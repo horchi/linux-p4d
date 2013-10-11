@@ -55,15 +55,15 @@ Create database and user:
 --------------------------
 
 - login as root: 
-#> mysql -u root -p
+> mysql -u root -p
  CREATE DATABASE p4 charset utf8;
  CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
  GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
 
 - login as p4 for maintanance:
-#> mysql -u p4 -pp4 -Dp4 --default-character-set=utf8
+> mysql -u p4 -pp4 -Dp4 --default-character-set=utf8
 - or remote
-#> mysql -u p4 -pp4 -Dp4 --default-character-set=utf8 -h <host>
+> mysql -u p4 -pp4 -Dp4 --default-character-set=utf8 -h <host>
 
 MYSQL HINTS:
 -----------
@@ -83,11 +83,8 @@ MYSQL HINTS:
  SELECT host, user FROM user;
 
 
-
--------------------------------------------------------
 -------------------------------------------------------
 --                 Charting Client                   --
--------------------------------------------------------
 -------------------------------------------------------
 
 The client reads data from database an creeate some weather charts using mathgl 2.1.x
