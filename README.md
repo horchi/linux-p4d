@@ -7,10 +7,6 @@ Requirements:
 
   - libmysql >= 5.07
 
-Ubuntu (12.10):
-  - libmysqlclient-dev libmysqlclient18
-
-
 Description:
 ------------
 
