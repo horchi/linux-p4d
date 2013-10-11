@@ -1,4 +1,0 @@
-tt -c p -p 0x1c1   #  Einschaltpunkt puffer oben unter Kesselsoll
-tt -c p -p 0x1e0   #  Kesseltemperatur soll
-
-
