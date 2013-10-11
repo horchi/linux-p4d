@@ -1,0 +1,86 @@
+#
+# Makefile
+#
+# See the README file for copyright information and how to reach the author.
+#
+#
+
+CC = g++
+
+TARGET = p4d
+CMDTARGET = p4
+CHARTTARGET = db-chart
+DEST = /usr/local/bin
+
+LIBS = -lmysqlclient_r -lrt
+DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
+CFLAGS   = -ggdb -I. -Wreturn-type -Wformat -pedantic -Wunused-variable -Wunused-label \
+           -Wunused-value -Wunused-function \
+           -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+
+VERSION = $(shell grep 'define VERSION ' $(TARGET).h | awk '{ print $$3 }' | sed -e 's/[";]//g')
+TMPDIR = /tmp
+ARCHIVE = $(TARGET)-$(VERSION)
+
+# object files 
+
+LOBJS =  lib/db.o lib/tabledef.o lib/common.o
+OBJS += $(LOBJS) main.o serial.o p4io.o p4d.o service.o
+CLOBJS = $(LOBJS) chart.o
+CMDOBJS = p4cmd.c p4io.c serial.c service.c lib/common.c
+
+# rules:
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $(DEFINES) -o $@ $<
+
+all: $(TARGET) $(CMDTARGET)
+chart: $(CHARTTARGET)
+
+$(TARGET) : $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+
+$(CHARTTARGET): $(CLOBJS)
+	$(CC) $(CFLAGS) $(CLOBJS) $(LIBS) -lmgl -o $@
+
+$(CMDTARGET) : $(CMDOBJS)
+	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
+
+install: inst
+
+inst:
+	@cp -p $(TARGET) $(DEST)
+
+dist: clean
+	@-rm -rf $(TMPDIR)/$(ARCHIVE)
+	@mkdir $(TMPDIR)/$(ARCHIVE)
+	@cp -a * $(TMPDIR)/$(ARCHIVE)
+	@tar czf $(ARCHIVE).tgz -C $(TMPDIR) $(ARCHIVE)
+	@-rm -rf $(TMPDIR)/$(ARCHIVE)
+	@echo Distribution package created as $(ARCHIVE).tgz
+
+clean:
+	@-rm -f $(OBJS) $(CLOBJS) core* *~ lib/*~ lib/t *.jpg tt
+	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
+
+cppchk:
+	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
+
+#***************************************************************************
+# dependencies
+#***************************************************************************
+
+HEADER = lib/db.h lib/common.h p4d.h
+
+lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
+lib/config.o    :  lib/config.c      lib/config.h $(HEADER)
+lib/db.o        :  lib/db.c          lib/db.h $(HEADER)
+lib/tabledef.o  :  lib/tabledef.c    $(HEADER)
+
+main.o			 :  main.c         $(HEADER)
+p4d.o           :  p4d.c          $(HEADER)
+p4.o            :  p4.c           $(HEADER)
+serial.o        :  serial.c       $(HEADER) serial.h
+p4io.o          :  p4io.c         $(HEADER) p4io.h 
+service.o       :  service.c      $(HEADER) service.h
+chart.o         :  chart.c

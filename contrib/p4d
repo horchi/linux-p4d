@@ -1,0 +1,53 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          p4d
+# Required-Start:    hostname $local_fs $network
+# Required-Stop:
+# Should-Start:
+# Default-Start:     1 2 3 4 5
+# Default-Stop:
+# Short-Description: Deamon to capture data of the P4 pellet heating
+# Description:       
+### END INIT INFO
+
+BIN="/usr/local/bin/p4d"
+
+do_start () {
+        $BIN
+}
+
+do_status () {
+
+   CHK=$(ps aux | grep "$BIN" | grep -vc grep)
+
+   if [ $CHK = '0' ]; then
+      echo "not running"
+      return 0
+   else
+      echo "running"
+      return 4
+   fi
+}
+
+case "$1" in
+  start|"")
+        do_start
+        ;;
+  restart|reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+        ;;
+  stop)
+        killall p4d
+        ;;
+  status)
+        do_status
+        exit $?
+        ;;
+  *)
+        echo "Usage: ip4d [start|stop|status]" >&2
+        exit 3
+        ;;
+esac
+
+:
