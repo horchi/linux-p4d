@@ -238,6 +238,7 @@ class cDbValue : public cDbService
             struct tm tm;
             time_t v = value;
 
+            memset(&tm, 0, sizeof(tm));
             localtime_r(&v, &tm);
             
             timeValue.year = tm.tm_year + 1900;
@@ -301,6 +302,7 @@ class cDbValue : public cDbService
       {
          struct tm tm;
          
+         memset(&tm, 0, sizeof(tm));
          tm.tm_year = timeValue.year - 1900;
          tm.tm_mon  = timeValue.month - 1;
          tm.tm_mday  = timeValue.day;
