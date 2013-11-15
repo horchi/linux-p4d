@@ -187,7 +187,7 @@ int Linpellet::sendMail()
    if (isEmpty(mailScript))
       return fail;
 
-   int isStateChanged = pState->value != lastState;
+   int isStateChanged = pState->value != lastState && (pState->value == 0 || pState->value == 1 || pState->value == 3 || pState->value == 19);
    int isErrorChanged = pError->value != lastError;
 
    if (isStateChanged || isErrorChanged || firstCall)
