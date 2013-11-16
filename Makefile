@@ -10,6 +10,8 @@ CC = g++
 TARGET = p4d
 CMDTARGET = p4
 CHARTTARGET = db-chart
+MBTARGET = p4mb
+
 DEST = /usr/local/bin
 
 LIBS = -lmysqlclient_r -lrt
@@ -27,14 +29,15 @@ ARCHIVE = $(TARGET)-$(VERSION)
 LOBJS =  lib/db.o lib/tabledef.o lib/common.o
 OBJS += $(LOBJS) main.o serial.o p4io.o p4d.o service.o
 CLOBJS = $(LOBJS) chart.o
-CMDOBJS = p4cmd.c p4io.c serial.c service.c lib/common.c
+CMDOBJS = p4cmd.o p4io.o serial.o service.o lib/common.o
+MBOBJS = mbp4.o serial.o lib/common.o
 
 # rules:
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $(DEFINES) -o $@ $<
 
-all: $(TARGET) $(CMDTARGET)
+all: $(TARGET) $(CMDTARGET) $(MBTARGET)
 chart: $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
@@ -45,6 +48,9 @@ $(CHARTTARGET): $(CLOBJS)
 
 $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
+
+$(MBTARGET) : $(MBOBJS)
+	$(CC) $(CFLAGS) $(MBOBJS) $(LIBS) -o $@
 
 install: inst
 
@@ -60,8 +66,8 @@ dist: clean
 	@echo Distribution package created as $(ARCHIVE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(CLOBJS) core* *~ lib/*~ lib/t *.jpg tt
-	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
+	@-rm -f $(OBJS) $(MBOBJS) $(CMDOBJS) $(CLOBJS) core* *~ lib/*~ lib/t *.jpg tt
+	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(MBTARGET) $(ARCHIVE).tgz
 
 cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h

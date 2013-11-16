@@ -15,7 +15,7 @@
 
 #include <termios.h>
 
-#include <lib/common.h>
+#include "lib/common.h"
 
 //***************************************************************************
 // IO Interface
