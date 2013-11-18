@@ -196,7 +196,7 @@ int main(int argc, char** argv)
 
          for (status = request.getFirstMenuItem(&m); status == success; status = request.getNextMenuItem(&m))
          {
-            tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n, m.address, m.unknown, m.description);
+            tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n++, m.address, m.unknown, m.description);
          }
 
          break;

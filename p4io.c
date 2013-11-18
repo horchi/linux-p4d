@@ -834,7 +834,26 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    {
       readByte(crc);
       show("<- ");
+
+      tell(0, "Got 'end of list'");
       return wrnLast;
+   }
+
+   if (size < 30)
+   {
+      tell(0, "At least 30 byte more ecxpected but only %d pending, status is %d", 
+           size, status);
+      tell(0, "Reading this %d and scipping item", size);
+
+      while (size > 0 && status == success)
+      {
+         status = readByte(b);
+         size--;
+      }
+
+      show("<- ");
+
+      return done;
    }
 
    // 24 noch unbekannte byte lesen ...
@@ -842,7 +861,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    for (int i = 0; i < 24; i++)
    {
       status += readByte(b);
-      size --;
+      size--;
    }
 
    status += readWord(m->address);
