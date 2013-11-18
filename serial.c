@@ -240,5 +240,15 @@ int Serial::read(void* buf, unsigned int count, int timeout)
          return wrnTimeout;
    };
 
+   if (res > 0)
+   {
+      for (int i = 0; i < res; i++)
+      {
+         byte b = ((byte*)buf)[i];
+         tell(eloDebug3, "got %2.2X", b);
+      }
+   }
+
    return res;
 }
+
