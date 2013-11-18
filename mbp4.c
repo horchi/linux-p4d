@@ -13,7 +13,7 @@ int main(int argc, char** argv)
    // int status;
    byte b;
 
-   loglevel = 1;
+   loglevel = 0;
    logstdout = yes;
 
    P4Request request(&serial);
@@ -24,8 +24,12 @@ int main(int argc, char** argv)
    while (yes)
    {
       while (serial.look(b, 100) == success)
-         tell(0, "-> 0x%2.2x", b);
+      {
+         tell(1, "-> 0x%2.2x", b);
+         printf("%c", b);
+      }
 
+      printf("\n");
       usleep(100000);
    }
 
