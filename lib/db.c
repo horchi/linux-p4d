@@ -707,7 +707,7 @@ int Table::createView(ViewDef* view)
    free(tmp);
    buffer = (char*)malloc(size+1);
    
-   while (res = fread(buffer+nread, 1, 1000, f))
+   while ((res = fread(buffer+nread, 1, 1000, f)))
    {
       nread += res;
       size += 1000;
@@ -922,7 +922,7 @@ int Table::countWhere(const char* where, int& count)
    if (mysql_query(connection->getMySql(), tmp.c_str()))
       return cDbConnection::errorSql(connection, "countWhere()", 0, tmp.c_str());
 
-   if (res = mysql_store_result(connection->getMySql()))
+   if ((res = mysql_store_result(connection->getMySql())))
    {
       data = mysql_fetch_row(res);
 

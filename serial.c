@@ -186,10 +186,10 @@ int Serial::look(byte& b, int timeout)
       if (res == wrnTimeout)
          return wrnTimeout;
 
-      if (errno = EINTR)
+      if (errno == EINTR)
          continue;
 
-      tell(0, "Read failed, errno was %d '%s'", 
+      tell(eloAlways, "Read failed, errno was %d '%s'", 
            errno, strerror(errno));
 
       return fail;

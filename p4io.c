@@ -158,7 +158,7 @@ int P4Packet::getToken(char* token)
 
    if (*pBuf != delimiter)
    {
-      tell(0, "Error: Missing delimiter at (%d/%d) [%s] [%s]", 
+      tell(eloAlways, "Error: Missing delimiter at (%d/%d) [%s] [%s]", 
            pBuf, buffer, pBuf, buffer);
       return fail;
    }
@@ -754,7 +754,7 @@ int P4Request::getError(ErrorInfo* e, int first)
 }
 
 //***************************************************************************
-// 
+// Get Value Spec
 //***************************************************************************
 
 int P4Request::getValueSpec(ValueSpec* v, int first)
@@ -811,7 +811,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 }
 
 //***************************************************************************
-// 
+// Get Menu Item
 //***************************************************************************
 
 int P4Request::getMenuItem(MenuItem* m, int first)
@@ -839,15 +839,15 @@ int P4Request::getMenuItem(MenuItem* m, int first)
       readByte(crc);
       show("<- ");
 
-      tell(0, "Got 'end of list'");
+      tell(eloAlways, "Got 'end of list'");
       return wrnLast;
    }
 
    if (size < 30)
    {
-      tell(0, "At least 30 byte more ecxpected but only %d pending, status is %d", 
+      tell(eloAlways, "At least 30 byte more ecxpected but only %d pending, status is %d", 
            size, status);
-      tell(0, "Reading this %d and skipping item", size);
+      tell(eloAlways, "Reading this %d and skipping item", size);
 
       while (size > 0 && status == success)
       {
@@ -928,4 +928,3 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    return status;   
 }
-

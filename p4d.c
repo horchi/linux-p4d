@@ -59,7 +59,7 @@ int Linpellet::initDb()
    if (connection || table)
       exitDb();
 
-   tell(0, "Try conneting to database");
+   tell(eloAlways, "Try conneting to database");
 
    connection = new cDbConnection();
 
@@ -67,7 +67,7 @@ int Linpellet::initDb()
    
    if (table->open() != success)
    {
-      tell(0, "Could not access database '%s:%d' (%s)", 
+      tell(eloAlways, "Could not access database '%s:%d' (%s)", 
            cDbConnection::getHost(), cDbConnection::getPort(), table->TableName());
       
       exitDb();
@@ -79,7 +79,7 @@ int Linpellet::initDb()
    
    if (tableSensors->open() != success)
    {
-      tell(0, "Could not access database '%s:%d' (%s)", 
+      tell(eloAlways, "Could not access database '%s:%d' (%s)", 
            cDbConnection::getHost(), cDbConnection::getPort(), tableSensors->TableName());
       
       exitDb();
@@ -87,7 +87,7 @@ int Linpellet::initDb()
       return fail;
    }
 
-   tell(0, "Connection to database established");  
+   tell(eloAlways, "Connection to database established");  
 
    return success;
 }
@@ -168,7 +168,7 @@ int Linpellet::sendMail()
 
    if (!pState || !pError)
    {
-      tell(0, "Missing at least one parameter %d/%d, got %d parameters - aborting mail check [%s]", 
+      tell(eloAlways, "Missing at least one parameter %d/%d, got %d parameters - aborting mail check [%s]", 
            pState, pError, tlg->getParameters()->size(), tlg->all());
 
       return fail;
@@ -232,7 +232,7 @@ int Linpellet::sendMail()
       free(command);
       firstCall = no;
 
-      tell(0, "Send mail '%s' with [%s] to '%s'", 
+      tell(eloAlways, "Send mail '%s' with [%s] to '%s'", 
            subject.c_str(), body.c_str(), receiver);
    }
 
@@ -267,7 +267,7 @@ int Linpellet::loop()
          if (initDb() == success)
             break;
 
-         tell(0, "Retrying in 10 seconds");
+         tell(eloAlways, "Retrying in 10 seconds");
          sleep(10);
       }
 

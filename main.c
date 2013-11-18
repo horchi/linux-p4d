@@ -117,7 +117,7 @@ int readConfig()
    free(line);
    fclose(f);
 
-   tell(0, "Read %d option from %s", count , fileName);
+   tell(eloAlways, "Read %d option from %s", count , fileName);
 
    free(fileName);
 
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
 
    // shutdown
 
-   tell(0, "shutdown");
+   tell(eloAlways, "shutdown");
 
    delete job;
 

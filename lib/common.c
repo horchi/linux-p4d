@@ -29,6 +29,7 @@
 
 int loglevel = 1;
 int logstdout = no;
+int logstamp = no;
 
 //***************************************************************************
 // Debug
@@ -58,17 +59,22 @@ void tell(int eloquence, const char* format, ...)
    if (logstdout)
    {
       char buf[50+TB];
-      timeval tp;
-      tm* tm;
+      *buf = 0;
 
-      gettimeofday(&tp, 0);
-      tm = localtime(&tp.tv_sec);
-      
-      sprintf(buf, "%2.2d:%2.2d:%2.2d,%3.3ld ",
-              tm->tm_hour, tm->tm_min, tm->tm_sec, 
-              tp.tv_usec / 1000);
-      
-      printf("%s %s\n", buf, t);
+      if (logstamp)
+      {
+         timeval tp;
+         tm* tm;
+         
+         gettimeofday(&tp, 0);
+         tm = localtime(&tp.tv_sec);
+         
+         sprintf(buf, "%2.2d:%2.2d:%2.2d,%3.3ld ",
+                 tm->tm_hour, tm->tm_min, tm->tm_sec, 
+                 tp.tv_usec / 1000);
+      }
+
+      printf("%s%s\n", buf, t);
    }
    else
       syslog(LOG_ERR, "%s", t);
@@ -454,7 +460,7 @@ int toUTF8(char* out, int outMax, const char* in, const char* from_code)
 
    const char* to_code = "UTF-8";
 
-   if (isEmpty)
+   if (isEmpty(from_code))
       from_code = "ISO8859-1";
 
    if (!out || !in || !outMax)

@@ -25,7 +25,7 @@ int main(int argc, char** argv)
    {
       while (serial.look(b, 100) == success)
       {
-         tell(1, "-> 0x%2.2x", b);
+         tell(eloDetail, "-> 0x%2.2x", b);
          printf("%c", b);
       }
 

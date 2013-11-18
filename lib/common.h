@@ -17,6 +17,7 @@
 struct MemoryStruct;
 extern int loglevel;
 extern int logstdout;
+extern int logstamp;
 
 using namespace std;
 

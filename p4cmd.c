@@ -17,10 +17,14 @@ enum UserCommand
 
 void showUsage(const char* bin)
 {
-   printf("Usage: %s <command> [-a <address> [-v <value>]] [-l <log-level>]\n", bin);
+   printf("Usage: %s <command> [-a <address> [-v <value>]] [-l <log-level>] [-d <device>]\n", bin);
+   printf("\n");
+   printf("  options:\n");
    printf("     -a <address>    address of parameter or value\n");
    printf("     -v <value>      new value\n");
    printf("     -l <log-level>  set log level\n");
+   printf("     -d <device>     serial device file (defaults to /dev/ttyUSB0)\n");
+   printf("\n");
    printf("  commands:\n");
    printf("     errors   show error buffer\n");
    printf("     values   list value addrsses\n");
@@ -42,6 +46,7 @@ int main(int argc, char** argv)
    word addr = Fs::addrUnknown;
    word value = Fs::addrUnknown;
    UserCommand cmd = ucUnknown;
+   const char* device = "/dev/ttyUSB0";
 
    loglevel = 0;
    logstdout = yes;
@@ -86,19 +91,23 @@ int main(int argc, char** argv)
          case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);  break;
          case 'v': if (argv[i+1]) value = strtol(argv[++i], 0, 0); break;
          case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);      break;
+         case 'd': if (argv[i+1]) device = argv[++i];              break;
       }
    }
 
    if (cmd == ucUnknown)
       return 1;
 
+   if (loglevel > 0)
+      logstamp = yes;
+
    P4Request request(&serial);
 
-   if (serial.open("/dev/ttyUSB0") != success)
+   if (serial.open(device) != success)
       return 1;
 
    while (serial.look(b, 100) == success)
-      tell(0, "-> 0x%2.2x", b);
+      tell(eloDebug, "-> 0x%2.2x", b);
 
    // connection check
 
@@ -206,6 +215,8 @@ int main(int argc, char** argv)
 
          break;
       }
+
+      default: break;
    }
    
    serial.close();

@@ -16,8 +16,8 @@ DEST = /usr/local/bin
 
 LIBS = -lmysqlclient_r -lrt
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
-CFLAGS   = -ggdb -I. -Wreturn-type -Wformat -pedantic -Wunused-variable -Wunused-label \
-           -Wunused-value -Wunused-function \
+CFLAGS   = -ggdb -I. -Wreturn-type -Wall -Wformat -Wunused-variable -Wunused-label \
+           -pedantic -Wunused-value -Wunused-function \
            -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 VERSION = $(shell grep 'define VERSION ' $(TARGET).h | awk '{ print $$3 }' | sed -e 's/[";]//g')
