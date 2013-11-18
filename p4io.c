@@ -375,9 +375,10 @@ int P4Request::readByte(byte& v, int decode, int tms)
 {
    byte b;
    byte b1;
-   
-   if (s->look(b, tms) != success)
-      return fail;
+   int status;
+
+   if ((status = s->look(b, tms)) != success)
+      return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
    
    buffer[sizeBufferContent++] = b;
 
@@ -394,8 +395,8 @@ int P4Request::readByte(byte& v, int decode, int tms)
    }
    else if (b == 0x02 || b == 0x2b)
    {
-      if (s->look(b1, tms) != success || b1 != 0x00)
-         return fail;
+      if ((status = s->look(b1, tms)) != success || b1 != 0x00)
+         return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
 
       buffer[sizeBufferContent++] = b1;
       
@@ -403,8 +404,8 @@ int P4Request::readByte(byte& v, int decode, int tms)
    }
    else if (b == 0x0fe)
    {
-      if (s->look(b1, tms) != success)
-         return fail;
+      if ((status = s->look(b1, tms)) != success)
+         return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
       
       buffer[sizeBufferContent++] = b1;
 
@@ -431,12 +432,13 @@ int P4Request::readWord(word& v, int decode, int tms)
 {
    byte b1;
    byte b2;
+   int status;
+
+   if ((status = readByte(b1, decode, tms)) != success)
+      return status;
    
-   if (readByte(b1, decode, tms) != success)
-      return fail;
-   
-   if (readByte(b2, decode, tms) != success)
-      return fail;
+   if ((status = readByte(b2, decode, tms)) != success)
+      return status;
    
    v = (b1 << 8) | b2;
 
@@ -814,7 +816,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
 int P4Request::getMenuItem(MenuItem* m, int first)
 {
-   int status = success;
+   int status;
    int size = 0;
    byte crc, tb, b;
    byte isLast;
@@ -822,12 +824,14 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    clear();
    request(first ? cmdGetMenuListFirst : cmdGetMenuListNext);
    
-   if (readHeader() != success)
-      return fail;
+   if ((status = readHeader()) != success)
+      return status;
 
    size = getHeader()->size;
 
-   status += readByte(isLast);
+   if ((status = readByte(isLast)) != success)
+      return status;
+
    size--;
 
    if (isLast != 1)
@@ -843,7 +847,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    {
       tell(0, "At least 30 byte more ecxpected but only %d pending, status is %d", 
            size, status);
-      tell(0, "Reading this %d and scipping item", size);
+      tell(0, "Reading this %d and skipping item", size);
 
       while (size > 0 && status == success)
       {
@@ -860,14 +864,20 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    for (int i = 0; i < 24; i++)
    {
-      status += readByte(b);
+      if ((status = readByte(b)) != success)
+         return status;
+      
       size--;
    }
 
-   status += readWord(m->address);
+   if ((status = readWord(m->address)) != success)
+      return status;
+
    size -= 2;
 
-   status += readWord(m->unknown);
+   if ((status = readWord(m->unknown)) != success)
+      return status;
+
    size -= 2;
 
 //    status += readWord(m->factor);
@@ -877,12 +887,19 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    // Rest als text lesen
 
-   status += readText(m->description, size-sizeCrc-1);
+   if ((status = readText(m->description, size-sizeCrc-1)) != success)
+      return status;
+
    size -= size-sizeCrc-1;
-   status += readByte(tb);  // termination byte
+
+   if ((status = readByte(tb)) != success)
+      return status;
+
    size--;
    
-   status += readByte(crc);
+   if ((status = readByte(crc)) != success)
+      return status;
+
    show("<- ");
 
    return status;   

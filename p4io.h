@@ -157,6 +157,8 @@ class P4Request : public FroelingService
 
       int readHeader(int tms = 100000)
       {
+         int status;
+
          clear();
 
          if (!s || !s->isOpen())
@@ -165,10 +167,10 @@ class P4Request : public FroelingService
             return fail;
          }
 
-         if (readWord(header.id, no, tms) != success)
+         if ((status = readWord(header.id, no, tms)) != success)
          {
             tell(eloAlways, "Read word failed, aborting");
-            return fail;
+            return status;
          }
 
          if (header.id != commId)
@@ -178,11 +180,11 @@ class P4Request : public FroelingService
             return fail;
          }
 
-         if (readWord(header.size) != success)
-            return fail;
+         if ((status = readWord(header.size)) != success)
+            return status;
 
-         if (readByte(header.command) != success)
-            return fail;
+         if ((status = readByte(header.command)) != success)
+            return status;
 
          return success;
       }

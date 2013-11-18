@@ -28,6 +28,7 @@ class FroelingService
          wrnOutOfRange,
          wrnLast,
          wrnEmpty,
+         wrnTimeout,
          
          errRequestFailed,
          errWrongAddress,

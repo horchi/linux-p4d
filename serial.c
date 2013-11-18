@@ -192,6 +192,9 @@ int Serial::look(byte& b, int timeout)
       return fail;
    }
 
+   if (res == wrnTimeout)
+      return wrnTimeout;
+
    return res != 1 ? fail : success;
 }
 
@@ -234,7 +237,7 @@ int Serial::read(void* buf, unsigned int count, int timeout)
    while ((res = ::read(fdDevice, buf, count)) == 0)
    {
       if (cTimeMs::Now() > start + timeout)
-         return res;
+         return wrnTimeout;
    };
 
    return res;

@@ -27,7 +27,9 @@ class Serial
 
       enum Misc
       {
-         sizeCmdMax = 100
+         sizeCmdMax = 100,
+
+         wrnTimeout = -10
       };
 
       // object
