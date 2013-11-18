@@ -58,9 +58,16 @@ void tell(int eloquence, const char* format, ...)
    if (logstdout)
    {
       char buf[50+TB];
-      time_t now;
-      time(&now);
-      strftime(buf, 50, "%y.%m.%d %H:%M:%S", localtime(&now));
+      timeval tp;
+      tm* tm;
+
+      gettimeofday(&tp, 0);
+      tm = localtime(&tp.tv_sec);
+      
+      sprintf(buf + strlen(buf),"%2.2d:%2.2d:%2.2d,%3.3ld ",
+              tm->tm_hour, tm->tm_min, tm->tm_sec, 
+              tp.tv_usec / 1000);
+      
       printf("%s %s\n", buf, t);
    }
    else
