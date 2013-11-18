@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <serial.h>
+#include "serial.h"
 
 //***************************************************************************
 // Object

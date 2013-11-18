@@ -17,8 +17,8 @@
 
 #include <vector>
 
-#include <service.h>
-#include <serial.h>
+#include "service.h"
+#include "serial.h"
 
 //***************************************************************************
 // Class P4 Packet
