@@ -155,7 +155,7 @@ class P4Request : public FroelingService
 
       Header* getHeader() { return &header; }
 
-      int readHeader(int tms = 100000)
+      int readHeader(int tms = 2000)
       {
          int status;
 
@@ -181,16 +181,22 @@ class P4Request : public FroelingService
          }
 
          if ((status = readWord(header.size)) != success)
+         {
+            tell(eloAlways, "Read size failed, status was %d", status);
             return status;
+         }
 
          if ((status = readByte(header.command)) != success)
+         {
+            tell(eloAlways, "Read command failed, status was %d", status);
             return status;
+         }
 
          return success;
       }
 
-      int readByte(byte& v, int decode = yes, int tms = 10);
-      int readWord(word& v, int decode = yes, int tms = 10);
+      int readByte(byte& v, int decode = yes, int tms = 1000);
+      int readWord(word& v, int decode = yes, int tms = 1000);
       int readTime(time_t& t);
       int readDate(time_t& t);
       int readTimeDate(time_t& t);

@@ -865,18 +865,30 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    for (int i = 0; i < 24; i++)
    {
       if ((status = readByte(b)) != success)
+      {
+         tell(eloAlways, "Missing at least %d of %d bytes at reading spare bytes", size, getHeader()->size);
+         show("<- ");
          return status;
+      }
       
       size--;
    }
 
    if ((status = readWord(m->address)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading address", size);
+      show("<- ");
       return status;
+   }
 
    size -= 2;
 
    if ((status = readWord(m->unknown)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading unknown word", size);
+      show("<- ");
       return status;
+   }
 
    size -= 2;
 
@@ -888,19 +900,32 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    // Rest als text lesen
 
    if ((status = readText(m->description, size-sizeCrc-1)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading text", size);
+      show("<- ");
       return status;
+   }
 
    size -= size-sizeCrc-1;
 
    if ((status = readByte(tb)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading tb", size);
+      show("<- ");
       return status;
+   }
 
    size--;
    
    if ((status = readByte(crc)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading crc", size);
+      show("<- ");
       return status;
+   }
 
    show("<- ");
 
    return status;   
 }
+

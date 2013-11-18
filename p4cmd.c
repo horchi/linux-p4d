@@ -199,6 +199,11 @@ int main(int argc, char** argv)
             tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n++, m.address, m.unknown, m.description);
          }
 
+         if (status == Fs::wrnTimeout)
+            tell(eloAlways, "Aborting on timeout");
+         else if (status != Fs::wrnLast && status != success)
+            tell(eloAlways, "Aborting on error, status was %d", status);
+
          break;
       }
    }

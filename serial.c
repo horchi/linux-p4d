@@ -183,11 +183,11 @@ int Serial::look(byte& b, int timeout)
 
    while ((res = read(&b, 1, timeout)) < 0)
    {
-      if (errno = EINTR)
-         continue;
-
       if (res == wrnTimeout)
          return wrnTimeout;
+
+      if (errno = EINTR)
+         continue;
 
       tell(0, "Read failed, errno was %d '%s'", 
            errno, strerror(errno));
