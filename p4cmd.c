@@ -125,9 +125,11 @@ int main(int argc, char** argv)
          
          if (request.getParameter(&p) == success)
          {
-            tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Digits: %d; Factor: %d; "
-                 "Current: %d; Min: %d; Max: %d; Default: %d", 
-                 p.address, p.unit, p.digits, p.factor, p.value, p.min, p.max, p.def);
+            tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Digits: %d; "
+                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (already applied)", 
+                 p.address, p.unit, p.digits, p.value, p.min, p.max, p.def, p.factor);
+            
+            tell(eloAlways, "=> %d%s", p.value, p.unit);
          }
 
          break;
@@ -172,7 +174,7 @@ int main(int argc, char** argv)
                tell(eloAlways, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
                     n, v.address, v.factor, v.unit, v.unknown, v.description);
             else
-               tell(eloAlways, "DATA: %3d) <empty>", n);
+               tell(eloAlways, "%3d) <empty>", n);
 
             n++;
          }
