@@ -64,7 +64,7 @@ void tell(int eloquence, const char* format, ...)
       gettimeofday(&tp, 0);
       tm = localtime(&tp.tv_sec);
       
-      sprintf(buf + strlen(buf),"%2.2d:%2.2d:%2.2d,%3.3ld ",
+      sprintf(buf, "%2.2d:%2.2d:%2.2d,%3.3ld ",
               tm->tm_hour, tm->tm_min, tm->tm_sec, 
               tp.tv_usec / 1000);
       
