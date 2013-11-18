@@ -56,7 +56,13 @@ void tell(int eloquence, const char* format, ...)
    vsnprintf(t+strlen(t), sizeBuffer-strlen(t), format, ap);
    
    if (logstdout)
-      printf("%s\n", t);
+   {
+      char buf[50+TB];
+      time_t now;
+      time(&now);
+      strftime(buf, 50, "%y.%m.%d %H:%M:%S", localtime(&now));
+      printf("%s %s\n", buf, t);
+   }
    else
       syslog(LOG_ERR, "%s", t);
 

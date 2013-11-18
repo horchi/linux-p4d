@@ -180,13 +180,13 @@ class P4Request : public FroelingService
             return fail;
          }
 
-         if ((status = readWord(header.size)) != success)
+         if ((status = readWord(header.size, yes, tms)) != success)
          {
             tell(eloAlways, "Read size failed, status was %d", status);
             return status;
          }
 
-         if ((status = readByte(header.command)) != success)
+         if ((status = readByte(header.command, yes, tms)) != success)
          {
             tell(eloAlways, "Read command failed, status was %d", status);
             return status;
