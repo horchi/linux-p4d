@@ -12,7 +12,8 @@ enum UserCommand
    ucParameterList,
    ucValueList,
    ucErrorList,
-   ucMenuList
+   ucMenuList,
+   ucState
 };
 
 void showUsage(const char* bin)
@@ -26,6 +27,7 @@ void showUsage(const char* bin)
    printf("     -d <device>     serial device file (defaults to /dev/ttyUSB0)\n");
    printf("\n");
    printf("  commands:\n");
+   printf("     state   show state\n");
    printf("     errors   show error buffer\n");
    printf("     values   list value addrsses\n");
    printf("     menu     list menu items (available parameters)\n");
@@ -73,6 +75,8 @@ int main(int argc, char** argv)
       cmd = ucErrorList;
    else if (strcasecmp(argv[1], "menu") == 0)
       cmd = ucMenuList;
+   else if (strcasecmp(argv[1], "state") == 0)
+      cmd = ucState;
    else
    {
       showUsage(argv[0]);
@@ -119,6 +123,15 @@ int main(int argc, char** argv)
 
    switch (cmd)
    {
+      case ucState:
+      {
+         if (request.getState() == success)
+         {
+         }
+
+         break;
+      }
+
       case ucGetParameter:
       {
          Fs::ConfigParameter p(addr);
