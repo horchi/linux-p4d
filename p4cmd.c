@@ -169,6 +169,13 @@ int main(int argc, char** argv)
 
          if (request.getState(&s) == success)
          {
+            struct tm tim = {0};
+            char date[100];
+
+            localtime_r(&s.time, &tim);
+            strftime(date, 20, "%A, %d. %b.%G", &tim);
+
+            tell(eloAlways, "%s - %s", s.version, date);
             tell(eloAlways, "%d - %s", s.mode, s.modeinfo);
             tell(eloAlways, "%d - %s", s.state, s.stateinfo);
          }

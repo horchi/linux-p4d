@@ -564,6 +564,7 @@ int P4Request::check()
    int status = fail;
    char* s = 0;
    byte b;
+
    clear();
    addText("Tescht ;-)");
    request(cmdCheck);
@@ -588,23 +589,27 @@ int P4Request::check()
 
 int P4Request::getState(State* s)
 {
+   int status = success;
+   byte crc;
+
+   // cmdGetState
+
    clear();
    request(cmdGetState);
    
-   if (readHeader() == success)
+   if ((status += readHeader()) == success)
    {
-      byte crc;
       char* text = 0;
       char* p;
       int size = getHeader()->size;
       
-      readByte(s->mode);
+      status += readByte(s->mode);
       size--;
-      readByte(s->state);
+      status += readByte(s->state);
       size--;
       
-      readText(text, size-sizeCrc);
-      readByte(crc);
+      status += readText(text, size-sizeCrc);
+      status += readByte(crc);
  
       p = strchr(text, ';');
       *p = 0;
@@ -617,7 +622,38 @@ int P4Request::getState(State* s)
       show("<- ");
    }
 
-   return success;
+   if (status != success)
+      return status;
+
+   // cmdGetVersion
+
+   clear();
+   request(cmdGetVersion);
+   
+   if ((status += readHeader()) == success)
+   {
+      int size = getHeader()->size;
+      byte v1, v2, v3, v4;
+
+      status += readByte(v1);
+      size--;
+      status += readByte(v2);
+      size--;
+      status += readByte(v3);
+      size--;
+      status += readByte(v4);
+      size--;
+
+      if (status == success)
+         sprintf(s->version, "%d.%d.%d.%d", v1, v2, v3, v4);
+
+      status += readTimeDate(s->time);
+      status += readByte(crc);
+
+      show("<- ");
+   }
+
+   return status;
 }
 
 //***************************************************************************

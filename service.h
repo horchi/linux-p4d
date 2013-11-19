@@ -139,13 +139,15 @@ class FroelingService
 
       struct State
       {
-         State()  { modeinfo = 0; stateinfo = 0; }
+         State()  { modeinfo = 0; stateinfo = 0; *version = 0; }
          ~State() { free(modeinfo); free(stateinfo); }
-
-         byte mode;         // Betriebsart
-         byte state;        // Zustand
-         char* modeinfo;    // Betriebsart Text
-         char* stateinfo;   // Zustand Text
+ 
+         time_t time; 
+         byte mode;           // Betriebsart
+         byte state;          // Zustand
+         char* modeinfo;      // Betriebsart Text
+         char* stateinfo;     // Zustand Text
+         char version[12+TB];
       };
 
       struct Value
