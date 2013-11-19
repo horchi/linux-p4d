@@ -1,9 +1,9 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
 // File p4d.h
-// Date 04.11.10 - Jörg Wendel
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+// Date 04.11.2010 - 19.11.2013  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4D_H_
@@ -16,7 +16,7 @@
 #include "service.h"
 #include "p4io.h"
 
-#include "lib/db.h"
+#include "lib/tabledef.h"
 
 #define VERSION "0.0.1"
 #define confDirDefault "/etc"
@@ -64,8 +64,8 @@ class Linpellet : public FroelingService
 
       // data
 
-      Table* table;
-      Table* tableSensors;
+      cTableSamples* table;
+      cTableSensorFacts* tableSensors;
       cDbConnection* connection;
       P4Packet* tlg;
 

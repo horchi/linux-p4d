@@ -1,9 +1,9 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
 // File p4io.h
-// Date 04.11.10 - Jörg Wendel
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+// Date 04.11.2010 - 19.11.2013  Jörg Wendel
 //***************************************************************************
 
 #ifndef _IO_P4_H_

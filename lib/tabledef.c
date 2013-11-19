@@ -11,7 +11,7 @@
 // Sensor Facts
 //***************************************************************************
 
-cDbService::FieldDef cSensorFactFields::fields[] =
+cDbService::FieldDef cTableSensorFacts::fields[] =
 {
    // name               format     size  index               type          viewStmt
 
@@ -37,7 +37,7 @@ cDbService::FieldDef cSensorFactFields::fields[] =
 // Sensor Samples
 //***************************************************************************
 
-cDbService::FieldDef cSampleFields::fields[] =
+cDbService::FieldDef cTableSamples::fields[] =
 {
    // name               format     size  index               type          viewStmt
 
@@ -64,7 +64,7 @@ cDbService::FieldDef cSampleFields::fields[] =
 // Value Addresses
 //***************************************************************************
 
-cDbService::FieldDef cValueAddressFields::fields[] =
+cDbService::FieldDef cTableValueFacts::fields[] =
 {
    // name               format     size  index               type          viewStmt
 

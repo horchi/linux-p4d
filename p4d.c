@@ -1,9 +1,9 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
-// File p4d.cc
-// Date 04.11.10 - Jörg Wendel
+// File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+// Date 04.11.2010 - 19.11.2013  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -15,8 +15,7 @@
 
 #include <vector>
 
-#include <p4d.h>
-#include <lib/tabledef.h>
+#include "p4d.h"
 
 int Linpellet::shutdown = no;
 
@@ -63,7 +62,7 @@ int Linpellet::initDb()
 
    connection = new cDbConnection();
 
-   table = new Table(connection, "samples", cSampleFields::fields);
+   table = new cTableSamples(connection);
    
    if (table->open() != success)
    {
@@ -75,7 +74,7 @@ int Linpellet::initDb()
       return fail;
    }
 
-   tableSensors = new Table(connection, "sensorfacts", cSensorFactFields::fields);
+   tableSensors = new cTableSensorFacts(connection);
    
    if (tableSensors->open() != success)
    {
@@ -110,14 +109,14 @@ int Linpellet::exitDb()
 int Linpellet::store(time_t now, Parameter* p)
 {
    table->clear();
-   table->setValue(cSampleFields::fiTime, now);
-   table->setValue(cSampleFields::fiSensorId, p->index);
+   table->setValue(cTableSamples::fiTime, now);
+   table->setValue(cTableSamples::fiSensorId, p->index);
 
    if (p->index != parError)
-      table->setValue(cSampleFields::fiValue, p->value);
+      table->setValue(cTableSamples::fiValue, p->value);
 
    if (!isEmpty(allTrim(p->text)))
-      table->setValue(cSampleFields::fiText, allTrim(p->text));
+      table->setValue(cTableSamples::fiText, allTrim(p->text));
 
    table->store();
    
@@ -127,7 +126,7 @@ int Linpellet::store(time_t now, Parameter* p)
 int Linpellet::storeSensor(Parameter* p)
 {
    tableSensors->clear();
-   tableSensors->setValue(cSensorFactFields::fiSensorId, p->index);
+   tableSensors->setValue(cTableSensorFacts::fiSensorId, p->index);
 
    if (!tableSensors->find())
    {
@@ -135,9 +134,9 @@ int Linpellet::storeSensor(Parameter* p)
 
       removeChars(name, ".:-,;_?=!§$%&/()\"'+* ");
 
-      tableSensors->setValue(cSensorFactFields::fiName, name.c_str());
-      tableSensors->setValue(cSensorFactFields::fiUnit, p->unit);
-      tableSensors->setValue(cSensorFactFields::fiTitle, 
+      tableSensors->setValue(cTableSensorFacts::fiName, name.c_str());
+      tableSensors->setValue(cTableSensorFacts::fiUnit, p->unit);
+      tableSensors->setValue(cTableSensorFacts::fiTitle, 
                              p->index == parState ? "Heizungsstatus" : p->name);
 
       tableSensors->store();

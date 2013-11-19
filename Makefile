@@ -5,6 +5,15 @@
 #
 #
 
+PREFIX   = /usr/local
+BINDEST  = $(DESTDIR)$(PREFIX)/bin
+CONFDEST = $(DESTDIR)/etc
+
+DEBUG = 1
+
+# -----------------------
+# don't touch below ;)
+
 CC = g++
 
 TARGET = p4d
@@ -12,13 +21,16 @@ CMDTARGET = p4
 CHARTTARGET = db-chart
 MBTARGET = p4mb
 
-DEST = /usr/local/bin
-
 LIBS = -lmysqlclient_r -lrt
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
-CFLAGS   = -ggdb -I. -Wreturn-type -Wall -Wformat -Wunused-variable -Wunused-label \
+
+CFLAGS   = -Wreturn-type -Wall -Wformat -Wunused-variable -Wunused-label \
            -pedantic -Wunused-value -Wunused-function \
            -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+
+ifdef DEBUG
+  CFLAGS += -ggdb -O0
+endif
 
 VERSION = $(shell grep 'define VERSION ' $(TARGET).h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 TMPDIR = /tmp
@@ -52,10 +64,13 @@ $(CMDTARGET) : $(CMDOBJS)
 $(MBTARGET) : $(MBOBJS)
 	$(CC) $(CFLAGS) $(MBOBJS) $(LIBS) -o $@
 
-install: inst
+install: $(TARGET) install-config
+	@cp -p $(TARGET) $(BINDEST)
 
-inst:
-	@cp -p $(TARGET) $(DEST)
+install-config:
+	if ! test -f $(CONFDEST)/epgd.conf; then \
+	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
+	fi
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)

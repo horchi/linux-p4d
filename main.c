@@ -1,9 +1,10 @@
-/*
- * main.c: P4 Deamon
- *
- * See the README file for copyright information and how to reach the author.
- *
- */
+//***************************************************************************
+// Group p4d / Linux - Heizungs Manager
+// File main.c
+// This code is distributed under the terms and conditions of the
+// GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+// Date 04.11.2010 - 19.11.2013  Jörg Wendel
+//***************************************************************************
 
 #include <unistd.h>
 #include <stdio.h>
@@ -11,7 +12,7 @@
 #include <signal.h>
 #include <string.h>
 
-#include <p4d.h>
+#include "p4d.h"
 
 char* confDir = (char*)confDirDefault;
 
