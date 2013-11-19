@@ -645,7 +645,7 @@ int P4Request::getState(State* s)
       size--;
 
       if (status == success)
-         sprintf(s->version, "%d.%d.%d.%d", v1, v2, v3, v4);
+         sprintf(s->version, "%2.2x.%2.2x.%2.2x.%2.2x", v1, v2, v3, v4);
 
       status += readTimeDate(s->time);
       status += readByte(crc);

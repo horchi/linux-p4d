@@ -173,9 +173,10 @@ int main(int argc, char** argv)
             char date[100];
 
             localtime_r(&s.time, &tim);
-            strftime(date, 20, "%A, %d. %b.%G", &tim);
+            strftime(date, 100, "%A, %d. %b.%G %H:%M:%S", &tim);
 
-            tell(eloAlways, "%s - %s", s.version, date);
+            tell(eloAlways, "Version: %s", s.version);
+            tell(eloAlways, "Time: %s", date);
             tell(eloAlways, "%d - %s", s.mode, s.modeinfo);
             tell(eloAlways, "%d - %s", s.state, s.stateinfo);
          }
