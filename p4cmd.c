@@ -26,7 +26,8 @@ enum UserCommand
    ucErrorList,
    ucMenuList,
    ucState,
-   ucGetDo
+   ucGetDo,
+   ucUser
 };
 
 void showUsage(const char* bin)
@@ -93,6 +94,8 @@ int main(int argc, char** argv)
       cmd = ucState;
    else if (strcasecmp(argv[1], "getdo") == 0)
       cmd = ucGetDo;
+   else if (strcasecmp(argv[1], "user") == 0)
+      cmd = ucUser;
    else
    {
       showUsage(argv[0]);
@@ -139,6 +142,13 @@ int main(int argc, char** argv)
 
    switch (cmd)
    {
+      case ucUser:
+      {
+         request.getItem(addr);
+
+         break;
+      }
+      
       case ucGetDo:
       {
          Fs::IoValue v(addr);

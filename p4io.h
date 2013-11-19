@@ -218,6 +218,8 @@ class P4Request : public FroelingService
       int getFirstMenuItem(MenuItem* m)    { return getMenuItem(m, yes); }
       int getNextMenuItem(MenuItem* m)     { return getMenuItem(m, no); }
 
+      int getItem(byte cmd);
+
       int check();
 
    protected:

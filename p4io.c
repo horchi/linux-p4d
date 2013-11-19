@@ -998,3 +998,25 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    return status;   
 }
+
+int P4Request::getItem(byte cmd)
+{
+   clear();
+   request(cmd);
+   
+   if (readHeader() != success)
+   {
+      tell(eloAlways, "request of %d failed", cmd);
+      return fail;
+   }
+
+   int size = getHeader()->size;
+   byte b;
+
+   while (size > 0 && readByte(b) == success)
+      size--;
+
+   show("<- ");
+
+   return done;
+}

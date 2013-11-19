@@ -79,24 +79,31 @@ class FroelingService
 
          cmdGetMenuListFirst  = 0x37,   // Menuestruktur auslesen
          cmdGetMenuListNext   = 0x38,   // Menuestruktur auslesen
-
          cmdSetParameter      = 0x39,   // Einstellung ändern
+
          cmdGetBaseSetup      = 0x40,   // Konfiguration des Kessels
          cmdGetVersion        = 0x41,   // Software Version, aktuelle Zeit und Datum
+
          cmdGetTimesFirst     = 0x42,   // Zeiten abfragen
          cmdGetTimesNext      = 0x43,   // Zeiten abfragen
+
          cmdGetDigOut         = 0x44,   // Digitale Ausgänge abfragen
          cmdGetAnlIn          = 0x45,   // Analoge Ausgänge abfragen
          cmdGetDigIn          = 0x46,   // Digitale Eingänge abfragen
+
          cmdGetErrorFirst     = 0x47,   // Fehlerpuffer abfragen
          cmdGetErrorNext      = 0x48,   // Fehlerpuffer abfragen
+
          cmdSetTimes          = 0x50,   // Zeiten ändern
          cmdGetState          = 0x51,   // Kesselzustand abfragen
+
          cmdSetDateTime       = 0x54,   // Datum und Uhrzeit einstellen
          cmdGetParameter      = 0x55,   // Einstellung abfragen
+
          cmdSetDigOut         = 0x58,   // Digitale Ausgänge manipulieren
          cmdSetAnlOut         = 0x59,   // Analoge Ausgänge manipulieren
          cmdSetDigIn          = 0x5A,   // Digitale Eingänge manipulieren
+
          cmdGetForce          = 0x5E,   // Überprüfen ob forcen aktiv
          cmdSetForce          = 0x7E    // Force ein/aus
       };
@@ -195,7 +202,6 @@ class FroelingService
 
       // -------------------------
       // COM2
-      // -------------------------
 
       enum InterfaceDef2
       {
