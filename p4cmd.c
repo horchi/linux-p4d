@@ -137,13 +137,14 @@ int main(int argc, char** argv)
    {
       case ucState:
       {
-         if (request.getState() == success)
+         Fs::State s;
+
+         if (request.getState(&s) == success)
          {
          }
 
          break;
       }
-
       case ucGetParameter:
       {
          Fs::ConfigParameter p(addr);

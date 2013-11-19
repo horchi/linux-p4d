@@ -586,23 +586,32 @@ int P4Request::check()
 // Get State
 //***************************************************************************
 
-int P4Request::getState()
+int P4Request::getState(State* s)
 {
-   byte b;
-
    clear();
    request(cmdGetState);
    
    if (readHeader() == success)
    {
+      char* text = 0;
+      char* p;
       int size = getHeader()->size;
-
-      while (size > 0)
-      {
-         readByte(b);
-         size--;
-      }
       
+      readByte(s->mode);
+      size--;
+      readByte(s->state);
+      size--;
+      
+      readText(text, size-sizeCrc);
+
+      p = strchr(text, ';');
+      *p = 0;
+      
+      s->modeinfo = strdup(p+1);
+      s->stateinfo = strdup(p+1);
+
+      free(text);
+
       show("<- ");
    }
 

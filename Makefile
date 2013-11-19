@@ -68,7 +68,7 @@ install: $(TARGET) install-config
 	@cp -p $(TARGET) $(BINDEST)
 
 install-config:
-	if ! test -f $(CONFDEST)/epgd.conf; then \
+	if ! test -f $(CONFDEST)/p4d.conf; then \
 	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
 	fi
 

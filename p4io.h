@@ -202,7 +202,7 @@ class P4Request : public FroelingService
       int readTimeDate(time_t& t);
       int readText(char*& s, int size);
 
-      int getState();
+      int getState(State* s);
 
       int getParameter(ConfigParameter* p);
       int setParameter(ConfigParameter* p);

@@ -127,6 +127,17 @@ class FroelingService
          word def;
       };
 
+      struct State
+      {
+         State()  { modeinfo = 0; stateinfo = 0; }
+         ~State() { free(modeinfo); free(stateinfo); }
+
+         byte mode;         // Betriebsart
+         byte state;        // Zustand
+         char* modeinfo;    // Betriebsart Text
+         char* stateinfo;   // Zustand Text
+      };
+
       struct Value
       {
          Value(word addr = addrUnknown)  { address = addr; }
