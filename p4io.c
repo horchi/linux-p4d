@@ -743,6 +743,34 @@ int P4Request::getValue(Value* v)
 }
 
 //***************************************************************************
+// Get Digital Out
+//***************************************************************************
+
+int P4Request::getDigitalOut(IoValue* v)
+{
+   int status = fail;
+   byte crc;
+
+   if (!v || v->address == addrUnknown)
+      return errWrongAddress;
+   
+   clear();
+   addAddress(v->address);
+   request(cmdGetDigOut);
+   
+   if (readHeader() == success)
+   {
+      status = readByte(v->mode)
+         + readByte(v->state)
+         + readByte(crc);
+
+      show("<- ");
+   }
+
+   return status;
+}
+
+//***************************************************************************
 // Get Error
 //***************************************************************************
 

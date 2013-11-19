@@ -147,6 +147,13 @@ class FroelingService
          word value;
       };
 
+      struct IoValue
+      {
+         word address;
+         byte mode;
+         byte state;
+      };
+
       struct ValueSpec
       {
          ValueSpec()  { unit = 0; description = 0; }

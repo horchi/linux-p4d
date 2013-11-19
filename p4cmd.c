@@ -25,7 +25,8 @@ enum UserCommand
    ucValueList,
    ucErrorList,
    ucMenuList,
-   ucState
+   ucState,
+   ucGetDo
 };
 
 void showUsage(const char* bin)
@@ -46,6 +47,7 @@ void showUsage(const char* bin)
    printf("     getv     show value at <addr>\n");
    printf("     getp     show parameter at <addr>\n");
    printf("     setp     set parameter at <addr> to <value>\n");
+   printf("     getdo    show digital output at <addr>\n");
 }
 
 //***************************************************************************
@@ -89,6 +91,8 @@ int main(int argc, char** argv)
       cmd = ucMenuList;
    else if (strcasecmp(argv[1], "state") == 0)
       cmd = ucState;
+   else if (strcasecmp(argv[1], "getdo") == 0)
+      cmd = ucGetDo;
    else
    {
       showUsage(argv[0]);
@@ -135,6 +139,17 @@ int main(int argc, char** argv)
 
    switch (cmd)
    {
+      case ucGetDo:
+      {
+         Fs::IoValue v;
+
+         if (request.getDigitalOut(&v) == success)
+         {
+            tell(eloAlways, "%c/%d", v.mode, v.state);
+         }
+
+         break;
+      }
       case ucState:
       {
          Fs::State s;

@@ -208,6 +208,7 @@ class P4Request : public FroelingService
       int setParameter(ConfigParameter* p);
 
       int getValue(Value* v);
+      int getDigitalOut(IoValue* v);
 
       int getFirstError(ErrorInfo* e)      { return getError(e, yes); }
       int getNextError(ErrorInfo* e)       { return getError(e, no); }
