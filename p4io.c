@@ -1001,6 +1001,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
 int P4Request::getItem(int first)
 {
+   byte more;
    clear();
    
    request(first ? cmdGetUnknownFirst : cmdGetUnknownNext);
@@ -1012,7 +1013,19 @@ int P4Request::getItem(int first)
    }
 
    int size = getHeader()->size;
-   byte b;
+   byte b, crc;
+
+   readByte(more);
+   size--;
+
+   if (!more)
+   {
+      readByte(crc);
+      show("<- ");
+      tell(eloAlways, "Got 'end of list'");
+
+      return wrnLast;
+   }
 
    while (size > 0 && readByte(b) == success)
       size--;

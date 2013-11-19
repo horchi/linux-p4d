@@ -97,6 +97,8 @@ int main(int argc, char** argv)
       cmd = ucGetDo;
    else if (strcasecmp(argv[1], "user") == 0)
       cmd = ucUser;
+   else if (strcasecmp(argv[1], "list") == 0)
+      cmd = ucUnkonownList;
    else
    {
       showUsage(argv[0]);
