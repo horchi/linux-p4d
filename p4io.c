@@ -593,6 +593,7 @@ int P4Request::getState(State* s)
    
    if (readHeader() == success)
    {
+      byte crc;
       char* text = 0;
       char* p;
       int size = getHeader()->size;
@@ -603,11 +604,12 @@ int P4Request::getState(State* s)
       size--;
       
       readText(text, size-sizeCrc);
-
+      readByte(crc);
+ 
       p = strchr(text, ';');
       *p = 0;
       
-      s->modeinfo = strdup(p+1);
+      s->modeinfo = strdup(text);
       s->stateinfo = strdup(p+1);
 
       free(text);

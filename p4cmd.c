@@ -141,6 +141,8 @@ int main(int argc, char** argv)
 
          if (request.getState(&s) == success)
          {
+            tell(eloAlways, "%d - %s", s.mode, s.modeinfo);
+            tell(eloAlways, "%d - %s", s.state, s.stateinfo);
          }
 
          break;
