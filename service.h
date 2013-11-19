@@ -77,6 +77,9 @@ class FroelingService
          cmdGetValueListFirst = 0x31,   // Liste der verfügbaren Aktuellen Werte
          cmdGetValueListNext  = 0x32,   // Liste der verfügbaren Aktuellen Werte
 
+         cmdGetUnknownFirst   = 0x35,   // 
+         cmdGetUnknownNext    = 0x36,   // 
+
          cmdGetMenuListFirst  = 0x37,   // Menuestruktur auslesen
          cmdGetMenuListNext   = 0x38,   // Menuestruktur auslesen
          cmdSetParameter      = 0x39,   // Einstellung ändern

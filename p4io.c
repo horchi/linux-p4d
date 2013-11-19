@@ -779,7 +779,7 @@ int P4Request::getError(ErrorInfo* e, int first)
    int status = success;
    int size = 0;
    byte crc;
-   byte isLast;
+   byte more;
 
    if (!e)
       return fail;
@@ -792,10 +792,10 @@ int P4Request::getError(ErrorInfo* e, int first)
 
    size = getHeader()->size;
    
-   status += readByte(isLast);
+   status += readByte(more);
    size--;
    
-   if (isLast != 1)
+   if (!more)
    {
       readByte(crc);
       show("<- ");
@@ -999,7 +999,30 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    return status;   
 }
 
-int P4Request::getItem(byte cmd)
+int P4Request::getItem(int first)
+{
+   clear();
+   
+   request(first ? cmdGetUnknownFirst : cmdGetUnknownNext);
+
+   if (readHeader() != success)
+   {
+      tell(eloAlways, "request failed");
+      return fail;
+   }
+
+   int size = getHeader()->size;
+   byte b;
+
+   while (size > 0 && readByte(b) == success)
+      size--;
+
+   show("<- ");
+
+   return done;
+}
+
+int P4Request::getUser(byte cmd)
 {
    clear();
    request(cmd);

@@ -27,7 +27,8 @@ enum UserCommand
    ucMenuList,
    ucState,
    ucGetDo,
-   ucUser
+   ucUser,
+   ucUnkonownList
 };
 
 void showUsage(const char* bin)
@@ -144,7 +145,7 @@ int main(int argc, char** argv)
    {
       case ucUser:
       {
-         request.getItem(addr);
+         request.getUser(addr);
 
          break;
       }
@@ -270,6 +271,16 @@ int main(int argc, char** argv)
 
          break;
       }
+      case ucUnkonownList:
+      {
+         int status;
+
+         for (status = request.getItem(yes); status != Fs::wrnLast; status = request.getItem(no))
+            ;
+
+         break;
+      }
+
 
       default: break;
    }
