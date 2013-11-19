@@ -141,11 +141,11 @@ int main(int argc, char** argv)
    {
       case ucGetDo:
       {
-         Fs::IoValue v;
+         Fs::IoValue v(addr);
 
          if (request.getDigitalOut(&v) == success)
          {
-            tell(eloAlways, "%c/%d", v.mode, v.state);
+            tell(eloAlways, "mode %c; state %d", v.mode, v.state);
          }
 
          break;

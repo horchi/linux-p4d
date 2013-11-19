@@ -149,6 +149,9 @@ class FroelingService
 
       struct IoValue
       {
+         IoValue(word addr = addrUnknown)  { address = addr; }
+         ~IoValue() { }
+
          word address;
          byte mode;
          byte state;
