@@ -104,7 +104,7 @@ int P4sd::initDb()
    
    // prepare statements
 
-   cDbStatement* selectActiveValues = new cDbStatement(tableValueFacts);
+   selectActiveValues = new cDbStatement(tableValueFacts);
 
    selectActiveValues->build("select ");
    selectActiveValues->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
@@ -281,6 +281,7 @@ int P4sd::store(time_t now, Value* v, unsigned int factor)
 int P4sd::loop()
 {
    time_t lastAt = 0;
+   int count = 0;
    int status;
 
    while (!doShutDown())
@@ -298,7 +299,7 @@ int P4sd::loop()
          sleep(10);
       }
 
-      if (time(0) < lastAt + interval);
+      if (time(0) < lastAt + interval)
       {
          sleep(1);
          continue;
@@ -316,6 +317,7 @@ int P4sd::loop()
       }
 
       lastAt = time(0);
+      count = 0;
       tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
       for (int f = selectActiveValues->find(); f; f = selectActiveValues->fetch())
@@ -330,9 +332,11 @@ int P4sd::loop()
          }
 
          store(lastAt, &v, tableValueFacts->getIntValue(cTableValueFacts::fiFactor));
+         count++;
       }
 
       selectActiveValues->freeResult();
+      tell(eloAlways, "Processed %d samples", count);
    }
    
    return success;
