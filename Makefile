@@ -91,7 +91,7 @@ dist: clean
 	@echo Distribution package created as $(ARCHIVE).tgz
 
 clean:
-	@-rm -f *.o core* *~ */*~ lib/t *.jpg
+	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg
 	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(MBTARGET) $(ARCHIVE).tgz
 
 cppchk:

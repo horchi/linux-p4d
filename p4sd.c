@@ -164,7 +164,7 @@ int P4sd::setup()
 
       printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
             
-      if ((res = fgets(buf, 100, stdin)))
+      if ((res = fgets(buf, 100, stdin)) && strlen(res) > 1)
          state = toupper(res[0]) == 'Y' ? 'A' : 'D';
 
       if (state != oldState && tableValueFacts->find())
