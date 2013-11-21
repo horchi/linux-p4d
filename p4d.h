@@ -50,6 +50,7 @@ class Linpellet : public FroelingService
       ~Linpellet();
 
 	   int loop();
+	   int setup() { return done; }
 
       static void downF(int aSignal) { shutdown = yes; }
 

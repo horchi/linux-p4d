@@ -137,6 +137,7 @@ void showUsage(const char* bin)
    printf("    -n              don't daemonize\n");
    printf("    -t              log to stdout\n");
    printf("    -v              show version\n");
+   printf("    -s              setup\n");
    printf("    -c <config-dir> use config in <config-dir>\n");
    printf("    -l <log-level>  set log level\n");
 }
@@ -150,6 +151,7 @@ int main(int argc, char** argv)
    DEAMON* job;
    int nofork = no;
    int pid;
+   int setup = no;
    int _stdout = na;
    int _level = na;
 
@@ -174,7 +176,8 @@ int main(int argc, char** argv)
          case 't': _stdout = yes;                           break;
          case 'n': nofork = yes;                            break;
          case 'c': if (argv[i+1]) confDir = argv[i+1];      break;
-         case 'v': printf("Version %s\n", VERSION);  return 1;
+         case 's': setup = yes;                             break;
+         case 'v': printf("Version %s\n", VERSION);         return 1;
       }
    }
 
@@ -187,6 +190,9 @@ int main(int argc, char** argv)
    if (_level != na)  loglevel = _level;
 
    job = new DEAMON();
+
+   if (setup)
+      return job->setup();
 
    // fork daemon
 
@@ -218,5 +224,5 @@ int main(int argc, char** argv)
 
    delete job;
 
-   return 1;
+   return 0;
 }

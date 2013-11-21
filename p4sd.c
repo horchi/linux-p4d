@@ -121,6 +121,63 @@ int P4sd::exitDb()
 }
 
 //***************************************************************************
+// Setup
+//***************************************************************************
+
+int P4sd::setup()
+{
+   int status;
+
+   cDbStatement* selectAll = new cDbStatement(tableValueFacts);
+
+   selectAll->build("select ");
+   selectAll->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
+   selectAll->bind(cTableValueFacts::fiState, cDBS::bndOut, ", ");
+   selectAll->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
+   selectAll->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
+   selectAll->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
+   selectAll->build(" from %s", tableValueFacts->TableName());
+
+   status = selectAll->prepare();
+
+   if (status != success)
+   {
+      tell(eloAlways, "Error ....");
+      delete selectAll;
+   }
+
+   for (int f = selectAll->find(); f; f = selectAll->fetch())
+   {
+      char buf[1024+TB]; *buf = 0;
+      char state;
+
+      tell(eloAlways, "0x%x '%s'", 
+           tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
+           tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
+
+      printf("Messwert aufzeichnen (y/n): n");
+            
+      fgets(buf, 1000, stdin);
+      buf[strlen(buf)-1] = 0;
+      printf("\n");
+
+      state = toupper(buf[0]) == 'Y' ? 'A' : 'D';
+
+      if (state != tableValueFacts->getStrValue(cTableValueFacts::fiState)[0] &&
+          tableValueFacts->find())
+      {
+         tableValueFacts->setCharValue(cTableValueFacts::fiState, state);
+         tableValueFacts->store();
+      }
+   }
+
+   selectAll->freeResult();
+   delete selectAll;
+   
+   return done;
+}
+
+//***************************************************************************
 // Update Value Facts
 //***************************************************************************
 
@@ -144,7 +201,7 @@ int P4sd::updateValueFacts()
    {
       if (status == success)
       {
-         tell(eloAlways, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
+         tell(eloDebug, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
               count, v.address, v.factor, v.unit, v.unknown, v.description);
 
          // update table

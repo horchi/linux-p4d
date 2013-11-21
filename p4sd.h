@@ -18,7 +18,7 @@
 
 #include "lib/tabledef.h"
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -37,7 +37,7 @@ extern char stateMailTo[];
 extern char errorMailTo[];
 
 //***************************************************************************
-// Class
+// Class P4sd
 //***************************************************************************
 
 class P4sd : public FroelingService
@@ -50,6 +50,7 @@ class P4sd : public FroelingService
       ~P4sd();
 
 	   int loop();
+	   int setup();
 
       static void downF(int aSignal) { shutdown = yes; }
 
