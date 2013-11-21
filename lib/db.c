@@ -614,22 +614,33 @@ int cDbTable::createTable()
 
       if (getField(i)->format != ffMlob)
       {
-         if (!size) size = getField(i)->format == ffAscii || getField(i)->format == ffText ? 100 : 11;
+         if (!size)          // set default sizes
+         {
+            if (getField(i)->format == ffAscii || getField(i)->format == ffText)
+               size = 100;
+            else if (getField(i)->format == ffInt)
+               size = 11;
+            else if (getField(i)->format == ffFloat)
+               size = 10;
+         }
 
-         if (getField(i)->format != ffFloat)
-            sprintf(num, "%d", size);
-         else
-            sprintf(num, "%d,%d", size/10, size%10);
-
-         statement += "(" + string(num) + ")";
-
-         if (getField(i)->format == ffUInt)
-            statement += " unsigned";
-
-         if (getField(i)->type & ftAutoinc)
-            statement += " not null auto_increment";
-         else if (getField(i)->type & ftDef0)
-            statement += " default '0'";
+         if (getField(i)->format != ffDateTime)
+         {
+            if (getField(i)->format != ffFloat)
+               sprintf(num, "%d", size);
+            else
+               sprintf(num, "%d,%d", size/10 + size%10, size%10); // 62 -> 8,2
+            
+            statement += "(" + string(num) + ")";
+            
+            if (getField(i)->format == ffUInt)
+               statement += " unsigned";
+            
+            if (getField(i)->type & ftAutoinc)
+               statement += " not null auto_increment";
+            else if (getField(i)->type & ftDef0)
+               statement += " default '0'";
+         }
       }
    }
 

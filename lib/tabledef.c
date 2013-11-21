@@ -53,7 +53,7 @@ cDbService::FieldDef cTableSamples::fields[] =
                                                                    
    // data
                                                                    
-   { "value",            ffFloat,      8, fiValue,         ftData }, 
+   { "value",            ffFloat,     62, fiValue,         ftData }, 
    { "text",             ffAscii,     20, fiText,          ftData }, 
 
    { 0 }
