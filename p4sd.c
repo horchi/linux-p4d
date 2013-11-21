@@ -61,10 +61,10 @@ P4sd::~P4sd()
 
 int P4sd::init()
 {
-   initDb();
-
    if (serial->open(ttyDeviceSvc) != success)
       return fail;
+
+   initDb();
 
    return success;
 }
