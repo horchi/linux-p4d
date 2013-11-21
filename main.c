@@ -12,7 +12,11 @@
 #include <signal.h>
 #include <string.h>
 
-#include "p4d.h"
+#ifdef SVC_INTERFACE
+#  include "p4sd.h"
+#else
+#  include "p4d.h"
+#endif
 
 char* confDir = (char*)confDirDefault;
 
@@ -24,7 +28,8 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
-char ttyDevice[100+TB] = "/dev/ttyUSB0";
+char ttyDevice[100+TB]    = "/dev/ttyUSB0";
+char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 
 int  mail = no;
@@ -48,7 +53,8 @@ int atConfigItem(const char* Name, const char* Value)
    
    else if (!strcasecmp(Name, "LogLevel"))    loglevel = atoi(Value);
    else if (!strcasecmp(Name, "Interval"))    interval = atoi(Value);
-   else if (!strcasecmp(Name, "ttyDevice"))   sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
+   else if (!strcasecmp(Name, "ttyDevice"))     sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
+   else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
 
    else if (!strcasecmp(Name, "mail"))        mail = atoi(Value);
    else if (!strcasecmp(Name, "mailScript"))  sstrcpy(mailScript, Value, sizeof(mailScript));
@@ -141,7 +147,7 @@ void showUsage(const char* bin)
 
 int main(int argc, char** argv)
 {
-   Linpellet* job;
+   DEAMON* job;
    int nofork = no;
    int pid;
    int _stdout = na;
@@ -180,7 +186,7 @@ int main(int argc, char** argv)
    if (_stdout != na) logstdout = _stdout;
    if (_level != na)  loglevel = _level;
 
-   job = new Linpellet();
+   job = new DEAMON();
 
    // fork daemon
 
@@ -198,9 +204,9 @@ int main(int argc, char** argv)
 
    // register SIGINT
 
-   ::signal(SIGINT, Linpellet::downF);
-   ::signal(SIGTERM, Linpellet::downF);
-   // ::signal(SIGHUP, Linpellet::triggerF);
+   ::signal(SIGINT, DEAMON::downF);
+   ::signal(SIGTERM, DEAMON::downF);
+   // ::signal(SIGHUP, DEAMON::triggerF);
 
    // do work ...
 

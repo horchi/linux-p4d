@@ -76,12 +76,16 @@ cDbService::FieldDef cTableValueFacts::fields[] =
 
    { "inssp",            ffInt,       10, fiInsSp,         ftMeta },
    { "updsp",            ffInt,       10, fiUpdSp,         ftMeta },
+
+   { "state",            ffAscii,      1, fiState,         ftData }, 
                                                                    
    // data
                                                                    
-   { "title",            ffAscii,    100, fiTitle,         ftData }, 
-   { "factor",           ffInt,        4, fiFactor,        ftData }, 
    { "unit",             ffAscii,      5, fiUnit,          ftData }, 
+   { "factor",           ffInt,        4, fiFactor,        ftData }, 
+   { "title",            ffAscii,    100, fiTitle,         ftData }, 
+
    { "res1",             ffInt,        4, fiRes1,          ftData }, 
+
    { 0 }
 };

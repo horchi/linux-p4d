@@ -1,13 +1,13 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
-// File p4d.h
+// File p4sd.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
 // Date 04.11.2010 - 19.11.2013  Jörg Wendel
 //***************************************************************************
 
-#ifndef _P4D_H_
-#define _P4D_H_
+#ifndef _P4SD_H_
+#define _P4SD_H_
 
 //***************************************************************************
 // Includes
@@ -40,14 +40,14 @@ extern char errorMailTo[];
 // Class
 //***************************************************************************
 
-class Linpellet : public FroelingService
+class P4sd : public FroelingService
 {
    public:
 
       // object
 
-      Linpellet();
-      ~Linpellet();
+      P4sd();
+      ~P4sd();
 
 	   int loop();
 
@@ -55,23 +55,30 @@ class Linpellet : public FroelingService
 
    protected:
 
+      int init();
+      int exit();
       int initDb();
       int exitDb();
+
       int store(time_t now, Parameter* p);
       int storeSensor(Parameter* p);
       int sendMail();
+      int updateValueFacts();
 
       int doShutDown() { return shutdown; }
 
       // data
 
-      cTableSamples* table;
+      cTableSamples* tableSamples;
+      cTableValueFacts* tableValueFacts;
       cTableSensorFacts* tableSensors;
       cDbConnection* connection;
-      P4Packet* tlg;
+
+      P4Request* request;
+      Serial* serial;    
 
       static int shutdown;
 };
 
 //***************************************************************************
-#endif // _P4D_H_
+#endif // _P4SD_H_

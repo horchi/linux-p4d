@@ -91,9 +91,12 @@ class cTableValueFacts : public cDbTable
          fiInsSp,
          fiUpdSp,
 
-         fiTitle,
+         fiState,
+
+         fiUnit,        
          fiFactor,
-         fiUnit,
+         fiTitle,
+
          fiRes1,
 
          fiCount

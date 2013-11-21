@@ -16,6 +16,8 @@ DEBUG = 1
 
 CC = g++
 
+USE_SVC_INTERFACE = 1
+
 TARGET = p4d
 CMDTARGET = p4
 CHARTTARGET = db-chart
@@ -39,10 +41,18 @@ ARCHIVE = $(TARGET)-$(VERSION)
 # object files 
 
 LOBJS =  lib/db.o lib/tabledef.o lib/common.o
-OBJS += $(LOBJS) main.o serial.o p4io.o p4d.o service.o
+OBJS += $(LOBJS) main.o serial.o p4io.o service.o
 CLOBJS = $(LOBJS) chart.o
 CMDOBJS = p4cmd.o p4io.o serial.o service.o lib/common.o
 MBOBJS = mbp4.o serial.o lib/common.o
+
+ifdef USE_SVC_INTERFACE
+  DEFINES += -DSVC_INTERFACE -DDEAMON=P4sd
+  OBJS += p4sd.o
+else
+  DEFINES += -DDEAMON=Linpellet
+  OBJS += p4d.o
+endif
 
 # rules:
 
@@ -81,7 +91,7 @@ dist: clean
 	@echo Distribution package created as $(ARCHIVE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(MBOBJS) $(CMDOBJS) $(CLOBJS) core* *~ lib/*~ lib/t *.jpg tt
+	@-rm -f *.o core* *~ */*~ lib/t *.jpg
 	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(MBTARGET) $(ARCHIVE).tgz
 
 cppchk:
@@ -91,7 +101,7 @@ cppchk:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/common.h p4d.h
+HEADER = lib/db.h lib/common.h p4d.h p4sd.h
 
 lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
 lib/config.o    :  lib/config.c      lib/config.h $(HEADER)
@@ -100,6 +110,7 @@ lib/tabledef.o  :  lib/tabledef.c    $(HEADER)
 
 main.o			 :  main.c         $(HEADER)
 p4d.o           :  p4d.c          $(HEADER)
+p4sd.o          :  p4sd.c         $(HEADER)
 p4.o            :  p4.c           $(HEADER)
 serial.o        :  serial.c       $(HEADER) serial.h
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
