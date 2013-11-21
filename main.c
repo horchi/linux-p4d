@@ -192,7 +192,10 @@ int main(int argc, char** argv)
    job = new DEAMON();
 
    if (setup)
+   {
+      logstdout = yes;
       return job->setup();
+   }
 
    // fork daemon
 
