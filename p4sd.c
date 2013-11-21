@@ -60,6 +60,8 @@ P4sd::~P4sd()
 
 int P4sd::init()
 {
+   initDb();
+
    if (serial->open(ttyDeviceSvc) != success)
       return fail;
 
@@ -127,6 +129,9 @@ int P4sd::exitDb()
 int P4sd::setup()
 {
    int status;
+
+   if (!connection)
+      return fail;
 
    cDbStatement* selectAll = new cDbStatement(tableValueFacts);
 
