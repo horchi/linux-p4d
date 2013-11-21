@@ -394,8 +394,9 @@ char* cDbConnection::dbName = 0;
 // Object
 //***************************************************************************
 
-cDbTable::cDbTable(cDbConnection* aConnection, FieldDef* f, IndexDef* i)
+cDbTable::cDbTable(cDbConnection* aConnection, const char* aName, FieldDef* f, IndexDef* i)
 {
+   tableName = strdup(aName);
    connection = aConnection;
    row = new cDbRow(f);
    holdInMemory = no;
@@ -410,6 +411,7 @@ cDbTable::cDbTable(cDbConnection* aConnection, FieldDef* f, IndexDef* i)
 cDbTable::~cDbTable()
 {
    close();
+   free(tableName);
 
    delete row;
 }

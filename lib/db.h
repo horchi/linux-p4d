@@ -753,10 +753,10 @@ class cDbTable : public cDbService
 {
    public:
 
-      cDbTable(cDbConnection* aConnection, FieldDef* f, IndexDef* i = 0);
+      cDbTable(cDbConnection* aConnection, const char* aName, FieldDef* f, IndexDef* i = 0);
       virtual ~cDbTable();
 
-      virtual const char* TableName() = 0;
+      virtual const char* TableName() { return tableName; }
 
       virtual int open();
       virtual int close();
@@ -815,6 +815,7 @@ class cDbTable : public cDbService
 
       // data
 
+      char* tableName;
       cDbRow* row;
       int holdInMemory;        // hold table additionally in memory (not implemented yet)
 

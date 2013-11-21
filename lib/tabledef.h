@@ -18,10 +18,8 @@ class cTableSensorFacts : public cDbTable
 {
    public:
 
-      cTableSensorFacts(cDbConnection* aConnection)
-         : cDbTable(aConnection, fields) { }
-
-      virtual const char* TableName()    { return "sensorfacts"; }
+      cTableSensorFacts(cDbConnection* aConnection, const char* aName = "sensorfacts")
+         : cDbTable(aConnection, aName, fields) { }
 
       enum FieldIndex
       {
@@ -49,10 +47,8 @@ class cTableSamples : public cDbTable
 {
    public:
 
-      cTableSamples(cDbConnection* aConnection)
-         : cDbTable(aConnection, fields) { }
-
-      virtual const char* TableName()    { return "samples"; }
+      cTableSamples(cDbConnection* aConnection, const char* aName = "samples")
+         : cDbTable(aConnection, aName, fields ) { }
 
       enum FieldIndex
       {
@@ -79,10 +75,8 @@ class cTableValueFacts : public cDbTable
 {
    public:
 
-      cTableValueFacts(cDbConnection* aConnection)
-         : cDbTable(aConnection, fields) { }
-
-      virtual const char* TableName()    { return "valuefacts"; }
+      cTableValueFacts(cDbConnection* aConnection, const char* aName = "valuefacts")
+         : cDbTable(aConnection, aName, fields) { }
 
       enum FieldIndex
       {

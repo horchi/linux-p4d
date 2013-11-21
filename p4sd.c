@@ -29,6 +29,7 @@ P4sd::P4sd()
    tableSamples = 0;
    tableValueFacts = 0;
    tableSensors = 0;
+   selectActiveValues = 0;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -83,8 +84,9 @@ int P4sd::exit()
 int P4sd::initDb()
 {
    static int initial = yes;
+   int status = success;
 
-   if (connection || tableSamples)
+   if (connection)
       exitDb();
 
    tell(eloAlways, "Try conneting to database");
@@ -94,21 +96,37 @@ int P4sd::initDb()
    tableValueFacts = new cTableValueFacts(connection);
    if (tableValueFacts->open() != success) return fail;
 
-   tableSamples = new cTableSamples(connection);
+   tableSamples = new cTableSamples(connection, "samples1");
    if (tableSamples->open() != success) return fail;
 
    tableSensors = new cTableSensorFacts(connection);
    if (tableSensors->open() != success) return fail;
    
-   tell(eloAlways, "Connection to database established");  
-   
+   // prepare statements
+
+   cDbStatement* selectActiveValues = new cDbStatement(tableValueFacts);
+
+   selectActiveValues->build("select ");
+   selectActiveValues->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
+   selectActiveValues->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
+   selectActiveValues->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
+   selectActiveValues->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
+   selectActiveValues->build(" from %s where ", tableValueFacts->TableName());
+   selectActiveValues->bind(cTableValueFacts::fiState, cDBS::bndIn | cDBS::bndSet);
+
+   status = selectActiveValues->prepare();
+
+   // ...
+
    if (initial)
    {
       updateValueFacts();
       initial = no;
    }
 
-   return success;
+   tell(eloAlways, "Connection to database established");  
+
+   return status;
 }
 
 int P4sd::exitDb()
@@ -116,6 +134,8 @@ int P4sd::exitDb()
    delete tableSamples;    tableSamples = 0;
    delete tableValueFacts; tableValueFacts = 0;
    delete tableSensors;    tableSensors = 0;
+
+   delete selectActiveValues;  selectActiveValues = 0;
 
    delete connection;      connection = 0;
 
@@ -158,8 +178,9 @@ int P4sd::setup()
       char oldState = tableValueFacts->getStrValue(cTableValueFacts::fiState)[0];
       char state = oldState;
 
-      printf("0x%04x '%s' ", 
+      printf("0x%04x '%s' (%s)", 
              (unsigned int)tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
+             tableValueFacts->getStrValue(cTableValueFacts::fiUnit),
              tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
 
       printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
@@ -240,42 +261,16 @@ int P4sd::updateValueFacts()
 // Store
 //***************************************************************************
 
-int P4sd::store(time_t now, Parameter* p)
+int P4sd::store(time_t now, Value* v, unsigned int factor)
 {
    tableSamples->clear();
+
    tableSamples->setValue(cTableSamples::fiTime, now);
-   tableSamples->setValue(cTableSamples::fiSensorId, p->index);
-
-   if (p->index != parError)
-      tableSamples->setValue(cTableSamples::fiValue, p->value);
-
-   if (!isEmpty(allTrim(p->text)))
-      tableSamples->setValue(cTableSamples::fiText, allTrim(p->text));
+   tableSamples->setValue(cTableSamples::fiSensorId, v->address);
+   tableSamples->setValue(cTableSamples::fiValue, (double)v->value / (double)factor);
 
    tableSamples->store();
    
-   return success;
-}
-
-int P4sd::storeSensor(Parameter* p)
-{
-   tableSensors->clear();
-   tableSensors->setValue(cTableSensorFacts::fiSensorId, p->index);
-
-   if (!tableSensors->find())
-   {
-      string name = p->name;
-
-      removeChars(name, ".:-,;_?=!§$%&/()\"'+* ");
-
-      tableSensors->setValue(cTableSensorFacts::fiName, name.c_str());
-      tableSensors->setValue(cTableSensorFacts::fiUnit, p->unit);
-      tableSensors->setValue(cTableSensorFacts::fiTitle, 
-                             p->index == parState ? "Heizungsstatus" : p->name);
-
-      tableSensors->store();
-   }
-
    return success;
 }
 
@@ -285,16 +280,8 @@ int P4sd::storeSensor(Parameter* p)
 
 int P4sd::loop()
 {
-//   static int lastState = na;
-
-//   std::vector<Parameter>::iterator it;
-//    int lastAt = 0;
-//    time_t startAt = 0;
-//    int doStore;
-//    int count;
-//    Parameter* pState;
-
-   // tlg->open(ttyDeviceSvc);
+   time_t lastAt = 0;
+   int status;
 
    while (!doShutDown())
    {
@@ -311,66 +298,42 @@ int P4sd::loop()
          sleep(10);
       }
 
-      sleep(10);
-      tell(eloAlways, "loop");
+      if (time(0) < lastAt + interval);
+      {
+         sleep(1);
+         continue;
+      }
 
-//       // try serial read
+      // check serial connection
 
-//       if (tlg->read() != success)
-//       {   
-//          sleep(5);
-//          tlg->reopen(ttyDeviceSvc);
+      if (request->check() != success)
+      {
+         serial->close();
+         tell(eloAlways, "Error reading serial interface");
+         serial->open(ttyDeviceSvc);
 
-//          continue;
-//       }
+         continue;
+      }
 
-//       pState = tlg->getParameter(parState);
-//       startAt = time(0);
-//       count = 0;
-//       doStore = (startAt >= lastAt + interval) || pState->value != lastState;
-//       lastState = pState->value;
+      lastAt = time(0);
+      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
-//       if (doStore)
-//       {
-//          lastAt = startAt;
-//          connection->startTransaction();
-//       }
-
-//       // process parameters ..
-
-//       for (it = tlg->getParameters()->begin(); it != tlg->getParameters()->end(); it++)
-//       {
-//          Parameter p = *it;
+      for (int f = selectActiveValues->find(); f; f = selectActiveValues->fetch())
+      {
+         unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
+         Value v(addr);
          
-//          if (*p.name) 
-//             tell(eloDetail, "(%2d) %-17s: %.2f %s", 
-//                  p.index, p.name, p.value, 
-//                  p.index == parError ? p.text : p.unit);
+         if ((status = request->getValue(&v)) != success)
+         {
+            tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
+            continue;
+         }
 
-//          if (doStore)
-//          {
-//             storeSensor(&p);
-//             store(startAt, &p);
-//          }
+         store(lastAt, &v, tableValueFacts->getIntValue(cTableValueFacts::fiFactor));
+      }
 
-//          count++;
-//       }
-
-//       if (mail)
-//          sendMail();
-
-//       // commit
-
-//       if (doStore)
-//       {
-//          connection->commit();
-         
-//          tell(eloAlways, "Got %d parameters (%sstored), status is '%s' [%s]", 
-//               count, !doStore ? "not " : "", pState->text, tlg->all());
-//       }
+      selectActiveValues->freeResult();
    }
-   
-   // tlg->close();
    
    return success;
 }

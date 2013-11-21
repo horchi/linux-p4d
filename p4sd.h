@@ -61,8 +61,7 @@ class P4sd : public FroelingService
       int initDb();
       int exitDb();
 
-      int store(time_t now, Parameter* p);
-      int storeSensor(Parameter* p);
+      int store(time_t now, Value* v, unsigned int factor);
       int sendMail();
       int updateValueFacts();
 
@@ -70,10 +69,13 @@ class P4sd : public FroelingService
 
       // data
 
+      cDbConnection* connection;
+
       cTableSamples* tableSamples;
       cTableValueFacts* tableValueFacts;
       cTableSensorFacts* tableSensors;
-      cDbConnection* connection;
+
+      cDbStatement* selectActiveValues;
 
       P4Request* request;
       Serial* serial;    
