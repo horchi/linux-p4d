@@ -156,11 +156,14 @@ int P4sd::setup()
       char buf[1024+TB]; *buf = 0;
       char state;
 
-      printf("0x%4x '%s' ", 
+      printf("0x%04x '%s' ", 
              (unsigned int)tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
              tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
 
-      printf(" - aufzeichnen (y/N): ");
+      if (tableValueFacts->getStrValue(cTableValueFacts::fiState)[0] == 'A')
+         printf(" - aufzeichnen (Y/n): ");
+      else
+         printf(" - aufzeichnen (y/N): ");
             
       fgets(buf, 1000, stdin);
       buf[strlen(buf)-1] = 0;
