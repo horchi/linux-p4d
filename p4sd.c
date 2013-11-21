@@ -156,15 +156,14 @@ int P4sd::setup()
       char buf[1024+TB]; *buf = 0;
       char state;
 
-      tell(eloAlways, "0x%x '%s'", 
-           tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
-           tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
+      printf("0x%4x '%s' ", 
+             (unsigned int)tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
+             tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
 
-      printf("Messwert aufzeichnen (y/n): n");
+      printf(" - aufzeichnen (y/N): ");
             
       fgets(buf, 1000, stdin);
       buf[strlen(buf)-1] = 0;
-      printf("\n");
 
       state = toupper(buf[0]) == 'Y' ? 'A' : 'D';
 
