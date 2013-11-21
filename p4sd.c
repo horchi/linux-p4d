@@ -153,25 +153,21 @@ int P4sd::setup()
 
    for (int f = selectAll->find(); f; f = selectAll->fetch())
    {
-      char buf[1024+TB]; *buf = 0;
-      char state;
+      char* res;
+      char buf[100+TB]; *buf = 0;
+      char oldState = tableValueFacts->getStrValue(cTableValueFacts::fiState)[0];
+      char state = oldState;
 
       printf("0x%04x '%s' ", 
              (unsigned int)tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
              tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
 
-      if (tableValueFacts->getStrValue(cTableValueFacts::fiState)[0] == 'A')
-         printf(" - aufzeichnen (Y/n): ");
-      else
-         printf(" - aufzeichnen (y/N): ");
+      printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
             
-      fgets(buf, 1000, stdin);
-      buf[strlen(buf)-1] = 0;
+      if ((res = fgets(buf, 100, stdin)))
+         state = toupper(res[0]) == 'Y' ? 'A' : 'D';
 
-      state = toupper(buf[0]) == 'Y' ? 'A' : 'D';
-
-      if (state != tableValueFacts->getStrValue(cTableValueFacts::fiState)[0] &&
-          tableValueFacts->find())
+      if (state != oldState && tableValueFacts->find())
       {
          tableValueFacts->setCharValue(cTableValueFacts::fiState, state);
          tableValueFacts->store();
