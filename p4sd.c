@@ -83,7 +83,6 @@ int P4sd::exit()
 
 int P4sd::initDb()
 {
-   static int initial = yes;
    int status = success;
 
    if (connection)
@@ -117,15 +116,6 @@ int P4sd::initDb()
 
    status = selectActiveValueFacts->prepare();
 
-   // ...
-
-   if (initial)
-   {
-      updateValueFacts();
-      updateParameterFacts();
-      initial = no;
-   }
-
    tell(eloAlways, "Connection to database established");  
 
    return status;
@@ -154,6 +144,11 @@ int P4sd::setup()
 
    if (!connection)
       return fail;
+
+   tell(eloAlways, "Getting value facs from s 3200");
+   updateValueFacts();
+   tell(eloAlways, "Getting parameter facs from s 3200");
+   updateParameterFacts();
 
    cDbStatement* selectAll = new cDbStatement(tableValueFacts);
 
