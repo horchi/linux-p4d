@@ -701,7 +701,7 @@ int P4Request::getState(State* s)
       status += readTimeDateExt(s->time);
       size -= 7;
 
-      while (size > 0)
+      while (size-- > 0)
          status += readByte(b);
 
       show("<- ");

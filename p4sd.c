@@ -342,9 +342,10 @@ int P4sd::store(time_t now, const char* type, long address, double value,
    tableSamples->clear();
 
    tableSamples->setValue(cTableSamples::fiTime, now);
-   tableSamples->setValue(cTableSamples::fiType, "VA");
+   tableSamples->setValue(cTableSamples::fiType, type);
    tableSamples->setValue(cTableSamples::fiAddress, address);
    tableSamples->setValue(cTableSamples::fiValue, value / (double)factor);
+   tableSamples->setValue(cTableSamples::fiText, text);
 
    tableSamples->store();
    
@@ -422,11 +423,16 @@ int P4sd::loop()
                {
                   Fs::State s;
                   
-                  if (request->getState(&s) == success)
-                     store(lastAt, "UD", udState, s.state, 
-                           tableValueFacts->getIntValue(cTableValueFacts::fiFactor), 
-                           s.stateinfo);
-                  
+                  if (request->getState(&s) != success)
+                  {
+                     tell(eloAlways, "Getting state failed");
+                     continue;
+                  }
+
+                  store(lastAt, "UD", udState, s.state, 
+                        tableValueFacts->getIntValue(cTableValueFacts::fiFactor), 
+                        s.stateinfo);
+                   
                   break;
                }
             }
