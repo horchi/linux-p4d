@@ -173,7 +173,7 @@ int main(int argc, char** argv)
             char date[100];
 
             localtime_r(&s.time, &tim);
-            strftime(date, 100, "%A, %d. %b.%G %H:%M:%S", &tim);
+            strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
 
             tell(eloAlways, "Version: %s", s.version);
             tell(eloAlways, "Time: %s", date);
