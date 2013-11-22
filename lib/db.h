@@ -346,13 +346,13 @@ class cDbValue : public cDbService
       unsigned long getStrValueSize()      { return strValueSize; }
       const char* getStrValue()            { return !isNull() && strValue ? strValue : ""; }
       long getIntValue()                   { return !isNull() ? numValue : 0; }
-      double getFloatValue()               { return !isNull() ? floatValue : 0; }
+      float getFloatValue()                { return !isNull() ? floatValue : 0; }
       int isNull()                         { return nullValue; }
 
       char* getStrValueRef()               { return strValue; }
       long* getIntValueRef()               { return &numValue; }
       MYSQL_TIME* getTimeValueRef()        { return &timeValue; }
-      double* getFloatValueRef()           { return &floatValue; }
+      float* getFloatValueRef()            { return &floatValue; }
       my_bool* getNullRef()                { return &nullValue; }
 
    private:
@@ -360,7 +360,7 @@ class cDbValue : public cDbService
       FieldDef* ownField;
       FieldDef* field;
       long numValue;
-      double floatValue;
+      float floatValue;
       MYSQL_TIME timeValue;
       char* strValue;
       unsigned long strValueSize;
@@ -466,7 +466,7 @@ class cDbRow : public cDbService
 
       const char* getStrValue(int f)         const { return dbValues[f].getStrValue(); }
       long getIntValue(int f)                const { return dbValues[f].getIntValue(); }
-      double getFloatValue(int f)            const { return dbValues[f].getFloatValue(); }
+      float getFloatValue(int f)             const { return dbValues[f].getFloatValue(); }
       int isNull(int f)                      const { return dbValues[f].isNull(); }
 
    protected:
@@ -786,7 +786,7 @@ class cDbTable : public cDbService
       int hasValue(int f, double value)                      { return row->hasValue(f, value); }
       const char* getStrValue(int f)       const             { return row->getStrValue(f); }
       long getIntValue(int f)              const             { return row->getIntValue(f); }
-      double getFloatValue(int f)          const             { return row->getFloatValue(f); }
+      float getFloatValue(int f)           const             { return row->getFloatValue(f); }
       int isNull(int f)                    const             { return row->isNull(f); }
 
       FieldDef* getField(int f)                              { return row->getField(f); }
