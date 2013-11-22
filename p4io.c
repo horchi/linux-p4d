@@ -520,7 +520,7 @@ int P4Request::readDateExt(time_t& t)
    memset(&tm, 0, sizeof(tm));
    
    tm.tm_mday = d;
-   tm.tm_mon = m;
+   tm.tm_mon = m - 1;
    tm.tm_year = y + 100;
 
    t = mktime(&tm);
