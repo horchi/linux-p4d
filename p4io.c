@@ -917,8 +917,9 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    const char* notignore = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; 
    string name = v->description;
+
    removeCharsExcept(name, notignore);
-   v->name = strdup(name.c_str());
+   asprintf(&v->name, "%s_0x%x", name.c_str(), v->address);
 
    return status;   
 }

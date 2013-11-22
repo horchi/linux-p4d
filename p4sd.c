@@ -305,7 +305,7 @@ int P4sd::updateParameterFacts()
       count++;
    }
 
-   tell(eloAlways, "Read %d value facts", count);
+   tell(eloAlways, "Read %d parameter facts", count);
    
    return success;
 }
