@@ -66,7 +66,8 @@ void chkStatement1()
    
    cDbStatement* s = new cDbStatement(db);
    
-   db->setValue(cTableSamples::fiSensorId, 1);
+   db->setValue(cTableSamples::fiAddress, 1);
+   db->setValue(cTableSamples::fiType, "VA");
    db->setValue(cTableSamples::fiTime, time(0));
    db->setValue(cTableSamples::fiValue, atof("22.3"));
 

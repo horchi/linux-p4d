@@ -346,13 +346,13 @@ class cDbValue : public cDbService
       unsigned long getStrValueSize()      { return strValueSize; }
       const char* getStrValue()            { return !isNull() && strValue ? strValue : ""; }
       long getIntValue()                   { return !isNull() ? numValue : 0; }
-      float getFloatValue()                { return !isNull() ? floatValue : 0; }
+      double getFloatValue()               { return !isNull() ? floatValue : 0; }
       int isNull()                         { return nullValue; }
 
       char* getStrValueRef()               { return strValue; }
       long* getIntValueRef()               { return &numValue; }
       MYSQL_TIME* getTimeValueRef()        { return &timeValue; }
-      float* getFloatValueRef()            { return &floatValue; }
+      double* getFloatValueRef()           { return &floatValue; }
       my_bool* getNullRef()                { return &nullValue; }
 
    private:
@@ -360,7 +360,7 @@ class cDbValue : public cDbService
       FieldDef* ownField;
       FieldDef* field;
       long numValue;
-      float floatValue;
+      double floatValue;
       MYSQL_TIME timeValue;
       char* strValue;
       unsigned long strValueSize;
@@ -458,7 +458,7 @@ class cDbRow : public cDbService
 
       void setValue(int f, const char* value, 
                     int size = 0)                  { dbValues[f].setValue(value, size); }
-      void setValue(int f, long value)             { dbValues[f].setValue(value); }
+      void setValue(int f, double value)           { dbValues[f].setValue(value); }
       void setCharValue(int f, char value)         { dbValues[f].setCharValue(value); }
       int hasValue(int f, double value)      const { return dbValues[f].hasValue(value); }
       int hasValue(int f, const char* value) const { return dbValues[f].hasValue(value); }
@@ -466,7 +466,7 @@ class cDbRow : public cDbService
 
       const char* getStrValue(int f)         const { return dbValues[f].getStrValue(); }
       long getIntValue(int f)                const { return dbValues[f].getIntValue(); }
-      float getFloatValue(int f)             const { return dbValues[f].getFloatValue(); }
+      double getFloatValue(int f)            const { return dbValues[f].getFloatValue(); }
       int isNull(int f)                      const { return dbValues[f].isNull(); }
 
    protected:
@@ -780,13 +780,13 @@ class cDbTable : public cDbService
 
       void clear()                                           { row->clear(); }
       void setValue(int f, const char* value, int size = 0)  { row->setValue(f, value, size); }
-      void setValue(int f, long value)                       { row->setValue(f, value); }
+      void setValue(int f, double value)                     { row->setValue(f, value); }
       void setCharValue(int f, char value)                   { row->setCharValue(f, value); }
       int hasValue(int f, const char* value)                 { return row->hasValue(f, value); }
-      int hasValue(int f, double value)                       { return row->hasValue(f, value); }
+      int hasValue(int f, double value)                      { return row->hasValue(f, value); }
       const char* getStrValue(int f)       const             { return row->getStrValue(f); }
       long getIntValue(int f)              const             { return row->getIntValue(f); }
-      float getFloatValue(int f)           const             { return row->getFloatValue(f); }
+      double getFloatValue(int f)          const             { return row->getFloatValue(f); }
       int isNull(int f)                    const             { return row->isNull(f); }
 
       FieldDef* getField(int f)                              { return row->getField(f); }
