@@ -1,6 +1,6 @@
 
 Für das PHP WEB Interface wird pChart 2.1.x benötigt (http://www.pchart.net/download).
-Muss auf dem selben Host installiert werden auf den der apache läuft
+Muss auf dem selben Host installiert werden auf den der apache läuft.
 
 Entweder wie im dort mitgelieferten Readme beschrieben installieren, oder nur den benötigten Teil 
 ohne die ganzen Beispiele etc. also nur Fonts und php Files wie unten beschrieben.

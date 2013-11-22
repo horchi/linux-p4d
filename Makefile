@@ -59,7 +59,7 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) -c $(DEFINES) -o $@ $<
 
-all: $(TARGET) $(CMDTARGET) $(MBTARGET)
+all: $(TARGET) $(CMDTARGET)
 chart: $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)

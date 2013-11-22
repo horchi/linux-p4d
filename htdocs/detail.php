@@ -39,6 +39,8 @@ $to = $from + ($range * (24*60*60));
 if ($to > time())
    $to = time();
 
+$range = ($to - $from) / (24*60*60);
+
 syslog(LOG_DEBUG, "p4: ---------");
 syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from) 
        . "'  to  '" . strftime("%d. %b %Y %H:%M", $to) . "' sensor: $sensorCond");
@@ -68,7 +70,7 @@ $count = 0;
 $first = true;
 $start = time();
 
-if ($range < 2)
+if ($range < 3)
    $groupMinutes = 5;
 elseif ($range < 8)
    $groupMinutes = 10;
@@ -123,7 +125,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
 
          $utc = $time + date('Z');
 
-         if ($range < 2 && ($utc % (60*60)) < 150)             // max diff 2,5 minutes
+         if ($range < 3 && ($utc % (60*60)) < 150)             // max diff 2,5 minutes
             $times[] = strftime("%H:%M", $time);
          elseif ($range < 8 && ($utc % (12*60*60)) < 5*60)    // max diff 5 minutes
             $times[] = strftime("%d. %b %H:%M", $time);
