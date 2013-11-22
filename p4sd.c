@@ -96,7 +96,7 @@ int P4sd::initDb()
    tableValueFacts = new cTableValueFacts(connection);
    if (tableValueFacts->open() != success) return fail;
 
-   tableParameterFacts = new cTableValueFacts(connection);
+   tableParameterFacts = new cTableParameterFacts(connection);
    if (tableParameterFacts->open() != success) return fail;
 
    tableSamples = new cTableSamples(connection, "samples1");
