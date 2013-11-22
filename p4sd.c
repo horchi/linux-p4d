@@ -27,6 +27,7 @@ P4sd::P4sd()
 {
    connection = 0;
    tableSamples = 0;
+   tableJobs = 0;
    tableValueFacts = 0;
    tableParameterFacts = 0;
    selectActiveValueFacts = 0;
@@ -101,6 +102,9 @@ int P4sd::initDb()
    tableSamples = new cTableSamples(connection, "samples1");
    if (tableSamples->open() != success) return fail;
 
+   tableJobs = new cTableJobs(connection);
+   if (tableJobs->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -126,6 +130,7 @@ int P4sd::exitDb()
    delete tableSamples;        tableSamples = 0;
    delete tableValueFacts;     tableValueFacts = 0;
    delete tableParameterFacts; tableParameterFacts = 0;
+   delete tableJobs;           tableJobs = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
 
@@ -220,7 +225,8 @@ int P4sd::updateValueFacts()
 
    // ...
 
-   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; status = request->getNextValueSpec(&v))
+   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; 
+        status = request->getNextValueSpec(&v))
    {
       if (status != success)
          continue;
@@ -274,7 +280,8 @@ int P4sd::updateParameterFacts()
 
    // ...
 
-   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; status = request->getNextMenuItem(&m))
+   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; 
+        status = request->getNextMenuItem(&m))
    {
       if (status != success)
          continue;

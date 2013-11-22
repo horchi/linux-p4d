@@ -190,7 +190,7 @@ int main(int argc, char** argv)
          if (request.getParameter(&p) == success)
          {
             tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Digits: %d; "
-                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (already applied)", 
+                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (factor already applied)", 
                  p.address, p.unit, p.digits, p.value, p.min, p.max, p.def, p.factor);
             
             tell(eloAlways, "=> %d%s", p.value, p.unit);

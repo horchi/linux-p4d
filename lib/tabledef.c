@@ -119,3 +119,30 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
 
    { 0 }
 };
+
+//***************************************************************************
+// Jobs
+//***************************************************************************
+
+cDbService::FieldDef cTableJobs::fields[] =
+{
+   // name               format     size  index            type 
+
+   // primary key
+
+   { "id",               ffInt,       11, fiId,            ftPrimary | ftAutoinc },
+
+   // meta                                                         
+
+   { "inssp",            ffInt,       10, fiInsSp,         ftMeta },
+   { "updsp",            ffInt,       10, fiUpdSp,         ftMeta },
+
+   // data
+
+   { "requestat",        ffDateTime,   0, fiReqAt,         ftData },
+   { "doneat",           ffDateTime,   0, fiDoneAt,        ftData },
+   { "state",            ffAscii,      1, fiState,         ftData },
+   { "command",          ffAscii,    100, fiCommand,       ftData },
+
+   { 0 }
+};

@@ -75,6 +75,7 @@ class P4sd : public FroelingService
       cTableSamples* tableSamples;
       cTableValueFacts* tableValueFacts;
       cTableParameterFacts* tableParameterFacts;
+      cTableJobs* tableJobs;
 
       cDbStatement* selectActiveValueFacts;
 

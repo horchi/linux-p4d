@@ -135,4 +135,33 @@ class cTableParameterFacts : public cDbTable
 };
 
 //***************************************************************************
+// class cTableJobs
+//***************************************************************************
+
+class cTableJobs : public cDbTable
+{
+   public:
+
+      cTableJobs(cDbConnection* aConnection, const char* aName = "jobs")
+         : cDbTable(aConnection, aName, fields) { }
+
+      enum FieldIndex
+      {
+         fiId,
+
+         fiInsSp,
+         fiUpdSp,
+
+         fiReqAt,
+         fiDoneAt,
+         fiState,
+         fiCommand,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
 #endif //__TABLEDEF_H
