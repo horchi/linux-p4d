@@ -83,15 +83,139 @@ void tell(int eloquence, const char* format, ...)
 }
 
 //***************************************************************************
+// Host ID
+//***************************************************************************
+
+unsigned int getHostId()
+{
+   static unsigned int id = gethostid() & 0xFFFFFFFF;
+   return id;
+}
+
+//***************************************************************************
 // String Operations
 //***************************************************************************
 
-void removeChars(string& str, string chars)
+void toUpper(std::string& str)
 {
-   size_t pos = 0;
+   const char* s = str.c_str();
+   int lenSrc = str.length();
 
-   while ((pos = str.find_first_of(chars, pos)) != string::npos)
-      str.erase(pos, 1);
+   char* dest = (char*)malloc(lenSrc+TB); *dest = 0;
+   char* d = dest;
+
+   int csSrc;  // size of character
+
+   for (int ps = 0; ps < lenSrc; ps += csSrc)
+   {
+      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+      
+      if (csSrc == 1)
+         *d++ = toupper(s[ps]);
+      else if (csSrc == 2 && s[ps] == (char)0xc3 && s[ps+1] >= (char)0xa0)
+      {
+         *d++ = s[ps];
+         *d++ = s[ps+1] - 32;
+      }
+      else
+      {
+         for (int i = 0; i < csSrc; i++)
+            *d++ = s[ps+i];
+      }
+   }
+
+   *d = 0;
+
+   str = dest;
+   free(dest);
+}
+
+//***************************************************************************
+// String Operations
+//***************************************************************************
+
+void removeChars(std::string& str, const char* ignore)
+{
+   const char* s = str.c_str();
+   int lenSrc = str.length();
+   int lenIgn = strlen(ignore);
+
+   char* dest = (char*)malloc(lenSrc+TB); *dest = 0;
+   char* d = dest;
+
+   int csSrc;  // size of character
+   int csIgn;  // 
+
+   for (int ps = 0; ps < lenSrc; ps += csSrc)
+   {
+      int skip = no;
+
+      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+
+      for (int pi = 0; pi < lenIgn; pi += csIgn)
+      {
+         csIgn = max(mblen(&ignore[pi], lenIgn-pi), 1);
+
+         if (csSrc == csIgn && strncmp(&s[ps], &ignore[pi], csSrc) == 0)
+         {
+            skip = yes;
+            break;
+         }
+      }
+
+      if (!skip)
+      {
+         for (int i = 0; i < csSrc; i++)
+            *d++ = s[ps+i];
+      }
+   }
+
+   *d = 0;
+
+   str = dest;
+   free(dest);
+}
+
+void removeCharsExcept(std::string& str, const char* except)
+{
+   const char* s = str.c_str();
+   int lenSrc = str.length();
+   int lenIgn = strlen(except);
+
+   char* dest = (char*)malloc(lenSrc+TB); *dest = 0;
+   char* d = dest;
+
+   int csSrc;  // size of character
+   int csIgn;  // 
+
+   for (int ps = 0; ps < lenSrc; ps += csSrc)
+   {
+      int skip = yes;
+
+      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+
+      for (int pi = 0; pi < lenIgn; pi += csIgn)
+      {
+         csIgn = max(mblen(&except[pi], lenIgn-pi), 1);
+
+         if (csSrc == csIgn && strncmp(&s[ps], &except[pi], csSrc) == 0)
+         {
+            skip = no;
+            break;
+         }
+      }
+
+      if (!skip)
+      {
+         for (int i = 0; i < csSrc; i++)
+            *d++ = s[ps+i];
+      }
+   }
+
+   *d = 0;
+
+   str = dest;
+   free(dest);
 }
 
 void removeWord(string& pattern, string word)
@@ -106,14 +230,15 @@ void removeWord(string& pattern, string word)
 // String Manipulation
 //***************************************************************************
 
-void prepareCompressed(string& pattern)
+void prepareCompressed(std::string& pattern)
 {
-   const char* ignChars = " (),.;:-_+*!#?=&%$<>§/'@~\"[]{}"; 
+   // const char* ignore = " (),.;:-_+*!#?=&%$<>§/'`´@~\"[]{}"; 
+   const char* notignore = "ABCDEFGHIJKLMNOPQRSTUVWXYZßÖÄÜöäü0123456789"; 
 
-   transform(pattern.begin(), pattern.end(), pattern.begin(), ::toupper);
+   toUpper(pattern);
    removeWord(pattern, " TEIL ");
    removeWord(pattern, " FOLGE ");
-   removeChars(pattern, ignChars);
+   removeCharsExcept(pattern, notignore);
 }
 
 //***************************************************************************

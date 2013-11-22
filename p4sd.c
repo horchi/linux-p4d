@@ -28,8 +28,8 @@ P4sd::P4sd()
    connection = 0;
    tableSamples = 0;
    tableValueFacts = 0;
-   tableSensors = 0;
-   selectActiveValues = 0;
+   tableParameterFacts = 0;
+   selectActiveValueFacts = 0;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -96,31 +96,33 @@ int P4sd::initDb()
    tableValueFacts = new cTableValueFacts(connection);
    if (tableValueFacts->open() != success) return fail;
 
+   tableParameterFacts = new cTableValueFacts(connection);
+   if (tableParameterFacts->open() != success) return fail;
+
    tableSamples = new cTableSamples(connection, "samples1");
    if (tableSamples->open() != success) return fail;
 
-   tableSensors = new cTableSensorFacts(connection);
-   if (tableSensors->open() != success) return fail;
-   
    // prepare statements
 
-   selectActiveValues = new cDbStatement(tableValueFacts);
+   selectActiveValueFacts = new cDbStatement(tableValueFacts);
 
-   selectActiveValues->build("select ");
-   selectActiveValues->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
-   selectActiveValues->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
-   selectActiveValues->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
-   selectActiveValues->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
-   selectActiveValues->build(" from %s where ", tableValueFacts->TableName());
-   selectActiveValues->bind(cTableValueFacts::fiState, cDBS::bndIn | cDBS::bndSet);
+   selectActiveValueFacts->build("select ");
+   selectActiveValueFacts->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
+   selectActiveValueFacts->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
+   selectActiveValueFacts->build(" from %s where ", tableValueFacts->TableName());
+   selectActiveValueFacts->bind(cTableValueFacts::fiState, cDBS::bndIn | cDBS::bndSet);
 
-   status = selectActiveValues->prepare();
+   status = selectActiveValueFacts->prepare();
 
    // ...
 
    if (initial)
    {
       updateValueFacts();
+      updateParameterFacts();
       initial = no;
    }
 
@@ -131,11 +133,11 @@ int P4sd::initDb()
 
 int P4sd::exitDb()
 {
-   delete tableSamples;    tableSamples = 0;
-   delete tableValueFacts; tableValueFacts = 0;
-   delete tableSensors;    tableSensors = 0;
+   delete tableSamples;        tableSamples = 0;
+   delete tableValueFacts;     tableValueFacts = 0;
+   delete tableParameterFacts; tableParameterFacts = 0;
 
-   delete selectActiveValues;  selectActiveValues = 0;
+   delete selectActiveValueFacts;  selectActiveValueFacts = 0;
 
    delete connection;      connection = 0;
 
@@ -157,6 +159,7 @@ int P4sd::setup()
 
    selectAll->build("select ");
    selectAll->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
+   selectAll->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
    selectAll->bind(cTableValueFacts::fiState, cDBS::bndOut, ", ");
    selectAll->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
    selectAll->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
@@ -178,7 +181,8 @@ int P4sd::setup()
       char oldState = tableValueFacts->getStrValue(cTableValueFacts::fiState)[0];
       char state = oldState;
 
-      printf("0x%04x '%s' (%s)", 
+      printf("%s 0x%04x '%s' (%s)", 
+             tableValueFacts->getStrValue(cTableValueFacts::fiType),
              (unsigned int)tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
              tableValueFacts->getStrValue(cTableValueFacts::fiUnit),
              tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
@@ -223,31 +227,80 @@ int P4sd::updateValueFacts()
 
    for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; status = request->getNextValueSpec(&v))
    {
-      if (status == success)
+      if (status != success)
+         continue;
+
+      tell(eloDebug, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
+           count, v.address, v.factor, v.unit, v.unknown, v.description);
+      
+      // update table
+      
+      tableValueFacts->clear();
+      tableValueFacts->setValue(cTableValueFacts::fiAddress, v.address);
+      tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
+      
+      if (!tableValueFacts->find())
       {
-         tell(eloDebug, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
-              count, v.address, v.factor, v.unit, v.unknown, v.description);
-
-         // update table
-
-         tableValueFacts->clear();
-         tableValueFacts->setValue(cTableValueFacts::fiAddress, v.address);
+         tableValueFacts->setValue(cTableValueFacts::fiName, v.name);
+         tableValueFacts->setValue(cTableValueFacts::fiState, "D");
+         tableValueFacts->setValue(cTableValueFacts::fiUnit, v.unit);
+         tableValueFacts->setValue(cTableValueFacts::fiFactor, v.factor);
+         tableValueFacts->setValue(cTableValueFacts::fiTitle, v.description);
+         tableValueFacts->setValue(cTableValueFacts::fiRes1, v.unknown);
          
-         if (!tableValueFacts->find())
-         {
-//          string name = p->name;
-//          removeChars(name, ".:-,;_?=!§$%&/()\"'+* ");
-//          tableValueFacts->setValue(cTableValueFacts::fiName, name.c_str());
+         tableValueFacts->store();
+      }
 
-            tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-            tableValueFacts->setValue(cTableValueFacts::fiUnit, v.unit);
-            tableValueFacts->setValue(cTableValueFacts::fiFactor, v.factor);
-            tableValueFacts->setValue(cTableValueFacts::fiTitle, v.description);
-            tableValueFacts->setValue(cTableValueFacts::fiRes1, v.unknown);
-            
-            tableValueFacts->store();
-         }
-      }      
+      count++;
+   }
+
+   tell(eloAlways, "Read %d value facts", count);
+   
+   return success;
+}
+
+//***************************************************************************
+// Update Parameter Facts
+//***************************************************************************
+
+int P4sd::updateParameterFacts()
+{
+   int status;
+   Fs::MenuItem m;
+   int count = 0;
+
+   // check serial communication
+
+   if (request->check() != success)
+   {
+      serial->close();
+      return fail;
+   }
+
+   // ...
+
+   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; status = request->getNextMenuItem(&m))
+   {
+      if (status != success)
+         continue;
+
+      tell(eloDebug, "%3d) 0x%04x (0x%04x) '%s'", count++, m.address, m.unknown, m.description);
+
+      // update table
+      
+      tableParameterFacts->clear();
+      tableParameterFacts->setValue(cTableParameterFacts::fiAddress, m.address);
+      
+      if (!tableParameterFacts->find())
+      {
+         tableParameterFacts->setValue(cTableParameterFacts::fiState, "D");
+         tableParameterFacts->setValue(cTableParameterFacts::fiUnit, m.unit);
+         tableParameterFacts->setValue(cTableParameterFacts::fiFactor, m.factor);
+         tableParameterFacts->setValue(cTableParameterFacts::fiTitle, m.description);
+         tableParameterFacts->setValue(cTableParameterFacts::fiRes1, m.unknown);
+
+         tableParameterFacts->store();
+      }
 
       count++;
    }
@@ -266,7 +319,8 @@ int P4sd::store(time_t now, Value* v, unsigned int factor)
    tableSamples->clear();
 
    tableSamples->setValue(cTableSamples::fiTime, now);
-   tableSamples->setValue(cTableSamples::fiSensorId, v->address);
+   tableSamples->setValue(cTableSamples::fiType, "VA");
+   tableSamples->setValue(cTableSamples::fiAddress, v->address);
    tableSamples->setValue(cTableSamples::fiValue, (double)v->value / (double)factor);
 
    tableSamples->store();
@@ -320,7 +374,7 @@ int P4sd::loop()
       count = 0;
       tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
-      for (int f = selectActiveValues->find(); f; f = selectActiveValues->fetch())
+      for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
       {
          unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
          Value v(addr);
@@ -335,7 +389,7 @@ int P4sd::loop()
          count++;
       }
 
-      selectActiveValues->freeResult();
+      selectActiveValueFacts->freeResult();
       tell(eloAlways, "Processed %d samples", count);
    }
    

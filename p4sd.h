@@ -64,6 +64,7 @@ class P4sd : public FroelingService
       int store(time_t now, Value* v, unsigned int factor);
       int sendMail();
       int updateValueFacts();
+      int updateParameterFacts();
 
       int doShutDown() { return shutdown; }
 
@@ -73,9 +74,9 @@ class P4sd : public FroelingService
 
       cTableSamples* tableSamples;
       cTableValueFacts* tableValueFacts;
-      cTableSensorFacts* tableSensors;
+      cTableValueFacts* tableParameterFacts;
 
-      cDbStatement* selectActiveValues;
+      cDbStatement* selectActiveValueFacts;
 
       P4Request* request;
       Serial* serial;    

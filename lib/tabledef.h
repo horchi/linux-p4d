@@ -11,7 +11,36 @@
 #include "db.h"
 
 //***************************************************************************
-// class cWdeFields
+// class cTableSamples
+//***************************************************************************
+
+class cTableSamples : public cDbTable
+{
+   public:
+
+      cTableSamples(cDbConnection* aConnection, const char* aName = "samples")
+         : cDbTable(aConnection, aName, fields ) { }
+
+      enum FieldIndex
+      {
+         fiAddress,      // Sensor ID
+         fiType,         // Sensor Type (VA, DI, DO, AI, AO)
+         fiTime,         // Zeitpunkt der Aufzeichnung
+
+         fiInsSp,
+         fiUpdSp,
+
+         fiValue,
+         fiText,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
+// class cTableSensorFacts
 //***************************************************************************
 
 class cTableSensorFacts : public cDbTable
@@ -28,38 +57,9 @@ class cTableSensorFacts : public cDbTable
          fiInsSp,
          fiUpdSp,
 
-         fiName,      // { "Sensor1","Kombi" }
+         fiName,      // 
          fiUnit,      // { "°C", "%" }
-         fiTitle,     // user defined title like "Garten" or "Temperatur Garten"
-
-         fiCount
-      };
-
-      static FieldDef fields[];
-};
-
-
-//***************************************************************************
-// class cWdeFields
-//***************************************************************************
-
-class cTableSamples : public cDbTable
-{
-   public:
-
-      cTableSamples(cDbConnection* aConnection, const char* aName = "samples")
-         : cDbTable(aConnection, aName, fields ) { }
-
-      enum FieldIndex
-      {
-         fiSensorId,     // Sensor ID
-         fiTime,         // Zeitpunkt der Aufzeichnung
-
-         fiInsSp,
-         fiUpdSp,
-
-         fiValue,
-         fiText,
+         fiTitle,     // user defined title 
 
          fiCount
       };
@@ -68,7 +68,7 @@ class cTableSamples : public cDbTable
 };
 
 //***************************************************************************
-// class
+// class cTableValueFacts
 //***************************************************************************
 
 class cTableValueFacts : public cDbTable
@@ -76,6 +76,41 @@ class cTableValueFacts : public cDbTable
    public:
 
       cTableValueFacts(cDbConnection* aConnection, const char* aName = "valuefacts")
+         : cDbTable(aConnection, aName, fields) { }
+
+      enum FieldIndex
+      {
+         fiAddress,     // Sensor Address
+         fiType,        // Sensor Type (VA, DI, DO, AI, AO)
+
+         fiInsSp,
+         fiUpdSp,
+
+         fiState,
+
+         fiUnit,        
+         fiFactor,
+         fiName,
+         fiTitle,
+
+         fiRes1,       // unknown data
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+
+//***************************************************************************
+// class cTableParameterFacts
+//***************************************************************************
+
+class cTableParameterFacts : public cDbTable
+{
+   public:
+
+      cTableParameterFacts(cDbConnection* aConnection, const char* aName = "parameterfacts")
          : cDbTable(aConnection, aName, fields) { }
 
       enum FieldIndex
@@ -91,7 +126,7 @@ class cTableValueFacts : public cDbTable
          fiFactor,
          fiTitle,
 
-         fiRes1,
+         fiRes1,       // unknown data
 
          fiCount
       };

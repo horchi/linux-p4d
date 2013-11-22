@@ -204,7 +204,7 @@ int chart(const char* sensorList, const char* file, int interval)
    //   from samples s, sensorfacts f 
    //     where s.sensorid = f.sensorid 
    //     and s.time > DATE_SUB(NOW(),INTERVAL 24 HOUR) 
-   //     and f.name = 'tempKombi' 
+   //     and f.name = ?
    //   order by time;
 
    cDbStatement* stmt = new cDbStatement(sDb);
@@ -428,8 +428,8 @@ int actual(const char* file)
    lastTime = sDb->getRow()->getValue(cSampleFields::fiTime)->getTimeValue();
 
    selMaxTime->freeResult();
-   delete selMaxTime;
-   selMaxTime = 0;
+
+   delete selMaxTime; selMaxTime = 0;
 
    // select s.value, f.name, f.title, f.unit
    //   from samples s, sensorfacts f 
@@ -468,7 +468,7 @@ int actual(const char* file)
 
       for (int f = s->find(); f; f = s->fetch())
       {
-         char* name =strdup(sfDb->getRow()->getValue(cSensorFactFields::fiName)->getStrValue());
+         char* name = strdup(sfDb->getRow()->getValue(cSensorFactFields::fiName)->getStrValue());
          
          if (isEmpty(name))
             continue;

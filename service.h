@@ -171,12 +171,13 @@ class FroelingService
 
       struct ValueSpec
       {
-         ValueSpec()  { unit = 0; description = 0; }
-         ~ValueSpec() { free(unit); free(description); }
+         ValueSpec()  { unit = 0; description = 0; name = 0; }
+         ~ValueSpec() { free(unit); free(description); free(name); }
 
          word address;
          char* unit;
          word factor;
+         char* name;
          char* description;
          word unknown;
       };

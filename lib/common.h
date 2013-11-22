@@ -102,13 +102,16 @@ void tell(int eloquence, const char* format, ...);
 // Tools
 //***************************************************************************
 
+unsigned int getHostId();
+
 byte crc(const byte* data, int size);
 
 int toUTF8(char* out, int outMax, const char* in, const char* from_code = 0);
 
-void removeChars(string& str, string chars);
-void removeWord(string& pattern, string word);
-void prepareCompressed(string& pattern);
+void removeChars(std::string& str, const char* ignore);
+void removeCharsExcept(std::string& str, const char* except);
+void removeWord(std::string& pattern, std::string word);
+void prepareCompressed(std::string& pattern);
 
 char* rTrim(char* buf);
 char* lTrim(char* buf);
