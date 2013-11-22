@@ -111,6 +111,11 @@ class FroelingService
          cmdSetForce          = 0x7E    // Force ein/aus
       };
 
+      enum UserDefined
+      {
+         udState = 1
+      };
+
       static const char* errState2Text(int state)
       {
          switch (state)

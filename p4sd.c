@@ -255,6 +255,26 @@ int P4sd::updateValueFacts()
       count++;
    }
 
+   // at least add value definitions for special data
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue(cTableValueFacts::fiAddress, udState);   // 1  -> Kessel Status
+   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");         // UD -> User Defined
+   
+   if (!tableValueFacts->find())
+   {
+      tableValueFacts->setValue(cTableValueFacts::fiName, "Status");
+      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+      tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
+      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Heizungsstatus");
+      tableValueFacts->setValue(cTableValueFacts::fiRes1, 0.0);
+      
+      tableValueFacts->store();
+   }
+   
+   count++;
+
    tell(eloAlways, "Read %d value facts", count);
    
    return success;
@@ -316,14 +336,15 @@ int P4sd::updateParameterFacts()
 // Store
 //***************************************************************************
 
-int P4sd::store(time_t now, Value* v, unsigned int factor)
+int P4sd::store(time_t now, const char* type, long address, double value, 
+                unsigned int factor, const char* text)
 {
    tableSamples->clear();
 
    tableSamples->setValue(cTableSamples::fiTime, now);
    tableSamples->setValue(cTableSamples::fiType, "VA");
-   tableSamples->setValue(cTableSamples::fiAddress, v->address);
-   tableSamples->setValue(cTableSamples::fiValue, (double)v->value / (double)factor);
+   tableSamples->setValue(cTableSamples::fiAddress, address);
+   tableSamples->setValue(cTableSamples::fiValue, value / (double)factor);
 
    tableSamples->store();
    
@@ -378,16 +399,39 @@ int P4sd::loop()
 
       for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
       {
-         unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
-         Value v(addr);
-         
-         if ((status = request->getValue(&v)) != success)
+         if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
          {
-            tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
-            continue;
+            unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
+            Value v(addr);
+            
+            if ((status = request->getValue(&v)) != success)
+            {
+               tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
+               continue;
+            }
+            
+            store(lastAt, "VA", v.address, v.value, 
+                  tableValueFacts->getIntValue(cTableValueFacts::fiFactor));
          }
 
-         store(lastAt, &v, tableValueFacts->getIntValue(cTableValueFacts::fiFactor));
+         else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
+         {
+            switch (tableValueFacts->getIntValue(cTableValueFacts::fiAddress))
+            {
+               case udState:
+               {
+                  Fs::State s;
+                  
+                  if (request->getState(&s) == success)
+                     store(lastAt, "UD", udState, s.state, 
+                           tableValueFacts->getIntValue(cTableValueFacts::fiFactor), 
+                           s.stateinfo);
+                  
+                  break;
+               }
+            }
+         }
+
          count++;
       }
 

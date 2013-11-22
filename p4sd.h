@@ -60,8 +60,9 @@ class P4sd : public FroelingService
       int exit();
       int initDb();
       int exitDb();
-
-      int store(time_t now, Value* v, unsigned int factor);
+      
+      int store(time_t now, const char* type, long address, double value, 
+                unsigned int factor, const char* text = 0);
       int sendMail();
       int updateValueFacts();
       int updateParameterFacts();
