@@ -497,6 +497,38 @@ int P4Request::readDate(time_t& t)
 }
 
 //***************************************************************************
+// Read Date
+//***************************************************************************
+
+int P4Request::readDateExt(time_t& t)
+{
+   byte d, m, y, dow;
+   struct tm tm;
+
+   if (readByte(d) != success)
+      return fail;
+   
+   if (readByte(m) != success)
+      return fail;
+
+   if (readByte(dow) != success)  // day of week
+      return fail;
+
+   if (readByte(y) != success)
+      return fail;
+   
+   memset(&tm, 0, sizeof(tm));
+   
+   tm.tm_mday = d;
+   tm.tm_mon = m;
+   tm.tm_year = y + 100;
+
+   t = mktime(&tm);
+
+   return success;
+}
+
+//***************************************************************************
 // Read Time-Date
 //***************************************************************************
 
@@ -508,6 +540,25 @@ int P4Request::readTimeDate(time_t& t)
       return fail;
 
    if (readDate(dt) != success)    // second the date!
+      return fail;
+
+   t = dt + ti;
+
+   return success;
+}
+
+//***************************************************************************
+// Read Time-Date Ext
+//***************************************************************************
+
+int P4Request::readTimeDateExt(time_t& t)
+{
+   time_t ti, dt;
+
+   if (readTime(ti) != success)       // first the time !
+      return fail;
+
+   if (readDateExt(dt) != success)    // second the date!
       return fail;
 
    t = dt + ti;
@@ -590,7 +641,7 @@ int P4Request::check()
 int P4Request::getState(State* s)
 {
    int status = success;
-   byte crc;
+   byte b;
 
    // cmdGetState
 
@@ -609,7 +660,7 @@ int P4Request::getState(State* s)
       size--;
       
       status += readText(text, size-sizeCrc);
-      status += readByte(crc);
+      status += readByte(b);
  
       p = strchr(text, ';');
       *p = 0;
@@ -647,8 +698,11 @@ int P4Request::getState(State* s)
       if (status == success)
          sprintf(s->version, "%2.2x.%2.2x.%2.2x.%2.2x", v1, v2, v3, v4);
 
-      status += readTimeDate(s->time);
-      status += readByte(crc);
+      status += readTimeDateExt(s->time);
+      size -= 7;
+
+      while (size > 0)
+         status += readByte(b);
 
       show("<- ");
    }
