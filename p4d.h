@@ -60,7 +60,7 @@ class Linpellet : public FroelingService
       int exitDb();
       int store(time_t now, Parameter* p);
       int storeSensor(Parameter* p);
-      int sendMail();
+      int sendMail(const char* body);
 
       int doShutDown() { return shutdown; }
 

@@ -359,6 +359,9 @@ int P4sd::store(time_t now, const char* type, long address, double value,
 int P4sd::loop()
 {
    time_t lastAt = 0;
+   int lastState = na;
+   int stateChanged = no;
+   Fs::State state;
    int count = 0;
    int status;
 
@@ -395,6 +398,14 @@ int P4sd::loop()
       }
 
       lastAt = time(0);
+      string mailBody = "";
+
+      if (request->getState(&state) == success)
+      {
+         stateChanged = lastState != state.state;
+         lastState = state.state;
+      }
+
       count = 0;
       tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
@@ -404,15 +415,23 @@ int P4sd::loop()
          {
             unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
             Value v(addr);
-            
+            double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
+
             if ((status = request->getValue(&v)) != success)
             {
                tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
                continue;
             }
             
-            store(lastAt, "VA", v.address, v.value, 
-                  tableValueFacts->getIntValue(cTableValueFacts::fiFactor));
+            store(lastAt, "VA", v.address, v.value, factor);
+
+            if (stateChanged)
+            {
+               char num[100];
+               sprintf(num, "%.2f", v.value / factor);
+               mailBody += string(tableValueFacts->getStrValue(cTableValueFacts::fiTitle))
+                  + " = " + string(num) + "\n";
+            }
          }
 
          else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
@@ -443,6 +462,9 @@ int P4sd::loop()
 
       selectActiveValueFacts->freeResult();
       tell(eloAlways, "Processed %d samples", count);
+
+      if (mail && stateChanged)
+         sendMail(mailBody.c_str(), &state);
    }
    
    return success;
@@ -452,93 +474,47 @@ int P4sd::loop()
 // Send Mail
 //***************************************************************************
 
-int P4sd::sendMail()
+int P4sd::sendMail(const char* body, State* state)
 {
-//    static int lastState = na;
-//    static int lastError = na;
-//    static int firstCall = yes;
+   int isErrorChanged = no;
+   char* command = 0;
+   const char* receiver = 0;
+   string subject = "";
 
-//    std::vector<Parameter>::iterator it;
-//    char* command = 0;
-//    const char* receiver = 0;
+   // check
 
-//    string subject = "";
-//    string body = "";
+   if (isEmpty(mailScript))
+      return fail;
 
-//    Parameter* pState = tlg->getParameter(parState);
-//    Parameter* pError = tlg->getParameter(parError);
+   // int isStateChanged = pState->value != lastState && (pState->value == 0 || pState->value == 1 || pState->value == 3 || pState->value == 19);
+   // int isErrorChanged = pError->value != lastError;
 
-//    if (!pState || !pError)
-//    {
-//       tell(eloAlways, "Missing at least one parameter %d/%d, got %d parameters - aborting mail check [%s]", 
-//            pState, pError, tlg->getParameters()->size(), tlg->all());
-
-//       return fail;
-//    }
-
-//    // init
-
-//    if (lastState == na)
-//       lastState = pState->value;
-
-//    if (lastError == na)
-//       lastError = pError->value;
-      
-//    // check
-
-//    if (isEmpty(mailScript))
-//       return fail;
-
-//    int isStateChanged = pState->value != lastState && (pState->value == 0 || pState->value == 1 || pState->value == 3 || pState->value == 19);
-//    int isErrorChanged = pError->value != lastError;
-
-//    if (isStateChanged || isErrorChanged || firstCall)
-//    {   
-//       if (isErrorChanged)
-//       {
-//          subject = "Heizung: STÖRUNG: " + string(pError->text);
-//          receiver = errorMailTo;
-//       }
-//       else
-//       {
-//          subject = "Heizung - Status: " + string(pState->text);
-//          receiver = stateMailTo;
-//       }
-
-//       if (isEmpty(receiver))
-//          return done;
-
-//       // build mail body
-
-//       for (it = tlg->getParameters()->begin(); it != tlg->getParameters()->end(); it++)
-//       {
-//          Parameter* p = &(*it);
-
-//          body += p->name + string(" = ") + num2Str((double)p->value);
-//          body += p->unit;
-
-//          if (!isEmpty(p->text))
-//             body += string("  \"") + p->text + string("\"");
-         
-//          body += "\n";
-//       }
-
-//       // send mail
-
-//       asprintf(&command, "%s '%s' '%s' %s", mailScript, 
-//                subject.c_str(), body.c_str(),
-//                receiver);
-      
-//       system(command);
-
-//       free(command);
-//       firstCall = no;
-
-//       tell(eloAlways, "Send mail '%s' with [%s] to '%s'", 
-//            subject.c_str(), body.c_str(), receiver);
-//    }
-
-//    lastState = pState->value;
+   if (isErrorChanged)
+   {
+      subject = "Heizung: STÖRUNG: " + string(state->stateinfo);
+      receiver = errorMailTo;
+   }
+   else
+   {
+      subject = "Heizung - Status: " + string(state->stateinfo);
+      receiver = stateMailTo;
+   }
+   
+   if (isEmpty(receiver))
+      return done;
+   
+   // send mail
+   
+   asprintf(&command, "%s '%s' '%s' %s", mailScript, 
+            subject.c_str(), body,
+            receiver);
+   
+   system(command);
+   
+   free(command);
+   
+   tell(eloAlways, "Send mail '%s' with [%s] to '%s'", 
+        subject.c_str(), body, receiver);
 
    return success;
 }

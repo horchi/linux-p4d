@@ -186,6 +186,10 @@ const char* toMglCode(const char* from)
    return mglcd;
 }
 
+//***************************************************************************
+// Chart
+//***************************************************************************
+
 int chart(const char* sensorList, const char* file, int interval)
 {
    std::vector<Sensor> sensors;
@@ -194,7 +198,7 @@ int chart(const char* sensorList, const char* file, int interval)
    const char* colors = "krGbcymhwRgBCYMHW";
 
    int multiAxis = no;
-   mglGraph *gr = new mglGraph(0, 1360, 768); // 1024, 300); 
+   mglGraph* gr = new mglGraph(0, 1360, 768); // 1024, 300); 
    long st, et;
 
    // ---------------------------
