@@ -99,8 +99,8 @@ void showUsage(const char* name)
           "    -d <name>      - database name\n"
           "    -u <user>      - database user\n"
           "    -p <pass>      - database password\n"
-          "    -l <lecvel>    - log level {0-4}\n"
-          "    -i <interval>  - inverval fpr charts [h] (default 10)\n",
+          "    -l <logvel>    - log level {0-4}\n"
+          "    -i <interval>  - inverval für charts [h] (default 10)\n",
           name);
 }
 
