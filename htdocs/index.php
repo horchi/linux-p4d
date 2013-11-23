@@ -68,6 +68,7 @@ include("functions.php");
    <tr style="color:white" bgcolor="#000099">
      <td>Id</td>
      <td>Sensor</td>
+     <td>Type</td>
      <td>Wert</td>
      <td>Unit</td>
    </tr>
@@ -96,6 +97,7 @@ include("functions.php");
         echo "   <tr bgcolor=\"#83AFFF\">\n";
      
      echo "      <td>" . $address . "</td>\n";   
+     echo "      <td>" . $type . "</td>\n";   
      echo "      <td>" . $url . $title . "</a></td>\n";
      echo "      <td>$value</td>\n";
      echo "      <td>$unit</td>\n";
