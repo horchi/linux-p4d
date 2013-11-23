@@ -362,7 +362,6 @@ int P4sd::loop()
    int lastState = na;
    int stateChanged = no;
    Fs::State state;
-   int count = 0;
    int status;
 
    while (!doShutDown())
@@ -398,7 +397,6 @@ int P4sd::loop()
       }
 
       lastAt = time(0);
-      string mailBody = "";
 
       if (request->getState(&state) == success)
       {
@@ -406,7 +404,8 @@ int P4sd::loop()
          lastState = state.state;
       }
 
-      count = 0;
+      int count = 0;
+      string mailBody = "";
       tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
       for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
@@ -452,9 +451,7 @@ int P4sd::loop()
                   store(lastAt, "UD", udState, s.state, factor, s.stateinfo);
 
                   if (stateChanged)
-                  {
                      mailBody += string(title) + " = " + string(s.stateinfo) + "\n";
-                  }
                   
                   break;
                }
@@ -465,7 +462,7 @@ int P4sd::loop()
       }
 
       selectActiveValueFacts->freeResult();
-      tell(eloAlways, "Processed %d samples", count);
+      tell(eloAlways, "Processed %d samples, state is %s", count, state.stateinfo);
 
       if (mail && stateChanged)
          sendMail(mailBody.c_str(), &state);
@@ -487,7 +484,7 @@ int P4sd::sendMail(const char* body, State* state)
 
    // check
 
-   if (isEmpty(mailScript))
+   if (isEmpty(mailScript) || isEmpty(body))
       return fail;
 
    // int isStateChanged = pState->value != lastState && (pState->value == 0 || pState->value == 1 || pState->value == 3 || pState->value == 19);
