@@ -74,8 +74,8 @@ include("functions.php");
 
 <?php
 
-  $strQuery = sprintf("select s.sensorid as s_sensorid, s.time as s_time, s.value as s_value, f.title as f_title, f.unit as f_unit 
-              from samples s, sensorfacts f where f.sensorid = s.sensorid and s.time = '%s';", $max);
+  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, f.title as f_title, f.unit as f_unit 
+              from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s';", $max);
 
   $result = mysql_query($strQuery);
 
@@ -86,15 +86,16 @@ include("functions.php");
      $value = $row['s_value'];
      $title = $row['f_title'];
      $unit = $row['f_unit'];
-     $sensorid = $row['s_sensorid'];
-     
-     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&sensorid=$sensorid&from=" . $from . "&range=" . $range . " ','_blank'," 
+     $address = $row['s_address'];
+     $type = $row['s_type'];
+
+     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . " ','_blank'," 
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
      
      if ($i++ % 2)
         echo "   <tr bgcolor=\"#83AFFF\">\n";
      
-     echo "      <td>" . $sensorid . "</td>\n";   
+     echo "      <td>" . $address . "</td>\n";   
      echo "      <td>" . $url . $title . "</a></td>\n";
      echo "      <td>$value</td>\n";
      echo "      <td>$unit</td>\n";

@@ -9,10 +9,15 @@ include("pChart/class/pCache.class.php");
 
 // parameters
 
-if (isset($_GET['sensorid']) && is_numeric($_GET['sensorid']))
-   $sensorCond = " sensorid = " .  $_GET['sensorid'] . " ";
+if (isset($_GET['address']) && is_numeric($_GET['address']))
+   $sensorCond = " address = " .  $_GET['address'] . " ";
 else
-   $sensorCond = " sensorid in (2,3,20,21,24,25,28) ";
+   $sensorCond = " address in (0,1,118,120,21,25,4) ";
+
+if (isset($_GET['type']))
+   $sensorCond .= "and type = '" .  $_GET['type'] . "' ";
+else
+   $sensorCond .= "and type = 'VA' ";
 
 if (isset($_GET['width']) && is_numeric($_GET['width']))
    $width = $_GET['width'];
@@ -42,8 +47,6 @@ if ($to > time())
 $range = ($to - $from) / (24*60*60);
 
 syslog(LOG_DEBUG, "p4: ---------");
-syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from) 
-       . "'  to  '" . strftime("%d. %b %Y %H:%M", $to) . "' sensor: $sensorCond");
 
 // -----------------------------
 // db connection
@@ -55,7 +58,9 @@ mysql_query("set names 'utf8'");
 // ------------------------------
 // get data from db
 
-$factsQuery = "select sensorid, name, title, unit from sensorfacts where" . $sensorCond;
+$factsQuery = "select address, type, name, title, unit from valuefacts where" . $sensorCond;
+syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from) 
+       . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
 $factResult = mysql_query($factsQuery);
 
@@ -81,13 +86,15 @@ else
 
 while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
 {
-   $sensorid = $fact['sensorid'];
+   $address = $fact['address'];
+   $type = $fact['type'];
    $title = $fact['title'];
    $unit = $fact['unit'];
    $name = $fact['name'];
 
    $query = "select unix_timestamp(time) as time, avg(value) as value"
-      . " from samples where sensorid = " . $sensorid
+      . " from samples where address = " . $address
+      . " and type = '" . $type . "'"
       . " and time > from_unixtime(" . $from . ") and time < from_unixtime(" . $to . ")"  
       . " group by date(time), ((60/" . $groupMinutes . ") * hour(time) + floor(minute(time)/" . $groupMinutes . "))"
       . " order by time";
@@ -101,7 +108,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
       continue;
    }
 
-   // syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($sensorid)");
+   // syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($address)");
 
    $lastLabel = "";
 
