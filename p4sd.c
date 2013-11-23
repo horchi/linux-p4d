@@ -411,11 +411,13 @@ int P4sd::loop()
 
       for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
       {
+         double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
+         const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
+
          if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
          {
             unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
             Value v(addr);
-            double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
 
             if ((status = request->getValue(&v)) != success)
             {
@@ -429,8 +431,7 @@ int P4sd::loop()
             {
                char num[100];
                sprintf(num, "%.2f", v.value / factor);
-               mailBody += string(tableValueFacts->getStrValue(cTableValueFacts::fiTitle))
-                  + " = " + string(num) + "\n";
+               mailBody += string(title) + " = " + string(num) + "\n";
             }
          }
 
@@ -448,10 +449,13 @@ int P4sd::loop()
                      continue;
                   }
 
-                  store(lastAt, "UD", udState, s.state, 
-                        tableValueFacts->getIntValue(cTableValueFacts::fiFactor), 
-                        s.stateinfo);
-                   
+                  store(lastAt, "UD", udState, s.state, factor, s.stateinfo);
+
+                  if (stateChanged)
+                  {
+                     mailBody += string(title) + " = " + string(s.stateinfo) + "\n";
+                  }
+                  
                   break;
                }
             }
