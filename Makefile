@@ -20,7 +20,7 @@ USE_SVC_INTERFACE = 1
 
 TARGET = p4d
 CMDTARGET = p4
-CHARTTARGET = db-chart
+CHARTTARGET = p4chart
 MBTARGET = p4mb
 
 LIBS = -lmysqlclient_r -lrt
@@ -60,7 +60,6 @@ endif
 	$(CC) $(CFLAGS) -c $(DEFINES) -o $@ $<
 
 all: $(TARGET) $(CMDTARGET)
-chart: $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@

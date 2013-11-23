@@ -16,8 +16,8 @@
 //***************************************************************************
 
 cDbConnection* connection;
-Table* sDb;
-Table* sfDb;
+cTableSamples* sDb;
+cTableValueFacts* sfDb;
 const char* dbhost = "localhost";
 const char* dbname = "";
 const char* dbuser = "";
@@ -47,7 +47,7 @@ int initDb()
 
    connection = new cDbConnection();
 
-   sDb = new Table(connection, "samples", cSampleFields::fields);
+   sDb = new cTableSamples(connection);
    
    if (sDb->open() != success)
    {
@@ -57,7 +57,7 @@ int initDb()
       return fail;
    }
 
-   sfDb = new Table(connection, "sensorfacts", cSensorFactFields::fields);
+   sfDb = new cTableValueFacts(connection);
    
    if (sfDb->open() != success)
    {
@@ -201,8 +201,9 @@ int chart(const char* sensorList, const char* file, int interval)
    // fill mglData
 
    // select s.time, s.value, f.unit, f.title 
-   //   from samples s, sensorfacts f 
-   //     where s.sensorid = f.sensorid 
+   //   from samples s, valuefacts f 
+   //     where s.address = f.address
+   //     and s.type = f.type 
    //     and s.time > DATE_SUB(NOW(),INTERVAL 24 HOUR) 
    //     and f.name = ?
    //   order by time;
@@ -211,17 +212,18 @@ int chart(const char* sensorList, const char* file, int interval)
    
    stmt->build("select ");
    stmt->setBindPrefix("s.");
-   stmt->bind(cSampleFields::fiTime, cDBS::bndOut);
-   stmt->bind(cSampleFields::fiValue, cDBS::bndOut, ", ");
+   stmt->bind(cTableSamples::fiTime, cDBS::bndOut);
+   stmt->bind(cTableSamples::fiValue, cDBS::bndOut, ", ");
    stmt->setBindPrefix("f.");
-   stmt->bind(sfDb->getValue(cSensorFactFields::fiUnit), cDBS::bndOut, ", ");
-   stmt->bind(sfDb->getValue(cSensorFactFields::fiTitle), cDBS::bndOut, ", ");
+   stmt->bind(sfDb->getValue(cTableValueFacts::fiUnit), cDBS::bndOut, ", ");
+   stmt->bind(sfDb->getValue(cTableValueFacts::fiTitle), cDBS::bndOut, ", ");
    stmt->build(" from %s s, %s f where ", sDb->TableName(), sfDb->TableName());
-   stmt->build("s.sensorid = f.sensorid ");
+   stmt->build("s.address = f.address ");
+   stmt->build("and s.type = f.type ");
    stmt->build("and s.%s > DATE_SUB(NOW(),INTERVAL %d HOUR)", 
-            sDb->getField(cSampleFields::fiTime)->name, interval);
-   stmt->bind(sfDb->getValue(cSensorFactFields::fiName), cDBS::bndIn | cDBS::bndSet, " and ");
-   stmt->build(" order by %s;", sDb->getField(cSampleFields::fiTime)->name);
+            sDb->getField(cTableSamples::fiTime)->name, interval);
+   stmt->bind(sfDb->getValue(cTableValueFacts::fiName), cDBS::bndIn | cDBS::bndSet, " and ");
+   stmt->build(" order by %s;", sDb->getField(cTableSamples::fiTime)->name);
    stmt->prepare();
 
    // --------------------
@@ -235,7 +237,7 @@ int chart(const char* sensorList, const char* file, int interval)
    int _min = 999999;
    int _max = -999999;
 
-   while (e = strchr(b, ','))
+   while ((e = strchr(b, ',')))
    {
       *e = 0;
 
@@ -275,7 +277,7 @@ int chart(const char* sensorList, const char* file, int interval)
       
       sDb->clear();
       sfDb->clear();
-      sfDb->setValue(cSensorFactFields::fiName, (*it).name.c_str());
+      sfDb->setValue(cTableValueFacts::fiName, (*it).name.c_str());
 
       for (int f = stmt->find(); f; f = stmt->fetch())
       {
@@ -286,21 +288,21 @@ int chart(const char* sensorList, const char* file, int interval)
          }
          else
          {
-            (*it).title = toMglCode(sfDb->getValue(cSensorFactFields::fiTitle)->getStrValue());
-            (*it).unit = toMglCode(sfDb->getValue(cSensorFactFields::fiUnit)->getStrValue());
+            (*it).title = toMglCode(sfDb->getValue(cTableValueFacts::fiTitle)->getStrValue());
+            (*it).unit = toMglCode(sfDb->getValue(cTableValueFacts::fiUnit)->getStrValue());
 
             if (lastUnit.length() && lastUnit != (*it).unit)
                multiAxis = yes;
             
             lastUnit = (*it).unit;
 
-            st = sDb->getRow()->getValue(cSampleFields::fiTime)->getTimeValue();
+            st = sDb->getRow()->getValue(cTableSamples::fiTime)->getTimeValue();
          }
          
-         (*it).xdat.a[i] = sDb->getRow()->getValue(cSampleFields::fiTime)->getTimeValue();
-         (*it).ydat.a[i] = sDb->getFloatValue(cSampleFields::fiValue);
+         (*it).xdat.a[i] = sDb->getRow()->getValue(cTableSamples::fiTime)->getTimeValue();
+         (*it).ydat.a[i] = sDb->getFloatValue(cTableSamples::fiValue);
          
-         et = sDb->getRow()->getValue(cSampleFields::fiTime)->getTimeValue();
+         et = sDb->getRow()->getValue(cTableSamples::fiTime)->getTimeValue();
 
          i++;
       }
@@ -416,7 +418,7 @@ int actual(const char* file)
    cDbStatement* selMaxTime = new cDbStatement(sDb);
    
    selMaxTime->build("select max(");
-   selMaxTime->bind(cSampleFields::fiTime, cDBS::bndOut);
+   selMaxTime->bind(cTableSamples::fiTime, cDBS::bndOut);
    selMaxTime->build(") from %s;", sDb->TableName());
    selMaxTime->prepare();
 
@@ -425,36 +427,37 @@ int actual(const char* file)
    if (!selMaxTime->find())
       return done;
 
-   lastTime = sDb->getRow()->getValue(cSampleFields::fiTime)->getTimeValue();
+   lastTime = sDb->getRow()->getValue(cTableSamples::fiTime)->getTimeValue();
 
    selMaxTime->freeResult();
 
    delete selMaxTime; selMaxTime = 0;
 
    // select s.value, f.name, f.title, f.unit
-   //   from samples s, sensorfacts f 
-   //     where s.sensorid = f.sensorid and s.time = ?;
+   //   from samples s, valuefacts f 
+   //     where s.address = f.address and s.type = f.type and s.time = ?;
 
    cDbStatement* s = new cDbStatement(sDb);
 
    s->build("select ");
    s->setBindPrefix("s.");
-   s->bind(cSampleFields::fiValue, cDBS::bndOut);
-   s->bind(cSampleFields::fiText, cDBS::bndOut, ", ");
+   s->bind(cTableSamples::fiValue, cDBS::bndOut);
+   s->bind(cTableSamples::fiText, cDBS::bndOut, ", ");
    s->setBindPrefix("f.");
-   s->bind(sfDb->getValue(cSensorFactFields::fiName), cDBS::bndOut, ", ");
-   s->bind(sfDb->getValue(cSensorFactFields::fiTitle), cDBS::bndOut, ", ");
-   s->bind(sfDb->getValue(cSensorFactFields::fiUnit), cDBS::bndOut, ", ");
+   s->bind(sfDb->getValue(cTableValueFacts::fiName), cDBS::bndOut, ", ");
+   s->bind(sfDb->getValue(cTableValueFacts::fiTitle), cDBS::bndOut, ", ");
+   s->bind(sfDb->getValue(cTableValueFacts::fiUnit), cDBS::bndOut, ", ");
    s->build(" from %s s, %s f where ", sDb->TableName(), sfDb->TableName());
-   s->build("s.sensorid = f.sensorid ");
+   s->build("s.address = f.address ");
+   s->build("and s.type = f.type ");
    s->setBindPrefix("s.");
-   s->bind(sDb->getValue(cSampleFields::fiTime), cDBS::bndIn | cDBS::bndSet, "and ");
+   s->bind(sDb->getValue(cTableSamples::fiTime), cDBS::bndIn | cDBS::bndSet, "and ");
    s->build(";");
    s->prepare();
 
    sDb->clear();
    sfDb->clear();
-   sDb->setValue(cSampleFields::fiTime, lastTime);  //-60*60);
+   sDb->setValue(cTableSamples::fiTime, lastTime);  //-60*60);
 
    fp = fopen(file, "w");
 
@@ -468,7 +471,7 @@ int actual(const char* file)
 
       for (int f = s->find(); f; f = s->fetch())
       {
-         char* name = strdup(sfDb->getRow()->getValue(cSensorFactFields::fiName)->getStrValue());
+         char* name = strdup(sfDb->getRow()->getValue(cTableValueFacts::fiName)->getStrValue());
          
          if (isEmpty(name))
             continue;
@@ -477,7 +480,7 @@ int actual(const char* file)
 
          fprintf(fp, "// --------------------------------------------\n");
 
-         double v =  sDb->getRow()->getValue(cSampleFields::fiValue)->getFloatValue();
+         double v =  sDb->getRow()->getValue(cTableSamples::fiValue)->getFloatValue();
 
          if (v != int(v))
             fprintf(fp, "var var%sValue = %2.1f;\n", name, v);
@@ -485,13 +488,13 @@ int actual(const char* file)
             fprintf(fp, "var var%sValue = %d;\n", name, (int)v);
          
          fprintf(fp, "var var%sTitle = %s;\n", name,
-                 sfDb->getRow()->getValue(cSensorFactFields::fiTitle)->getStrValue());
+                 sfDb->getRow()->getValue(cTableValueFacts::fiTitle)->getStrValue());
                  
          fprintf(fp, "var var%sUnit = %s;\n", name,
-                 sfDb->getRow()->getValue(cSensorFactFields::fiUnit)->getStrValue());
+                 sfDb->getRow()->getValue(cTableValueFacts::fiUnit)->getStrValue());
 
          fprintf(fp, "var var%sText = %s;\n", name,
-                 sDb->getRow()->getValue(cSampleFields::fiText)->getStrValue());
+                 sDb->getRow()->getValue(cTableSamples::fiText)->getStrValue());
       
          free(name);
       }
@@ -522,7 +525,9 @@ int main(int argc, char** argv)
    loglevel = 0;
    logstdout = yes;
 
-   if (argc == 1 || argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
+   if (argc == 1 || (argc > 1 && (argv[1][0] == '?' || 
+        (strcmp(argv[1], "-h") == 0) || 
+                                  (strcmp(argv[1], "--help") == 0))))
    {
       showUsage(argv[0]);
       return 0;

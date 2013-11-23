@@ -789,6 +789,7 @@ class cDbTable : public cDbService
       float getFloatValue(int f)           const             { return row->getFloatValue(f); }
       int isNull(int f)                    const             { return row->isNull(f); }
 
+      cDbValue* getValue(int f)                              { return row->getValue(f); }
       FieldDef* getField(int f)                              { return row->getField(f); }
       int fieldCount()                                       { return row->fieldCount(); }
       cDbRow* getRow()                                       { return row; }
