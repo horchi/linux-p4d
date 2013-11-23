@@ -35,32 +35,6 @@ cDbService::FieldDef cTableSamples::fields[] =
 };
 
 //***************************************************************************
-// Sensor Facts
-//***************************************************************************
-
-cDbService::FieldDef cTableSensorFacts::fields[] =
-{
-   // name               format     size  index           type
-
-   // primary key
-
-   { "sensorid",         ffInt,        2, fiSensorId,      ftPrimary },
-
-   // meta                                                         
-
-   { "inssp",            ffInt,       10, fiInsSp,         ftMeta },
-   { "updsp",            ffInt,       10, fiUpdSp,         ftMeta },
-                                                                   
-   // data
-                                                                   
-   { "name",             ffAscii,     30, fiName,          ftData },
-   { "unit",             ffAscii,      5, fiUnit,          ftData },
-   { "title",            ffAscii,    100, fiTitle,         ftData },
-
-   { 0 }
-};
-
-//***************************************************************************
 // Value Facts
 //***************************************************************************
 

@@ -40,34 +40,6 @@ class cTableSamples : public cDbTable
 };
 
 //***************************************************************************
-// class cTableSensorFacts
-//***************************************************************************
-
-class cTableSensorFacts : public cDbTable
-{
-   public:
-
-      cTableSensorFacts(cDbConnection* aConnection, const char* aName = "sensorfacts")
-         : cDbTable(aConnection, aName, fields) { }
-
-      enum FieldIndex
-      {
-         fiSensorId,  // Sensor ID
-
-         fiInsSp,
-         fiUpdSp,
-
-         fiName,      // 
-         fiUnit,      // { "°C", "%" }
-         fiTitle,     // user defined title 
-
-         fiCount
-      };
-
-      static FieldDef fields[];
-};
-
-//***************************************************************************
 // class cTableValueFacts
 //***************************************************************************
 
