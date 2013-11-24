@@ -42,6 +42,7 @@ P4sd::P4sd()
 
    serial = new Serial;
    request = new P4Request(serial);
+   request->setFixFwDateBug(fixFwDateBug);
 
    init();
 }
@@ -462,7 +463,8 @@ int P4sd::loop()
       }
 
       selectActiveValueFacts->freeResult();
-      tell(eloAlways, "Processed %d samples, state is %s", count, state.stateinfo);
+      tell(eloAlways, "Processed %d samples, state is '%s'", 
+           count, state.stateinfo);
 
       if (mail && stateChanged)
          sendMail(mailBody.c_str(), &state);

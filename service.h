@@ -1,7 +1,7 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
-// File service.hpp
-// Date 04.11.10 - Jörg Wendel
+// File service.h
+// Date 04.11.10-24.11.13 - Jörg Wendel
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
 //***************************************************************************

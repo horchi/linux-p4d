@@ -82,7 +82,7 @@ class P4Request : public FroelingService
 {
    public:
 
-      P4Request(Serial* aSerial)    { s = aSerial; text = 0; clear(); }
+      P4Request(Serial* aSerial)    { s = aSerial; text = 0; fixFwDateBug = no; clear(); }
       virtual ~P4Request()          { clear(); }
 
       int clear() 
@@ -195,14 +195,9 @@ class P4Request : public FroelingService
          return success;
       }
 
-      int readByte(byte& v, int decode = yes, int tms = 1000);
-      int readWord(word& v, int decode = yes, int tms = 1000);
-      int readTime(time_t& t);         // 3 byte  
-      int readDate(time_t& t);         // 3 byte
-      int readDateExt(time_t& t);      // 4 byte
-      int readTimeDate(time_t& t);     // 6 byte
-      int readTimeDateExt(time_t& t);  // 7 byte
-      int readText(char*& s, int size);
+      void setFixFwDateBug(int b) { fixFwDateBug = b; }
+
+      // interface
 
       int getState(State* s);
 
@@ -232,6 +227,15 @@ class P4Request : public FroelingService
       int getValueSpec(ValueSpec* v, int first);
       int getMenuItem(MenuItem* m, int first);
 
+      int readByte(byte& v, int decode = yes, int tms = 1000);
+      int readWord(word& v, int decode = yes, int tms = 1000);
+      int readTime(time_t& t);         // 3 byte  
+      int readDate(time_t& t);         // 3 byte
+      int readDateExt(time_t& t);      // 4 byte
+      int readTimeDate(time_t& t);     // 6 byte
+      int readTimeDateExt(time_t& t);  // 7 byte
+      int readText(char*& s, int size);
+
       // data
 
       Header header;
@@ -241,6 +245,7 @@ class P4Request : public FroelingService
       int addressCount;
       byte buffer[sizeMaxRequest*2+TB];
       int sizeBufferContent;
+      int fixFwDateBug;
 
       Serial* s;
 };

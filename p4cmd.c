@@ -40,6 +40,8 @@ void showUsage(const char* bin)
    printf("     -v <value>      new value\n");
    printf("     -l <log-level>  set log level\n");
    printf("     -d <device>     serial device file (defaults to /dev/ttyUSB0)\n");
+   printf("     -w              enable workaround for FW date bug (at least for FW 50.04.05.03)\n");
+
    printf("\n");
    printf("  commands:\n");
    printf("     state   show state\n");
@@ -65,6 +67,7 @@ int main(int argc, char** argv)
    word value = Fs::addrUnknown;
    UserCommand cmd = ucUnknown;
    const char* device = "/dev/ttyUSB0";
+   int fixFwDateBug = no;
 
    loglevel = 0;
    logstdout = yes;
@@ -118,6 +121,7 @@ int main(int argc, char** argv)
          case 'v': if (argv[i+1]) value = strtol(argv[++i], 0, 0); break;
          case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);      break;
          case 'd': if (argv[i+1]) device = argv[++i];              break;
+         case 'w': fixFwDateBug = yes;                             break;
       }
    }
 
@@ -128,6 +132,7 @@ int main(int argc, char** argv)
       logstamp = yes;
 
    P4Request request(&serial);
+   request.setFixFwDateBug(fixFwDateBug);
 
    if (serial.open(device) != success)
       return 1;

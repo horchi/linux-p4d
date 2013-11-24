@@ -30,6 +30,7 @@ extern char dbPass[];
 extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
+extern int  fixFwDateBug;
 
 extern int  mail;
 extern char mailScript[];

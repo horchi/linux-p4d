@@ -32,6 +32,8 @@ char ttyDevice[100+TB]    = "/dev/ttyUSB0";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 
+int fixFwDateBug = no;
+
 int  mail = no;
 char mailScript[200+TB] = "/usr/local/bin/p4d-mail.sh";
 char stateMailTo[200+TB] = "";
@@ -55,6 +57,8 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "Interval"))    interval = atoi(Value);
    else if (!strcasecmp(Name, "ttyDevice"))     sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
    else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
+
+   else if (!strcasecmp(Name, "enableFwDateBugWorkaround")) fixFwDateBug = atoi(Value);
 
    else if (!strcasecmp(Name, "mail"))        mail = atoi(Value);
    else if (!strcasecmp(Name, "mailScript"))  sstrcpy(mailScript, Value, sizeof(mailScript));

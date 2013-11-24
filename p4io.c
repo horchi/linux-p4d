@@ -484,9 +484,12 @@ int P4Request::readDate(time_t& t)
 
    if (readByte(y) != success)
       return fail;
-   
+
+   if (y == 10 && fixFwDateBug)
+      y = 13;
+
    memset(&tm, 0, sizeof(tm));
-   
+
    tm.tm_mday = d;
    tm.tm_mon = m - 1;
    tm.tm_year = y + 100;
@@ -517,6 +520,9 @@ int P4Request::readDateExt(time_t& t)
    if (readByte(y) != success)
       return fail;
    
+   if (y == 10 && fixFwDateBug)
+      y = 13;
+
    memset(&tm, 0, sizeof(tm));
    
    tm.tm_mday = d;
