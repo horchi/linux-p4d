@@ -170,9 +170,9 @@ int main(int argc, char** argv)
       }
       case ucState:
       {
-         Fs::State s;
+         Fs::Status s;
 
-         if (request.getState(&s) == success)
+         if (request.getStatus(&s) == success)
          {
             struct tm tim = {0};
             char date[100];

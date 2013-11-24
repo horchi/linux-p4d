@@ -362,7 +362,7 @@ int P4sd::loop()
    time_t lastAt = 0;
    int lastState = na;
    int stateChanged = no;
-   Fs::State state;
+   Fs::Status state;
    int status;
 
    while (!doShutDown())
@@ -399,7 +399,7 @@ int P4sd::loop()
 
       lastAt = time(0);
 
-      if (request->getState(&state) == success)
+      if (request->getStatus(&state) == success)
       {
          stateChanged = lastState != state.state;
          lastState = state.state;
@@ -441,18 +441,11 @@ int P4sd::loop()
             {
                case udState:
                {
-                  Fs::State s;
-                  
-                  if (request->getState(&s) != success)
-                  {
-                     tell(eloAlways, "Getting state failed");
-                     continue;
-                  }
-
-                  store(lastAt, "UD", udState, s.state, factor, s.stateinfo);
+                  store(lastAt, "UD", udState, state.state, factor, state.stateinfo);
 
                   if (stateChanged)
-                     mailBody += string(title) + " = " + string(s.stateinfo) + "\n";
+                     mailBody += string(title) 
+                        + " = " + string(state.stateinfo) + "\n";
                   
                   break;
                }
@@ -477,27 +470,49 @@ int P4sd::loop()
 // Send Mail
 //***************************************************************************
 
-int P4sd::sendMail(const char* body, State* state)
+int P4sd::sendMail(const char* body, Status* state)
 {
-   int isErrorChanged = no;
    char* command = 0;
    const char* receiver = 0;
    string subject = "";
+   string errorBody = "";
 
    // check
 
    if (isEmpty(mailScript) || isEmpty(body))
       return fail;
 
-   // int isStateChanged = pState->value != lastState && (pState->value == 0 || pState->value == 1 || pState->value == 3 || pState->value == 19);
-   // int isErrorChanged = pError->value != lastError;
-
-   if (isErrorChanged)
+   if (state->state == wsError)
    {
-      subject = "Heizung: STÖRUNG: " + string(state->stateinfo);
+      Fs::ErrorInfo e;
+
+      subject = "Heizung: STÖRUNG";
       receiver = errorMailTo;
+
+      for (int status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
+      {
+         // nur Fehler der letzten 24 Stunden 
+
+         if (e.time > time(0) - 24 * tmeSecondsPerDay)
+         {  
+            char* ct = strdup(ctime(&e.time));
+            char* line;
+            
+            ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
+            
+            asprintf(&line, "%s:  %03d/%03d  '%s' (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
+            errorBody += line;
+
+            free(line);
+            free(ct);
+         }
+      }
+
+      errorBody += string("\n") + body;
+      body = errorBody.c_str();
    }
-   else
+
+   else if (isMailState(state->state))
    {
       subject = "Heizung - Status: " + string(state->stateinfo);
       receiver = stateMailTo;
@@ -520,4 +535,22 @@ int P4sd::sendMail(const char* body, State* state)
         subject.c_str(), body, receiver);
 
    return success;
+}
+
+//***************************************************************************
+// Is Mail State
+//***************************************************************************
+
+int P4sd::isMailState(int state)
+{
+   if (isEmpty(stateMailAtStates))
+      return yes;
+
+   for (const char* p = strtok(stateMailAtStates, ":,"); p; p = strtok(0, ":,"))
+   {
+      if (atoi(p) == state)
+         return yes;
+   }
+
+   return no;
 }

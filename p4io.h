@@ -199,7 +199,7 @@ class P4Request : public FroelingService
 
       // interface
 
-      int getState(State* s);
+      int getStatus(Status* s);
 
       int getParameter(ConfigParameter* p);
       int setParameter(ConfigParameter* p);

@@ -1,6 +1,18 @@
 -------------------------------------------------------
---             Linux - P4 Daemon                     --
+- -           Linux - P4 Daemon (p4d)                --
 -------------------------------------------------------
+-
+- This daemon is fetch data from the S 3200 and store it in a 
+- MySQL database
+-
+- Written by: C++/SQL         - Jörg Wendel (linux at jwendel dot de)
+-             Documetation    - pending ;-)
+-
+- Homepage:   https://github.com/horchi/linux-p4d
+-
+- See the file LICENSE for license information.
+-----------------------------------------------------------------------------------
+
  
 Requirements:
 -------------

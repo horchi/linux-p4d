@@ -644,7 +644,7 @@ int P4Request::check()
 // Get State
 //***************************************************************************
 
-int P4Request::getState(State* s)
+int P4Request::getStatus(Status* s)
 {
    int status = success;
    byte b;

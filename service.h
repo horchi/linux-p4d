@@ -19,6 +19,24 @@ class FroelingService
 {
    public:
 
+      enum WorkingState
+      {
+         wsUnknown = na,
+
+         wsError
+      };
+
+      struct StateInfo
+      {
+         int code;
+         const char* title;
+      };
+
+      // statics
+
+      static StateInfo stateInfos[];
+      static const char* toTitle(int code);
+
       // -------------------------
       // COM1 (service interface)
 
@@ -142,10 +160,10 @@ class FroelingService
          word def;
       };
 
-      struct State
+      struct Status
       {
-         State()  { modeinfo = 0; stateinfo = 0; *version = 0; }
-         ~State() { free(modeinfo); free(stateinfo); }
+         Status()  { modeinfo = 0; stateinfo = 0; *version = 0; }
+         ~Status() { free(modeinfo); free(stateinfo); }
  
          time_t time; 
          byte mode;           // Betriebsart
@@ -267,17 +285,6 @@ class FroelingService
          char text[sizeText+TB];        // "Kein Fehler"
          char unit[sizeUnit+TB];        // °C"
       };
-
-      struct WorkingState
-      {
-         int code;
-         const char* title;
-      };
-
-      // statics
-
-      static WorkingState workingStates[];
-      static const char* toTitle(int code);
 };
 
 typedef FroelingService Fs;

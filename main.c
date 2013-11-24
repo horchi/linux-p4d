@@ -36,6 +36,7 @@ int fixFwDateBug = no;
 
 int  mail = no;
 char mailScript[200+TB] = "/usr/local/bin/p4d-mail.sh";
+char stateMailAtStates[200+TB] = "";
 char stateMailTo[200+TB] = "";
 char errorMailTo[200+TB] = "";
 
@@ -53,17 +54,18 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "DbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "DbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
    
-   else if (!strcasecmp(Name, "LogLevel"))    loglevel = atoi(Value);
-   else if (!strcasecmp(Name, "Interval"))    interval = atoi(Value);
+   else if (!strcasecmp(Name, "LogLevel"))      loglevel = atoi(Value);
+   else if (!strcasecmp(Name, "Interval"))      interval = atoi(Value);
    else if (!strcasecmp(Name, "ttyDevice"))     sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
    else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
 
    else if (!strcasecmp(Name, "enableFwDateBugWorkaround")) fixFwDateBug = atoi(Value);
 
-   else if (!strcasecmp(Name, "mail"))        mail = atoi(Value);
-   else if (!strcasecmp(Name, "mailScript"))  sstrcpy(mailScript, Value, sizeof(mailScript));
-   else if (!strcasecmp(Name, "stateMailTo")) sstrcpy(stateMailTo, Value, sizeof(stateMailTo));
-   else if (!strcasecmp(Name, "errorMailTo")) sstrcpy(errorMailTo, Value, sizeof(errorMailTo));
+   else if (!strcasecmp(Name, "mail"))              mail = atoi(Value);
+   else if (!strcasecmp(Name, "mailScript"))        sstrcpy(mailScript, Value, sizeof(mailScript));
+   else if (!strcasecmp(Name, "stateMailAtStates")) sstrcpy(stateMailAtStates, Value, sizeof(stateMailAtStates));
+   else if (!strcasecmp(Name, "stateMailTo"))       sstrcpy(stateMailTo, Value, sizeof(stateMailTo));
+   else if (!strcasecmp(Name, "errorMailTo"))       sstrcpy(errorMailTo, Value, sizeof(errorMailTo));
    
    else
       return fail;

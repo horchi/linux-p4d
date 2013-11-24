@@ -12,31 +12,31 @@
 // Working States
 //***************************************************************************
 
-FroelingService::WorkingState FroelingService::workingStates[] =
+FroelingService::StateInfo FroelingService::stateInfos[] =
 {
-   {  0,  "Störung"        }, 
-   {  1,  "Brenner aus"    }, 
-   {  2,  "Anheizen"       },
-   {  3,  "Heizen"         },
-   {  4,  "Feuerhaltung"   },
-   {  5,  "Feuer aus"      },
-   {  6,  "Tür offen"      },
-   {  7,  "Vorbereitung"   },
-   {  8,  "Vorwärmphase"   },
-   {  9,  "Zünden"         },
-   { 10,  "Abstellen Warten" },
-   { 11,  "Abstellen Warten 1"  },
-   { 12,  "Abstellen Einsch."   },
-   { 13,  "Abstellen Warten 2"  },
-   { 14,  "Abstellen Einsch. 2"  },
-   { 15,  "Abreinigen"     },
+   {  wsError,  "Störung"        }, 
+   {  1,        "Brenner aus"    }, 
+   {  2,        "Anheizen"       },
+   {  3,        "Heizen"         },
+   {  4,        "Feuerhaltung"   },
+   {  5,        "Feuer aus"      },
+   {  6,        "Tür offen"      },
+   {  7,        "Vorbereitung"   },
+   {  8,        "Vorwärmphase"   },
+   {  9,        "Zünden"         },
+   { 10,        "Abstellen Warten" },
+   { 11,        "Abstellen Warten 1"  },
+   { 12,        "Abstellen Einsch."   },
+   { 13,        "Abstellen Warten 2"  },
+   { 14,        "Abstellen Einsch. 2"  },
+   { 15,        "Abreinigen"     },
 
-   { 19,  "Betriebsbereit" },
+   { 19,        "Betriebsbereit" },
 
-   { 35,  "Zünden warten"  },
-   { 56,  "Vorbelüften"    },
+   { 35,        "Zünden warten"  },
+   { 56,        "Vorbelüften"    },
 
-   { na,  "" }
+   { wsUnknown, "" }
 };
 
 //***************************************************************************
@@ -45,9 +45,9 @@ FroelingService::WorkingState FroelingService::workingStates[] =
 
 const char* FroelingService::toTitle(int code)
 {
-   for (int i = 0; workingStates[i].code != na; i++)
-      if (workingStates[i].code == code)
-         return workingStates[i].title;
+   for (int i = 0; stateInfos[i].code != na; i++)
+      if (stateInfos[i].code == code)
+         return stateInfos[i].title;
 
    return "unknown";
 }
