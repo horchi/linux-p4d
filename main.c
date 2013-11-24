@@ -31,6 +31,7 @@ char dbPass[100+TB] = "p4";
 char ttyDevice[100+TB]    = "/dev/ttyUSB0";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
+int  stateCheckInterval = 0;
 
 int fixFwDateBug = no;
 
@@ -48,14 +49,16 @@ int atConfigItem(const char* Name, const char* Value)
 {
    // Parse setup parameters and store values.
    
-   if      (!strcasecmp(Name, "DbHost"))      sstrcpy(dbHost, Value, sizeof(dbHost));
-   else if (!strcasecmp(Name, "DbPort"))      dbPort = atoi(Value);
-   else if (!strcasecmp(Name, "DbName"))      sstrcpy(dbName, Value, sizeof(dbName));
-   else if (!strcasecmp(Name, "DbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
-   else if (!strcasecmp(Name, "DbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
+   if      (!strcasecmp(Name, "dbHost"))      sstrcpy(dbHost, Value, sizeof(dbHost));
+   else if (!strcasecmp(Name, "dbPort"))      dbPort = atoi(Value);
+   else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
+   else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
+   else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
    
-   else if (!strcasecmp(Name, "LogLevel"))      loglevel = atoi(Value);
-   else if (!strcasecmp(Name, "Interval"))      interval = atoi(Value);
+   else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
+   else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);
+   else if (!strcasecmp(Name, "stateCheckInterval")) stateCheckInterval = atoi(Value);
+
    else if (!strcasecmp(Name, "ttyDevice"))     sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
    else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
 

@@ -30,6 +30,7 @@ extern char dbPass[];
 extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
+extern int  stateCheckInterval;
 extern int  fixFwDateBug;
 
 extern int  mail;
@@ -62,7 +63,10 @@ class P4sd : public FroelingService
       int exit();
       int initDb();
       int exitDb();
-      
+
+      int standby(int t);
+      int standbyUntil(time_t until);
+
       int store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text = 0);
       int sendMail(const char* body, Status* state);

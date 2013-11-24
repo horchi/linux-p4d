@@ -354,19 +354,43 @@ int P4sd::store(time_t now, const char* type, long address, double value,
 }
 
 //***************************************************************************
+// standby
+//***************************************************************************
+
+int P4sd::standby(int t)
+{
+   time_t end = time(0) + t;
+
+   while (time(0) < end && !doShutDown())
+      sleep(1);
+
+   return done;
+}
+
+int P4sd::standbyUntil(time_t until)
+{
+   while (time(0) < until && !doShutDown())
+      sleep(1);
+
+   return done;
+}
+
+//***************************************************************************
 // Refresh
 //***************************************************************************
 
 int P4sd::loop()
 {
-   time_t lastAt = 0;
+   time_t nextAt = 0;
+   time_t nextStateAt = 0;
    int lastState = na;
-   int stateChanged = no;
    Fs::Status state;
    int status;
 
    while (!doShutDown())
    {
+      int stateChanged = no;
+
       // check db connection
 
       while (!doShutDown() && (!tableSamples || !tableSamples->isConnected()))
@@ -377,14 +401,30 @@ int P4sd::loop()
             exitDb();
 
          tell(eloAlways, "Retrying in 10 seconds");
-         sleep(10);
+         standby(10);
       }
 
-      if (time(0) < lastAt + interval)
+      standbyUntil(min(nextStateAt, nextAt));
+
+      // check state
+
+      if (request->getStatus(&state) == success)
       {
-         sleep(1);
-         continue;
+         stateChanged = lastState != state.state;
+
+         if (stateChanged)
+         {
+            lastState = state.state;
+            nextAt = time(0);              // force on state change
+         }
+
+         nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
       }
+
+      // work expected?
+
+      if (time(0) < nextAt)
+         continue;
 
       // check serial connection
 
@@ -397,16 +437,14 @@ int P4sd::loop()
          continue;
       }
 
-      lastAt = time(0);
-
-      if (request->getStatus(&state) == success)
-      {
-         stateChanged = lastState != state.state;
-         lastState = state.state;
-      }
-
       int count = 0;
       string mailBody = "";
+      time_t now = time(0);
+
+      nextAt = time(0) + interval;
+      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+
+      tableValueFacts->clear();
       tableValueFacts->setValue(cTableValueFacts::fiState, "A");
 
       for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
@@ -425,7 +463,7 @@ int P4sd::loop()
                continue;
             }
             
-            store(lastAt, "VA", v.address, v.value, factor);
+            store(now, "VA", v.address, v.value, factor);
 
             if (stateChanged)
             {
@@ -441,7 +479,7 @@ int P4sd::loop()
             {
                case udState:
                {
-                  store(lastAt, "UD", udState, state.state, factor, state.stateinfo);
+                  store(now, "UD", udState, state.state, factor, state.stateinfo);
 
                   if (stateChanged)
                      mailBody += string(title) 
@@ -499,7 +537,7 @@ int P4sd::sendMail(const char* body, Status* state)
             char* line;
             
             ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
-            
+
             asprintf(&line, "%s:  %03d/%03d  '%s' (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
             errorBody += line;
 
