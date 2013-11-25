@@ -507,6 +507,7 @@ int P4sd::update()
    int status;
    int count = 0;
    time_t now = time(0);
+   char num[100];
 
    tell(eloDetail, "Reading values ...");
 
@@ -515,12 +516,13 @@ int P4sd::update()
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
+      unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
       double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
       const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
+      const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
 
       if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
       {
-         unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
          Value v(addr);
 
          if ((status = request->getValue(&v)) != success)
@@ -529,11 +531,23 @@ int P4sd::update()
             continue;
          }
             
-         store(now, "VA", v.address, v.value, factor);
+         store(now, type, v.address, v.value, factor);
 
-         char num[100];
          sprintf(num, "%.2f", v.value / factor);
          mailBody += string(title) + " = " + string(num) + "\n";
+      }
+
+      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "DO"))
+      {
+         Fs::IoValue v(addr);
+
+         if (request->getDigitalOut(&v) != success)
+         {
+            tell(eloAlways, "Getting digital out 0x%04x failed, error %d", addr, status);
+            continue;
+         }
+
+         store(now, type, v.address, v.state, factor);
       }
 
       else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
@@ -542,7 +556,7 @@ int P4sd::update()
          {
             case udState:
             {
-               store(now, "UD", udState, currentState.state, factor, currentState.stateinfo);
+               store(now, type, udState, currentState.state, factor, currentState.stateinfo);
                mailBody += string(title) + " = " + string(currentState.stateinfo) + "\n";
                   
                break;
@@ -554,8 +568,7 @@ int P4sd::update()
    }
 
    selectActiveValueFacts->freeResult();
-   tell(eloAlways, "Processed %d samples, state is '%s'", 
-        count, currentState.stateinfo);
+   tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 
    return success;
 }
