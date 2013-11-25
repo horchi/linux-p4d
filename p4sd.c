@@ -532,7 +532,6 @@ int P4sd::update()
          }
             
          store(now, type, v.address, v.value, factor);
-
          sprintf(num, "%.2f", v.value / factor);
          mailBody += string(title) + " = " + string(num) + "\n";
       }
@@ -548,6 +547,8 @@ int P4sd::update()
          }
 
          store(now, type, v.address, v.state, factor);
+         sprintf(num, "%d", v.state);
+         mailBody += string(title) + " = " + string(num) + "\n";
       }
 
       else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
