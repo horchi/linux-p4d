@@ -9,6 +9,12 @@
 #include "service.h"
 
 //***************************************************************************
+// Const
+//***************************************************************************
+
+const char* FroelingService::nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789äöüÄÖÜ_-";
+
+//***************************************************************************
 // Working States
 //***************************************************************************
 
@@ -51,3 +57,42 @@ const char* FroelingService::toTitle(int code)
 
    return "unknown";
 }
+
+//***************************************************************************
+// Didital Output Definitions
+//***************************************************************************
+
+FroelingService::DigitalOutDef FroelingService::diditalOutDefinitions[] =
+{
+   { doHeizungLambdasonde, "HeizungLambdasonde" },
+   { doBrennerrelais,      "Brennerrelais" },
+   { doStandbyRelais,      "StandbyRelais" },
+
+   { doHeizkreispumpe1,    "Heizkreispumpe 1" },
+   { doHeizkreispumpe2,    "Heizkreispumpe 2" },
+   { doHeizkreispumpe3,    "Heizkreispumpe 3" },
+   { doHeizkreispumpe4,    "Heizkreispumpe 4" },
+   { doHeizkreispumpe5,    "Heizkreispumpe 5" },
+   { doHeizkreispumpe6,    "Heizkreispumpe 6" },
+   { doHeizkreispumpe7,    "Heizkreispumpe 7" },
+   { doHeizkreispumpe8,    "Heizkreispumpe 8" },
+
+   { doMischer1auf,        "Mischer 1 auf" },
+   { doMischer1zu,         "Mischer 1 zu" },       
+   { doMischer2auf,        "Mischer 2 auf" },       
+   { doMischer2zu,         "Mischer 2 zu" },       
+   { doMischer3auf,        "Mischer 3 auf" },       
+   { doMischer3zu,         "Mischer 3 zu" },       
+   { doMischer4auf,        "Mischer 4 auf" },       
+   { doMischer4zu,         "Mischer 4 zu" },       
+   { doMischer5auf,        "Mischer 5 auf" },       
+   { doMischer5zu,         "Mischer 5 zu" },       
+   { doMischer6auf,        "Mischer 6 auf" },       
+   { doMischer6zu,         "Mischer 6 zu" },       
+   { doMischer7auf,        "Mischer 7 auf" },       
+   { doMischer7zu,         "Mischer 7 zu" },       
+   { doMischer8auf,        "Mischer 8 auf" },       
+   { doMischer8zu,         "Mischer 8 zu" },       
+
+   { 0, 0 }
+};

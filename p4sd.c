@@ -218,7 +218,8 @@ int P4sd::updateValueFacts()
 {
    int status;
    Fs::ValueSpec v;
-   int count = 0;
+   int count;
+   int added;
 
    // check serial communication
 
@@ -228,7 +229,10 @@ int P4sd::updateValueFacts()
       return fail;
    }
 
-   // ...
+   // Add the sensor definitions delivered by the S 3200
+
+   count = 0;
+   added = 0;
 
    for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; 
         status = request->getNextValueSpec(&v))
@@ -255,12 +259,50 @@ int P4sd::updateValueFacts()
          tableValueFacts->setValue(cTableValueFacts::fiRes1, v.unknown);
          
          tableValueFacts->store();
+         added++;
       }
 
       count++;
    }
 
+   tell(eloAlways, "Read %d value facts, added %d", count, added);
+
+   // add default fpr digital outputs
+
+   count = 0;
+   added = 0;
+
+   for (int i = 0; Fs::diditalOutDefinitions[i].title; i++)
+   {
+      tableValueFacts->clear();
+      tableValueFacts->setValue(cTableValueFacts::fiAddress, diditalOutDefinitions[i].address);
+      tableValueFacts->setValue(cTableValueFacts::fiType, "DO");         // DO -> Digital Out
+      
+      if (!tableValueFacts->find())
+      {
+         string name = diditalOutDefinitions[i].title;
+         
+         removeCharsExcept(name, nameChars);
+
+         tableValueFacts->setValue(cTableValueFacts::fiName, name.c_str());
+         tableValueFacts->setValue(cTableValueFacts::fiState, "D");
+         tableValueFacts->setValue(cTableValueFacts::fiUnit, "dig");
+         tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+         tableValueFacts->setValue(cTableValueFacts::fiTitle, diditalOutDefinitions[i].title);
+         
+         tableValueFacts->store();
+         added++;
+      }
+
+      count++;
+   }
+
+   tell(eloAlways, "Checked %d digital output facts, added %d", count, added);
+
    // at least add value definitions for special data
+
+   count = 0;
+   added = 0;
 
    tableValueFacts->clear();
    tableValueFacts->setValue(cTableValueFacts::fiAddress, udState);   // 1  -> Kessel Status
@@ -273,15 +315,11 @@ int P4sd::updateValueFacts()
       tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
       tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
       tableValueFacts->setValue(cTableValueFacts::fiTitle, "Heizungsstatus");
-      tableValueFacts->setValue(cTableValueFacts::fiRes1, 0.0);
       
       tableValueFacts->store();
+      added++;
    }
-   
-   count++;
 
-   tell(eloAlways, "Read %d value facts", count);
-   
    return success;
 }
 

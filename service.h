@@ -19,6 +19,8 @@ class FroelingService
 {
    public:
 
+      static const char* nameChars;
+
       enum WorkingState
       {
          wsUnknown = na,
@@ -93,13 +95,13 @@ class FroelingService
 
          cmdGetValue          = 0x30,   // Aktuelle Werte der Heizung
          cmdGetValueListFirst = 0x31,   // Liste der verfügbaren Aktuellen Werte
-         cmdGetValueListNext  = 0x32,   // Liste der verfügbaren Aktuellen Werte
+         cmdGetValueListNext  = 0x32,   //   "
 
-         cmdGetUnknownFirst   = 0x35,   // 
+         cmdGetUnknownFirst   = 0x35,   // What ever :o
          cmdGetUnknownNext    = 0x36,   // 
 
          cmdGetMenuListFirst  = 0x37,   // Menuestruktur auslesen
-         cmdGetMenuListNext   = 0x38,   // Menuestruktur auslesen
+         cmdGetMenuListNext   = 0x38,   //   "
          cmdSetParameter      = 0x39,   // Einstellung ändern
 
          cmdGetBaseSetup      = 0x40,   // Konfiguration des Kessels
@@ -113,7 +115,7 @@ class FroelingService
          cmdGetDigIn          = 0x46,   // Digitale Eingänge abfragen
 
          cmdGetErrorFirst     = 0x47,   // Fehlerpuffer abfragen
-         cmdGetErrorNext      = 0x48,   // Fehlerpuffer abfragen
+         cmdGetErrorNext      = 0x48,   //   "
 
          cmdSetTimes          = 0x50,   // Zeiten ändern
          cmdGetState          = 0x51,   // Kesselzustand abfragen
@@ -133,6 +135,49 @@ class FroelingService
       {
          udState = 1
       };
+
+      enum DigitalOut
+      {
+         doHeizungLambdasonde = 0x07,
+         doBrennerrelais      = 0x08,
+         doStandbyRelais      = 0x0D,
+
+         doHeizkreispumpe1    = 0x01,
+         doHeizkreispumpe2    = 0x02,
+         doHeizkreispumpe3    = 0x19,
+         doHeizkreispumpe4    = 0x1A,
+         doHeizkreispumpe5    = 0x1F,
+         doHeizkreispumpe6    = 0x20,
+         doHeizkreispumpe7    = 0x25,
+         doHeizkreispumpe8    = 0x26,
+
+         doMischer1auf        = 0x03,
+         doMischer1zu         = 0x04,
+         doMischer2auf        = 0x05,
+         doMischer2zu         = 0x06,
+         doMischer3auf        = 0x1B,
+         doMischer3zu         = 0x1C,
+         doMischer4auf        = 0x1D,
+         doMischer4zu         = 0x1E,
+         doMischer5auf        = 0x21,
+         doMischer5zu         = 0x22,
+         doMischer6auf        = 0x23,
+         doMischer6zu         = 0x24,
+         doMischer7auf        = 0x27,
+         doMischer7zu         = 0x28,
+         doMischer8auf        = 0x29,
+         doMischer8zu         = 0x2A         
+      };
+
+      struct DigitalOutDef
+      {
+         word address;
+         const char* title;
+      };
+      
+      static DigitalOutDef diditalOutDefinitions[];
+
+      // error states
 
       static const char* errState2Text(int state)
       {
@@ -154,10 +199,10 @@ class FroelingService
          char* unit;
          byte digits;
          word factor;
-         word value;
-         word min;
-         word max;
-         word def;
+         sword value;
+         sword min;
+         sword max;
+         sword def;
       };
 
       struct Status
@@ -230,7 +275,9 @@ class FroelingService
       };
 
       // -------------------------
+      // -------------------------
       // COM2
+      // -------------------------
 
       enum InterfaceDef2
       {
