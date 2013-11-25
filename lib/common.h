@@ -92,7 +92,6 @@ enum Eloquence
    eloAlways,                // 0
    eloDetail,                // 1
    eloDebug,                 // 2
-   eloDebug1 = eloDebug,     // 2
    eloDebug2,                // 3
    eloDebug3                 // 4
 };

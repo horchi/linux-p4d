@@ -408,6 +408,8 @@ int P4sd::loop()
 
       // check state
 
+      tell(eloDetail, "Check state");
+
       if (request->getStatus(&state) == success)
       {
          stateChanged = lastState != state.state;
@@ -416,6 +418,8 @@ int P4sd::loop()
          {
             lastState = state.state;
             nextAt = time(0);              // force on state change
+
+            tell(eloAlways, "State changed to '%s'", state.stateinfo);
          }
 
          nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
@@ -436,6 +440,10 @@ int P4sd::loop()
 
          continue;
       }
+
+      // read values ...
+
+      tell(eloDetail, "Read values");
 
       int count = 0;
       string mailBody = "";
