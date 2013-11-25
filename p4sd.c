@@ -31,6 +31,7 @@ P4sd::P4sd()
    tableValueFacts = 0;
    tableParameterFacts = 0;
    selectActiveValueFacts = 0;
+   mailBody = "";
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -67,6 +68,9 @@ int P4sd::init()
       return fail;
 
    initDb();
+
+   if (mail && !isEmpty(stateMailTo))
+      tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
 
    return success;
 }
@@ -376,7 +380,7 @@ int P4sd::standbyUntil(time_t until)
 }
 
 //***************************************************************************
-// Refresh
+// Loop
 //***************************************************************************
 
 int P4sd::loop()
@@ -384,8 +388,6 @@ int P4sd::loop()
    time_t nextAt = 0;
    time_t nextStateAt = 0;
    int lastState = na;
-   Fs::Status state;
-   int status;
 
    while (!doShutDown())
    {
@@ -408,18 +410,18 @@ int P4sd::loop()
 
       // check state
 
-      tell(eloDetail, "Check state");
+      tell(eloDetail, "Checking state ...");
 
-      if (request->getStatus(&state) == success)
+      if (request->getStatus(&currentState) == success)
       {
-         stateChanged = lastState != state.state;
+         stateChanged = lastState != currentState.state;
 
          if (stateChanged)
          {
-            lastState = state.state;
+            lastState = currentState.state;
             nextAt = time(0);              // force on state change
 
-            tell(eloAlways, "State changed to '%s'", state.stateinfo);
+            tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
          }
 
          nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
@@ -441,74 +443,82 @@ int P4sd::loop()
          continue;
       }
 
-      // read values ...
-
-      tell(eloDetail, "Read values");
-
-      int count = 0;
-      string mailBody = "";
-      time_t now = time(0);
+      // perform update 
 
       nextAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+      mailBody = "";
 
-      tableValueFacts->clear();
-      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+      update();
 
-      for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
-      {
-         double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
-         const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
-
-         if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
-         {
-            unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
-            Value v(addr);
-
-            if ((status = request->getValue(&v)) != success)
-            {
-               tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
-               continue;
-            }
-            
-            store(now, "VA", v.address, v.value, factor);
-
-            if (stateChanged)
-            {
-               char num[100];
-               sprintf(num, "%.2f", v.value / factor);
-               mailBody += string(title) + " = " + string(num) + "\n";
-            }
-         }
-
-         else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
-         {
-            switch (tableValueFacts->getIntValue(cTableValueFacts::fiAddress))
-            {
-               case udState:
-               {
-                  store(now, "UD", udState, state.state, factor, state.stateinfo);
-
-                  if (stateChanged)
-                     mailBody += string(title) 
-                        + " = " + string(state.stateinfo) + "\n";
-                  
-                  break;
-               }
-            }
-         }
-
-         count++;
-      }
-
-      selectActiveValueFacts->freeResult();
-      tell(eloAlways, "Processed %d samples, state is '%s'", 
-           count, state.stateinfo);
+      // mail 
 
       if (mail && stateChanged)
-         sendMail(mailBody.c_str(), &state);
+         sendMail();
    }
    
+   return success;
+}
+
+//***************************************************************************
+// Update
+//***************************************************************************
+
+int P4sd::update()
+{
+   int status;
+   int count = 0;
+   time_t now = time(0);
+
+   tell(eloDetail, "Reading values ...");
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+
+   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+   {
+      double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
+      const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
+
+      if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
+      {
+         unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
+         Value v(addr);
+
+         if ((status = request->getValue(&v)) != success)
+         {
+            tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
+            continue;
+         }
+            
+         store(now, "VA", v.address, v.value, factor);
+
+         char num[100];
+         sprintf(num, "%.2f", v.value / factor);
+         mailBody += string(title) + " = " + string(num) + "\n";
+      }
+
+      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
+      {
+         switch (tableValueFacts->getIntValue(cTableValueFacts::fiAddress))
+         {
+            case udState:
+            {
+               store(now, "UD", udState, currentState.state, factor, currentState.stateinfo);
+               mailBody += string(title) + " = " + string(currentState.stateinfo) + "\n";
+                  
+               break;
+            }
+         }
+      }
+
+      count++;
+   }
+
+   selectActiveValueFacts->freeResult();
+   tell(eloAlways, "Processed %d samples, state is '%s'", 
+        count, currentState.stateinfo);
+
    return success;
 }
 
@@ -516,7 +526,7 @@ int P4sd::loop()
 // Send Mail
 //***************************************************************************
 
-int P4sd::sendMail(const char* body, Status* state)
+int P4sd::sendMail()
 {
    char* command = 0;
    const char* receiver = 0;
@@ -525,10 +535,10 @@ int P4sd::sendMail(const char* body, Status* state)
 
    // check
 
-   if (isEmpty(mailScript) || isEmpty(body))
+   if (isEmpty(mailScript) || !mailBody.length())
       return fail;
 
-   if (state->state == wsError)
+   if (currentState.state == wsError)
    {
       Fs::ErrorInfo e;
 
@@ -554,13 +564,12 @@ int P4sd::sendMail(const char* body, Status* state)
          }
       }
 
-      errorBody += string("\n") + body;
-      body = errorBody.c_str();
+      mailBody = errorBody + string("\n\n") + mailBody;
    }
 
-   else if (isMailState(state->state))
+   else if (haveMailState())
    {
-      subject = "Heizung - Status: " + string(state->stateinfo);
+      subject = "Heizung - Status: " + string(currentState.stateinfo);
       receiver = stateMailTo;
    }
    
@@ -570,7 +579,7 @@ int P4sd::sendMail(const char* body, Status* state)
    // send mail
    
    asprintf(&command, "%s '%s' '%s' %s", mailScript, 
-            subject.c_str(), body,
+            subject.c_str(), mailBody.c_str(),
             receiver);
    
    system(command);
@@ -578,25 +587,35 @@ int P4sd::sendMail(const char* body, Status* state)
    free(command);
    
    tell(eloAlways, "Send mail '%s' with [%s] to '%s'", 
-        subject.c_str(), body, receiver);
+        subject.c_str(), mailBody.c_str(), receiver);
 
    return success;
 }
 
 //***************************************************************************
-// Is Mail State
+// Have Mail State
 //***************************************************************************
 
-int P4sd::isMailState(int state)
+int P4sd::haveMailState()
 {
+   int result = no;
+   char* mailStates = 0;
+
    if (isEmpty(stateMailAtStates))
       return yes;
 
-   for (const char* p = strtok(stateMailAtStates, ":,"); p; p = strtok(0, ":,"))
+   mailStates = strdup(stateMailAtStates);
+
+   for (const char* p = strtok(mailStates, ":,"); p; p = strtok(0, ":,"))
    {
-      if (atoi(p) == state)
-         return yes;
+      if (atoi(p) == currentState.state)
+      {
+         result = yes;
+         break;
+      }
    }
 
-   return no;
+   free(mailStates);
+
+   return result;
 }

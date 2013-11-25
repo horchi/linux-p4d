@@ -66,13 +66,15 @@ class P4sd : public FroelingService
 
       int standby(int t);
       int standbyUntil(time_t until);
+      
+      int update();
 
       int store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text = 0);
-      int sendMail(const char* body, Status* state);
+      int sendMail();
       int updateValueFacts();
       int updateParameterFacts();
-      int isMailState(int state);
+      int haveMailState();
       
       int doShutDown() { return shutdown; }
 
@@ -89,6 +91,9 @@ class P4sd : public FroelingService
 
       P4Request* request;
       Serial* serial;    
+
+      Status currentState;
+      string mailBody;
 
       static int shutdown;
 };
