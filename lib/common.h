@@ -23,6 +23,7 @@ using namespace std;
 
 typedef unsigned char byte;
 typedef unsigned short word;
+typedef short sword;
 typedef unsigned int dword;
 
 //***************************************************************************

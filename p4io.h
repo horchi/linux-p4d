@@ -229,6 +229,7 @@ class P4Request : public FroelingService
 
       int readByte(byte& v, int decode = yes, int tms = 1000);
       int readWord(word& v, int decode = yes, int tms = 1000);
+      int readWord(sword& v, int decode = yes, int tms = 1000);
       int readTime(time_t& t);         // 3 byte  
       int readDate(time_t& t);         // 3 byte
       int readDateExt(time_t& t);      // 4 byte

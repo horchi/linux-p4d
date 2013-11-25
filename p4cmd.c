@@ -225,7 +225,7 @@ int main(int argc, char** argv)
          Fs::Value v(addr);
          
          if ((status = request.getValue(&v)) == success)
-            tell(eloAlways, "value 0x%4.4X is %d", v.address, v.value);
+            tell(eloAlways, "value 0x%x is %d", v.address, v.value);
          else
             tell(eloAlways, "Getting value failed, error %d", status);
 

@@ -445,6 +445,22 @@ int P4Request::readWord(word& v, int decode, int tms)
    return success;
 }
 
+int P4Request::readWord(sword& v, int decode, int tms)
+{
+   byte b1;
+   byte b2;
+   int status;
+
+   if ((status = readByte(b1, decode, tms)) != success)
+      return status;
+   
+   if ((status = readByte(b2, decode, tms)) != success)
+      return status;
+   
+   v = (signed short)(b1 << 8) | b2;
+
+   return success;
+}
 //***************************************************************************
 // Read Time
 //***************************************************************************

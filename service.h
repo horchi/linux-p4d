@@ -179,7 +179,7 @@ class FroelingService
          ~Value() { }
 
          word address;
-         word value;
+         sword value;
       };
 
       struct IoValue
