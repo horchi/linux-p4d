@@ -101,7 +101,7 @@ int Serial::open(const char* dev)
       CREAD   : enable receiving characters  */
 
    newtio.c_cflag = B57600 | CS8 | CLOCAL | CREAD;
-   newtio.c_iflag = IGNPAR | ICRNL;  // don't set ICRNL and PARMRK iflag
+   newtio.c_iflag = IGNPAR;  // don't set ICRNL !!
    newtio.c_oflag = 0;
    newtio.c_lflag = 0;       // ICANON - 'disable echo functionality  and don't
                              //           send signals to the calling prozess'
