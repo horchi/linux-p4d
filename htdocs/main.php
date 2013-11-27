@@ -4,9 +4,8 @@
     <title>main</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <style type="text/css">
-      body { margin:0; padding:0; height:1500px; }
       #aState  { position:absolute; top:10px; left:50px; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
-      #aSelect { position:absolute; top:120px; left:50px; width:700px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
+      #aSelect { position:absolute; top:120px; left:50px; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
     </style>
   </head>
 
@@ -62,8 +61,8 @@ include("functions.php");
 
   echo " <div id=\"aState\">";
   echo $time ."<br>";
-  echo "Status:  " . $status ."<br>";
   echo "Betriebsmodus:  " . $mode ."<br>";
+  echo "Status:  " . $status ."<br>";
   echo " </div>";
 
   echo "<br>\n";
@@ -73,10 +72,9 @@ include("functions.php");
 
   echo " <div id=\"aSelect\">";
   echo "  <form name='navigation' method='get'>\n";
-
+  echo "Zeitraum der Charts: <br>\n";
   echo datePicker("Start", "s", $year, $day, $month);
 
-  echo "Bereich: ";
   echo "     <select name=\"range\">\n";
   echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
   echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
@@ -93,7 +91,7 @@ include("functions.php");
   // ------------------
   // tabelle
 
-  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:190px; left:50px;\">\n";
+  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:200px; left:50px;\">\n";
 
   echo "    <tr style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
@@ -119,14 +117,15 @@ include("functions.php");
      $unit = $row['f_unit'];
      $address = $row['s_address'];
      $type = $row['s_type'];
+     $txtaddr = sprintf("0x%x", $address);
 
      $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . " ','_blank'," 
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
      
      if ($i++ % 2)
-        echo "   <tr bgcolor=\"#83AFFF\">\n";
+        echo "   <tr style=\"color:black\" bgcolor=\"#83AFFF\">\n";
      
-     echo "      <td>" . $address . "</td>\n";   
+     echo "      <td>" . $txtaddr . "</td>\n";   
      echo "      <td>" . $type . "</td>\n";   
      echo "      <td>" . $url . $title . "</a></td>\n";
      echo "      <td>$value</td>\n";
@@ -134,7 +133,7 @@ include("functions.php");
      echo "   </tr>\n";
   }
 
-  echo "  </table><br>\n";
+  echo "  </table>\n";
 
   mysql_close();
 

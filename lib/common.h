@@ -11,6 +11,8 @@
 #include <stdint.h>   // uint_64_t
 #include <stdlib.h>
 #include <iconv.h>
+#include <errno.h>
+#include <string.h>
 
 #include <string>
 
@@ -158,6 +160,85 @@ class cTimeMs
    private:
 
       uint64_t begin;
+};
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+#include <sys/sem.h>
+
+class Sem
+{
+   public:
+
+      Sem(int aKey)
+      {
+         locked = 0;
+         key = aKey;
+
+         if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
+            tell(eloAlways, "Error: Can't get semaphore, errno (%d) '%s'", 
+                 errno, strerror(errno));
+      }
+
+      ~Sem() 
+      { 
+         while (locked && v() == success)
+            ;
+      }
+
+      int p()
+      {
+         sembuf sops[2];
+         
+         sops[0].sem_num = 0;
+         sops[0].sem_op = 0;                        // wait for lock
+         sops[0].sem_flg = SEM_UNDO;
+         
+         sops[1].sem_num = 0;
+         sops[1].sem_op = 1;                        // increment 
+         sops[1].sem_flg = SEM_UNDO | IPC_NOWAIT;
+         
+         if (semop(id, sops, 2) == -1)
+         {
+            tell(eloAlways, "Error: Can't lock semaphore, errno (%d) '%s'", 
+                 errno, strerror(errno));
+            
+            return fail;
+         }
+
+         locked++;
+
+         return success;
+      }
+
+      int v()
+      {
+         sembuf sops;
+         
+         sops.sem_num = 0;
+         sops.sem_op = -1;                          // release control
+         sops.sem_flg = SEM_UNDO | IPC_NOWAIT;
+         
+         if (semop(id, &sops, 1) == -1)
+         {
+            tell(eloAlways, "Error: Can't unlock semaphore, errno (%d) '%s'",
+                 errno, strerror(errno));
+            
+            return fail;
+         }
+         
+         locked--;
+
+         return success;
+      }
+
+   private:
+
+      int key;
+      int id;
+      int locked;
 };
 
 //***************************************************************************

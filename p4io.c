@@ -634,6 +634,8 @@ int P4Request::readText(char*& s, int size)
 
 int P4Request::check()
 {
+   RequestLock lock(this);
+
    int status = fail;
    char* s = 0;
    byte b;
@@ -823,7 +825,7 @@ int P4Request::setParameter(ConfigParameter* p)
       return fail;
 
    show("<- ");
-   
+
    return getParameter(p);
 }
 
@@ -1034,7 +1036,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    if (size < 30)
    {
-      tell(eloAlways, "At least 30 byte more ecxpected but only %d pending, status is %d", 
+      tell(eloAlways, "At least 30 byte more expected but only %d pending, status is %d", 
            size, status);
       tell(eloAlways, "Reading this %d and skipping item", size);
 

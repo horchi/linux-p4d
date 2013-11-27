@@ -101,7 +101,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
       . " group by date(time), ((60/" . $groupMinutes . ") * hour(time) + floor(minute(time)/" . $groupMinutes . "))"
       . " order by time";
 
-   // syslog(LOG_DEBUG, "p4: $query");
+   syslog(LOG_DEBUG, "p4: $query");
    $result = mysql_query($query);
 
    if (!$result)

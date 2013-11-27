@@ -10,8 +10,8 @@
 #define _IO_P4_H_
 
 #include <arpa/inet.h>
-#include <time.h>
 
+#include <time.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -81,10 +81,44 @@ class P4Packet : public FroelingService, public Serial
 class P4Request : public FroelingService
 {
    public:
-
+      
       P4Request(Serial* aSerial)    { s = aSerial; text = 0; fixFwDateBug = no; clear(); }
       virtual ~P4Request()          { clear(); }
+      
+      class RequestLock
+      {
+         public:
+            
+            RequestLock(P4Request* aReq) 
+            { 
+               req = aReq;
+               sem = new Sem(0x3da00001);
+               sem->p();
+            }
 
+            ~RequestLock()
+            {
+               int count = 0;
+               byte b;
+               
+               while (req->readByte(b, 10) == success)
+                  count++;
+               
+               if (count)
+               {
+                  tell(eloAlways, "Got %d unexpected bytes", count);
+                  req->show("<- ");
+               }
+
+               delete sem;
+            }
+            
+         private:
+            
+            P4Request* req;
+            Sem* sem;
+      };
+      
       int clear() 
       { 
          free(text);
