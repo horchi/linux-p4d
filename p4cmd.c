@@ -162,9 +162,7 @@ int main(int argc, char** argv)
          Fs::IoValue v(addr);
 
          if (request.getDigitalOut(&v) == success)
-         {
             tell(eloAlways, "mode %c; state %d", v.mode, v.state);
-         }
 
          break;
       }
