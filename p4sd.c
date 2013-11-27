@@ -305,8 +305,8 @@ int P4sd::updateValueFacts()
    added = 0;
 
    tableValueFacts->clear();
-   tableValueFacts->setValue(cTableValueFacts::fiAddress, udState);   // 1  -> Kessel Status
-   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");         // UD -> User Defined
+   tableValueFacts->setValue(cTableValueFacts::fiAddress, udState);      // 1  -> Kessel Status
+   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
    
    if (!tableValueFacts->find())
    {
@@ -315,6 +315,38 @@ int P4sd::updateValueFacts()
       tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
       tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
       tableValueFacts->setValue(cTableValueFacts::fiTitle, "Heizungsstatus");
+      
+      tableValueFacts->store();
+      added++;
+   }
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue(cTableValueFacts::fiAddress, udMode);       // 2  -> Kessel Mode
+   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
+   
+   if (!tableValueFacts->find())
+   {
+      tableValueFacts->setValue(cTableValueFacts::fiName, "Betriebsmodus");
+      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+      tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
+      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Betriebsmodus");
+      
+      tableValueFacts->store();
+      added++;
+   }
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue(cTableValueFacts::fiAddress, udTime);       // 3  -> Kessel Zeit
+   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
+   
+   if (!tableValueFacts->find())
+   {
+      tableValueFacts->setValue(cTableValueFacts::fiName, "Uhrzeit");
+      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+      tableValueFacts->setValue(cTableValueFacts::fiUnit, "T");
+      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Datum Uhrzeit der Heizung");
       
       tableValueFacts->store();
       added++;
@@ -559,6 +591,26 @@ int P4sd::update()
             {
                store(now, type, udState, currentState.state, factor, currentState.stateinfo);
                mailBody += string(title) + " = " + string(currentState.stateinfo) + "\n";
+                  
+               break;
+            }
+            case udMode:
+            {
+               store(now, type, udMode, currentState.mode, factor, currentState.modeinfo);
+               mailBody += string(title) + " = " + string(currentState.modeinfo) + "\n";
+                  
+               break;
+            }
+            case udTime:
+            {
+               struct tm tim = {0};
+               char date[100];
+               
+               localtime_r(&currentState.time, &tim);
+               strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
+               
+               store(now, type, udTime, currentState.time, factor, date);
+               mailBody += string(title) + " = " + string(date) + "\n";
                   
                break;
             }

@@ -11,8 +11,10 @@ include("pChart/class/pCache.class.php");
 
 if (isset($_GET['address']) && is_numeric($_GET['address']))
    $sensorCond = " address = " .  $_GET['address'] . " ";
+elseif (isset($_GET['condition']))
+   $sensorCond = " " . $_GET['condition'] . " ";
 else
-   $sensorCond = " address in (0,1,118,120,21,25,4) ";
+   $sensorCond = " address in (0,1,21,25,4) ";
 
 if (isset($_GET['type']))
    $sensorCond .= "and type = '" .  $_GET['type'] . "' ";

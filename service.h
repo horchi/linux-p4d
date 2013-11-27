@@ -133,7 +133,9 @@ class FroelingService
 
       enum UserDefined
       {
-         udState = 1
+         udState = 1,
+         udMode,
+         udTime
       };
 
       enum DigitalOut
