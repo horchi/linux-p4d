@@ -352,6 +352,8 @@ int P4sd::updateValueFacts()
       added++;
    }
 
+   tell(eloAlways, "Added %d user defined values", added);
+
    return success;
 }
 

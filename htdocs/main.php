@@ -35,12 +35,21 @@ include("functions.php");
   // ----------------
   // Status
 
-  $strQuery = "select * from samples where time = '" . $max . "' and address = 1 and type = 'UD';";
+  echo "Status:<br>\n";
+
+  $strQuery = "select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';";
   $result = mysql_query($strQuery);
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
-
-  echo "Status:<br>\n";
   echo $row['text'] . "\n";
+
+  $strQuery = "select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';";
+  $result = mysql_query($strQuery);
+  $row = mysql_fetch_array($result, MYSQL_ASSOC);
+  echo $row['text'] . "\n";
+
+  $strQuery = "select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';";
+  $result = mysql_query($strQuery);
+  $row = mysql_fetch_array($result, MYSQL_ASSOC);
   echo $row['text'] . "\n";
 
   echo "<br><br><br><br>\n";
