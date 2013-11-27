@@ -101,7 +101,7 @@ class P4Request : public FroelingService
                int count = 0;
                byte b;
                
-               while (req->readByte(b, 10) == success)
+               while (req->readByte(b, yes, 10) == success)
                   count++;
                
                if (count)
