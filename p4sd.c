@@ -43,7 +43,6 @@ P4sd::P4sd()
 
    serial = new Serial;
    request = new P4Request(serial);
-   request->setFixFwDateBug(fixFwDateBug);
 
    init();
 }

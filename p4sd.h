@@ -31,7 +31,6 @@ extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
 extern int  stateCheckInterval;
-extern int  fixFwDateBug;
 
 extern int  mail;
 extern char mailScript[];

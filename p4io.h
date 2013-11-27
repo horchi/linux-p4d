@@ -82,7 +82,7 @@ class P4Request : public FroelingService
 {
    public:
       
-      P4Request(Serial* aSerial)    { s = aSerial; text = 0; fixFwDateBug = no; clear(); }
+      P4Request(Serial* aSerial)    { s = aSerial; text = 0; clear(); }
       virtual ~P4Request()          { clear(); }
       
       class RequestLock
@@ -229,8 +229,6 @@ class P4Request : public FroelingService
          return success;
       }
 
-      void setFixFwDateBug(int b) { fixFwDateBug = b; }
-
       // interface
 
       int getStatus(Status* s);
@@ -280,7 +278,6 @@ class P4Request : public FroelingService
       int addressCount;
       byte buffer[sizeMaxRequest*2+TB];
       int sizeBufferContent;
-      int fixFwDateBug;
 
       Serial* s;
 };
