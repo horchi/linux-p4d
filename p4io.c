@@ -687,7 +687,7 @@ int P4Request::getStatus(Status* s)
       p = strchr(text, ';');
       *p = 0;
       
-      s->modeinfo = strdup(text);
+      s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
       s->stateinfo = strdup(p+1);
 
       free(text);

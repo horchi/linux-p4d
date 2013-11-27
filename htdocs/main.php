@@ -1,3 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+  <head>
+    <title>main</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <style type="text/css">
+      body { margin:0; padding:0; height:1500px; }
+      #aState  { position:absolute; top:10px; left:50px; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
+      #aSelect { position:absolute; top:120px; left:50px; width:700px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
+    </style>
+  </head>
+
+  <body>
 <?php
 
 include("pChart/class/pData.class.php");
@@ -35,49 +48,52 @@ include("functions.php");
   // ----------------
   // Status
 
-  echo "Status:<br>\n";
-
-  $strQuery = "select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';";
-  $result = mysql_query($strQuery);
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  echo $row['text'] . "\n";
+  $time = $row['text'];
 
-  $strQuery = "select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';";
-  $result = mysql_query($strQuery);
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  echo $row['text'] . "\n";
+  $status = $row['text'];
 
-  $strQuery = "select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';";
-  $result = mysql_query($strQuery);
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  echo $row['text'] . "\n";
+  $mode = $row['text'];
 
-  echo "<br><br><br><br>\n";
+  echo " <div id=\"aState\">";
+  echo $time ."<br>";
+  echo "Status:  " . $status ."<br>";
+  echo "Betriebsmodus:  " . $mode ."<br>";
+  echo " </div>";
+
+  echo "<br>\n";
 
   // ----------------
   // 
 
-  echo "<form name='navigation' method='get'>\n";
+  echo " <div id=\"aSelect\">";
+  echo "  <form name='navigation' method='get'>\n";
 
   echo datePicker("Start", "s", $year, $day, $month);
 
   echo "Bereich: ";
-  echo "   <select name=\"range\">\n";
-  echo "      <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
-  echo "      <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
-  echo "      <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
-  echo "   </select>\n";
+  echo "     <select name=\"range\">\n";
+  echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
+  echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
+  echo "        <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
+  echo "     </select>\n";
 
-  echo "   <input type=submit value=\"Go\">";
+  echo "     <input type=submit value=\"Go\">";
 
-  echo "</form>\n";
+  echo "  </form>\n";
+  echo " </div>";
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   // ------------------
   // tabelle
 
-  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:70px; left:50px\">\n";
+  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:190px; left:50px;\">\n";
 
   echo "    <tr style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
@@ -122,5 +138,6 @@ include("functions.php");
 
   mysql_close();
 
+echo " </body>\n";
 echo "</html>\n";
 ?>
