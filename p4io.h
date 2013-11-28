@@ -120,8 +120,10 @@ class P4Request : public FroelingService
          text = 0;
          theByte = 0;
          sizeBufferContent = 0;
+         sizeDecodedContent = 0;
          memset(&header, 0, sizeof(Header)); 
          memset(buffer, 0, sizeof(buffer)); 
+         memset(decoded, 0, sizeof(buffer)); 
          return clearAddresses();
       }
 
@@ -180,6 +182,24 @@ class P4Request : public FroelingService
             sprintf(tmp+strlen(tmp), "%c", isprint(buffer[i]) ? buffer[i] : '.');
 
          tell(eloDebug, "%s", tmp);
+      }
+
+      void showDecoded(const char* prefix = "")
+      {
+         char tmp[1000];
+         *tmp = 0;
+
+         sprintf(tmp+strlen(tmp), "%s", prefix);
+
+         for (int i = 0; i < sizeDecodedContent; i++)
+            sprintf(tmp+strlen(tmp), "%2.2X ", decoded[i]);
+
+         sprintf(tmp+strlen(tmp), "   ");
+
+         for (int i = 0; i < sizeDecodedContent; i++)
+            sprintf(tmp+strlen(tmp), "%c", isprint(decoded[i]) ? decoded[i] : '.');
+
+         tell(eloDebug2, "%s", tmp);
       }
 
       Header* getHeader() { return &header; }
@@ -274,6 +294,9 @@ class P4Request : public FroelingService
       byte buffer[sizeMaxRequest*2+TB];
       int sizeBufferContent;
 
+      byte decoded[sizeMaxRequest*2+TB];  // for debug
+      int sizeDecodedContent;
+      
       Serial* s;
 };
 

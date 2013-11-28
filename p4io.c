@@ -307,6 +307,7 @@ int P4Request::prepareRequest()
    byte* p;
 
    sizeBufferContent = 0;
+   sizeDecodedContent = 0;
 
    if (addressCount)
       header.size = htons((addressCount * sizeAddress) + sizeCrc);
@@ -385,10 +386,13 @@ int P4Request::readByte(byte& v, int decode, int tms)
    if (!decode)
    {
       v = b;
+      decoded[sizeDecodedContent++] = v;
 
       return success;
    }
    
+   // decode ...
+
    if (b != 0x02 && b != 0x2b && b != 0x0fe)
    {
       v = b;
@@ -420,6 +424,8 @@ int P4Request::readByte(byte& v, int decode, int tms)
    }
    else
       return fail;
+
+   decoded[sizeDecodedContent++] = v;
 
    return success;
 }
@@ -1111,6 +1117,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    }
 
    show("<- ");
+   showDecoded("DEBUG: ");
 
    return status;   
 }
