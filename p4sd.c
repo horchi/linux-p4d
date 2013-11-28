@@ -379,8 +379,11 @@ int P4sd::updateParameterFacts()
    for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; 
         status = request->getNextMenuItem(&m))
    {
-      if (status != success)
+      if (status == wrnSkip)
          continue;
+
+      if (status != success)
+         break;
 
       tell(eloDebug, "%3d) 0x%04x (0x%04x) '%s'", count++, m.address, m.unknown, m.description);
 

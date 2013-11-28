@@ -49,7 +49,8 @@ class FroelingService
          wrnLast,
          wrnEmpty,
          wrnTimeout,
-         
+         wrnSkip,
+
          errRequestFailed,
          errWrongAddress,
          errTransmissionFailed

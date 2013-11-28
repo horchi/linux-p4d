@@ -28,8 +28,18 @@ cDbService::FieldDef cTableSamples::fields[] =
                                                                    
    // data
                                                                    
-   { "value",            ffFloat,     62, fiValue,         ftData }, 
+   { "value",            ffFloat,    122, fiValue,         ftData }, 
    { "text",             ffAscii,     50, fiText,          ftData }, 
+
+   { 0 }
+};
+
+cDbService::IndexDef cTableSamples::indices[] =
+{
+   // index             fields  
+
+   { "time",          { fiTime, na      }, 0 },
+   { "type",          { fiType, na      }, 0 },
 
    { 0 }
 };

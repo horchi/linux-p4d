@@ -268,9 +268,12 @@ int main(int argc, char** argv)
          Fs::MenuItem m;
          int n = 0;
 
-         for (status = request.getFirstMenuItem(&m); status == success; status = request.getNextMenuItem(&m))
+         for (status = request.getFirstMenuItem(&m); status != Fs::wrnLast; status = request.getNextMenuItem(&m))
          {
-            tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n++, m.address, m.unknown, m.description);
+            if (status == success)
+               tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n++, m.address, m.unknown, m.description);
+            else if (status != Fs::wrnSkip)
+               break;
          }
 
          if (status == Fs::wrnTimeout)

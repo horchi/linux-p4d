@@ -19,7 +19,7 @@ class cTableSamples : public cDbTable
    public:
 
       cTableSamples(cDbConnection* aConnection, const char* aName = "samples")
-         : cDbTable(aConnection, aName, fields ) { }
+         : cDbTable(aConnection, aName, fields, indices) { }
 
       enum FieldIndex
       {
@@ -37,6 +37,7 @@ class cTableSamples : public cDbTable
       };
 
       static FieldDef fields[];
+      static IndexDef indices[];
 };
 
 //***************************************************************************

@@ -1035,25 +1035,20 @@ int P4Request::getMenuItem(MenuItem* m, int first)
       readByte(crc);
       show("<- ");
 
-      tell(eloAlways, "Got 'end of list'");
+      tell(eloDetail, "Got 'end of list'");
       return wrnLast;
    }
 
    if (size < 30)
    {
-      tell(eloAlways, "At least 30 byte more expected but only %d pending, status is %d", 
-           size, status);
-      tell(eloAlways, "Reading this %d and skipping item", size);
+      tell(eloDebug, "At least 30 byte more expected but only %d pending, skipping item", size);
 
-      while (size > 0 && status == success)
-      {
+      while (size-- > 0 && status == success)
          status = readByte(b);
-         size--;
-      }
 
       show("<- ");
 
-      return done;
+      return wrnSkip;
    }
 
    // 24 noch unbekannte byte lesen ...
@@ -1087,11 +1082,6 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    }
 
    size -= 2;
-
-//    status += readWord(m->factor);
-//    size -= 2;
-//    status += readText(m->unit, 2);
-//    size -= 2;
 
    // Rest als text lesen
 
