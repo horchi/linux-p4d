@@ -53,8 +53,8 @@ syslog(LOG_DEBUG, "p4: ---------");
 // -----------------------------
 // db connection
 
-mysql_connect("hgate", "p4", "p4");
-mysql_select_db("p4");
+mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
+mysql_select_db($mysqldb);
 mysql_query("set names 'utf8'");
 
 // ------------------------------
