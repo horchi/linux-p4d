@@ -628,7 +628,7 @@ int P4Request::readText(char*& s, int size)
 
 int P4Request::check()
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
 
    int status = fail;
    char* s = 0;
@@ -658,7 +658,7 @@ int P4Request::check()
 
 int P4Request::getStatus(Status* s)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
 
    int status = success;
    byte b;
@@ -736,7 +736,7 @@ int P4Request::getStatus(Status* s)
 
 int P4Request::getParameter(ConfigParameter* p)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
 
    int status = fail;
 
@@ -783,7 +783,7 @@ int P4Request::getParameter(ConfigParameter* p)
 
 int P4Request::setParameter(ConfigParameter* p)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
 
    byte crc;
 
@@ -835,7 +835,7 @@ int P4Request::setParameter(ConfigParameter* p)
 
 int P4Request::getValue(Value* v)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    int status = fail;
    byte crc;
 
@@ -863,7 +863,7 @@ int P4Request::getValue(Value* v)
 
 int P4Request::getDigitalOut(IoValue* v)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    int status = fail;
    byte crc;
 
@@ -892,7 +892,7 @@ int P4Request::getDigitalOut(IoValue* v)
 
 int P4Request::getError(ErrorInfo* e, int first)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    int status = success;
    int size = 0;
    byte crc;
@@ -944,7 +944,7 @@ int P4Request::getError(ErrorInfo* e, int first)
 
 int P4Request::getValueSpec(ValueSpec* v, int first)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    int status = success;
    int size = 0;
    byte crc, tb, b;
@@ -1011,7 +1011,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
 int P4Request::getMenuItem(MenuItem* m, int first)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    int status;
    int size = 0;
    byte crc, tb, b;
@@ -1117,7 +1117,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
 int P4Request::getItem(int first)
 {
-   RequestLock lock(this);
+   RequestClean clean(this);
    byte more;
    clear();
    
@@ -1154,7 +1154,7 @@ int P4Request::getItem(int first)
 
 int P4Request::getUser(byte cmd)
 {
-   RequestLock lock(this); 
+   RequestClean clean(this); 
    clear();
    request(cmd);
    

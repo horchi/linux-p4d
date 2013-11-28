@@ -67,6 +67,8 @@ int main(int argc, char** argv)
    UserCommand cmd = ucUnknown;
    const char* device = "/dev/ttyUSB0";
 
+   Sem sem(0x3da00001);
+
    loglevel = 0;
    logstdout = yes;
 
@@ -129,6 +131,8 @@ int main(int argc, char** argv)
       logstamp = yes;
 
    P4Request request(&serial);
+
+   sem.p();
 
    if (serial.open(device) != success)
       return 1;
@@ -298,6 +302,7 @@ int main(int argc, char** argv)
    }
    
    serial.close();
+   sem.v();
    
    return 0;
 }

@@ -2,6 +2,7 @@
 #include <stdint.h>   // uint_64_t
 #include <sys/time.h>
 
+#include <unistd.h>
 #include <stdio.h>
 #include <string>
 
@@ -105,27 +106,19 @@ int main(int argc, char** argv)
    logstdout = yes;
    loglevel = 2;
 
-//    byte* b = (byte*)argv[1];
-//    int size = strlen((char*)b);
+   Sem* sem = new Sem(0x3da00001);
 
-   byte b[30];
-   int size = 7;
+   sem->p();
+   printf("got lock\n");
 
-   b[0] = 0x02;
-   b[1] = 0xFD;
-   b[2] = 0x00;
-   b[3] = 0x03;
-   b[4] = 0x30;
-   b[5] = 0x00;
-   b[6] = 0x62;
+   sleep(5);
 
-   printf("0x%X  / %d\n", crc(b, size), crc(b, size));
+   sem->v();
+   printf("freed lock\n");
 
-//    initConnection();
-
-//    chkStatement2();
-
-//   exitConnection();
+//  initConnection();
+//  chkStatement2();
+//  exitConnection();
 
    return 0;
 }

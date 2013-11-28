@@ -88,6 +88,7 @@ class P4sd : public FroelingService
 
       cDbStatement* selectActiveValueFacts;
 
+      Sem* sem;
       P4Request* request;
       Serial* serial;    
 

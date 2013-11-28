@@ -41,6 +41,7 @@ P4sd::P4sd()
    cDbConnection::setUser(dbUser);
    cDbConnection::setPass(dbPass);
 
+   sem = new Sem(0x3da00001);
    serial = new Serial;
    request = new P4Request(serial);
 
@@ -154,7 +155,9 @@ int P4sd::setup()
    if (!connection)
       return fail;
 
-   tell(eloAlways, "Getting value facs from s 3200");
+   sem->p();
+
+   tell(eloAlways, "Getting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Getting parameter facs from s 3200");
    updateParameterFacts();
@@ -203,6 +206,7 @@ int P4sd::setup()
       }
    }
 
+   sem->v();
    selectAll->freeResult();
    delete selectAll;
    
@@ -459,6 +463,7 @@ int P4sd::standbyUntil(time_t until)
 
 int P4sd::loop()
 {
+   int status;
    time_t nextAt = 0;
    time_t nextStateAt = 0;
    int lastState = na;
@@ -486,20 +491,24 @@ int P4sd::loop()
 
       tell(eloDetail, "Checking state ...");
 
-      if (request->getStatus(&currentState) == success)
+      sem->p();
+      status = request->getStatus(&currentState);
+      sem->v();
+
+      if (status != success)
+         continue;
+
+      stateChanged = lastState != currentState.state;
+      
+      if (stateChanged)
       {
-         stateChanged = lastState != currentState.state;
-
-         if (stateChanged)
-         {
-            lastState = currentState.state;
-            nextAt = time(0);              // force on state change
-
-            tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
-         }
-
-         nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+         lastState = currentState.state;
+         nextAt = time(0);              // force on state change
+         
+         tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
       }
+      
+      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
 
       // work expected?
 
@@ -508,7 +517,11 @@ int P4sd::loop()
 
       // check serial connection
 
-      if (request->check() != success)
+      sem->p();
+      status = request->check();
+      sem->v();
+
+      if (status != success)
       {
          serial->close();
          tell(eloAlways, "Error reading serial interface");
@@ -523,12 +536,15 @@ int P4sd::loop()
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
       mailBody = "";
 
+      sem->p();
       update();
 
       // mail 
 
       if (mail && stateChanged)
          sendMail();
+
+      sem->v();
    }
    
    return success;

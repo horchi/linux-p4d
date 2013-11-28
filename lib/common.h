@@ -174,7 +174,7 @@ class Sem
 
       Sem(int aKey)
       {
-         locked = 0;
+         locked = no;
          key = aKey;
 
          if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
@@ -184,8 +184,8 @@ class Sem
 
       ~Sem() 
       { 
-         while (locked && v() == success)
-            ;
+         if (locked)
+            v();
       }
 
       int p()
@@ -208,7 +208,7 @@ class Sem
             return fail;
          }
 
-         locked++;
+         locked = yes;
 
          return success;
       }
@@ -229,11 +229,11 @@ class Sem
             return fail;
          }
          
-         locked--;
+         locked = no;
 
          return success;
       }
-
+      
    private:
 
       int key;

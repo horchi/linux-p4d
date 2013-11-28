@@ -85,18 +85,16 @@ class P4Request : public FroelingService
       P4Request(Serial* aSerial)    { s = aSerial; text = 0; clear(); }
       virtual ~P4Request()          { clear(); }
       
-      class RequestLock
+      class RequestClean
       {
          public:
             
-            RequestLock(P4Request* aReq) 
-            { 
+            RequestClean(P4Request* aReq) 
+            {
                req = aReq;
-               sem = new Sem(0x3da00001);
-               sem->p();
             }
 
-            ~RequestLock()
+            ~RequestClean()
             {
                int count = 0;
                byte b;
@@ -109,14 +107,11 @@ class P4Request : public FroelingService
                   tell(eloAlways, "Got %d unexpected bytes", count);
                   req->show("<- ");
                }
-
-               delete sem;
             }
             
          private:
             
             P4Request* req;
-            Sem* sem;
       };
       
       int clear() 
