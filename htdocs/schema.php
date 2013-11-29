@@ -61,7 +61,7 @@ include("functions.php");
         $value = $row['s_value'];
         $unit = $row['f_unit'];
 
-        echo "<div style=\"top:" . $top . "px; left:" . $left . "px;\">" . $value . " " . $unit . "</div>\n";
+        echo "<div style=\"top:" . $top . "px; color:white; left:" . $left . "px;\">" . $value . " " . $unit . "</div>\n";
      }
   }
 

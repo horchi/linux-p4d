@@ -265,6 +265,8 @@ int P4sd::updateConfTables()
       if (!tableSchemaConf->find())
       {
          tableSchemaConf->setValue(cTableSchemaConf::fiKind, "value");
+         tableSchemaConf->setValue(cTableSchemaConf::fiState, "A");
+         tableSchemaConf->setValue(cTableSchemaConf::fiColor, "black");
          tableSchemaConf->setValue(cTableSchemaConf::fiXPos, 12);
          tableSchemaConf->setValue(cTableSchemaConf::fiYPos, y);
 
