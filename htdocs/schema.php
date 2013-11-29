@@ -9,6 +9,7 @@
     <style type="text/css">
       body { margin:0; }
       div { position:absolute; }
+       #time        { top:20px;  left:40px; }
        #kessel      { top:440px; left:110px; }
        #pufferOben  { top:215px; left:1100px; }
        #pufferUnten { top:379px; left:640px; }
@@ -38,34 +39,33 @@ include("functions.php");
   $maxPretty = $row['maxPretty'];
 
   // -------------------------
-  // #TODO: Werte (und seofern möglich die Koordinaten) in Schleife über eine config-tabelle holen
-
-  // -------------------------
-  // get values
-
-  $result = mysql_query("select value from samples where time = '" . $max . "' and address = 0x0 and type = 'VA';");
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  $kessel = $row['value'];
-
-  $result = mysql_query("select value from samples where time = '" . $max . "' and address = 0x76 and type = 'VA';");
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  $pufferOben = $row['value'];
-
-  // -------------------------
   // show values
 
-  echo "<div id=\"kessel\">$kessel °C</div>\n";
-  echo "<div id=\"pufferOben\">$pufferOben °C</div>\n";
+  echo "<div id=\"time\">$maxPretty</div>\n";
 
   // -------------------------
   // 
 
-  $value = $maxPretty;
-  $top = 40;
-  $left = 20;
+  $resultConf = mysql_query("select address, type, kind, xpos, ypos from schemaconf");
 
-  echo "<div style=\"top:" . $top . "px; left:" . $left . "px;\">" . $value . "</div>\n";
+  while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
+  {
+     $addr = $rowConf['address'];
+     $type = $rowConf['type'];
+     $left = $rowConf['xpos'];
+     $top = $rowConf['ypos'];
 
+     $strQuery = sprintf("select value from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
+
+     $result = mysql_query($strQuery);
+
+     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+     {
+        $value = $row['value'];
+        syslog(LOG_DEBUG, "p4: add value to schema at pos " . $left . "/" . $top);
+        echo "<div style=\"top:" . $top . "px; left:" . $left . "px;\">" . $value . "</div>\n";
+     }
+  }
 
 ?>
 

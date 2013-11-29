@@ -266,7 +266,7 @@ int P4sd::updateConfTables()
       {
          tableSchemaConf->setValue(cTableSchemaConf::fiKind, "value");
          tableSchemaConf->setValue(cTableSchemaConf::fiXPos, 20);
-         tableSchemaConf->setValue(cTableSchemaConf::fiXPos, y);
+         tableSchemaConf->setValue(cTableSchemaConf::fiYPos, y);
 
          tableSchemaConf->store();
          added++;
