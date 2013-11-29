@@ -43,7 +43,7 @@ include("functions.php");
   // -------------------------
   // 
 
-  $resultConf = mysql_query("select address, type, kind, xpos, ypos from schemaconf");
+  $resultConf = mysql_query("select address, type, kind, xpos, ypos from schemaconf where state = 'A'");
 
   while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
   {
@@ -51,6 +51,7 @@ include("functions.php");
      $type = $rowConf['type'];
      $left = $rowConf['xpos'];
      $top = $rowConf['ypos'];
+     $color = $rowConf['color'];
 
      $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
 
@@ -61,7 +62,7 @@ include("functions.php");
         $value = $row['s_value'];
         $unit = $row['f_unit'];
 
-        echo "<div style=\"top:" . $top . "px; color:white; left:" . $left . "px;\">" . $value . " " . $unit . "</div>\n";
+        echo "<div style=\"top:" . $top . "px; color:" . $color . "; left:" . $left . "px;\">" . $value . " " . $unit . "</div>\n";
      }
   }
 
