@@ -248,7 +248,7 @@ int P4sd::setup()
 
 int P4sd::updateConfTables()
 {
-   const int step = 40;
+   const int step = 20;
    int y = 0;
    int added = 0;
 
