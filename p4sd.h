@@ -52,7 +52,7 @@ class P4sd : public FroelingService
       ~P4sd();
 
 	   int loop();
-	   int setup();
+	   int setup(int truncate = no);
 
       static void downF(int aSignal) { shutdown = yes; }
 
@@ -89,6 +89,7 @@ class P4sd : public FroelingService
       cTableSchemaConf* tableSchemaConf;
 
       cDbStatement* selectActiveValueFacts;
+      cDbStatement* selectAllValueFacts;
 
       Sem* sem;
       P4Request* request;

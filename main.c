@@ -143,6 +143,7 @@ void showUsage(const char* bin)
    printf("    -t              log to stdout\n");
    printf("    -v              show version\n");
    printf("    -s              setup\n");
+   printf("    -S              setup and truncate configuration tables!!\n");
    printf("    -c <config-dir> use config in <config-dir>\n");
    printf("    -l <log-level>  set log level\n");
 }
@@ -157,6 +158,7 @@ int main(int argc, char** argv)
    int nofork = no;
    int pid;
    int setup = no;
+   int truncOnSetup = no;
    int _stdout = na;
    int _level = na;
 
@@ -182,6 +184,7 @@ int main(int argc, char** argv)
          case 'n': nofork = yes;                            break;
          case 'c': if (argv[i+1]) confDir = argv[i+1];      break;
          case 's': setup = yes;                             break;
+         case 'S': truncOnSetup = yes; setup = yes;         break;
          case 'v': printf("Version %s\n", VERSION);         return 1;
       }
    }
@@ -199,7 +202,7 @@ int main(int argc, char** argv)
    if (setup)
    {
       logstdout = yes;
-      return job->setup();
+      return job->setup(truncOnSetup);
    }
 
    // fork daemon

@@ -32,6 +32,8 @@ P4sd::P4sd()
    tableValueFacts = 0;
    tableParameterFacts = 0;
    selectActiveValueFacts = 0;
+   selectAllValueFacts = 0;
+
    mailBody = "";
 
    cDbConnection::init();
@@ -129,6 +131,21 @@ int P4sd::initDb()
 
    status = selectActiveValueFacts->prepare();
 
+   // ------------------
+
+   selectAllValueFacts = new cDbStatement(tableValueFacts);
+
+   selectAllValueFacts->build("select ");
+   selectAllValueFacts->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
+   selectAllValueFacts->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
+   selectAllValueFacts->bind(cTableValueFacts::fiState, cDBS::bndOut, ", ");
+   selectAllValueFacts->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
+   selectAllValueFacts->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
+   selectAllValueFacts->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
+   selectAllValueFacts->build(" from %s", tableValueFacts->TableName());
+
+   status = selectAllValueFacts->prepare();
+
    tell(eloAlways, "Connection to database established");  
 
    return status;
@@ -143,6 +160,7 @@ int P4sd::exitDb()
    delete tableSchemaConf;     tableSchemaConf = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
+   delete selectAllValueFacts;     selectAllValueFacts = 0;
 
    delete connection;      connection = 0;
 
@@ -153,42 +171,32 @@ int P4sd::exitDb()
 // Setup
 //***************************************************************************
 
-int P4sd::setup()
+int P4sd::setup(int truncate)
 {
-   int status;
-
    if (!connection)
       return fail;
+
+   // truncate config tables ?
+
+   if (truncate)
+   {
+      tell(eloAlways, "Truncate configuration tables!");
+      
+      tableValueFacts->truncate();
+      tableSchemaConf->truncate();
+      tableParameterFacts->truncate();
+   }
 
    sem->p();
 
    tell(eloAlways, "Getting value facts from s 3200");
    updateValueFacts();
-   tell(eloAlways, "Getting parameter facs from s 3200");
-   updateParameterFacts();
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
+   tell(eloAlways, "Getting parameter facs from s 3200");
+   updateParameterFacts();
 
-   cDbStatement* selectAll = new cDbStatement(tableValueFacts);
-
-   selectAll->build("select ");
-   selectAll->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
-   selectAll->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
-   selectAll->bind(cTableValueFacts::fiState, cDBS::bndOut, ", ");
-   selectAll->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
-   selectAll->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
-   selectAll->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
-   selectAll->build(" from %s", tableValueFacts->TableName());
-
-   status = selectAll->prepare();
-
-   if (status != success)
-   {
-      tell(eloAlways, "Error ....");
-      delete selectAll;
-   }
-
-   for (int f = selectAll->find(); f; f = selectAll->fetch())
+   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
       char* res;
       char buf[100+TB]; *buf = 0;
@@ -214,8 +222,7 @@ int P4sd::setup()
    }
 
    sem->v();
-   selectAll->freeResult();
-   delete selectAll;
+   selectAllValueFacts->freeResult();
    
    return done;
 }
@@ -230,7 +237,7 @@ int P4sd::updateConfTables()
    int y = 0;
    int added;
 
-   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
       unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
       const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
@@ -251,6 +258,7 @@ int P4sd::updateConfTables()
       }
    }
 
+   selectAllValueFacts->freeResult();
    tell(eloAlways, "Added %d html schema configurations", added);
 
    return success;
