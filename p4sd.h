@@ -51,14 +51,15 @@ class P4sd : public FroelingService
       P4sd();
       ~P4sd();
 
+      int init();
 	   int loop();
-	   int setup(int truncate = no);
+	   int setup();
+	   int initialize(int truncate = no);
 
       static void downF(int aSignal) { shutdown = yes; }
 
    protected:
 
-      int init();
       int exit();
       int initDb();
       int exitDb();

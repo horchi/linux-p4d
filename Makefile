@@ -100,7 +100,7 @@ cppchk:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/common.h p4d.h p4sd.h
+HEADER = lib/db.h lib/tabledef.h lib/common.h p4d.h p4sd.h
 
 lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
 lib/config.o    :  lib/config.c      lib/config.h $(HEADER)

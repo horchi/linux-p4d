@@ -47,8 +47,6 @@ P4sd::P4sd()
    sem = new Sem(0x3da00001);
    serial = new Serial;
    request = new P4Request(serial);
-
-   init();
 }
 
 P4sd::~P4sd()
@@ -70,7 +68,8 @@ int P4sd::init()
    if (serial->open(ttyDeviceSvc) != success)
       return fail;
 
-   initDb();
+   if (initDb() != success)
+      return fail;
 
    if (mail && !isEmpty(stateMailTo))
       tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
@@ -168,10 +167,10 @@ int P4sd::exitDb()
 }
 
 //***************************************************************************
-// Setup
+// Initialize
 //***************************************************************************
 
-int P4sd::setup(int truncate)
+int P4sd::initialize(int truncate)
 {
    if (!connection)
       return fail;
@@ -187,14 +186,26 @@ int P4sd::setup(int truncate)
       tableParameterFacts->truncate();
    }
 
-   sem->p();
-
    tell(eloAlways, "Getting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
    tell(eloAlways, "Getting parameter facs from s 3200");
    updateParameterFacts();
+
+   return done;
+}
+
+//***************************************************************************
+// Setup
+//***************************************************************************
+
+int P4sd::setup()
+{
+   if (!connection)
+      return fail;
+
+   sem->p();
 
    for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
@@ -223,7 +234,10 @@ int P4sd::setup(int truncate)
 
    sem->v();
    selectAllValueFacts->freeResult();
-   
+
+   tell(eloAlways, "Update html schema configuration");
+   updateConfTables();
+
    return done;
 }
 
@@ -237,7 +251,7 @@ int P4sd::updateConfTables()
    int y = 0;
    int added;
 
-   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
+   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
       const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
@@ -250,15 +264,15 @@ int P4sd::updateConfTables()
       if (!tableSchemaConf->find())
       {
          tableSchemaConf->setValue(cTableSchemaConf::fiKind, "value");
-         tableSchemaConf->setValue(cTableSchemaConf::fiLeft, 20);
-         tableSchemaConf->setValue(cTableSchemaConf::fiTop, y);
+         tableSchemaConf->setValue(cTableSchemaConf::fiXPos, 20);
+         tableSchemaConf->setValue(cTableSchemaConf::fiXPos, y);
 
          tableSchemaConf->store();
          added++;
       }
    }
 
-   selectAllValueFacts->freeResult();
+   selectActiveValueFacts->freeResult();
    tell(eloAlways, "Added %d html schema configurations", added);
 
    return success;
