@@ -10,9 +10,6 @@
       body { margin:0; }
       div { position:absolute; }
        #time        { top:20px;  left:40px; }
-       #kessel      { top:440px; left:110px; }
-       #pufferOben  { top:215px; left:1100px; }
-       #pufferUnten { top:379px; left:640px; }
     </style>
   </head>
 
@@ -55,15 +52,16 @@ include("functions.php");
      $left = $rowConf['xpos'];
      $top = $rowConf['ypos'];
 
-     $strQuery = sprintf("select value from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
+     $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
 
      $result = mysql_query($strQuery);
 
      if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
      {
-        $value = $row['value'];
-        syslog(LOG_DEBUG, "p4: add value to schema at pos " . $left . "/" . $top);
-        echo "<div style=\"top:" . $top . "px; left:" . $left . "px;\">" . $value . "</div>\n";
+        $value = $row['s_value'];
+        $unit = $row['f_unit'];
+
+        echo "<div style=\"top:" . $top . "px; left:" . $left . "px;\">" . $value . " " . $unit . "</div>\n";
      }
   }
 

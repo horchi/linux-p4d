@@ -249,7 +249,7 @@ int P4sd::setup()
 int P4sd::updateConfTables()
 {
    const int step = 20;
-   int y = 0;
+   int y = 50;
    int added = 0;
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
