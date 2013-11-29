@@ -435,7 +435,8 @@ int actual(const char* file)
 
    selMaxTime->freeResult();
 
-   delete selMaxTime; selMaxTime = 0;
+   delete selMaxTime; 
+   selMaxTime = 0;
 
    // select s.value, f.name, f.title, f.unit
    //   from samples s, valuefacts f 
