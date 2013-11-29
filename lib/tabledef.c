@@ -105,6 +105,33 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
 };
 
 //***************************************************************************
+// HTML Schema Configuration
+//***************************************************************************
+
+cDbService::FieldDef cTableSchemaConf::fields[] =
+{
+   // name               format     size  index            type 
+
+   // primary key
+
+   { "address",          ffInt,        4, fiAddress,       ftPrimary },
+   { "type",             ffAscii,      2, fiType,          ftPrimary },
+
+   // meta
+
+   { "inssp",            ffInt,       10, fiInsSp,         ftMeta },
+   { "updsp",            ffInt,       10, fiUpdSp,         ftMeta },
+
+   // data
+
+   { "kind",             ffAscii,     20, fiKind,          ftData },
+   { "left",             ffInt,        0, fiLeft,          ftData },
+   { "top",              ffInt,        0, fiTop,           ftData },
+
+   { 0 }
+};
+
+//***************************************************************************
 // Jobs
 //***************************************************************************
 

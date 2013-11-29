@@ -108,6 +108,35 @@ class cTableParameterFacts : public cDbTable
 };
 
 //***************************************************************************
+// class cTableSchemaConf
+//***************************************************************************
+
+class cTableSchemaConf : public cDbTable
+{
+   public:
+
+      cTableSchemaConf(cDbConnection* aConnection, const char* aName = "schemaconf")
+         : cDbTable(aConnection, aName, fields) { }
+
+      enum FieldIndex
+      {
+         fiAddress,
+         fiType,
+
+         fiInsSp,
+         fiUpdSp,
+
+         fiKind,  // unused, prpared for html display kind ( value,state,time,... )
+         fiLeft,
+         fiTop,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
 // class cTableJobs
 //***************************************************************************
 

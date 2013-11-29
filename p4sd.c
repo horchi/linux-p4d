@@ -28,6 +28,7 @@ P4sd::P4sd()
    connection = 0;
    tableSamples = 0;
    tableJobs = 0;
+   tableSchemaConf = 0;
    tableValueFacts = 0;
    tableParameterFacts = 0;
    selectActiveValueFacts = 0;
@@ -110,6 +111,9 @@ int P4sd::initDb()
    tableJobs = new cTableJobs(connection);
    if (tableJobs->open() != success) return fail;
 
+   tableSchemaConf = new cTableSchemaConf(connection);
+   if (tableSchemaConf->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -136,6 +140,7 @@ int P4sd::exitDb()
    delete tableValueFacts;     tableValueFacts = 0;
    delete tableParameterFacts; tableParameterFacts = 0;
    delete tableJobs;           tableJobs = 0;
+   delete tableSchemaConf;     tableSchemaConf = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
 
@@ -161,6 +166,8 @@ int P4sd::setup()
    updateValueFacts();
    tell(eloAlways, "Getting parameter facs from s 3200");
    updateParameterFacts();
+   tell(eloAlways, "Update html schema configuration");
+   updateConfTables();
 
    cDbStatement* selectAll = new cDbStatement(tableValueFacts);
 
@@ -211,6 +218,42 @@ int P4sd::setup()
    delete selectAll;
    
    return done;
+}
+
+//***************************************************************************
+// Update Conf Tables
+//***************************************************************************
+
+int P4sd::updateConfTables()
+{
+   const int step = 40;
+   int y = 0;
+   int added;
+
+   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+   {
+      unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
+      const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
+      y += step;
+
+      tableSchemaConf->clear();
+      tableSchemaConf->setValue(cTableSchemaConf::fiAddress, addr);
+      tableSchemaConf->setValue(cTableSchemaConf::fiType, type);
+   
+      if (!tableSchemaConf->find())
+      {
+         tableSchemaConf->setValue(cTableSchemaConf::fiKind, "value");
+         tableSchemaConf->setValue(cTableSchemaConf::fiLeft, 20);
+         tableSchemaConf->setValue(cTableSchemaConf::fiTop, y);
+
+         tableSchemaConf->store();
+         added++;
+      }
+   }
+
+   tell(eloAlways, "Added %d html schema configurations", added);
+
+   return success;
 }
 
 //***************************************************************************

@@ -32,8 +32,7 @@ include("functions.php");
   // -------------------------
   // get last time stamp
 
-  $strQuery = "select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;";
-  $result = mysql_query($strQuery);
+  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];

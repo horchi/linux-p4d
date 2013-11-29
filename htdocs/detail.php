@@ -248,7 +248,6 @@ else
  
    $cache->writeToCache($chartHash, $picture);
    $picture->Stroke();
-   syslog(LOG_DEBUG, "p4: Stroke");
 }
 
 $dd = time() - $start;

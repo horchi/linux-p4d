@@ -71,6 +71,7 @@ class P4sd : public FroelingService
       int store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text = 0);
       int sendMail();
+      int updateConfTables();
       int updateValueFacts();
       int updateParameterFacts();
       int haveMailState();
@@ -85,6 +86,7 @@ class P4sd : public FroelingService
       cTableValueFacts* tableValueFacts;
       cTableParameterFacts* tableParameterFacts;
       cTableJobs* tableJobs;
+      cTableSchemaConf* tableSchemaConf;
 
       cDbStatement* selectActiveValueFacts;
 
