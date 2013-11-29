@@ -1,5 +1,9 @@
 <?
 
+// ---------------------------------------------------------------------------
+// Date Picker
+// ---------------------------------------------------------------------------
+
 function datePicker($title, $name, $year, $day, $month)
 {
    $startyear = date("Y")-10;
@@ -47,6 +51,18 @@ function datePicker($title, $name, $year, $day, $month)
    $html .= "  </select>\n";
 
    return $html;
+}
+
+// ---------------------------------------------------------------------------
+// Check/Create Folder
+// ---------------------------------------------------------------------------
+
+function chkDir($path, $rights = 0777)
+{ 
+   if (!(is_dir($path) OR is_file($path) OR is_link($path)))
+      return mkdir($path, $rights);
+   else
+      return true; 
 }
 
 ?>

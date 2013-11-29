@@ -5,6 +5,8 @@ include("pChart/class/pDraw.class.php");
 include("pChart/class/pImage.class.php");
 include("pChart/class/pCache.class.php");
 
+include("config.php");
+
 // date_default_timezone_set('Europe/Berlin');
 
 // parameters
@@ -166,8 +168,11 @@ if (!$count)
 // -------------------------
 // charting
 
+if (!chkDir($cache_dir))
+   syslog(LOG_DEBUG, "Can't create directory " . $cache_dir);
+
 $data = new pData(); 
-$cache = new pCache(array("CacheFolder"=>"/var/cache/p4/"));
+$cache = new pCache(array("CacheFolder"=>$cache_dir));
 
 // fill data struct
 
