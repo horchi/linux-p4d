@@ -127,8 +127,8 @@ class cTableSchemaConf : public cDbTable
          fiUpdSp,
 
          fiKind,  // unused, prpared for html display kind ( value,state,time,... )
-         fiLeft,
-         fiTop,
+         fiXPos,
+         fiYPos,
 
          fiCount
       };

@@ -125,8 +125,8 @@ cDbService::FieldDef cTableSchemaConf::fields[] =
    // data
 
    { "kind",             ffAscii,     20, fiKind,          ftData },
-   { "left",             ffInt,        0, fiLeft,          ftData },
-   { "top",              ffInt,        0, fiTop,           ftData },
+   { "xpos",             ffInt,        0, fiXPos,          ftData },
+   { "ypos",             ffInt,        0, fiYPos,          ftData },
 
    { 0 }
 };
