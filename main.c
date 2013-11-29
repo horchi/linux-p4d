@@ -164,6 +164,8 @@ int main(int argc, char** argv)
    int _stdout = na;
    int _level = na;
 
+   logstdout = yes;
+
    // Usage ..
 
    if (argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
@@ -197,7 +199,6 @@ int main(int argc, char** argv)
    if (readConfig() != success)
       return 1;
 
-   if (_stdout != na) logstdout = _stdout;
    if (_level != na)  loglevel = _level;
 
    job = new DEAMON();
@@ -210,16 +211,10 @@ int main(int argc, char** argv)
    }
 
    if (setup)
-   {
-      logstdout = yes;
       return job->setup();
-   }
    
-   if (init )
-   {
-      logstdout = yes;
+   if (init)
       return job->initialize(truncOnInit);
-   }
 
    // fork daemon
 
@@ -240,6 +235,11 @@ int main(int argc, char** argv)
    ::signal(SIGINT, DEAMON::downF);
    ::signal(SIGTERM, DEAMON::downF);
    // ::signal(SIGHUP, DEAMON::triggerF);
+
+   if (_stdout != na) 
+      logstdout = _stdout;
+   else
+      logstdout = no;
 
    // do work ...
 

@@ -249,7 +249,7 @@ int P4sd::updateConfTables()
 {
    const int step = 40;
    int y = 0;
-   int added;
+   int added = 0;
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -554,9 +554,8 @@ int P4sd::loop()
 
       // check state
 
-      tell(eloDetail, "Checking state ...");
-
       sem->p();
+      tell(eloDetail, "Checking state ...");
       status = request->getStatus(&currentState);
       sem->v();
 
