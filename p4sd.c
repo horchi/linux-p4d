@@ -186,12 +186,16 @@ int P4sd::initialize(int truncate)
       tableParameterFacts->truncate();
    }
 
+   sem->p();
+
    tell(eloAlways, "Getting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
    tell(eloAlways, "Getting parameter facs from s 3200");
    updateParameterFacts();
+
+   sem->v();
 
    return done;
 }
@@ -204,8 +208,6 @@ int P4sd::setup()
 {
    if (!connection)
       return fail;
-
-   sem->p();
 
    for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
@@ -232,7 +234,6 @@ int P4sd::setup()
       }
    }
 
-   sem->v();
    selectAllValueFacts->freeResult();
 
    tell(eloAlways, "Update html schema configuration");
