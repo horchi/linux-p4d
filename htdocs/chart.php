@@ -3,6 +3,8 @@
   <head>
     <title>main</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="author" content="Jörg Wendel">
+    <meta name="copyright" content="Jörg Wendel">
     <style type="text/css">
       #aSelect { position:static; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
     </style>

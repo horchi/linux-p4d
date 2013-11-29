@@ -1,4 +1,15 @@
-<?php   
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+  <head>
+    <title>main</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="author" content="Jörg Wendel">
+    <meta name="copyright" content="Jörg Wendel">
+    </style>
+  </head>
+
+  <body>
+<?php
 
 include("pChart/class/pData.class.php");
 include("pChart/class/pDraw.class.php");
