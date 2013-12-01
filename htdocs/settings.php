@@ -1,7 +1,5 @@
 <?php
-#opcache_reset();
-
-include("config.php");
+include("header.php");
 
 $action = htmlspecialchars($_POST["action"]);
 
@@ -9,12 +7,7 @@ mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
 mysql_select_db($mysqldb) or die("DB error");
 
 if ($action == "") {
-   echo "<html>
-      <head>
-      <title>Settings</title>
-      </head>
-      <body>
-      Settings:<br>
+   echo "
       <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>
       <table border=1>
       <tr>
@@ -71,4 +64,6 @@ elseif ($action == "update") {
 }
 
 mysql_close();
+
+include("footer.php");
 ?>

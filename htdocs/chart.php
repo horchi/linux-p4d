@@ -1,24 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
-  <head>
-    <title>main</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta name="author" content="Jörg Wendel">
-    <meta name="copyright" content="Jörg Wendel">
-    <style type="text/css">
-      #aSelect { position:static; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
-    </style>
-  </head>
-
-  <body>
 <?php
+include("header.php");
 
 include("pChart/class/pData.class.php");
 include("pChart/class/pDraw.class.php");
 include("pChart/class/pImage.class.php");
-
-include("config.php");
-include("functions.php");
 
   // -------------------------
   // establish db connection
@@ -37,7 +22,7 @@ include("functions.php");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
   echo "<br>\n";
-  echo " <div id=\"aSelect\">";
+  echo " <div id=\"aSelectChart\">";
   echo "  <form name='navigation' method='get'>\n";
   echo "Zeitraum der Charts: <br>\n";
   echo datePicker("Start", "s", $year, $day, $month);
@@ -55,6 +40,7 @@ include("functions.php");
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
+  echo " <div id=\"aChart\">";
   echo "<br>\n";
   $condition = "address in (" . $addrs_char1 . ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
@@ -63,4 +49,7 @@ include("functions.php");
   $condition = "address in (" . $addrs_char2. ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
   echo "<br><br>\n";
+  echo " </div>";
+
+include("footer.php");
 ?>

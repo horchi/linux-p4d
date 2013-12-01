@@ -1,0 +1,10 @@
+<Files ~ "^\.(htaccess|htpasswd)$">
+deny from all
+</Files>
+<Files "settings.php">
+require valid-user
+</Files>
+Options Indexes
+AuthUserFile /var/lib/p4/htdocs/.htpasswd
+AuthType Basic
+AuthName "Enter password"

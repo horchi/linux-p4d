@@ -1,25 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
-  <head>
-    <title>main</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta name="author" content="Jörg Wendel">
-    <meta name="copyright" content="Jörg Wendel">
-    <style type="text/css">
-      #aState  { position:absolute; top:10px; left:50px; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
-      #aSelect { position:absolute; top:120px; left:50px; width:500px; background-color:#83AFFF; border:1px solid #804000; padding:10px; border-radius:10px; }
-    </style>
-  </head>
-
-  <body>
 <?php
+include("header.php");
 
-include("pChart/class/pData.class.php");
-include("pChart/class/pDraw.class.php");
-include("pChart/class/pImage.class.php");
-
-include("config.php");
-include("functions.php");
 
   // -------------------------
   // establish db connection
@@ -92,7 +73,7 @@ include("functions.php");
   // ------------------
   // tabelle
 
-  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:200px; left:50px;\">\n";
+  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:220px; left:50px;\">\n";
 
   echo "    <tr style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
@@ -138,6 +119,5 @@ include("functions.php");
 
   mysql_close();
 
-echo " </body>\n";
-echo "</html>\n";
+include("footer.php");
 ?>

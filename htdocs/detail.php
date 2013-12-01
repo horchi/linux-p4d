@@ -27,22 +27,22 @@ else
 if (isset($_GET['width']) && is_numeric($_GET['width']))
    $width = $_GET['width'];
 else
-	$width = 1200;
+   $width = 1200;
 
 if (isset($_GET['height']) && is_numeric($_GET['height']))
    $height = $_GET['height'];
 else
-	$height = 600;
+   $height = 600;
 
 if (isset($_GET['from']) && is_numeric($_GET['from']))
    $from = $_GET['from'];
 else
-	$from  = time() - (36 * 60 * 60);
+   $from  = time() - (36 * 60 * 60);
 
 if (isset($_GET['range']) && is_numeric($_GET['range']))
    $range = $_GET['range'];
 else
-	$range = 1;
+   $range = 1;
 
 $to = $from + ($range * (24*60*60));
 
