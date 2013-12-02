@@ -1,0 +1,67 @@
+Body {
+background-color : #EEEEEE; 
+color : #111111;
+}
+
+A:link {
+color : #000000;
+}
+
+A:visited {
+color : #000000;
+}
+
+A:active {
+color : #000000;
+text-decoration : underline;
+}
+
+.button1 {
+  background-color: #BBBBBB;
+  padding: 5px 25px;
+  color: #000000;
+  text-decoration: none;
+  font: bold 20px Verdana;
+}
+
+.button1:visited, .button1:hover, .button1:active {
+  color: #ffffff;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: bold 20px Verdana;
+}
+
+.button1:hover {
+	background:#AAAAAA;
+}
+
+.content {
+	padding:20px;
+}
+
+.schema {
+  position:absolute;
+  top:50px;
+  left:5px;
+}
+
+.schema .scheima_image {
+  position:absolute;
+  left:0;
+  top:0;
+}
+
+.schema .schema_text {
+  z-index:100;
+  position:absolute;
+  top:10px;
+  left:10px;
+  background-color:rgba(200,200,200,0.5);
+  padding: 5px 10px;
+}
+
+#aState  { position:absolute; top:50px; left:50px; width:500px; background-color:#83AFFF; border:1px; solid:#804000; padding:10px; border-radius:10px; }
+#aSelect { position:absolute; top:140px; left:50px; width:500px; background-color:#83AFFF; border:1px; solid:#804000; padding:10px; border-radius:10px; }
+#aSelectChart { position:absolute; top:50px; left:30px; width:500px; background-color:#83AFFF; border:1px; padding:10px; border-radius:10px; }
+#aChart { position:absolute; top:130px; left:30px; background-color:#83AFFF; border:1px; padding: 0px; border-radius:10px; }
+
