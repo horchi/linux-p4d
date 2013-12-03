@@ -17,7 +17,7 @@ if ($action == "") {
          <td> Typ </td>
          <td> Name </td>
          <td> Unit </td>
-         <td> Status </td>
+         <td> Aufzeichnen </td>
       </tr>\n";
    $result=mysql_query("select * from $mysqltable_values");
    $num=mysql_numrows($result);
