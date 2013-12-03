@@ -262,6 +262,8 @@ class FroelingService
          char* unit;
          word factor;
          char* description;
+         byte b1;
+         byte b2;
          word unknown;
       };
 
