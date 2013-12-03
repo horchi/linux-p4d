@@ -59,6 +59,7 @@ syslog(LOG_DEBUG, "p4: ---------");
 mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
 mysql_select_db($mysqldb);
 mysql_query("set names 'utf8'");
+mysql_query("SET lc_time_names = 'de_DE'");
 
 // ------------------------------
 // get data from db
