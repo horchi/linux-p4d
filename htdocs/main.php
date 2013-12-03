@@ -1,7 +1,6 @@
 <?php
 include("header.php");
 
-
   // -------------------------
   // establish db connection
 
@@ -106,6 +105,8 @@ include("header.php");
      
      if ($i++ % 2)
         echo "   <tr style=\"color:black\" bgcolor=\"#83AFFF\">\n";
+     else
+        echo "   <tr>\n";
      
      echo "      <td>" . $txtaddr . "</td>\n";   
      echo "      <td>" . $type . "</td>\n";   
