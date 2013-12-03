@@ -11,10 +11,10 @@ $cfg = "";
 $started = 0;
 
 if (isset($_POST["mouse"]))
- $action = htmlspecialchars($_POST["mouse"]);
+   $action = htmlspecialchars($_POST["mouse"]);
 
 if (isset($_POST["cfg"]))
- $cfg = htmlspecialchars($_POST["cfg"]);
+   $cfg = htmlspecialchars($_POST["cfg"]);
 
 if (isset($_SESSION["started"]))
    $started = $_SESSION["started"];
@@ -38,14 +38,16 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 if ($started == 1)
   echo "
-      <input type=\"submit\" name=cfg value=\"Stop\">";
+      <input type=submit name=cfg value=Stop>";
 else
   echo "
-      <input type=\"submit\" name=cfg value=\"Start\">";
+      <input type=submit name=cfg value=Start>";
 
   echo "
-      <input type=\"submit\" name=cfg value=\"Skip\">
-      <input type=\"submit\" name=cfg value=\"Back\">
+      <input type=submit name=cfg value=Skip>
+      <input type=submit name=cfg value=Hide>
+      <input type=submit name=cfg value=Back>
+      <input type=checkbox name=unit value=unit>Einheit
   ";
 
 if ($cfg == "Start") 
@@ -77,6 +79,13 @@ if ($started == 1)
 
       nextConf(-1);      
    }
+   elseif ($cfg == "Hide")
+   {
+      syslog(LOG_DEBUG, "p4: hide");
+
+      store("D", 0, 0, "black");
+      nextConf(1);
+   }
    
    if ($action == "click") 
    {
@@ -85,21 +94,14 @@ if ($started == 1)
       
       if ($_SESSION["cur"] > 0)
       {
+         $state = 'A';
+
          // check numrows
 
          $result = mysql_query("select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type");
          $_SESSION["num"] = mysql_numrows($result);  // update ... who nows :o
          
-         // store
-
-         if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
-         {
-            syslog(LOG_DEBUG, "p4: store position: " . $mouseX . "/" . $mouseY);
-            
-            mysql_query("update schemaconf set xpos = '" . $mouseX . 
-                        "', ypos = '" . $mouseY . "' where address = '" . $_SESSION["addr"] . "' and type = '" .
-                        $_SESSION["type"] . "'");
-         }
+         store("A", $mouseX, $mouseY, "black");
          
          nextConf(1);
       }
@@ -114,7 +116,6 @@ if ($started == 1)
   echo "    </form>\n";
 
 include("footer.php");
-
 
 function nextConf($dir)
 {
@@ -156,7 +157,7 @@ function nextConf($dir)
    
    // show
 
-   echo "<div style=\"position:absolute; left:200px; top:51px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "<div style=\"position:absolute; left:300px; top:51px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
 
    $_SESSION["cur"]++;
    
@@ -164,6 +165,27 @@ function nextConf($dir)
    {
       syslog(LOG_DEBUG, "p4: config done");
       $_SESSION["started"] = 0;
+   }
+}
+
+function store($state, $xpos, $ypos, $color)
+{
+   if (isset($_POST["unit"]))
+      $showUnit = 1;
+
+   if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
+   {
+      syslog(LOG_DEBUG, "p4: store position: " . $xpos . "/" . $ypos . " with unit: " . $showUnit);
+      
+      if ($state == "D")
+         mysql_query("update schemaconf set state = '" . $state . "'" .
+                     " where address = '" . $_SESSION["addr"] . "' and type = '" .
+                     $_SESSION["type"] . "'");
+      else
+         mysql_query("update schemaconf set xpos = '" . $xpos . 
+                     "', ypos = '" . $ypos . "', state = '" . $state . 
+                     "' where address = '" . $_SESSION["addr"] . "' and type = '" .
+                     $_SESSION["type"] . "'");
    }
 }
 
