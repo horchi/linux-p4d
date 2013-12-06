@@ -258,13 +258,13 @@ class FroelingService
          MenuItem()  { unit = 0; description = 0; }
          ~MenuItem() { free(unit); free(description); }
 
+         word unknown1;
+         word parent;
+         word child;
          word address;
-         char* unit;
-         word factor;
+         word unknown2;
          char* description;
-         byte b1;
-         byte b2;
-         word unknown;
+         char* unit;
       };
 
       struct ErrorInfo

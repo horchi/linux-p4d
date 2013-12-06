@@ -11,8 +11,10 @@
   // -------------------------
   // show values
 
-echo "      <div style=\"position:absolute; font-size:30px; left:" . ($jpegLeft +40) . "px; top:" .($jpegTop + 5) . "px; z-index:2;\">$maxPretty</div>\n";
-  
+  echo "      <div class=\"schema\">\n";
+
+  echo "        <div style=\"position:absolute; font-size:28px; left:" . ($jpegLeft +40) . "px; top:" .($jpegTop + 5) . "px; z-index:2;\">$maxPretty</div>\n";
+
   // -------------------------
   // show values
 
@@ -38,19 +40,21 @@ echo "      <div style=\"position:absolute; font-size:30px; left:" . ($jpegLeft 
         $unit = $row['f_unit'];
 
         echo "
-       <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
-           "; color:" . $color . "; font-size:28px; z-index:2" . "\">";
+         <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
+           "; color:" . $color . "; z-index:2" . "\">";
 
         if ($showText)
            echo $text;
         else if ($showUnit)
-           echo $value . " " . $unit;
+           echo $value . " " . ($unit == "°" ? "°C" : $unit);
         else
            echo $value;
 
         echo "
-       </div>\n";
+         </div>\n";
      }
   }
+
+  echo "      </div>\n";
 
 ?>

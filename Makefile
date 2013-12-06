@@ -34,7 +34,7 @@ ifdef DEBUG
   CFLAGS += -ggdb -O0
 endif
 
-VERSION = $(shell grep 'define VERSION ' $(TARGET).h | awk '{ print $$3 }' | sed -e 's/[";]//g')
+VERSION = $(shell grep 'define VERSION ' p4sd.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 TMPDIR = /tmp
 ARCHIVE = $(TARGET)-$(VERSION)
 

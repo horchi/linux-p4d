@@ -88,18 +88,21 @@ class cTableParameterFacts : public cDbTable
 
       enum FieldIndex
       {
-         fiAddress,     // Sensor Address
+         fiId,
 
          fiInsSp,
          fiUpdSp,
 
-         fiState,
-
-         fiUnit,        
-         fiFactor,
+         fiParent,
+         fiChild,
+         fiAddress,      // Sensor Address
          fiTitle,
 
-         fiRes1,       // unknown data
+         fiState,
+         fiUnit,        
+
+         fiUnknown1,     // unknown data
+         fiUnknown2,     // unknown data
 
          fiCount
       };
@@ -160,6 +163,8 @@ class cTableJobs : public cDbTable
          fiDoneAt,
          fiState,
          fiCommand,
+         fiAddress,
+         fiResult,
 
          fiCount
       };
