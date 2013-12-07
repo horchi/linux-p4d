@@ -107,11 +107,11 @@ function showChilds($parnt, $level)
       }
       elseif ($u1 == 0x0700)
       {
-         $txtu1 = "Parameter";
+         $txtu1 = "Par.";
          $value = getParameter($address, "");
       }
       elseif ($u1 == 0x0800)
-         $txtu1 = "Parameter dig";
+         $txtu1 = "Par. dig";
       elseif ($u1 == 0x1100)
          $txtu1 = "Dig Out";
       elseif ($u1 == 0x1200)
@@ -119,7 +119,7 @@ function showChilds($parnt, $level)
       elseif ($u1 == 0x1300)
          $txtu1 = "Dig In";
       elseif ($u1 == 0x0a00)
-         $txtu1 = "Parameter Zeit";
+         $txtu1 = "Par. Zeit";
 
       else
          $txtu1 = sprintf("0x%04x", $u1);
@@ -138,34 +138,36 @@ function showChilds($parnt, $level)
       else
       {
          if (!$child)
-            echo "        <tr style=\"color:black\" bgcolor=\"#FFFFCC\">\n";
+            $bgc = "#FFFFCC";
          elseif ($level == 1)
-            echo "        <tr style=\"color:black\" bgcolor=\"#FF6600\">\n";
+            $bgc = "#FF6600";
          elseif ($level == 2)
-            echo "        <tr style=\"color:black\" bgcolor=\"#FFFF66\">\n";
+            $bgc = "#FFF66";
          elseif ($level == 3)
-            echo "        <tr style=\"color:black\" bgcolor=\"#FFAA66\">\n";
+            $bgc = "#FFAA66";
          elseif ($level == 4)
-            echo "       <tr>\n";
+            $bgc = "white";
          else
          {
             syslog(LOG_DEBUG, "p4: unexpected menu level " . $level);
             return;
          }
+
+         echo "        <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
          
-         echo "          <td>" . $txtaddr . "</td>\n";
-         echo "          <td>" . $level . "</td>\n";
-         echo "          <td>" . $txtchild . "</td>\n";
-         echo "          <td>" . $txtu1 . "</td>\n";
-         echo "          <td>" . $txtu2 . "</td>\n";
+         echo "          <td>$txtaddr</td>\n";
+         echo "          <td style=\"color:blue\">$level</td>\n";
+         echo "          <td>$txtchild</td>\n";
+         echo "          <td>$txtu1</td>\n";
+         echo "          <td>$txtu2</td>\n";
 
          if ($child)
-            echo "          <td><center><b>" . $title . "</b></center></td>\n";
+            echo "          <td><center><b>$title</b></center></td>\n";
          else
-            echo "          <td>" . $title . "</td>\n";
+            echo "          <td>$title</td>\n";
 
          if ($value != -1)
-            echo "          <td>" . $value . "</td>\n";
+            echo "          <td>$value</td>\n";
          else
             echo "          <td></td>\n";
 
