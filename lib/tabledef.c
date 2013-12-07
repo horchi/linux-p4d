@@ -127,6 +127,7 @@ cDbService::FieldDef cTableSchemaConf::fields[] =
    { "state",            ffAscii,      1, fiState,         ftData },
    { "kind",             ffAscii,     20, fiKind,          ftData },
    { "color",            ffAscii,     10, fiColor,         ftData },
+   { "showunit",         ffInt,        1, fiShowUnit,      ftData },
    { "xpos",             ffInt,        0, fiXPos,          ftData },
    { "ypos",             ffInt,        0, fiYPos,          ftData },
 

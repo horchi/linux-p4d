@@ -129,6 +129,7 @@ class cTableSchemaConf : public cDbTable
          fiState,
          fiKind,  // unused, perpared for html display kind ( value,state,time,... )
          fiColor,
+         fiShowUnit,
          fiXPos,
          fiYPos,
 
