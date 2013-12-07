@@ -619,7 +619,7 @@ int P4sd::meanwhile()
          for (int f = selectAllParameters->find(); f; f = selectAllParameters->fetch())
          {
             int type = tableParameterFacts->getIntValue(cTableParameterFacts::fiType);
-            int paddr = tableParameterFacts->getIntValue(cTableJobs::fiAddress);
+            int paddr = tableParameterFacts->getIntValue(cTableParameterFacts::fiAddress);
 
             if (type == 0x0700)
             {
