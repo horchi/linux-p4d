@@ -41,6 +41,18 @@ A:active {
 	background:#FF3300;
 }
 
+.button3 {
+  background-color: #2020FF;
+  padding: 5px 25px;
+  color: #FFFFFF;
+  text-decoration: none;
+  font: bold 20px Verdana;
+}
+
+.button3:hover {
+	background:#2020AA;
+}
+
 .content {
 	padding:20px;
 }

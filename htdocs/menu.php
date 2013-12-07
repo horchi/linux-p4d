@@ -20,7 +20,9 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 showMenu();
 
-if ($menu != "")
+if ($menu == "update")
+   requestUpdate();
+elseif ($menu != "")
    showChilds($menu, 0);
 
 include("footer.php");
@@ -48,6 +50,8 @@ function showMenu()
 
       $i++;
    }
+
+   echo "          <button class=\"button3\" type=submit name=menu value=update>Aktualisieren\n";
 
    echo "        </form>\n";
    echo "      </div>\n";
@@ -93,6 +97,7 @@ function showChilds($parnt, $level)
 
    while ($i < $count)
    {
+      $id      = mysql_result($result, $i, "id");
       $child   = mysql_result($result, $i, "child");
       $address = mysql_result($result, $i, "address");
       $title   = mysql_result($result, $i, "title");
@@ -108,7 +113,7 @@ function showChilds($parnt, $level)
       elseif ($u1 == 0x0700)
       {
          $txtu1 = "Par.";
-         $value = getParameter($address, "");
+         $value = getParameter($id);
       }
       elseif ($u1 == 0x0800)
          $txtu1 = "Par. dig";
@@ -215,7 +220,28 @@ function getValue($address)
 // Get Parameter
 //***************************************************************************
 
-function getParameter($address, $type)
+function getParameter($id)
+{   
+   $strQuery = sprintf("select value, unit from parameterfacts
+              where id = $id");
+
+   $result = mysql_query($strQuery);
+   
+   if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+   {
+      $value = $row['value'];
+      $unit = $row['unit'];
+      return $value . $unit;
+   }
+
+   return "";
+}
+
+//***************************************************************************
+// Request Parameter
+//***************************************************************************
+
+function requestParameter($address, $type)
 {
    $timeout = time() + 10;
 
@@ -243,7 +269,7 @@ function getParameter($address, $type)
          }
          else
          {
-            syslog(LOG_DEBUG, "p4: got response for addr " . $addr . "-> " . $value);
+            syslog(LOG_DEBUG, "p4: got response for addr " . $address . "-> " . $value);
 
             return $value;
          }
@@ -251,6 +277,35 @@ function getParameter($address, $type)
    }
    
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
+
+   // #TODO show timeout
+}
+
+//***************************************************************************
+// Request Update
+//***************************************************************************
+
+function requestUpdate()
+{
+   $timeout = time() + 10;
+
+   syslog(LOG_DEBUG, "p4: requesting update");
+
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'updatepardata', address = '0'");
+   $id = mysql_insert_id();
+
+   while (time() < $timeout)
+   {
+      usleep(1000);
+
+      $result = mysql_query("select * from jobs where id = $id and state = 'D'");
+      $count = mysql_numrows($result);
+
+      if ($count)
+         return;
+   }
+
+   syslog(LOG_DEBUG, "p4: timeout on update request");
 
    // #TODO show timeout
 }
