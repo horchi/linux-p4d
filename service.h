@@ -258,7 +258,7 @@ class FroelingService
          MenuItem()  { unit = 0; description = 0; }
          ~MenuItem() { free(unit); free(description); }
 
-         word unknown1;
+         word type;
          word parent;
          word child;
          word address;

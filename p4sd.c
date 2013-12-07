@@ -34,6 +34,7 @@ P4sd::P4sd()
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
+   selectAllParameters = 0;
 
    mailBody = "";
 
@@ -143,6 +144,20 @@ int P4sd::initDb()
 
    status = selectAllValueFacts->prepare();
 
+   // ----------------
+
+   selectAllParameters = new cDbStatement(tableParameterFacts);
+
+   selectAllParameters->build("select ");
+   selectAllParameters->bind(cTableParameterFacts::fiAddress, cDBS::bndOut);
+   selectAllParameters->bind(cTableParameterFacts::fiType, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableParameterFacts::fiUnit, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableParameterFacts::fiValue, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableParameterFacts::fiTitle, cDBS::bndOut, ", ");
+   selectAllParameters->build(" from %s", tableParameterFacts->TableName());
+
+   status = selectAllParameters->prepare();
+
    // ------------------
 
    selectPendingJobs = new cDbStatement(tableJobs);
@@ -175,6 +190,7 @@ int P4sd::exitDb()
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
+   delete selectAllParameters;     selectAllParameters = 0;
 
    delete connection;      connection = 0;
 
@@ -496,7 +512,7 @@ int P4sd::updateParameterFacts()
       tableParameterFacts->setValue(cTableParameterFacts::fiAddress, m.address);
       tableParameterFacts->setValue(cTableParameterFacts::fiTitle, m.description);
       
-      tableParameterFacts->setValue(cTableParameterFacts::fiUnknown1, m.unknown1);
+      tableParameterFacts->setValue(cTableParameterFacts::fiType, m.type);
       tableParameterFacts->setValue(cTableParameterFacts::fiUnknown2, m.unknown2);
 
       tableParameterFacts->insert();
@@ -578,7 +594,7 @@ int P4sd::meanwhile()
            tableJobs->getIntValue(cTableJobs::fiId),
            command, addr);
 
-      if (strcmp(command, "getp") == 0)
+      if (strcasecmp(command, "getp") == 0)
       {
          Fs::ConfigParameter p(addr);
 
@@ -592,8 +608,43 @@ int P4sd::meanwhile()
          }
       }
 
-      else if (strcmp(command, "getv") == 0)
-         ;
+      else if (strcasecmp(command, "getv") == 0)
+      {
+      }
+
+      else if (strcasecmp(command, "updatepardata") == 0)
+      {
+         tableParameterFacts->clear();
+
+         for (int f = selectAllParameters->find(); f; f = selectAllParameters->fetch())
+         {
+            int type = tableParameterFacts->getIntValue(cTableParameterFacts::fiType);
+            int paddr = tableJobs->getIntValue(cTableJobs::fiAddress);
+
+            if (type == 0x0700)
+            {
+               Fs::ConfigParameter p(paddr);
+               
+               if (request->getParameter(&p) == success)
+               {
+                  char* buf = 0;
+                  
+                  asprintf(&buf, "%d", p.value);
+
+                  tableParameterFacts->find();
+                  tableParameterFacts->setValue(cTableParameterFacts::fiValue, buf);
+                  tableParameterFacts->setValue(cTableParameterFacts::fiUnit, p.unit);
+                  tableParameterFacts->store();
+
+                  free(buf);
+               }
+            }
+         }
+
+         selectAllParameters->freeResult();
+         tableJobs->setValue(cTableJobs::fiResult, "success");
+      }
+
       else
       {
          tell(eloAlways, "Warning: Ignoring unknown job '%s'", command);

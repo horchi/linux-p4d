@@ -1059,7 +1059,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
       return wrnSkip;
    }
 
-   if ((status = readWord(m->unknown1)) != success)
+   if ((status = readWord(m->type)) != success)
    {
       tell(eloAlways, "Missing at least %d bytes at reading unknown1 (word)", size);
       show("<- ");

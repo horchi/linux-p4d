@@ -167,7 +167,7 @@ function showChilds($parnt, $level)
             echo "          <td>$title</td>\n";
 
          if ($value != -1)
-            echo "          <td>$value</td>\n";
+            echo "          <td style=\"color:blue\">$value</td>\n";
          else
             echo "          <td></td>\n";
 

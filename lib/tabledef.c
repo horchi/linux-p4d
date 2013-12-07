@@ -100,9 +100,11 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
    { "title",            ffAscii,    100, fiTitle,         ftData },
 
    { "state",            ffAscii,      1, fiState,         ftData },
-   { "unit",             ffAscii,      5, fiUnit,          ftData },
 
-   { "unknown1",         ffInt,        4, fiUnknown1,      ftData },
+   { "unit",             ffAscii,      5, fiUnit,          ftData },
+   { "value",            ffAscii,     10, fiValue,         ftData },
+
+   { "unknown1",         ffInt,        4, fiType,          ftData },
    { "unknown2",         ffInt,        4, fiUnknown2,      ftData },
 
    { 0 }

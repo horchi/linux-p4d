@@ -99,9 +99,10 @@ class cTableParameterFacts : public cDbTable
          fiTitle,
 
          fiState,
-         fiUnit,        
+         fiUnit,
+         fiValue,        // to store the last may be deprecated value for fast access
 
-         fiUnknown1,     // unknown data
+         fiType,         // 
          fiUnknown2,     // unknown data
 
          fiCount

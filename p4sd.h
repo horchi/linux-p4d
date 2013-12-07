@@ -93,6 +93,7 @@ class P4sd : public FroelingService
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
       cDbStatement* selectPendingJobs;
+      cDbStatement* selectAllParameters;
 
       Sem* sem;
       P4Request* request;
