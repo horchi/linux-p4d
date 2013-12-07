@@ -954,7 +954,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    int status = success;
    int size = 0;
    byte crc, tb, b;
-   byte isLast;
+   byte more;
 
    clear();
    request(first ? cmdGetValueListFirst : cmdGetValueListNext);
@@ -964,10 +964,10 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    size = getHeader()->size;
 
-   status += readByte(isLast);
+   status += readByte(more);
    size--;
 
-   if (isLast != 1)
+   if (!more)
    {
       readByte(crc);
       show("<- ");
@@ -1021,7 +1021,9 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    int status;
    int size = 0;
    byte crc, tb, b;
-   byte isLast;
+   byte more;
+
+   memset(m, 0, sizeof(MenuItem));
 
    clear();
    request(first ? cmdGetMenuListFirst : cmdGetMenuListNext);
@@ -1031,12 +1033,12 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    size = getHeader()->size;
 
-   if ((status = readByte(isLast)) != success)
+   if ((status = readByte(more)) != success)
       return status;
 
    size--;
 
-   if (isLast != 1)
+   if (!more)
    {
       readByte(crc);
       show("<- ");
@@ -1057,9 +1059,36 @@ int P4Request::getMenuItem(MenuItem* m, int first)
       return wrnSkip;
    }
 
-   // 24 noch unbekannte byte lesen ...
+   if ((status = readWord(m->unknown1)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading unknown1 (word)", size);
+      show("<- ");
+      return status;
+   }
 
-   for (int i = 0; i < 24; i++)
+   size -= 2;
+
+   if ((status = readWord(m->parent)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading parent (word)", size);
+      show("<- ");
+      return status;
+   }
+
+   size -= 2;
+
+   if ((status = readWord(m->child)) != success)
+   {
+      tell(eloAlways, "Missing at least %d bytes at reading child (word)", size);
+      show("<- ");
+      return status;
+   }
+
+   size -= 2;
+
+   // 18 noch unbekannte byte lesen ...
+
+   for (int i = 0; i < 18; i++)
    {
       if ((status = readByte(b)) != success)
       {
@@ -1080,9 +1109,9 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    size -= 2;
 
-   if ((status = readWord(m->unknown)) != success)
+   if ((status = readWord(m->unknown2)) != success)
    {
-      tell(eloAlways, "Missing at least %d bytes at reading unknown word", size);
+      tell(eloAlways, "Missing at least %d bytes at reading unknown2 (word)", size);
       show("<- ");
       return status;
    }

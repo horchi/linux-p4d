@@ -1,3 +1,67 @@
+
+unkown1:
+--------
+03 00 - Messwert (value)
+07 00 - Parameter einstellbar
+08 00 - Parameter einstellbar digital
+11 00 - Digitaler Ausgang
+12 00 - Analoger Ausgang
+13 00 - Digitaler Eingang
+18 00 - 
+19 00 - 
+0a 00 - Parameter einstellbar Tageszeit in Minuten von 00:00
+
+-----------------------------------------
+Menüstruktur
+-----------------------------------------
+
+1. Ebene
+-----------------------------------------
+
+Anlage
+Heizen
+Puffer
+Kessel
+Pellets
+Zirku. Pumpe
+Hand
+Anlage
+
+
+2. Ebene
+-----------------------------------------
+
+ Anlage
+-----------
+Einstellen
+Aktuelle Werte
+Fehler
+Fühler und Pumpen
+Display Bedienrechte
+Display Zuweisungen
+Grundbild- Parameter
+Betriebsart im Automatikbetrieb
+Sprache - Language - Langue - Lingua - Jezik
+Aktuelles Datum
+Aktuelle Zeit
+Standardeinstellungen übernehmen (Alle Werte werden zurückgesetzt!)
+Aktuelle Bedienebene
+Anlagenart
+
+ Heizen
+-----------
+Heizkreis 01
+Heizkreis 02
+Aufheiz Programm
+Allg. Einst
+
+
+
+-----------------------------------------
+Unbekannte Kommandos
+-----------------------------------------
+
+
 ## 0x33
 -----------------------------------------
 

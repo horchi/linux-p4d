@@ -18,7 +18,7 @@
 
 #include "lib/tabledef.h"
 
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
 #define confDirDefault "/etc"
 
 extern char dbHost[];

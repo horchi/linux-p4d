@@ -85,7 +85,7 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
 
    // primary key
 
-   { "address",          ffInt,        4, fiAddress,       ftPrimary },
+   { "id",               ffUInt,       4, fiId,            ftPrimary | ftAutoinc },
 
    // meta                                                         
 
@@ -94,12 +94,16 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
 
    // data
 
-   { "state",            ffAscii,      1, fiState,         ftData },
-   { "unit",             ffAscii,      5, fiUnit,          ftData },
-   { "factor",           ffInt,        4, fiFactor,        ftData },
+   { "parent",           ffUInt,       5, fiParent,        ftData },
+   { "child",            ffUInt,       5, fiChild,         ftData },
+   { "address",          ffUInt,       4, fiAddress,       ftData },
    { "title",            ffAscii,    100, fiTitle,         ftData },
 
-   { "res1",             ffInt,        4, fiRes1,          ftData },
+   { "state",            ffAscii,      1, fiState,         ftData },
+   { "unit",             ffAscii,      5, fiUnit,          ftData },
+
+   { "unknown1",         ffInt,        4, fiUnknown1,      ftData },
+   { "unknown2",         ffInt,        4, fiUnknown2,      ftData },
 
    { 0 }
 };
@@ -114,7 +118,7 @@ cDbService::FieldDef cTableSchemaConf::fields[] =
 
    // primary key
 
-   { "address",          ffInt,        4, fiAddress,       ftPrimary },
+   { "address",          ffUInt,       4, fiAddress,       ftPrimary },
    { "type",             ffAscii,      2, fiType,          ftPrimary },
 
    // meta
@@ -144,7 +148,7 @@ cDbService::FieldDef cTableJobs::fields[] =
 
    // primary key
 
-   { "id",               ffInt,       11, fiId,            ftPrimary | ftAutoinc },
+   { "id",               ffUInt,      11, fiId,            ftPrimary | ftAutoinc },
 
    // meta                                                         
 
@@ -157,6 +161,8 @@ cDbService::FieldDef cTableJobs::fields[] =
    { "doneat",           ffDateTime,   0, fiDoneAt,        ftData },
    { "state",            ffAscii,      1, fiState,         ftData },
    { "command",          ffAscii,    100, fiCommand,       ftData },
+   { "address",          ffUInt,       4, fiAddress,       ftData },
+   { "result",           ffAscii,    100, fiResult,        ftData },
 
    { 0 }
 };

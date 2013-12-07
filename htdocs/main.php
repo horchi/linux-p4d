@@ -1,7 +1,6 @@
 <?php
 include("header.php");
 
-
   // -------------------------
   // establish db connection
 
@@ -73,9 +72,9 @@ include("header.php");
   // ------------------
   // tabelle
 
-  echo "  <table width=\"70%\" border=1 cellspacing=0 rules=rows style=\"position:absolute; top:220px; left:50px;\">\n";
+  echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:240px; left:50px;\">\n";
 
-  echo "    <tr style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
+  echo "    <tr class=\"tableHead\" style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
   echo "      <tr style=\"color:white\" bgcolor=\"#000099\">\n";
   echo "        <td>Id</td>\n";
@@ -106,6 +105,8 @@ include("header.php");
      
      if ($i++ % 2)
         echo "   <tr style=\"color:black\" bgcolor=\"#83AFFF\">\n";
+     else
+        echo "   <tr>\n";
      
      echo "      <td>" . $txtaddr . "</td>\n";   
      echo "      <td>" . $type . "</td>\n";   

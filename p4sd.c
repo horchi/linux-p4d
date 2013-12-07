@@ -65,9 +65,6 @@ P4sd::~P4sd()
 
 int P4sd::init()
 {
-   if (serial->open(ttyDeviceSvc) != success)
-      return fail;
-
    if (initDb() != success)
       return fail;
 
@@ -188,12 +185,20 @@ int P4sd::initialize(int truncate)
 
    sem->p();
 
+   if (serial->open(ttyDeviceSvc) != success)
+   {
+      sem->v();
+      return fail;
+   }
+
    tell(eloAlways, "Getting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
    tell(eloAlways, "Getting parameter facs from s 3200");
    updateParameterFacts();
+
+   serial->close();
 
    sem->v();
 
@@ -446,6 +451,8 @@ int P4sd::updateParameterFacts()
       return fail;
    }
 
+   tableParameterFacts->truncate();
+
    // ...
 
    for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; 
@@ -457,23 +464,24 @@ int P4sd::updateParameterFacts()
       if (status != success)
          break;
 
-      tell(eloDebug, "%3d) 0x%04x (0x%04x) '%s'", count++, m.address, m.unknown, m.description);
+      tell(eloDebug, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'", count++, m.parent, m.child, m.description);
 
-      // update table
-      
+      // update table    
+
       tableParameterFacts->clear();
-      tableParameterFacts->setValue(cTableParameterFacts::fiAddress, m.address);
-      
-      if (!tableParameterFacts->find())
-      {
-         tableParameterFacts->setValue(cTableParameterFacts::fiState, "D");
-         tableParameterFacts->setValue(cTableParameterFacts::fiUnit, m.unit);
-         tableParameterFacts->setValue(cTableParameterFacts::fiFactor, m.factor);
-         tableParameterFacts->setValue(cTableParameterFacts::fiTitle, m.description);
-         tableParameterFacts->setValue(cTableParameterFacts::fiRes1, m.unknown);
 
-         tableParameterFacts->store();
-      }
+      tableParameterFacts->setValue(cTableParameterFacts::fiState, "D");
+      tableParameterFacts->setValue(cTableParameterFacts::fiUnit, m.unit);
+      
+      tableParameterFacts->setValue(cTableParameterFacts::fiParent, m.parent);
+      tableParameterFacts->setValue(cTableParameterFacts::fiChild, m.child);
+      tableParameterFacts->setValue(cTableParameterFacts::fiAddress, m.address);
+      tableParameterFacts->setValue(cTableParameterFacts::fiTitle, m.description);
+      
+      tableParameterFacts->setValue(cTableParameterFacts::fiUnknown1, m.unknown1);
+      tableParameterFacts->setValue(cTableParameterFacts::fiUnknown2, m.unknown2);
+
+      tableParameterFacts->insert();
 
       count++;
    }
@@ -535,6 +543,16 @@ int P4sd::loop()
    time_t nextAt = 0;
    time_t nextStateAt = 0;
    int lastState = na;
+
+   sem->p();
+
+   if (serial->open(ttyDeviceSvc) != success)
+   {
+      sem->v();
+      return fail;
+   }
+
+   sem->v();
 
    while (!doShutDown())
    {
@@ -614,6 +632,8 @@ int P4sd::loop()
       sem->v();
    }
    
+   serial->close();
+
    return success;
 }
 

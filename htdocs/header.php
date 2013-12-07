@@ -1,4 +1,5 @@
 <?php
+
 include("config.php");
 include("functions.php");
 
@@ -16,9 +17,16 @@ echo "
     <a class=\"button1\" href=\"main.php\">Aktuell</a>
     <a class=\"button1\" href=\"chart.php\">Charts</a>
     <a class=\"button1\" href=\"schemadsp.php\">Schema</a>
+    <a class=\"button1\" href=\"menu.php\">Parameter</a>
     <a class=\"button1\" href=\"settings.php\">Settings</a>
-    <a class=\"button1\" href=\"schemacfg.php\">Schema Config</a>
+    <a class=\"button1\" href=\"schemacfg.php\">Schema Config</a>";
 
+if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
+   echo "
+    <a class=\"button1\" href=\"http://logout:password@" . $_SERVER["SERVER_ADDR"] . "/p4/logout/index.php\">logout</a>";
+
+echo "
     <div class=\"content\">
 ";
+
 ?>

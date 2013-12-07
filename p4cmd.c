@@ -275,7 +275,8 @@ int main(int argc, char** argv)
          for (status = request.getFirstMenuItem(&m); status != Fs::wrnLast; status = request.getNextMenuItem(&m))
          {
             if (status == success)
-               tell(eloAlways, "%3d) 0x%04x (0x%04x) '%s'", n++, m.address, m.unknown, m.description);
+               tell(eloAlways, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'", 
+                    n++, m.address, m.parent, m.child, m.description);
             else if (status != Fs::wrnSkip)
                break;
          }

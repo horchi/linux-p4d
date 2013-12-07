@@ -6,6 +6,8 @@ include("header.php");
 $jpegTop = 90;
 $jpegLeft = 30;
 
+$selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
+
 $action = "";
 $cfg = "";
 $started = 0;
@@ -27,14 +29,14 @@ mysql_select_db($mysqldb);
 mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
-  // -------------------------
-  // show image / form
+// -------------------------
+// show image / form
 
-  echo "\n";
-  echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
-  echo "      <div style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-  echo "        <input type=\"image\" src=\"schema.jpg\" value=\"click\" name=\"mouse\">\n";
-  echo "      </div>\n";
+echo "\n";
+echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
+echo "      <div style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
+echo "        <input type=\"image\" src=\"schema.jpg\" value=\"click\" name=\"mouse\">\n";
+echo "      </div>\n";
 
 if ($started == 1)
   echo "
@@ -47,7 +49,9 @@ else
       <input type=submit name=cfg value=Skip>
       <input type=submit name=cfg value=Hide>
       <input type=submit name=cfg value=Back>
-      <input type=checkbox name=unit value=unit>Einheit
+      <input type=checkbox name=unit value=unit checked>Einheit
+      <input type=radio name=showtext value=Value checked>Value
+      <input type=radio name=showtext value=Text>Text
   ";
 
 if ($cfg == "Start") 
@@ -55,7 +59,7 @@ if ($cfg == "Start")
    $_SESSION["started"] = 1;
    syslog(LOG_DEBUG, "p4: starting config");
 
-   $result = mysql_query("select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type");
+   $result = mysql_query($selectAllSchemaConf);
    $_SESSION["cur"] = 0;
    $_SESSION["addr"] = -1;
 
@@ -94,11 +98,9 @@ if ($started == 1)
       
       if ($_SESSION["cur"] > 0)
       {
-         $state = 'A';
-
          // check numrows
 
-         $result = mysql_query("select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type");
+         $result = mysql_query($selectAllSchemaConf);
          $_SESSION["num"] = mysql_numrows($result);  // update ... who nows :o
          
          store("A", $mouseX, $mouseY, "black");
@@ -108,34 +110,40 @@ if ($started == 1)
    }
 }
 
-  // -------------------------
-  // show values
+// -------------------------
+// show values
 
-  include("schema.php");
+include("schema.php");
 
-  echo "    </form>\n";
+echo "    </form>\n";
 
 include("footer.php");
 
+//***************************************************************************
+// Next Conf
+//***************************************************************************
+
 function nextConf($dir)
 {
+   $selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
+
    if ($dir == -1)
       $_SESSION["cur"] -= 2;
-
+   
    if ($_SESSION["cur"] < 0)
       $_SESSION["cur"] = 0;
-
+   
    syslog(LOG_DEBUG, "p4: select " .  $_SESSION["cur"]);
-
+   
    // get last time stamp
    
    $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
    $row = mysql_fetch_array($result, MYSQL_ASSOC);
    $max = $row['max(time)'];
-
+   
    // select conf item
 
-   $result = mysql_query("select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type");
+   $result = mysql_query($selectAllSchemaConf);
    $_SESSION["num"] = mysql_numrows($result);
    $_SESSION["addr"] = mysql_result($result, $_SESSION["cur"], "f.address");
    $_SESSION["type"] = mysql_result($result, $_SESSION["cur"], "f.type");
@@ -157,7 +165,7 @@ function nextConf($dir)
    
    // show
 
-   echo "<div style=\"position:absolute; left:300px; top:51px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "<div style=\"position:absolute; left:450px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
 
    $_SESSION["cur"]++;
    
@@ -168,10 +176,20 @@ function nextConf($dir)
    }
 }
 
+//***************************************************************************
+// Store
+//***************************************************************************
+
 function store($state, $xpos, $ypos, $color)
 {
+   $showUnit = 0;
+   $showText = 0;
+
    if (isset($_POST["unit"]))
       $showUnit = 1;
+   
+   if ($_POST["showtext"] == "Text")
+      $showText = 1;
 
    if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
    {
@@ -184,7 +202,8 @@ function store($state, $xpos, $ypos, $color)
       else
          mysql_query("update schemaconf set xpos = '" . $xpos . 
                      "', ypos = '" . $ypos . "', state = '" . $state . 
-                     "' where address = '" . $_SESSION["addr"] . "' and type = '" .
+                     "', showunit = " . $showUnit . ", showtext = " . $showText . 
+                     " where address = '" . $_SESSION["addr"] . "' and type = '" .
                      $_SESSION["type"] . "'");
    }
 }

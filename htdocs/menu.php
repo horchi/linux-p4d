@@ -1,0 +1,220 @@
+<?php
+
+include("header.php");
+
+$menu = "";
+
+if (isset($_POST["menu"]))
+   $menu = htmlspecialchars($_POST["menu"]);
+
+// -------------------------
+// establish db connection
+
+mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
+mysql_select_db($mysqldb);
+mysql_query("set names 'utf8'");
+mysql_query("SET lc_time_names = 'de_DE'");
+
+// -----------------------
+//
+
+getParameter(0x0415, "");
+
+showMenu();
+
+if ($menu != "")
+   showChilds($menu, 0);
+
+include("footer.php");
+
+//***************************************************************************
+// Show Menu
+//***************************************************************************
+
+function showMenu()
+{
+   $i = 0;
+
+   $result = mysql_query("select * from parameterfacts where parent = " . 1);
+   $count = mysql_numrows($result);
+
+   echo "      <div>\n";
+   echo "        <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+
+   while ($i < $count)
+   {
+      $child = mysql_result($result, $i, "child");
+      $title   = mysql_result($result, $i, "title");
+
+      echo "          <button class=\"button2\" type=submit name=menu value=$child>$title\n";
+
+      $i++;
+   }
+
+   echo "        </form>\n";
+   echo "      </div>\n";
+}
+
+//***************************************************************************
+// Table
+//***************************************************************************
+
+function beginTable($title)
+{
+   echo "      <br>\n";
+
+   echo "      <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
+   echo "        <tr style=\"color:white\" bgcolor=\"#CC0033\">\n";
+   echo "          <td><center><b>$title</b></center></td>\n";
+   echo "        </tr>\n";
+   echo "      </table>\n";
+
+   echo "      <br>\n";
+
+   echo "      <table class=\"table\" cellspacing=0 rules=rows>\n";
+}
+
+function endTable()
+{
+   echo "      </table>\n";
+
+}
+
+//***************************************************************************
+// Show Childs
+//***************************************************************************
+
+function showChilds($parnt, $level)
+{
+   $i = 0;
+
+   $result = mysql_query("select * from parameterfacts where parent = " . $parnt);
+   $count = mysql_numrows($result);
+   
+   // syslog(LOG_DEBUG, "p4: menu with " . $count . " childs of parent " . $parnt . " on level " . $level);
+
+   while ($i < $count)
+   {
+      $child   = mysql_result($result, $i, "child");
+      $address = mysql_result($result, $i, "address");
+      $title   = mysql_result($result, $i, "title");
+      $u1      = mysql_result($result, $i, "unknown1");
+      $u2      = mysql_result($result, $i, "unknown2");
+      $value   = -1;
+
+      if ($u1 == 0x0300)
+      {
+         $txtu1 = "Messwert";
+         $value = getValue($address);
+      }
+      elseif ($u1 == 0x0700)
+         $txtu1 = "Parameter";
+      elseif ($u1 == 0x0800)
+         $txtu1 = "Parameter dig";
+      elseif ($u1 == 0x1100)
+         $txtu1 = "Dig Out";
+      elseif ($u1 == 0x1200)
+         $txtu1 = "Anl Out";
+      elseif ($u1 == 0x1300)
+         $txtu1 = "Dig In";
+      elseif ($u1 == 0x0a00)
+         $txtu1 = "Parameter Zeit";
+
+      else
+         $txtu1 = sprintf("0x%04x", $u1);
+
+      $txtu2 = sprintf("0x%04x", $u2);
+      $txtchild = $child ? sprintf("0x%04x", $child) : "";
+      $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
+
+      if ($level == 0 && $child)
+      {
+         if ($i > 0)
+            endTable();
+         
+         beginTable($title);
+      }
+      else
+      {
+         if (!$child)
+            echo "        <tr style=\"color:black\" bgcolor=\"#FFFFCC\">\n";
+         elseif ($level == 1)
+            echo "        <tr style=\"color:black\" bgcolor=\"#FF6600\">\n";
+         elseif ($level == 2)
+            echo "        <tr style=\"color:black\" bgcolor=\"#FFFF66\">\n";
+         elseif ($level == 3)
+            echo "        <tr style=\"color:black\" bgcolor=\"#FFAA66\">\n";
+         elseif ($level == 4)
+            echo "       <tr>\n";
+         else
+         {
+            syslog(LOG_DEBUG, "p4: unexpected menu level " . $level);
+            return;
+         }
+         
+         echo "          <td>" . $txtaddr . "</td>\n";
+         echo "          <td>" . $level . "</td>\n";
+         echo "          <td>" . $txtchild . "</td>\n";
+         echo "          <td>" . $txtu1 . "</td>\n";
+         echo "          <td>" . $txtu2 . "</td>\n";
+
+         if ($child)
+            echo "          <td><center><b>" . $title . "</b></center></td>\n";
+         else
+            echo "          <td>" . $title . "</td>\n";
+
+         if ($value != -1)
+            echo "          <td>" . $value . "</td>\n";
+         else
+            echo "          <td></td>\n";
+
+         echo "        </tr>\n";
+      }
+
+      if ($child)
+         showChilds($child, $level+1);
+
+      $i++;
+   }
+
+   if ($level == 0)
+      endTable();
+}
+
+//***************************************************************************
+// Get Value
+//***************************************************************************
+
+function getValue($address)
+{
+   $result = mysql_query("select max(time) as max from samples");
+   $row = mysql_fetch_array($result, MYSQL_ASSOC);
+   $max = $row['max'];
+   
+   $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f
+              where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = '%s' and f.type = 'VA'", $max, $address);
+
+   syslog(LOG_DEBUG, "p4: " . $strQuery);
+   
+   $result = mysql_query($strQuery);
+   
+   if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+   {
+      $value = $row['s_value'];
+      $unit = $row['f_unit'];
+      return $value . $unit;
+   }
+ 
+   return 0;
+}
+
+//***************************************************************************
+// Get Parameter
+//***************************************************************************
+
+function getParameter($address, $type)
+{
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'");
+}
+
+?>
