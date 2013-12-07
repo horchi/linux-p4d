@@ -18,7 +18,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 // -----------------------
 //
 
-getParameter(0x0415, "");
+getParameter(0x01bb, "");
 
 showMenu();
 
@@ -108,7 +108,10 @@ function showChilds($parnt, $level)
          $value = getValue($address);
       }
       elseif ($u1 == 0x0700)
+      {
          $txtu1 = "Parameter";
+         $value = getParameter($address, "");
+      }
       elseif ($u1 == 0x0800)
          $txtu1 = "Parameter dig";
       elseif ($u1 == 0x1100)
@@ -194,7 +197,7 @@ function getValue($address)
    $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f
               where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = '%s' and f.type = 'VA'", $max, $address);
 
-   syslog(LOG_DEBUG, "p4: " . $strQuery);
+   // syslog(LOG_DEBUG, "p4: " . $strQuery);
    
    $result = mysql_query($strQuery);
    
@@ -214,7 +217,37 @@ function getValue($address)
 
 function getParameter($address, $type)
 {
+   $timeout = time() + 10;
+
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'");
+   $id = mysql_insert_id();
+
+   while (time() < $timeout)
+   {
+      sleep(1);
+      
+      $result = mysql_query("select * from jobs where id = $id");
+
+      if ($result && mysql_numrows($result) == 1)
+      {
+         $response = mysql_result($result, 0, "result");
+         list($state, $value) = split(":", $response);
+         
+         if ($state == "fail")
+         {
+            // #TODO show error
+            return "";
+         }
+         else
+         {
+            syslog(LOG_DEBUG, "p4: got response for addr " . $addr . "-> " . $value);
+
+            return $value;
+         }
+      }
+   }
+
+   // #TODO show timeout
 }
 
 ?>

@@ -624,9 +624,15 @@ class cDbConnection
    
          while ((res = fread(buffer+nread, 1, 1000, f)))
          {
+            char* b;
+
             nread += res;
             size += 1000;
-            buffer = (char*)realloc(buffer, size+1);
+
+            if (!(b = (char*)realloc(buffer, size+1)))
+               free(buffer);
+                
+            buffer = b;
          }
          
          fclose(f);

@@ -66,7 +66,8 @@ class P4sd : public FroelingService
 
       int standby(int t);
       int standbyUntil(time_t until);
-      
+      int meanwhile();
+
       int update();
 
       int store(time_t now, const char* type, long address, double value, 
@@ -91,6 +92,7 @@ class P4sd : public FroelingService
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
+      cDbStatement* selectPendingJobs;
 
       Sem* sem;
       P4Request* request;

@@ -33,6 +33,7 @@ P4sd::P4sd()
    tableParameterFacts = 0;
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
+   selectPendingJobs = 0;
 
    mailBody = "";
 
@@ -142,6 +143,22 @@ int P4sd::initDb()
 
    status = selectAllValueFacts->prepare();
 
+   // ------------------
+
+   selectPendingJobs = new cDbStatement(tableJobs);
+
+   selectPendingJobs->build("select ");
+   selectPendingJobs->bind(cTableJobs::fiId, cDBS::bndOut);
+   selectPendingJobs->bind(cTableJobs::fiReqAt, cDBS::bndOut, ", ");
+   selectPendingJobs->bind(cTableJobs::fiState, cDBS::bndOut, ", ");
+   selectPendingJobs->bind(cTableJobs::fiCommand, cDBS::bndOut, ", ");
+   selectPendingJobs->bind(cTableJobs::fiAddress, cDBS::bndOut, ", ");
+   selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
+
+   status = selectPendingJobs->prepare();
+
+   // ------------------
+
    tell(eloAlways, "Connection to database established");  
 
    return status;
@@ -157,6 +174,7 @@ int P4sd::exitDb()
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
+   delete selectPendingJobs;       selectPendingJobs = 0;
 
    delete connection;      connection = 0;
 
@@ -520,7 +538,10 @@ int P4sd::standby(int t)
    time_t end = time(0) + t;
 
    while (time(0) < end && !doShutDown())
+   {
+      meanwhile();
       sleep(1);
+   }
 
    return done;
 }
@@ -528,9 +549,64 @@ int P4sd::standby(int t)
 int P4sd::standbyUntil(time_t until)
 {
    while (time(0) < until && !doShutDown())
+   {
+      meanwhile();
       sleep(1);
+   }
 
    return done;
+}
+
+//***************************************************************************
+// Meanwhile
+//***************************************************************************
+
+int P4sd::meanwhile()
+{
+   tableJobs->clear();
+
+   for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
+   {
+      int addr = tableJobs->getIntValue(cTableJobs::fiAddress);
+      const char* command = tableJobs->getStrValue(cTableJobs::fiCommand);
+
+      tableJobs->find();
+      tableJobs->setValue(cTableJobs::fiDoneAt, time(0));
+      tableJobs->setValue(cTableJobs::fiState, "D");
+
+      tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x'", 
+           tableJobs->getIntValue(cTableJobs::fiId),
+           command, addr);
+
+      if (strcmp(command, "getp") == 0)
+      {
+         Fs::ConfigParameter p(addr);
+
+         if (request->getParameter(&p) == success)
+         {
+            char* buf = 0;
+
+            asprintf(&buf, "success:%d%s", p.value, p.unit);
+            tableJobs->setValue(cTableJobs::fiResult, buf);
+            free(buf);
+         }
+      }
+
+      else if (strcmp(command, "getv") == 0)
+         ;
+      else
+      {
+         tell(eloAlways, "Warning: Ignoring unknown job '%s'", command);
+         tableJobs->setValue(cTableJobs::fiResult, "fail:unknown command");
+      }
+
+      tableJobs->store();
+      tell(eloAlways, "Processing WEBIF job %d done", tableJobs->getIntValue(cTableJobs::fiId));
+   }
+
+   selectPendingJobs->freeResult();
+
+   return success;
 }
 
 //***************************************************************************
@@ -560,7 +636,7 @@ int P4sd::loop()
 
       // check db connection
 
-      while (!doShutDown() && (!tableSamples || !tableSamples->isConnected()))
+      while (!doShutDown() && !tableSamples->isConnected())
       {
          if (initDb() == success)
             break;
