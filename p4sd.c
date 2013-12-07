@@ -540,7 +540,7 @@ int P4sd::standby(int t)
    while (time(0) < end && !doShutDown())
    {
       meanwhile();
-      sleep(1);
+      usleep(100000);
    }
 
    return done;
@@ -551,7 +551,7 @@ int P4sd::standbyUntil(time_t until)
    while (time(0) < until && !doShutDown())
    {
       meanwhile();
-      sleep(1);
+      usleep(100000);
    }
 
    return done;
