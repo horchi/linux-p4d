@@ -149,7 +149,8 @@ int P4sd::initDb()
    selectAllParameters = new cDbStatement(tableParameterFacts);
 
    selectAllParameters->build("select ");
-   selectAllParameters->bind(cTableParameterFacts::fiAddress, cDBS::bndOut);
+   selectAllParameters->bind(cTableParameterFacts::fiId, cDBS::bndOut);
+   selectAllParameters->bind(cTableParameterFacts::fiAddress, cDBS::bndOut, ", ");
    selectAllParameters->bind(cTableParameterFacts::fiType, cDBS::bndOut, ", ");
    selectAllParameters->bind(cTableParameterFacts::fiUnit, cDBS::bndOut, ", ");
    selectAllParameters->bind(cTableParameterFacts::fiValue, cDBS::bndOut, ", ");
@@ -631,10 +632,12 @@ int P4sd::meanwhile()
                   
                   asprintf(&buf, "%d", p.value);
 
-                  tableParameterFacts->find();
-                  tableParameterFacts->setValue(cTableParameterFacts::fiValue, buf);
-                  tableParameterFacts->setValue(cTableParameterFacts::fiUnit, p.unit);
-                  tableParameterFacts->store();
+                  if (tableParameterFacts->find())
+                  {
+                     tableParameterFacts->setValue(cTableParameterFacts::fiValue, buf);
+                     tableParameterFacts->setValue(cTableParameterFacts::fiUnit, p.unit);
+                     tableParameterFacts->update();
+                  }
 
                   free(buf);
                }

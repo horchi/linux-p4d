@@ -223,10 +223,12 @@ function getValue($address)
 function getParameter($id)
 {   
    $strQuery = sprintf("select value, unit from parameterfacts
-              where id = $id");
+              where id = '$id'");
 
    $result = mysql_query($strQuery);
-   
+
+   syslog(LOG_DEBUG, "p4: " . $strQuery);
+
    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
    {
       $value = $row['value'];
@@ -287,7 +289,7 @@ function requestParameter($address, $type)
 
 function requestUpdate()
 {
-   $timeout = time() + 10;
+   $timeout = time() + 30;
 
    syslog(LOG_DEBUG, "p4: requesting update");
 
