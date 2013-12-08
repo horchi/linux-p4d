@@ -48,14 +48,14 @@ function showMenu()
       $child = mysql_result($result, $i, "child");
       $title   = mysql_result($result, $i, "title");
 
-      echo "          <button class=\"button2\" type=submit name=menu value=$child>$title\n";
+      echo "          <button class=\"button2\" type=submit name=menu value=$child>$title</button>\n";
 
       $i++;
    }
 
    echo "          <br>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=init>Init\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=update>Aktualisieren\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=init>Init</button>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=update>Aktualisieren</button>\n";
 
    echo "        </form>\n";
    echo "      </div>\n";
