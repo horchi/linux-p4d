@@ -22,8 +22,8 @@ showMenu();
 
 if ($menu == "update")
    requestAction("updatemenu", 30);
-if ($menu == "init")
-   requestAction("initmenu", 30);
+elseif ($menu == "init")
+   requestAction("initmenu", 60);
 elseif ($menu != "")
    showChilds($menu, 0);
 
@@ -110,29 +110,29 @@ function showChilds($parnt, $level)
       $u2      = mysql_result($result, $i, "unknown2");
       $value   = -1;
 
-      if ($type == 0x0300)
+      if ($type == 0x03)
       {
          $txtpt = "Messwert";
          $value = getValue($address);
       }
-      elseif ($type == 0x0700)
+      elseif ($type == 0x07)
          $txttp = "Par.";
-      elseif ($type == 0x0800)
+      elseif ($type == 0x08)
          $txttp = "Par. dig";
-      elseif ($type == 0x4000 || $type == 0x3900 || $type == 0x3200)
+      elseif ($type == 0x40 || $type == 0x39 || $type == 0x32)
          $txttp = "Par. set";
-      elseif ($type == 0x0a00)
+      elseif ($type == 0x0a)
          $txttp = "Par. Zeit";
-      elseif ($type == 0x1100)
+      elseif ($type == 0x11)
          $txttp = "Dig Out";
-      elseif ($type == 0x1200)
+      elseif ($type == 0x12)
          $txttp = "Anl Out";
-      elseif ($type == 0x1300)
+      elseif ($type == 0x13)
          $txttp = "Dig In";
       else
          $txttp = sprintf("0x%04x", $type);
       
-      if ($type != 0x0300)
+      if ($type != 0x03)
          $value = getParameter($id);
 
       $txtu1 = sprintf("0x%04x", $u1);
@@ -235,7 +235,7 @@ function getParameter($id)
 
    $result = mysql_query($strQuery);
 
-   syslog(LOG_DEBUG, "p4: " . $strQuery);
+   // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
    {

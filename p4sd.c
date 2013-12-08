@@ -586,6 +586,7 @@ int P4sd::meanwhile()
 
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
    {
+      int start = time(0);
       int addr = tableJobs->getIntValue(cTableJobs::fiAddress);
       const char* command = tableJobs->getStrValue(cTableJobs::fiCommand);
 
@@ -626,8 +627,8 @@ int P4sd::meanwhile()
             int type = tableMenu->getIntValue(cTableMenu::fiType);
             int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
-            if (type == 0x0700 || type == 0x0800 || type == 0x0a00 || 
-                type == 0x4000 || type == 0x3900 || type == 0x3200)
+            if (type == 0x07 || type == 0x08 || type == 0x0a || 
+                type == 0x40 || type == 0x39 || type == 0x32)
             {
                Fs::ConfigParameter p(paddr);
                
@@ -635,9 +636,9 @@ int P4sd::meanwhile()
                {
                   char* buf = 0;
                   
-                  if (type == 0x0800)
+                  if (type == 0x08)
                      asprintf(&buf, "%s", p.value ? "ja" : "nein");
-                  else if (type == 0x0a00)
+                  else if (type == 0x0a)
                      asprintf(&buf, "%02d:%02d", p.value/60, p.value%60);
                   else
                      asprintf(&buf, "%d", p.value);
@@ -665,7 +666,8 @@ int P4sd::meanwhile()
       }
 
       tableJobs->store();
-      tell(eloAlways, "Processing WEBIF job %d done", tableJobs->getIntValue(cTableJobs::fiId));
+      tell(eloAlways, "Processing WEBIF job %d done after %d seconds", 
+           tableJobs->getIntValue(cTableJobs::fiId), time(0) - start);
    }
 
    selectPendingJobs->freeResult();
