@@ -21,7 +21,9 @@ mysql_query("SET lc_time_names = 'de_DE'");
 showMenu();
 
 if ($menu == "update")
-   requestUpdate();
+   requestAction("updatemenu", 30);
+if ($menu == "init")
+   requestAction("initmenu", 30);
 elseif ($menu != "")
    showChilds($menu, 0);
 
@@ -51,6 +53,8 @@ function showMenu()
       $i++;
    }
 
+   echo "          <br>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=init>Init\n";
    echo "          <button class=\"button3\" type=submit name=menu value=update>Aktualisieren\n";
 
    echo "        </form>\n";
@@ -101,35 +105,37 @@ function showChilds($parnt, $level)
       $child   = mysql_result($result, $i, "child");
       $address = mysql_result($result, $i, "address");
       $title   = mysql_result($result, $i, "title");
+      $type    = mysql_result($result, $i, "type");
       $u1      = mysql_result($result, $i, "unknown1");
       $u2      = mysql_result($result, $i, "unknown2");
       $value   = -1;
 
-      if ($u1 == 0x0300)
+      if ($type == 0x0300)
       {
-         $txtu1 = "Messwert";
+         $txtpt = "Messwert";
          $value = getValue($address);
       }
-      elseif ($u1 == 0x0700)
-         $txtu1 = "Par.";
-      elseif ($u1 == 0x0800)
-         $txtu1 = "Par. dig";
-      elseif ($u1 == 0x4000 || $u1 == 0x3900 || $u1 == 0x3200)
-         $txtu1 = "Par. set";
-      elseif ($u1 == 0x0a00)
-         $txtu1 = "Par. Zeit";
-      elseif ($u1 == 0x1100)
-         $txtu1 = "Dig Out";
-      elseif ($u1 == 0x1200)
-         $txtu1 = "Anl Out";
-      elseif ($u1 == 0x1300)
-         $txtu1 = "Dig In";
+      elseif ($type == 0x0700)
+         $txttp = "Par.";
+      elseif ($type == 0x0800)
+         $txttp = "Par. dig";
+      elseif ($type == 0x4000 || $type == 0x3900 || $type == 0x3200)
+         $txttp = "Par. set";
+      elseif ($type == 0x0a00)
+         $txttp = "Par. Zeit";
+      elseif ($type == 0x1100)
+         $txttp = "Dig Out";
+      elseif ($type == 0x1200)
+         $txttp = "Anl Out";
+      elseif ($type == 0x1300)
+         $txttp = "Dig In";
       else
-         $txtu1 = sprintf("0x%04x", $u1);
+         $txttp = sprintf("0x%04x", $type);
       
-      if ($u1 != 0x0300)
+      if ($type != 0x0300)
          $value = getParameter($id);
 
+      $txtu1 = sprintf("0x%04x", $u1);
       $txtu2 = sprintf("0x%04x", $u2);
       $txtchild = $child ? sprintf("0x%04x", $child) : "-";
       $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
@@ -164,6 +170,7 @@ function showChilds($parnt, $level)
          echo "          <td>$txtaddr</td>\n";
          echo "          <td style=\"color:blue\">$level</td>\n";
          echo "          <td>$txtchild</td>\n";
+         echo "          <td>$txttp</td>\n";
          echo "          <td>$txtu1</td>\n";
          echo "          <td>$txtu2</td>\n";
 
@@ -285,16 +292,16 @@ function requestParameter($address, $type)
 }
 
 //***************************************************************************
-// Request Update
+// Request Action
 //***************************************************************************
 
-function requestUpdate()
+function requestAction($action, $timeout)
 {
-   $timeout = time() + 30;
+   $timeout = time() + $timeout;
 
-   syslog(LOG_DEBUG, "p4: requesting update");
+   syslog(LOG_DEBUG, "p4: requesting ". $action);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'updatepardata', address = '0'");
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$action', address = '0'");
    $id = mysql_insert_id();
 
    while (time() < $timeout)
@@ -308,7 +315,7 @@ function requestUpdate()
          return;
    }
 
-   syslog(LOG_DEBUG, "p4: timeout on update request");
+   syslog(LOG_DEBUG, "p4: timeout on " . $action);
 
    // #TODO show timeout
 }

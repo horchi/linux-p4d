@@ -226,11 +226,11 @@ int P4sd::initialize(int truncate)
       return fail;
    }
 
-   tell(eloAlways, "Getting value facts from s 3200");
+   tell(eloAlways, "Requesting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
-   tell(eloAlways, "Getting parameter facs from s 3200");
+   tell(eloAlways, "Requesting menu structure from s 3200");
    updateMenu();
 
    serial->close();
@@ -487,10 +487,11 @@ int P4sd::updateMenu()
    }
 
    tableMenu->truncate();
+   tableMenu->clear();
 
    // ...
 
-   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast; 
+   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast;
         status = request->getNextMenuItem(&m))
    {
       if (status == wrnSkip)
@@ -514,6 +515,7 @@ int P4sd::updateMenu()
       tableMenu->setValue(cTableMenu::fiTitle, m.description);
       
       tableMenu->setValue(cTableMenu::fiType, m.type);
+      tableMenu->setValue(cTableMenu::fiUnknown1, m.unknown1);
       tableMenu->setValue(cTableMenu::fiUnknown2, m.unknown2);
 
       tableMenu->insert();
@@ -609,11 +611,13 @@ int P4sd::meanwhile()
          }
       }
 
-      else if (strcasecmp(command, "getv") == 0)
+      else if (strcasecmp(command, "initmenu") == 0)
       {
+         updateMenu();
+         tableJobs->setValue(cTableJobs::fiResult, "success");
       }
 
-      else if (strcasecmp(command, "updatepardata") == 0)
+      else if (strcasecmp(command, "updatemenu") == 0)
       {
          tableMenu->clear();
 
