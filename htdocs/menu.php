@@ -130,12 +130,12 @@ function showChilds($parnt, $level)
       elseif ($type == 0x13)
          $txttp = "Dig In";
       else
-         $txttp = sprintf("0x%04x", $type);
+         $txttp = sprintf("0x%02x", $type);
       
       if ($type != 0x03)
          $value = getParameter($id);
 
-      $txtu1 = sprintf("0x%04x", $u1);
+      $txtu1 = sprintf("0x%02x", $u1);
       $txtu2 = sprintf("0x%04x", $u2);
       $txtchild = $child ? sprintf("0x%04x", $child) : "-";
       $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
