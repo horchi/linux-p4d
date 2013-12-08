@@ -2,8 +2,8 @@
 // Group p4d / Linux - Heizungs Manager
 // File p4sd.h
 // This code is distributed under the terms and conditions of the
-// GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
-// Date 04.11.2010 - 19.11.2013  Jörg Wendel
+// GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
+// Date 04.11.2010 - 08.12.2013  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4SD_H_
@@ -18,7 +18,7 @@
 
 #include "lib/tabledef.h"
 
-#define VERSION "0.0.3"
+#define VERSION "0.0.4"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -75,7 +75,7 @@ class P4sd : public FroelingService
       int sendMail();
       int updateConfTables();
       int updateValueFacts();
-      int updateParameterFacts();
+      int updateMenu();
       int haveMailState();
       
       int doShutDown() { return shutdown; }
@@ -86,7 +86,7 @@ class P4sd : public FroelingService
 
       cTableSamples* tableSamples;
       cTableValueFacts* tableValueFacts;
-      cTableParameterFacts* tableParameterFacts;
+      cTableMenu* tableMenu;
       cTableJobs* tableJobs;
       cTableSchemaConf* tableSchemaConf;
 

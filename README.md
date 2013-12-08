@@ -10,7 +10,8 @@
 -
 - Homepage:   https://github.com/horchi/linux-p4d
 -
-- See the file LICENSE for license information.
+- This code is distributed under the terms and conditions of the
+- GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 -----------------------------------------------------------------------------------
 
  

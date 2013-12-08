@@ -76,14 +76,14 @@ class cTableValueFacts : public cDbTable
 
 
 //***************************************************************************
-// class cTableParameterFacts
+// class cTableMenu
 //***************************************************************************
 
-class cTableParameterFacts : public cDbTable
+class cTableMenu : public cDbTable
 {
    public:
 
-      cTableParameterFacts(cDbConnection* aConnection, const char* aName = "parameterfacts")
+      cTableMenu(cDbConnection* aConnection, const char* aName = "menu")
          : cDbTable(aConnection, aName, fields) { }
 
       enum FieldIndex
@@ -95,6 +95,7 @@ class cTableParameterFacts : public cDbTable
 
          fiParent,
          fiChild,
+         fiType,
          fiAddress,      // Sensor Address
          fiTitle,
 
@@ -102,7 +103,7 @@ class cTableParameterFacts : public cDbTable
          fiUnit,
          fiValue,        // to store the last may be deprecated value for fast access
 
-         fiType,         // 
+         fiUnknown1,     // 
          fiUnknown2,     // unknown data
 
          fiCount
@@ -134,6 +135,7 @@ class cTableSchemaConf : public cDbTable
          fiKind,  // unused, perpared for html display kind ( value,state,time,... )
          fiColor,
          fiShowUnit,
+         fiShowText,
          fiXPos,
          fiYPos,
 

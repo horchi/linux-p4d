@@ -2,7 +2,7 @@
 // Group p4d / Linux - Heizungs Manager
 // File p4io.c
 // This code is distributed under the terms and conditions of the
-// GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+// GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 // Date 04.11.2010 - 19.11.2013  Jörg Wendel
 //***************************************************************************
 
@@ -774,8 +774,14 @@ int P4Request::getParameter(ConfigParameter* p)
          
          + readByte(b);               // crc
 
-      if (status == success && p->factor)
-         p->value /= p->factor;
+      if (status == success)
+      {
+         if (p->factor)
+            p->value /= p->factor;
+
+         if (strcmp(p->unit, "°") == 0)
+            p->setUnit("°C");
+      }
 
       show("<- ");
    }

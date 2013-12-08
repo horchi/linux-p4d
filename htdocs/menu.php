@@ -35,7 +35,7 @@ function showMenu()
 {
    $i = 0;
 
-   $result = mysql_query("select * from parameterfacts where parent = " . 1);
+   $result = mysql_query("select * from menu where parent = " . 1);
    $count = mysql_numrows($result);
 
    echo "      <div>\n";
@@ -90,7 +90,7 @@ function showChilds($parnt, $level)
 {
    $i = 0;
 
-   $result = mysql_query("select * from parameterfacts where parent = " . $parnt);
+   $result = mysql_query("select * from menu where parent = " . $parnt);
    $count = mysql_numrows($result);
    
    // syslog(LOG_DEBUG, "p4: menu with " . $count . " childs of parent " . $parnt . " on level " . $level);
@@ -111,26 +111,27 @@ function showChilds($parnt, $level)
          $value = getValue($address);
       }
       elseif ($u1 == 0x0700)
-      {
          $txtu1 = "Par.";
-         $value = getParameter($id);
-      }
       elseif ($u1 == 0x0800)
          $txtu1 = "Par. dig";
+      elseif ($u1 == 0x4000 || $u1 == 0x3900 || $u1 == 0x3200)
+         $txtu1 = "Par. set";
+      elseif ($u1 == 0x0a00)
+         $txtu1 = "Par. Zeit";
       elseif ($u1 == 0x1100)
          $txtu1 = "Dig Out";
       elseif ($u1 == 0x1200)
          $txtu1 = "Anl Out";
       elseif ($u1 == 0x1300)
          $txtu1 = "Dig In";
-      elseif ($u1 == 0x0a00)
-         $txtu1 = "Par. Zeit";
-
       else
          $txtu1 = sprintf("0x%04x", $u1);
+      
+      if ($u1 != 0x0300)
+         $value = getParameter($id);
 
       $txtu2 = sprintf("0x%04x", $u2);
-      $txtchild = $child ? sprintf("0x%04x", $child) : "";
+      $txtchild = $child ? sprintf("0x%04x", $child) : "-";
       $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
 
       if ($level == 0 && $child)
@@ -222,7 +223,7 @@ function getValue($address)
 
 function getParameter($id)
 {   
-   $strQuery = sprintf("select value, unit from parameterfacts
+   $strQuery = sprintf("select value, unit from menu 
               where id = '$id'");
 
    $result = mysql_query($strQuery);

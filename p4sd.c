@@ -2,8 +2,8 @@
 // Group p4d / Linux - Heizungs Manager
 // File p4sd.c
 // This code is distributed under the terms and conditions of the
-// GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
-// Date 04.11.2010 - 21.11.2013  Jörg Wendel
+// GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
+// Date 04.11.2010 - 08.12.2013  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -30,7 +30,7 @@ P4sd::P4sd()
    tableJobs = 0;
    tableSchemaConf = 0;
    tableValueFacts = 0;
-   tableParameterFacts = 0;
+   tableMenu = 0;
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
@@ -102,8 +102,8 @@ int P4sd::initDb()
    tableValueFacts = new cTableValueFacts(connection);
    if (tableValueFacts->open() != success) return fail;
 
-   tableParameterFacts = new cTableParameterFacts(connection);
-   if (tableParameterFacts->open() != success) return fail;
+   tableMenu = new cTableMenu(connection);
+   if (tableMenu->open() != success) return fail;
 
    tableSamples = new cTableSamples(connection);
    if (tableSamples->open() != success) return fail;
@@ -146,16 +146,16 @@ int P4sd::initDb()
 
    // ----------------
 
-   selectAllParameters = new cDbStatement(tableParameterFacts);
+   selectAllParameters = new cDbStatement(tableMenu);
 
    selectAllParameters->build("select ");
-   selectAllParameters->bind(cTableParameterFacts::fiId, cDBS::bndOut);
-   selectAllParameters->bind(cTableParameterFacts::fiAddress, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableParameterFacts::fiType, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableParameterFacts::fiUnit, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableParameterFacts::fiValue, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableParameterFacts::fiTitle, cDBS::bndOut, ", ");
-   selectAllParameters->build(" from %s", tableParameterFacts->TableName());
+   selectAllParameters->bind(cTableMenu::fiId, cDBS::bndOut);
+   selectAllParameters->bind(cTableMenu::fiAddress, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableMenu::fiType, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableMenu::fiUnit, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableMenu::fiValue, cDBS::bndOut, ", ");
+   selectAllParameters->bind(cTableMenu::fiTitle, cDBS::bndOut, ", ");
+   selectAllParameters->build(" from %s", tableMenu->TableName());
 
    status = selectAllParameters->prepare();
 
@@ -184,7 +184,7 @@ int P4sd::exitDb()
 {
    delete tableSamples;        tableSamples = 0;
    delete tableValueFacts;     tableValueFacts = 0;
-   delete tableParameterFacts; tableParameterFacts = 0;
+   delete tableMenu; tableMenu = 0;
    delete tableJobs;           tableJobs = 0;
    delete tableSchemaConf;     tableSchemaConf = 0;
 
@@ -215,7 +215,7 @@ int P4sd::initialize(int truncate)
       
       tableValueFacts->truncate();
       tableSchemaConf->truncate();
-      tableParameterFacts->truncate();
+      tableMenu->truncate();
    }
 
    sem->p();
@@ -231,7 +231,7 @@ int P4sd::initialize(int truncate)
    tell(eloAlways, "Update html schema configuration");
    updateConfTables();
    tell(eloAlways, "Getting parameter facs from s 3200");
-   updateParameterFacts();
+   updateMenu();
 
    serial->close();
 
@@ -469,10 +469,10 @@ int P4sd::updateValueFacts()
 }
 
 //***************************************************************************
-// Update Parameter Facts
+// Update Menu Structure
 //***************************************************************************
 
-int P4sd::updateParameterFacts()
+int P4sd::updateMenu()
 {
    int status;
    Fs::MenuItem m;
@@ -486,7 +486,7 @@ int P4sd::updateParameterFacts()
       return fail;
    }
 
-   tableParameterFacts->truncate();
+   tableMenu->truncate();
 
    // ...
 
@@ -503,25 +503,25 @@ int P4sd::updateParameterFacts()
 
       // update table    
 
-      tableParameterFacts->clear();
+      tableMenu->clear();
 
-      tableParameterFacts->setValue(cTableParameterFacts::fiState, "D");
-      tableParameterFacts->setValue(cTableParameterFacts::fiUnit, m.unit);
+      tableMenu->setValue(cTableMenu::fiState, "D");
+      tableMenu->setValue(cTableMenu::fiUnit, m.unit);
       
-      tableParameterFacts->setValue(cTableParameterFacts::fiParent, m.parent);
-      tableParameterFacts->setValue(cTableParameterFacts::fiChild, m.child);
-      tableParameterFacts->setValue(cTableParameterFacts::fiAddress, m.address);
-      tableParameterFacts->setValue(cTableParameterFacts::fiTitle, m.description);
+      tableMenu->setValue(cTableMenu::fiParent, m.parent);
+      tableMenu->setValue(cTableMenu::fiChild, m.child);
+      tableMenu->setValue(cTableMenu::fiAddress, m.address);
+      tableMenu->setValue(cTableMenu::fiTitle, m.description);
       
-      tableParameterFacts->setValue(cTableParameterFacts::fiType, m.type);
-      tableParameterFacts->setValue(cTableParameterFacts::fiUnknown2, m.unknown2);
+      tableMenu->setValue(cTableMenu::fiType, m.type);
+      tableMenu->setValue(cTableMenu::fiUnknown2, m.unknown2);
 
-      tableParameterFacts->insert();
+      tableMenu->insert();
 
       count++;
    }
 
-   tell(eloAlways, "Read %d parameter facts", count);
+   tell(eloAlways, "Read %d menu items", count);
    
    return success;
 }
@@ -615,14 +615,15 @@ int P4sd::meanwhile()
 
       else if (strcasecmp(command, "updatepardata") == 0)
       {
-         tableParameterFacts->clear();
+         tableMenu->clear();
 
          for (int f = selectAllParameters->find(); f; f = selectAllParameters->fetch())
          {
-            int type = tableParameterFacts->getIntValue(cTableParameterFacts::fiType);
-            int paddr = tableParameterFacts->getIntValue(cTableParameterFacts::fiAddress);
+            int type = tableMenu->getIntValue(cTableMenu::fiType);
+            int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
-            if (type == 0x0700)
+            if (type == 0x0700 || type == 0x0800 || type == 0x0a00 || 
+                type == 0x4000 || type == 0x3900 || type == 0x3200)
             {
                Fs::ConfigParameter p(paddr);
                
@@ -630,13 +631,18 @@ int P4sd::meanwhile()
                {
                   char* buf = 0;
                   
-                  asprintf(&buf, "%d", p.value);
+                  if (type == 0x0800)
+                     asprintf(&buf, "%s", p.value ? "ja" : "nein");
+                  else if (type == 0x0a00)
+                     asprintf(&buf, "%02d:%02d", p.value/60, p.value%60);
+                  else
+                     asprintf(&buf, "%d", p.value);
 
-                  if (tableParameterFacts->find())
+                  if (tableMenu->find())
                   {
-                     tableParameterFacts->setValue(cTableParameterFacts::fiValue, buf);
-                     tableParameterFacts->setValue(cTableParameterFacts::fiUnit, p.unit);
-                     tableParameterFacts->update();
+                     tableMenu->setValue(cTableMenu::fiValue, buf);
+                     tableMenu->setValue(cTableMenu::fiUnit, p.unit);
+                     tableMenu->update();
                   }
 
                   free(buf);

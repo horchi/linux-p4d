@@ -76,10 +76,10 @@ cDbService::FieldDef cTableValueFacts::fields[] =
 };
 
 //***************************************************************************
-// Parameter Facts
+// Menu
 //***************************************************************************
 
-cDbService::FieldDef cTableParameterFacts::fields[] =
+cDbService::FieldDef cTableMenu::fields[] =
 {
    // name               format     size  index            type 
 
@@ -96,15 +96,15 @@ cDbService::FieldDef cTableParameterFacts::fields[] =
 
    { "parent",           ffUInt,       5, fiParent,        ftData },
    { "child",            ffUInt,       5, fiChild,         ftData },
+   { "type"    ,         ffUInt,       1, fiType,          ftData },
    { "address",          ffUInt,       4, fiAddress,       ftData },
    { "title",            ffAscii,    100, fiTitle,         ftData },
 
    { "state",            ffAscii,      1, fiState,         ftData },
-
    { "unit",             ffAscii,      5, fiUnit,          ftData },
    { "value",            ffAscii,     10, fiValue,         ftData },
-
-   { "unknown1",         ffInt,        4, fiType,          ftData },
+   
+   { "unknown1",         ffInt,        4, fiUnknown1,      ftData },
    { "unknown2",         ffInt,        4, fiUnknown2,      ftData },
 
    { 0 }
@@ -134,6 +134,7 @@ cDbService::FieldDef cTableSchemaConf::fields[] =
    { "kind",             ffAscii,     20, fiKind,          ftData },
    { "color",            ffAscii,     10, fiColor,         ftData },
    { "showunit",         ffInt,        1, fiShowUnit,      ftData },
+   { "showtext",         ffInt,        1, fiShowText,      ftData },
    { "xpos",             ffInt,        0, fiXPos,          ftData },
    { "ypos",             ffInt,        0, fiYPos,          ftData },
 
