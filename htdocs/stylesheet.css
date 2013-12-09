@@ -18,7 +18,7 @@ A:active {
 }
 
 .button1 {
-  background-color: #BBBBBB;
+  background-color: #FF6600;
   padding: 5px 25px;
   color: #000000;
   text-decoration: none;
@@ -26,11 +26,11 @@ A:active {
 }
 
 .button1:hover {
-	background:#AAAAAA;
+	background:#FF3300;
 }
 
 .button2 {
-  background-color: #FF6600;
+  background-color: #FF9900;
   padding: 5px 25px;
   color: #FFFFFF;
   text-decoration: none;
@@ -42,7 +42,7 @@ A:active {
 }
 
 .button3 {
-  background-color: #2020FF;
+  background-color: #FF9900;
   padding: 5px 25px;
   color: #FFFFFF;
   text-decoration: none;
@@ -50,7 +50,7 @@ A:active {
 }
 
 .button3:hover {
-	background:#2020AA;
+	background:#FF3300;
 }
 
 .buttont {
@@ -87,10 +87,21 @@ A:active {
   left: 5px;
 }
 
-.table 
+.tableLight
 {
   width: 90%;
   border: 1;
+  background-color: #FFFFCC;
+  color: #000000;
+  font: 14px Verdana;
+  padding: 20px 20px;
+}
+
+.tableDark
+{
+  width: 90%;
+  border: 1;
+  background-color: #FFFF66;
   color: #000000;
   font: 14px Verdana;
   padding: 20px 20px;
@@ -100,59 +111,69 @@ A:active {
 {
   width: 70%;
   border: 1;
-  background-color: #000099;
-  color: #FFFFFF;
+  background-color: #FF9900;
+  color: #000000;
   font: bold 20px Verdana;
+  padding: 20px;
+}
+
+.tableHead1
+{
+  width: 70%;
+  border: 1;
+  background-color: #FF9900;
+  color: #000000;
+  font: bold 16px Verdana;
   padding: 20px;
 }
 
 #aState  
 { 
-  position:absolute; 
-  top:50px; 
-  left:50px; 
-  width:500px; 
-  background-color:#83AFFF; 
-  border:1px; solid:#804000; 
-  padding:10px; 
+  position: absolute; 
+  top: 50px; 
+  left: 50px; 
+  width: 500px; 
+  background-color: #FFFFCC; 
+  border: 1px; solid: #804000; 
+  padding: 10px; 
   font: 20px Verdana;
-  border-radius:10px; 
+  border-radius: 10px; 
 }
 
 #aSelect 
 {
-  position:absolute; 
-  top:160px; 
-  left:50px; 
-  width:500px; 
-  background-color:#83AFFF; 
-  border:1px; 
-  solid:#804000; 
-  padding:10px; 
+  position: absolute; 
+  top: 160px; 
+  left: 50px; 
+  width: 500px; 
+  background-color: #FFFFCC; 
+  border: 1px; 
+  solid: #804000; 
+  padding: 10px; 
   font: 18px Verdana;
-  border-radius:10px; 
+  border-radius: 10px; 
 }
 
 #aSelectChart 
 { 
-  position:absolute; 
-  top:50px; 
-  left:30px; 
-  width:500px; 
-  background-color:#83AFFF; 
-  border:1px; 
-  padding:10px; 
+  position: absolute;
+  top: 50px;
+  left: 30px;
+  width: 500px;
+  background-color: #FFFFCC;
+  border: 1px;
+  padding: 10px;
   font: 16px Verdana;
-  border-radius:10px; 
+  border-radius:10px;
 }
 
 #aChart 
 { 
-  position:absolute; 
-  top:130px; 
-  left:30px; 
-  background-color:#83AFFF; 
-  border:1px; 
-  padding: 0px; 
-  border-radius:10px; 
+  position: absolute;
+  top: 130px;
+  left: 30px;
+  background-color: #83AFFF;
+  border: 1px;
+  padding: 0px;
+  border-radius: 10px; 
 }

@@ -80,11 +80,11 @@ include("header.php");
   // ------------------
   // table
 
-  echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:240px; left:50px;\">\n";
+  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:240px; left:50px;\">\n";
 
   echo "    <tr class=\"tableHead\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
-  echo "      <tr style=\"color:white\" bgcolor=\"#000099\">\n";
+  echo "      <tr class=\"tableHead1\">\n";
   echo "        <td>Id</td>\n";
   echo "        <td>Sensor</td>\n";
   echo "        <td>Type</td>\n";
@@ -112,9 +112,9 @@ include("header.php");
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
      
      if ($i++ % 2)
-        echo "   <tr style=\"color:black\" bgcolor=\"#83AFFF\">\n";
+        echo "   <tr class=\"tableDark\">\n";
      else
-        echo "   <tr>\n";
+        echo "   <tr class=\"tableLight\">\n";
      
      echo "      <td>" . $txtaddr . "</td>\n";   
      echo "      <td>" . $type . "</td>\n";   

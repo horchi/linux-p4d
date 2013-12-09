@@ -19,8 +19,8 @@ if ($action == "")
 {
    echo "
       <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>
-      <table  class=\"table\" border=1 cellspacing=0 rules=rows>
-      <tr class=\"tableHead\">
+      <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
+      <tr class=\"tableHead1\">
          <td> Adresse </td>
          <td> Typ </td>
          <td> Name </td>
@@ -47,9 +47,9 @@ if ($action == "")
       }  
       
       if ($i % 2)
-         echo "         <tr style=\"color:black\" bgcolor=\"#83AFFF\">";
+         echo "         <tr class=\"tableLight\">";
       else
-         echo "         <tr>";
+         echo "         <tr class=\"tableDark\">";
       echo "
             <td> $txtaddr </td>
             <td> $type </td>
