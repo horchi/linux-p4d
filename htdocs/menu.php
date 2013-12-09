@@ -122,42 +122,53 @@ function showChilds($parnt, $level)
          continue;
       }
 
-      if ($type == 0x03)
+      if ($type == 0x03 || $type == 0x46)
       {
          $txttp = "Messwert";
          $value = getValue($address);
       }
-      elseif ($type == 0x07)
-         $txttp = "Par.";
-      elseif ($type == 0x08)
-         $txttp = "Par. dig";
-      elseif ($type == 0x40 || $type == 0x39 || $type == 0x32)
-         $txttp = "Par. set";
-      elseif ($type == 0x0a)
-         $txttp = "Par. Zeit";
-      elseif ($type == 0x11)
-         $txttp = "Dig Out";
-      elseif ($type == 0x12)
-         $txttp = "Anl Out";
-      elseif ($type == 0x13)
-         $txttp = "Dig In";
       else
-         $txttp = sprintf("0x%02x", $type);
-      
-      if ($type != 0x03)
+      {
          $value = getParameter($id);
+
+         switch ($type)
+         {
+            case 0x07: $txttp = "Par.";      break;
+            case 0x08: $txttp = "Par. dig";  break;
+            case 0x40:
+            case 0x39:
+            case 0x32: $txttp = "Par. set";  break;
+            case 0x0a: $txttp = "Par. Zeit"; break;
+            case 0x11: $txttp = "Dig Out";   break;
+            case 0x12: $txttp = "Anl Out";   break; 
+            case 0x13: $txttp = "Dig In";    break; 
+            case 0x22: $txttp = "Empty?";    break;
+            case 0x23: $txttp = "Reset";     break;
+            case 0x26: $txttp = "Zeiten";    break;
+            case 0x3a: $txttp = "Anzeigen";  break;
+            case 0x16: $txttp = "Firmware";  break;
+
+            default:
+               $txttp = sprintf("0x%02x", $type);
+         }
+      }
 
       $txtu1 = sprintf("0x%02x", $u1);
       $txtu2 = sprintf("0x%04x", $u2);
       $txtchild = $child ? sprintf("0x%04x", $child) : "-";
       $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
 
-      if ($level == 0 && $child)
+      if (!$level && $child)
       {
          if ($i > 0)
             endTable();
          
          beginTable($title);
+      }
+      elseif (!$level && !$child && !$address)  // ignore items witout address and child in level 0
+      {
+         $i++;
+         continue;
       }
       else
       {
@@ -189,17 +200,16 @@ function showChilds($parnt, $level)
 
          if ($child)
             echo "          <td><center><b>$title</b></center></td>\n";
-         elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32)
+         elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32 || $type == 0x0a)
             echo "          <td><button class=buttont type=submit name=table value=$id>$title</button></td>\n";
          else
             echo "          <td>$title</td>\n";
-
+         
          if ($value != "on (A)")
             echo "          <td style=\"color:blue\">$value</td>\n";
          else
             echo "          <td style=\"color:green\">$value</td>\n";
          
-
          echo "        </tr>\n";
       }
 
@@ -236,8 +246,8 @@ function getValue($address)
       $unit = $row['f_unit'];
       return $value . $unit;
    }
- 
-   return 0;
+
+   return "-";
 }
 
 //***************************************************************************

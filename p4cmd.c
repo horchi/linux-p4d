@@ -178,9 +178,9 @@ int main(int argc, char** argv)
          if (request.getAnalogOut(&v) == success)
          {
             if (v.mode == 0xff)
-               tell(eloAlways, "mode A; state %d", v.state);
+               tell(eloAlways, "mode A; value %d", v.state);
             else
-               tell(eloAlways, "mode %d; state %d", v.mode, v.state);
+               tell(eloAlways, "mode %d; value %d", v.mode, v.state);
          }
 
          break;

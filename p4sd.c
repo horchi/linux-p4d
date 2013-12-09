@@ -654,6 +654,20 @@ int P4sd::meanwhile()
                   free(buf);
                }
             }
+            else if (type == 0x16)
+            {
+               Fs::Status s;
+               
+               if (request->getStatus(&s) == success)
+               {
+                  if (tableMenu->find())
+                  {
+                     tableMenu->setValue(cTableMenu::fiValue, s.version);
+                     tableMenu->setValue(cTableMenu::fiUnit, "");
+                     tableMenu->update();
+                  }
+               }
+            }
             else if (type == 0x11 || type == 0x13)
             {
                int status;
