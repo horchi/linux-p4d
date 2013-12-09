@@ -227,7 +227,7 @@ else
    
    //  title 
    
-   $picture->setFontProperties(array("FontName"=>"pchart/Forgotte.ttf","FontSize"=>14,"R"=>255,"G"=>255,"B"=>255));
+   $picture->setFontProperties(array("FontName"=>$chart_font,"FontSize"=>14,"R"=>255,"G"=>255,"B"=>255));
    // $picture->drawText(60,25,$title, array("FontSize"=>20));
    $picture->drawText(70,25,strftime("%d. %b %Y", $from) . "  ->  " . strftime(" %d. %b %Y %H:%M", $to) , array("FontSize"=>18));
    
