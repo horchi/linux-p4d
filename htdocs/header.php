@@ -17,9 +17,9 @@ echo "
     <a class=\"button1\" href=\"main.php\">Aktuell</a>
     <a class=\"button1\" href=\"chart.php\">Charts</a>
     <a class=\"button1\" href=\"schemadsp.php\">Schema</a>
-    <a class=\"button1\" href=\"menu.php\">Parameter</a>
-    <a class=\"button1\" href=\"settings.php\">Settings</a>
-    <a class=\"button1\" href=\"schemacfg.php\">Schema Config</a>";
+    <a class=\"button1\" href=\"menu.php\">Menü</a>
+    <a class=\"button1\" href=\"settings.php\">Setup</a>
+    <a class=\"button1\" href=\"schemacfg.php\">Schema Setup</a>";
 
 if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
    echo "

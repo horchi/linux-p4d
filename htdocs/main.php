@@ -78,11 +78,11 @@ include("header.php");
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   // ------------------
-  // tabelle
+  // table
 
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:240px; left:50px;\">\n";
 
-  echo "    <tr class=\"tableHead\" style=\"color:white\" bgcolor=\"#000099\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
+  echo "    <tr class=\"tableHead\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
   echo "      <tr style=\"color:white\" bgcolor=\"#000099\">\n";
   echo "        <td>Id</td>\n";
