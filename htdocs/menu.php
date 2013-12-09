@@ -60,7 +60,7 @@ function showMenu()
    }
 
    echo "          <br>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=init>Init</button>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur löschen und neu initialisieren?')\">Init</button>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter aktualisieren?')\">Aktualisieren</button>\n";
 
    echo "        </form>\n";
