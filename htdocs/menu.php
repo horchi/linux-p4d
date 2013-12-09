@@ -179,6 +179,7 @@ function showChilds($parnt, $level)
 
          echo "        <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
          
+         echo "          <td style=\"color:red\">($id)</td>\n";
          echo "          <td>$txtaddr</td>\n";
          echo "          <td style=\"color:blue\">$level</td>\n";
          echo "          <td>$txtchild</td>\n";

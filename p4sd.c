@@ -624,6 +624,7 @@ int P4sd::meanwhile()
 
          for (int f = selectAllParameters->find(); f; f = selectAllParameters->fetch())
          {
+            // int id = tableMenu->getIntValue(cTableMenu::fiId);
             int type = tableMenu->getIntValue(cTableMenu::fiType);
             int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
@@ -656,7 +657,7 @@ int P4sd::meanwhile()
             else if (type == 0x11 || type == 0x13)
             {
                int status;
-               Fs::IoValue v(addr);
+               Fs::IoValue v(paddr);
 
                if (type == 0x11)
                   status = request->getDigitalOut(&v);
@@ -680,7 +681,7 @@ int P4sd::meanwhile()
             }
             else if (type == 0x12)
             {
-               Fs::IoValue v(addr);
+               Fs::IoValue v(paddr);
                
                if (request->getAnalogOut(&v) == success)
                {
