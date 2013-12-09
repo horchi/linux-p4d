@@ -53,15 +53,37 @@ A:active {
 	background:#2020AA;
 }
 
+.buttont {
+  background-color: rgba(255, 255, 255, 0);
+  color: #000000;
+  border: 0;
+  text-decoration: none;
+  font: 16px Verdana;
+}
+
+.buttont:hover {
+  background:#FF6600;
+  border: 0;
+}
+
+.info {
+  background-color: green;
+  color: white;
+  text-decoration: none;
+  font: bold 30px Verdana;
+  width: 70%;
+  padding: 20px;
+}
+
 .content {
-	padding:20px;
+	padding: 20px;
 }
 
 .schema 
 {
   font: 22px Verdana;
-  top:50px;
-  left:5px;
+  top: 50px;
+  left: 5px;
 }
 
 .table 

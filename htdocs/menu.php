@@ -21,9 +21,15 @@ mysql_query("SET lc_time_names = 'de_DE'");
 showMenu();
 
 if ($menu == "update")
+{
    requestAction("updatemenu", 30);
+   echo "<br/><br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div>";
+}
 elseif ($menu == "init")
+{
    requestAction("initmenu", 60);
+   echo "<br/><br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div>";
+}
 elseif ($menu != "")
    showChilds($menu, 0);
 
@@ -55,7 +61,7 @@ function showMenu()
 
    echo "          <br>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=init>Init</button>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=update>Aktualisieren</button>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter aktualisieren?')\">Aktualisieren</button>\n";
 
    echo "        </form>\n";
    echo "      </div>\n";
@@ -112,7 +118,7 @@ function showChilds($parnt, $level)
 
       if ($type == 0x03)
       {
-         $txtpt = "Messwert";
+         $txttp = "Messwert";
          $value = getValue($address);
       }
       elseif ($type == 0x07)
@@ -170,14 +176,14 @@ function showChilds($parnt, $level)
          echo "          <td>$txtaddr</td>\n";
          echo "          <td style=\"color:blue\">$level</td>\n";
          echo "          <td>$txtchild</td>\n";
-         echo "          <td>$txttp</td>\n";
+         echo "          <td style=\"color:red\">$txttp</td>\n";
          echo "          <td>$txtu1</td>\n";
          echo "          <td>$txtu2</td>\n";
 
          if ($child)
             echo "          <td><center><b>$title</b></center></td>\n";
          else
-            echo "          <td>$title</td>\n";
+            echo "          <td><button class=buttont type=submit name=table>$title</button></td>\n";
 
          if ($value != -1)
             echo "          <td style=\"color:blue\">$value</td>\n";
@@ -321,3 +327,14 @@ function requestAction($action, $timeout)
 }
 
 ?>
+
+<script language="JavaScript" type="text/JavaScript"> 
+   <!-- 
+function confirmSubmit(msg)
+{
+   if (confirm(msg)) 
+      return true;
+   else 
+      return false;
+} 
+</script> 
