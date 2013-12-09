@@ -27,6 +27,7 @@ enum UserCommand
    ucMenuList,
    ucState,
    ucGetDo,
+   ucGetAo,
    ucUser,
    ucUnkonownList
 };
@@ -51,6 +52,7 @@ void showUsage(const char* bin)
    printf("     getp     show parameter at <addr>\n");
    printf("     setp     set parameter at <addr> to <value>\n");
    printf("     getdo    show digital output at <addr>\n");
+   printf("     getao    show analog output at <addr>\n");
 }
 
 //***************************************************************************
@@ -98,6 +100,8 @@ int main(int argc, char** argv)
       cmd = ucState;
    else if (strcasecmp(argv[1], "getdo") == 0)
       cmd = ucGetDo;
+   else if (strcasecmp(argv[1], "getao") == 0)
+      cmd = ucGetAo;
    else if (strcasecmp(argv[1], "user") == 0)
       cmd = ucUser;
    else if (strcasecmp(argv[1], "list") == 0)
@@ -166,6 +170,22 @@ int main(int argc, char** argv)
 
          break;
       }
+
+      case ucGetAo:
+      {
+         Fs::IoValue v(addr);
+
+         if (request.getAnalogOut(&v) == success)
+         {
+            if (v.mode == 0xff)
+               tell(eloAlways, "mode A; state %d", v.state);
+            else
+               tell(eloAlways, "mode %d; state %d", v.mode, v.state);
+         }
+
+         break;
+      }
+
       case ucState:
       {
          Fs::Status s;
@@ -186,6 +206,7 @@ int main(int argc, char** argv)
 
          break;
       }
+
       case ucGetParameter:
       {
          Fs::ConfigParameter p(addr);

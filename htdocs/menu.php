@@ -114,7 +114,7 @@ function showChilds($parnt, $level)
       $type    = mysql_result($result, $i, "type");
       $u1      = mysql_result($result, $i, "unknown1");
       $u2      = mysql_result($result, $i, "unknown2");
-      $value   = -1;
+      $value   = "";
 
       if ($type == 0x31)
       {
@@ -194,10 +194,11 @@ function showChilds($parnt, $level)
          else
             echo "          <td>$title</td>\n";
 
-         if ($value != -1)
+         if ($value != "on (A)")
             echo "          <td style=\"color:blue\">$value</td>\n";
          else
-            echo "          <td></td>\n";
+            echo "          <td style=\"color:green\">$value</td>\n";
+         
 
          echo "        </tr>\n";
       }
