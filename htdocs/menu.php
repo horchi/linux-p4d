@@ -247,6 +247,50 @@ function getValue($address)
       return $value . $unit;
    }
 
+   return requestValue($address);
+}
+
+//***************************************************************************
+// Request Parameter
+//***************************************************************************
+
+function requestValue($address)
+{
+   $timeout = time() + 10;
+
+   syslog(LOG_DEBUG, "p4: requesting value " . $address);
+
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'");
+   $id = mysql_insert_id();
+
+   while (time() < $timeout)
+   {
+      usleep(1000);
+
+      $result = mysql_query("select * from jobs where id = $id and state = 'D'");
+      $count = mysql_numrows($result);
+
+      if ($count == 1)
+      {
+         $response = mysql_result($result, 0, "result");
+         list($state, $value) = split(":", $response);
+
+         if ($state == "fail")
+         {
+            // #TODO show error
+            return "";
+         }
+         else
+         {
+            syslog(LOG_DEBUG, "p4: got response for value at addr " . $address . "-> " . $value);
+
+            return $value;
+         }
+      }
+   }
+   
+   syslog(LOG_DEBUG, "p4: timeout on value request ");
+
    return "-";
 }
 
@@ -281,7 +325,7 @@ function requestParameter($address, $type)
 {
    $timeout = time() + 10;
 
-   syslog(LOG_DEBUG, "p4: requesting " . $address);
+   syslog(LOG_DEBUG, "p4: requesting parameter " . $address);
 
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'");
    $id = mysql_insert_id();

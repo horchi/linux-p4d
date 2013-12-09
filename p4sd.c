@@ -600,13 +600,28 @@ int P4sd::meanwhile()
 
       if (strcasecmp(command, "getp") == 0)
       {
-         Fs::ConfigParameter p(addr);
+         ConfigParameter p(addr);
 
          if (request->getParameter(&p) == success)
          {
             char* buf = 0;
 
             asprintf(&buf, "success:%d%s", p.value, p.unit);
+            tableJobs->setValue(cTableJobs::fiResult, buf);
+            free(buf);
+         }
+      }
+
+      else if (strcasecmp(command, "getv") == 0)
+      {
+         int factor = 1;
+         Value v(addr);
+
+         if (request->getValue(&v) == success)
+         {
+            char* buf = 0;
+
+            asprintf(&buf, "success:%d", v.value / factor);
             tableJobs->setValue(cTableJobs::fiResult, buf);
             free(buf);
          }
