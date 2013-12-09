@@ -672,6 +672,29 @@ int P4sd::meanwhile()
                   free(buf);
                }
             }
+            else if (type == 0x13)
+            {
+               Fs::IoValue v(addr);
+               
+               if (request->getAnalogOut(&v) == success)
+               {
+                  char* buf = 0;
+
+                  if (v.mode == 0xff)
+                     asprintf(&buf, "%d (A)", v.state);
+                  else
+                     asprintf(&buf, "%d (%d)", v.state, v.mode);
+
+                  if (tableMenu->find())
+                  {
+                     tableMenu->setValue(cTableMenu::fiValue, buf);
+                     tableMenu->setValue(cTableMenu::fiUnit, "");
+                     tableMenu->update();
+                  }
+
+                  free(buf);
+               }
+            }
          }
 
          selectAllParameters->freeResult();

@@ -253,6 +253,7 @@ class P4Request : public FroelingService
 
       int getValue(Value* v);
       int getDigitalOut(IoValue* v);
+      int getAnalogOut(IoValue* v);
 
       int getFirstError(ErrorInfo* e)      { return getError(e, yes); }
       int getNextError(ErrorInfo* e)       { return getError(e, no); }

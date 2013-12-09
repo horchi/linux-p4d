@@ -116,6 +116,12 @@ function showChilds($parnt, $level)
       $u2      = mysql_result($result, $i, "unknown2");
       $value   = -1;
 
+      if ($type == 0x31)
+      {
+         $i++;
+         continue;
+      }
+
       if ($type == 0x03)
       {
          $txttp = "Messwert";
@@ -182,8 +188,10 @@ function showChilds($parnt, $level)
 
          if ($child)
             echo "          <td><center><b>$title</b></center></td>\n";
+         elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32)
+            echo "          <td><button class=buttont type=submit name=table value=$id>$title</button></td>\n";
          else
-            echo "          <td><button class=buttont type=submit name=table>$title</button></td>\n";
+            echo "          <td>$title</td>\n";
 
          if ($value != -1)
             echo "          <td style=\"color:blue\">$value</td>\n";

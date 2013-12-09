@@ -112,7 +112,7 @@ class FroelingService
          cmdGetTimesNext      = 0x43,   // Zeiten abfragen
 
          cmdGetDigOut         = 0x44,   // Digitale Ausgänge abfragen
-         cmdGetAnlIn          = 0x45,   // Analoge Ausgänge abfragen
+         cmdGetAnlOut         = 0x45,   // Analoge Ausgänge abfragen
          cmdGetDigIn          = 0x46,   // Digitale Eingänge abfragen
 
          cmdGetErrorFirst     = 0x47,   // Fehlerpuffer abfragen
