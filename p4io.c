@@ -899,6 +899,35 @@ int P4Request::getDigitalOut(IoValue* v)
 }
 
 //***************************************************************************
+// Get Digital In
+//***************************************************************************
+
+int P4Request::getDigitalIn(IoValue* v)
+{
+   RequestClean clean(this);
+   int status = fail;
+   byte crc;
+
+   if (!v || v->address == addrUnknown)
+      return errWrongAddress;
+   
+   clear();
+   addAddress(v->address);
+   request(cmdGetDigIn);
+   
+   if (readHeader() == success)
+   {
+      status = readByte(v->mode)
+         + readByte(v->state)
+         + readByte(crc);
+
+      show("<- ");
+   }
+
+   return status;
+}
+
+//***************************************************************************
 // Get Analog Out
 //***************************************************************************
 

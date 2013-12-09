@@ -653,11 +653,17 @@ int P4sd::meanwhile()
                   free(buf);
                }
             }
-            else if (type == 0x11)
+            else if (type == 0x11 || type == 0x13)
             {
+               int status;
                Fs::IoValue v(addr);
-               
-               if (request->getDigitalOut(&v) == success)
+
+               if (type == 0x11)
+                  status = request->getDigitalOut(&v);
+               else
+                  status = request->getDigitalIn(&v);
+
+               if (status == success)
                {
                   char* buf = 0;
                   asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
@@ -672,7 +678,7 @@ int P4sd::meanwhile()
                   free(buf);
                }
             }
-            else if (type == 0x13)
+            else if (type == 0x12)
             {
                Fs::IoValue v(addr);
                
