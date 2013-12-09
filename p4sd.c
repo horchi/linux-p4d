@@ -653,6 +653,25 @@ int P4sd::meanwhile()
                   free(buf);
                }
             }
+            else if (type == 0x11)
+            {
+               Fs::IoValue v(addr);
+               
+               if (request->getDigitalOut(&v) == success)
+               {
+                  char* buf = 0;
+                  asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
+
+                  if (tableMenu->find())
+                  {
+                     tableMenu->setValue(cTableMenu::fiValue, buf);
+                     tableMenu->setValue(cTableMenu::fiUnit, "");
+                     tableMenu->update();
+                  }
+
+                  free(buf);
+               }
+            }
          }
 
          selectAllParameters->freeResult();
