@@ -39,6 +39,9 @@
         $text = $row['s_text'];
         $unit = $row['f_unit'];
 
+        if ($unit == "U")
+           $unit = " u/min";
+
         echo "
          <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
            "; color:" . $color . "; z-index:2" . "\">";
@@ -46,7 +49,7 @@
         if ($showText)
            echo $text;
         else if ($showUnit)
-           echo $value . " " . ($unit == "°" ? "°C" : $unit);
+           echo $value . ($unit == "°" ? "°C" : $unit);
         else
            echo $value;
 

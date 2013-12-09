@@ -3,9 +3,13 @@
 include("header.php");
 
 $menu = "";
+$table = "";
 
 if (isset($_POST["menu"]))
    $menu = htmlspecialchars($_POST["menu"]);
+
+if (isset($_POST["edit"]))
+   $edit = htmlspecialchars($_POST["edit"]);
 
 // -------------------------
 // establish db connection
@@ -14,6 +18,14 @@ mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
 mysql_select_db($mysqldb);
 mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
+
+// -----------------------
+//
+
+if ($edit != "")
+{
+   syslog(LOG_DEBUG, "p4: edit menu item " . $edit);
+}
 
 // -----------------------
 //
@@ -31,7 +43,11 @@ elseif ($menu == "init")
    echo "<br/><br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div>";
 }
 elseif ($menu != "")
+{
+   echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
    showChilds($menu, 0);
+   echo "      </form>\n";
+}
 
 include("footer.php");
 
@@ -60,7 +76,7 @@ function showMenu()
    }
 
    echo "          <br>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur löschen und neu initialisieren?')\">Init</button>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter aktualisieren?')\">Aktualisieren</button>\n";
 
    echo "        </form>\n";
@@ -73,22 +89,22 @@ function showMenu()
 
 function beginTable($title)
 {
-   echo "      <br>\n";
+   echo "        <br>\n";
 
-   echo "      <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
-   echo "        <tr style=\"color:white\" bgcolor=\"#CC0033\">\n";
-   echo "          <td><center><b>$title</b></center></td>\n";
-   echo "        </tr>\n";
-   echo "      </table>\n";
+   echo "        <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
+   echo "          <tr style=\"color:white\" bgcolor=\"#CC0033\">\n";
+   echo "            <td><center><b>$title</b></center></td>\n";
+   echo "          </tr>\n";
+   echo "        </table>\n";
 
-   echo "      <br>\n";
+   echo "        <br>\n";
 
-   echo "      <table class=\"table\" cellspacing=0 rules=rows>\n";
+   echo "        <table class=\"tableLight\" cellspacing=0 rules=rows>\n";
 }
 
 function endTable()
 {
-   echo "      </table>\n";
+   echo "        </table>\n";
 
 }
 
@@ -134,11 +150,11 @@ function showChilds($parnt, $level)
          switch ($type)
          {
             case 0x07: $txttp = "Par.";      break;
-            case 0x08: $txttp = "Par. dig";  break;
+            case 0x08: $txttp = "Par Dig";   break;
             case 0x40:
             case 0x39:
-            case 0x32: $txttp = "Par. set";  break;
-            case 0x0a: $txttp = "Par. Zeit"; break;
+            case 0x32: $txttp = "Par Set";   break;
+            case 0x0a: $txttp = "Par Zeit";  break;
             case 0x11: $txttp = "Dig Out";   break;
             case 0x12: $txttp = "Anl Out";   break; 
             case 0x13: $txttp = "Dig In";    break; 
@@ -165,7 +181,7 @@ function showChilds($parnt, $level)
          
          beginTable($title);
       }
-      elseif (!$level && !$child && !$address)  // ignore items witout address and child in level 0
+      elseif (!$level && !$child && !$address)  // ignore items without address and child in level 0
       {
          $i++;
          continue;
@@ -188,29 +204,29 @@ function showChilds($parnt, $level)
             return;
          }
 
-         echo "        <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
+         echo "          <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
          
-         echo "          <td style=\"color:red\">($id)</td>\n";
-         echo "          <td>$txtaddr</td>\n";
-         echo "          <td style=\"color:blue\">$level</td>\n";
-         echo "          <td>$txtchild</td>\n";
-         echo "          <td style=\"color:red\">$txttp</td>\n";
-         echo "          <td>$txtu1</td>\n";
-         echo "          <td>$txtu2</td>\n";
+         echo "            <td style=\"color:red\">($id)</td>\n";
+         echo "            <td>$txtaddr</td>\n";
+         echo "            <td style=\"color:blue\">$level</td>\n";
+         echo "            <td>$txtchild</td>\n";
+         echo "            <td style=\"color:red\">$txttp</td>\n";
+         echo "            <td>$txtu1</td>\n";
+         echo "            <td>$txtu2</td>\n";
 
          if ($child)
-            echo "          <td><center><b>$title</b></center></td>\n";
+            echo "            <td><center><b>$title</b></center></td>\n";
          elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32 || $type == 0x0a)
-            echo "          <td><button class=buttont type=submit name=table value=$id>$title</button></td>\n";
+            echo "            <td><button class=buttont type=submit name=edit value=$id>$title</button></td>\n";
          else
-            echo "          <td>$title</td>\n";
+            echo "            <td>$title</td>\n";
          
          if ($value != "on (A)")
-            echo "          <td style=\"color:blue\">$value</td>\n";
+            echo "            <td style=\"color:blue\">$value</td>\n";
          else
-            echo "          <td style=\"color:green\">$value</td>\n";
+            echo "            <td style=\"color:green\">$value</td>\n";
          
-         echo "        </tr>\n";
+         echo "          </tr>\n";
       }
 
       if ($child)

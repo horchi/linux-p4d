@@ -73,7 +73,7 @@ include("header.php");
   echo "     <input type=submit value=\"Go\">";
 
   echo "  </form>\n";
-  echo " </div>";
+  echo " </div>\n";
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
@@ -89,10 +89,9 @@ include("header.php");
   echo "        <td>Sensor</td>\n";
   echo "        <td>Type</td>\n";
   echo "        <td>Wert</td>\n";
-  echo "        <td>Unit</td>\n";
   echo "      </tr>\n";
 
-  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, f.title as f_title, f.unit as f_unit 
+  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.title as f_title, f.unit as f_unit 
               from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
 
   $result = mysql_query($strQuery);
@@ -102,11 +101,22 @@ include("header.php");
   while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
   {
      $value = $row['s_value'];
+     $text = $row['s_text'];
      $title = $row['f_title'];
      $unit = $row['f_unit'];
      $address = $row['s_address'];
      $type = $row['s_type'];
      $txtaddr = sprintf("0x%x", $address);
+
+     if ($unit == "zst" || $unit == "dig")
+        $unit = "";
+     else if ($unit == "U")
+        $unit = " u/min";
+     else if ($unit == "T")
+     {
+        $unit = "";
+        $value = $text;
+     }
 
      $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . " ','_blank'," 
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
@@ -119,8 +129,7 @@ include("header.php");
      echo "      <td>" . $txtaddr . "</td>\n";   
      echo "      <td>" . $type . "</td>\n";   
      echo "      <td>" . $url . $title . "</a></td>\n";
-     echo "      <td>$value</td>\n";
-     echo "      <td>$unit</td>\n";
+     echo "      <td>$value$unit</td>\n";
      echo "   </tr>\n";
   }
 
