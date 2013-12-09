@@ -614,16 +614,25 @@ int P4sd::meanwhile()
 
       else if (strcasecmp(command, "getv") == 0)
       {
-         int factor = 1;
          Value v(addr);
 
-         if (request->getValue(&v) == success)
-         {
-            char* buf = 0;
+         tableValueFacts->clear();
+         tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
+         tableValueFacts->setValue(cTableValueFacts::fiAddress, addr);
 
-            asprintf(&buf, "success:%d", v.value / factor);
-            tableJobs->setValue(cTableJobs::fiResult, buf);
-            free(buf);
+         if (tableValueFacts->find())
+         {
+            double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
+            const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
+
+            if (request->getValue(&v) == success)
+            {
+               char* buf = 0;
+               
+               asprintf(&buf, "success:%.2f%s", v.value / factor, unit);
+               tableJobs->setValue(cTableJobs::fiResult, buf);
+               free(buf);
+            }
          }
       }
 
