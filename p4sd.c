@@ -582,6 +582,9 @@ int P4sd::standbyUntil(time_t until)
 
 int P4sd::meanwhile()
 {
+   if (!connection->isConnected())
+      return fail;
+
    tableJobs->clear();
 
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
