@@ -8,6 +8,9 @@ include("pChart/class/pCache.class.php");
 include("config.php");
 include("functions.php");
 
+$fontText = $chart_fontpath . "/Forgotte.ttf";
+$fontScale = $chart_fontpath . "/MankSans.ttf";
+
 // date_default_timezone_set('Europe/Berlin');
 
 // parameters
@@ -226,8 +229,8 @@ else
    $picture->drawRectangle(0,0,$width-1,$height-1,array("R"=>0,"G"=>0,"B"=>0));
    
    //  title 
-   
-   $picture->setFontProperties(array("FontName"=>$chart_font,"FontSize"=>14,"R"=>255,"G"=>255,"B"=>255));
+
+   $picture->setFontProperties(array("FontName" => $fontText, "FontSize"=>14, "R"=>255, "G"=>255, "B"=>255));
    // $picture->drawText(60,25,$title, array("FontSize"=>20));
    $picture->drawText(70,25,strftime("%d. %b %Y", $from) . "  ->  " . strftime(" %d. %b %Y %H:%M", $to) , array("FontSize"=>18));
    
@@ -239,7 +242,7 @@ else
    $picture->drawScale(array("LabelingMethod"=>LABELING_DIFFERENT,"DrawSubTicks"=>false,"MinDivHeight"=>25,"LabelSkip"=>$skipTicks,"DrawXLines"=>false,"LabelRotation"=>45));
    
    // $picture->setShadow(true, array("X"=>1, "Y"=>1, "R"=>0, "G"=>0, "B"=>0, "Alpha"=>10));
-   $picture->setFontProperties(array("FontName"=>"pchart/MankSans.ttf","FontSize"=>6,"R"=>0, "G"=>0, "B"=>0));
+   $picture->setFontProperties(array("FontName" => $fontScale, "FontSize"=>6, "R"=>0, "G"=>0, "B"=>0));
 
    $picture->drawSplineChart(array("DisplayValues"=>false,"DisplayColor"=>DISPLAY_AUTO));
    // $picture->drawLineChart(array("DisplayValues"=>false,"DisplayColor"=>DISPLAY_AUTO));
