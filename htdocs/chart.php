@@ -42,11 +42,11 @@ include("pChart/class/pImage.class.php");
 
   echo " <div id=\"aChart\">";
   echo "<br>\n";
-  $condition = "address in (" . $addrs_char1 . ")";
+  $condition = "address in (" . $addrs_chart1 . ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
   echo "<br><br>\n";
 
-  $condition = "address in (" . $addrs_char2. ")";
+  $condition = "address in (" . $addrs_chart2. ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
   echo "<br><br>\n";
   echo " </div>";
