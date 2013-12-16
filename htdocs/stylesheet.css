@@ -81,13 +81,14 @@ A:active
   border: 0;
 }
 
-.info {
+.info 
+{
   background-color: green;
   color: white;
   text-decoration: none;
-  font: bold 30px Verdana;
+  font: 28px Verdana;
   width: 70%;
-  padding: 20px;
+  padding: 15px;
 }
 
 .content 
@@ -145,7 +146,7 @@ A:active
   padding: 20px;
 }
 
-#aInfo
+#aStateInfo
 { 
   position: absolute; 
   top: 50px; 

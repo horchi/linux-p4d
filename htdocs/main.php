@@ -58,7 +58,7 @@ include("header.php");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $mode = $row['text'];
 
-  echo " <div id=\"aInfo\">";
+  echo " <div id=\"aStateInfo\">";
 
   if ($state == 19)
      echo  "  <div id=\"aStateOk\"><center>$status</center></div><br>";
