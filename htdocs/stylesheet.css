@@ -159,11 +159,23 @@ A:active
   border-radius: 10px; 
 }
 
+#aStateImage
+{ 
+  position: absolute; 
+  top: 50px; 
+  left: 580px; 
+  width: 200px; 
+  background-color: #FFFFCC; 
+  border: 1px; 
+  padding: 5px; 
+  border-radius: 10px; 
+}
+
 #aP4dInfo
 { 
   position: absolute; 
   top: 50px; 
-  left: 600px; 
+  left: 800px; 
   width: 300px; 
   background-color: #FFFFCC;
   border: 1px; 

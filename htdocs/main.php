@@ -34,8 +34,8 @@ include("header.php");
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
-  // ----------------
-  // State of P4 Daemon 
+  // ------------------
+  // State of P4 Daemon
 
   $p4dstate = requestAction("p4d-state", 3);
 
@@ -72,6 +72,11 @@ include("header.php");
   echo $time ."<br>";
   echo "Betriebsmodus:  " . $mode ."<br>";
   echo " </div>";
+
+  if ($state == 3)
+     echo "  <img id=\"aStateImage\" src=\"fire.png\">";
+  elseif ($state == 0)
+     echo "  <img id=\"aStateImage\" src=\"error.png\">";
 
   echo " <div id=\"aP4dInfo\">";
 
