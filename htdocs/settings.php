@@ -22,7 +22,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 if ($action == "init")
 {
    requestAction("initvaluefacts", 20);
-   echo "<br/><br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div>";
+   echo "<br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
 }
 
 else if ($action == "store")
@@ -43,13 +43,15 @@ else if ($action == "store")
          $result = mysql_query($sql) 
             or die("Error" . mysql_error());
       }
+
+      echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
    }
 }
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>";
 showButtons();
 showTable();
-echo "        </form>\n";
+echo "      </form>\n";
 
 mysql_close();
 

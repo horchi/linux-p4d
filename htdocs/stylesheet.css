@@ -158,8 +158,39 @@ A:active
   border-radius: 10px; 
 }
 
-#aState  
+#aP4dInfo
 { 
+  position: absolute; 
+  top: 50px; 
+  left: 600px; 
+  width: 300px; 
+  background-color: #FFFFCC; 
+  border: 1px; solid: #804000; 
+  padding: 10px; 
+  font: 20px Verdana;
+  border-radius: 10px; 
+}
+
+#aStateOk
+{ 
+  font: bold 24px Verdana;
+}
+
+#aStateFail
+{ 
+  color: red;
+  font: bold 24px Verdana;
+}
+
+#aStateHeating
+{ 
+  color: green;
+  font: bold 24px Verdana;
+}
+
+#aStateOther
+{ 
+  color: blue;
   font: bold 24px Verdana;
 }
 

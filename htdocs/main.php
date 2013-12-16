@@ -37,7 +37,7 @@ include("header.php");
   // ----------------
   // State of P4 Daemon 
 
-  $p4state = requestAction("p4d-state", 5);
+  $p4dstate = requestAction("p4d-state", 5);
 
   // ----------------
   // Status
@@ -47,10 +47,11 @@ include("header.php");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $time = $row['text'];
 
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';")
+  $result = mysql_query("select text,value from samples where time = '" . $max . "' and address = 1 and type = 'UD';")
      or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $status = $row['text'];
+  $state = $row['value'];
 
   $result = mysql_query("select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';")
      or die("Error" . mysql_error());
@@ -58,9 +59,27 @@ include("header.php");
   $mode = $row['text'];
 
   echo " <div id=\"aInfo\">";
-  echo  "<div id=\"aState\"><center>$status</center></div><br>";
+
+  if ($state == 19)
+     echo  "  <div id=\"aStateOk\"><center>$status</center></div><br>";
+  elseif ($state == 0)
+     echo  "  <div id=\"aStateFail\"><center>$status</center></div><br>";
+  elseif ($state == 3)
+     echo  "  <div id=\"aStateHeating\"><center>$status</center></div><br>";
+  else
+     echo  "  <div id=\"aStateOther\"><center>$status</center></div><br>";
+
   echo $time ."<br>";
   echo "Betriebsmodus:  " . $mode ."<br>";
+  echo " </div>";
+
+  echo " <div id=\"aP4dInfo\">";
+
+  if ($p4dstate == 0)
+    echo  "  <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div>";
+  else
+    echo  "  <div id=\"aStateOk\"><center>P4 Daemon OFFLINE</center></div>";
+
   echo " </div>";
 
   echo "<br>\n";

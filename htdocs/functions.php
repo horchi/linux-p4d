@@ -89,12 +89,12 @@ function requestAction($action, $timeout)
       $count = mysql_numrows($result);
 
       if ($count)
-         return;
+         return 0;
    }
 
    syslog(LOG_DEBUG, "p4: timeout on " . $action);
 
-   // #TODO show timeout
+   return -1;
 }
 
 ?>
