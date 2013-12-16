@@ -84,7 +84,8 @@ function requestAction($action, $timeout)
       usleep(1000);
 
       $result = mysql_query("select * from jobs where id = $id and state = 'D'")
-         or die("Error" . mysql_error())
+         or die("Error" . mysql_error());
+
       $count = mysql_numrows($result);
 
       if ($count)

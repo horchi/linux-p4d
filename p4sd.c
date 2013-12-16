@@ -672,6 +672,11 @@ int P4sd::performWebifRequests()
          tableJobs->setValue(cTableJobs::fiResult, "success");
       }
 
+      else if (strcasecmp(command, "p4d-state") == 0)
+      {
+         tableJobs->setValue(cTableJobs::fiResult, "success");
+      }
+
       else if (strcasecmp(command, "initvaluefacts") == 0)
       {
          updateValueFacts();

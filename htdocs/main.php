@@ -35,6 +35,11 @@ include("header.php");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
   // ----------------
+  // State of P4 Daemon 
+
+  $p4state = requestAction("p4d-state", 5);
+
+  // ----------------
   // Status
 
   $result = mysql_query("select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';")
