@@ -71,13 +71,9 @@ $factsQuery = "select address, type, name, title, unit from valuefacts where" . 
 syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from) 
        . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
-$factResult = mysql_query($factsQuery);
+$factResult = mysql_query($factsQuery)
+   or die("Error" . mysql_error());
 
-if (!$factResult)
-{
-   syslog(LOG_DEBUG, "p4: Query failed. " . mysql_error());
-   return;
-}
 
 $skipTicks = 0;
 $count = 0;
@@ -109,15 +105,11 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
       . " order by time";
 
    syslog(LOG_DEBUG, "p4: $query");
-   $result = mysql_query($query);
 
-   if (!$result)
-   {
-      syslog(LOG_DEBUG, "p4: Query failed. " . mysql_error());
-      continue;
-   }
+   $result = mysql_query($query)
+      or die("Error" . mysql_error());
 
-   // syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($address)");
+   syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($address)");
 
    $lastLabel = "";
 
@@ -202,7 +194,7 @@ else
    
    // $data->setAxisName(0, "Temperature");
    $data->setAxisUnit(0, $unit);
-   $data->setAxisDisplay(0,AXIS_FORMAT_METRIC);
+   $data->setAxisDisplay(0, AXIS_FORMAT_METRIC);
 
    // $data->setSerieDescription("Timestamp","Sampled Dates");
    $data->setAbscissa("Timestamps");

@@ -1,6 +1,7 @@
 <?php
 
 include("header.php");
+include("jfunctions.php");
 
 $action = "";
 
@@ -15,24 +16,82 @@ mysql_select_db($mysqldb) or die("DB error");
 mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
-if ($action == "") 
-{
-   echo "
-      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>
-      <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
-      <tr class=\"tableHead1\">
-         <td> Adresse </td>
-         <td> Typ </td>
-         <td> Name </td>
-         <td> Unit </td>
-         <td> Aufzeichnen </td>
-      </tr>\n";
+// -----------------------
+//
 
-   $result=mysql_query("select * from $mysqltable_values");
-   $num=mysql_numrows($result);
+if ($action == "init")
+{
+   requestAction("initvaluefacts", 20);
+   echo "<br/><br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div>";
+}
+
+else if ($action == "store")
+{
+   if (isset($_POST["selected"]))
+   {
+      $sql = "UPDATE valuefacts SET state = 'D'";
+      $result = mysql_query($sql) 
+         or die("Error" . mysql_error());
+      
+      foreach ($_POST['selected'] as $key => $value) 
+      {
+         $value = htmlspecialchars($value);
+         list ($addr, $type) = split(":", $value);
+         
+         $sql = "UPDATE valuefacts set state = 'A' where address = '$addr' and type = '$type'";
+
+         $result = mysql_query($sql) 
+            or die("Error" . mysql_error());
+      }
+   }
+}
+
+echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>";
+showButtons();
+showTable();
+echo "        </form>\n";
+
+mysql_close();
+
+include("footer.php");
+
+//***************************************************************************
+// Show Buttons
+//***************************************************************************
+
+function showButtons()
+{
+   echo "      <div>\n";
+   echo "          <button class=\"button3\" type=submit name=action value=init onclick=\"return confirmSubmit('Stammdaten der Messwerte initialisieren')\">Init</button>\n";
+   echo "          <button class=\"button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
+   echo "      </div>\n";
+}
+
+//***************************************************************************
+// Show Table
+//***************************************************************************
+
+function showTable()
+{
    $i = 0;
+
+   echo "
+        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
+          <tr class=\"tableHead1\">
+            <td> Adresse </td>
+            <td> Typ </td>
+            <td> Name </td>
+            <td> Einheit </td>
+            <td> Aufzeichnen </td>
+          </tr>\n";
+
+   $result = mysql_query("select * from valuefacts")
+      or die("Error" . mysql_error());
+
+   $num = mysql_numrows($result);
    
-   while ($i < $num) {
+   while ($i < $num) 
+   {
       $address = mysql_result($result,$i,"address");
       $type    = mysql_result($result,$i,"type");
       $title   = mysql_result($result,$i,"title");
@@ -40,53 +99,29 @@ if ($action == "")
       $state   = mysql_result($result,$i,"state");
       $txtaddr = sprintf("0x%04x", $address);
 
-      if ($state == "A") {
+      if ($state == "A") 
          $checked = " checked";
-      } else { 
+      else 
          $checked = "";
-      }  
       
       if ($i % 2)
          echo "         <tr class=\"tableLight\">";
       else
          echo "         <tr class=\"tableDark\">";
+
       echo "
             <td> $txtaddr </td>
             <td> $type </td>
             <td> $title </td>
             <td> $unit </td>
-            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked> </td>
-         </tr>\n";
+            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>
+          </tr>\n";
+
       $i++;
    }
-   
-   echo "
-      </table>
-         <input type=hidden name=action value=update>
-         <input type=hidden name=num_of_addresses value=$i>
-         <input type=submit value=Speichern>
-      </form>";
+
+   echo "        </table>\n";
+// echo "      </form>";
 }
 
-elseif ($action == "update") 
-{
-   $sql="UPDATE $mysqltable_values SET `state`='D'; ";
-   $result = mysql_query($sql) or die("Error" . mysql_error());
-   
-   $selected = $_POST['selected'];
-   foreach ($_POST['selected'] as $key => $value) {
-      $value = htmlspecialchars($value);
-      list ($addr, $type) = split(":", $value);
-      
-      $sql="UPDATE $mysqltable_values SET `state`='A' where `address`='$addr' and `type`='$type'";
-      $result = mysql_query($sql) or die("Error" . mysql_error());
-   }
-   
-   echo "values updated<br>
-      <a href=\"settings.php\">back to settings<a>";
-}
-
-mysql_close();
-
-include("footer.php");
 ?>

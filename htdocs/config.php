@@ -16,9 +16,6 @@ $chart_fontpath     = "pChart/fonts";
 // -----------------------------
 // don't touch below ;-)
 
-$mysqltable_values  = "valuefacts";
-$mysqltable_samples = "samples";
-
 if (function_exists('opcache_reset')) 
    opcache_reset();
 

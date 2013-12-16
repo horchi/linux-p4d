@@ -1,8 +1,10 @@
 <?php
 
 include("header.php");
+include("jfunctions.php");
 
 $menu = "";
+$edit = "";
 $table = "";
 
 if (isset($_POST["menu"]))
@@ -59,7 +61,9 @@ function showMenu()
 {
    $i = 0;
 
-   $result = mysql_query("select * from menu where parent = " . 1);
+   $result = mysql_query("select * from menu where parent = " . 1)
+         or die("Error" . mysql_error());
+
    $count = mysql_numrows($result);
 
    echo "      <div>\n";
@@ -116,7 +120,9 @@ function showChilds($parnt, $level)
 {
    $i = 0;
 
-   $result = mysql_query("select * from menu where parent = " . $parnt);
+   $result = mysql_query("select * from menu where parent = " . $parnt)
+         or die("Error" . mysql_error());
+
    $count = mysql_numrows($result);
    
    // syslog(LOG_DEBUG, "p4: menu with " . $count . " childs of parent " . $parnt . " on level " . $level);
@@ -245,7 +251,9 @@ function showChilds($parnt, $level)
 
 function getValue($address)
 {
-   $result = mysql_query("select max(time) as max from samples");
+   $result = mysql_query("select max(time) as max from samples")
+      or die("Error" . mysql_error());
+
    $row = mysql_fetch_array($result, MYSQL_ASSOC);
    $max = $row['max'];
    
@@ -254,7 +262,8 @@ function getValue($address)
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
    
-   $result = mysql_query($strQuery);
+   $result = mysql_query($strQuery)
+      or die("Error" . mysql_error());
    
    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
    {
@@ -276,14 +285,18 @@ function requestValue($address)
 
    syslog(LOG_DEBUG, "p4: requesting value " . $address);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'");
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'")
+      or die("Error" . mysql_error());
+
    $id = mysql_insert_id();
 
    while (time() < $timeout)
    {
       usleep(1000);
 
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'");
+      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
+         or die("Error" . mysql_error());
+
       $count = mysql_numrows($result);
 
       if ($count == 1)
@@ -319,7 +332,8 @@ function getParameter($id)
    $strQuery = sprintf("select value, unit from menu 
               where id = '$id'");
 
-   $result = mysql_query($strQuery);
+   $result = mysql_query($strQuery)
+      or die("Error" . mysql_error());
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
@@ -343,14 +357,17 @@ function requestParameter($address, $type)
 
    syslog(LOG_DEBUG, "p4: requesting parameter " . $address);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'");
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'")
+      or die("Error" . mysql_error());
+
    $id = mysql_insert_id();
 
    while (time() < $timeout)
    {
       usleep(1000);
 
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'");
+      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
+         or die("Error" . mysql_error());
       $count = mysql_numrows($result);
 
       if ($count == 1)
@@ -376,45 +393,3 @@ function requestParameter($address, $type)
 
    // #TODO show timeout
 }
-
-//***************************************************************************
-// Request Action
-//***************************************************************************
-
-function requestAction($action, $timeout)
-{
-   $timeout = time() + $timeout;
-
-   syslog(LOG_DEBUG, "p4: requesting ". $action);
-
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$action', address = '0'");
-   $id = mysql_insert_id();
-
-   while (time() < $timeout)
-   {
-      usleep(1000);
-
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'");
-      $count = mysql_numrows($result);
-
-      if ($count)
-         return;
-   }
-
-   syslog(LOG_DEBUG, "p4: timeout on " . $action);
-
-   // #TODO show timeout
-}
-
-?>
-
-<script language="JavaScript" type="text/JavaScript"> 
-   <!-- 
-function confirmSubmit(msg)
-{
-   if (confirm(msg)) 
-      return true;
-   else 
-      return false;
-} 
-</script> 

@@ -34,7 +34,7 @@ P4sd::P4sd()
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
-   selectAllParameters = 0;
+   selectAllMenuItems = 0;
 
    mailBody = "";
 
@@ -146,18 +146,18 @@ int P4sd::initDb()
 
    // ----------------
 
-   selectAllParameters = new cDbStatement(tableMenu);
+   selectAllMenuItems = new cDbStatement(tableMenu);
 
-   selectAllParameters->build("select ");
-   selectAllParameters->bind(cTableMenu::fiId, cDBS::bndOut);
-   selectAllParameters->bind(cTableMenu::fiAddress, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableMenu::fiType, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableMenu::fiUnit, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableMenu::fiValue, cDBS::bndOut, ", ");
-   selectAllParameters->bind(cTableMenu::fiTitle, cDBS::bndOut, ", ");
-   selectAllParameters->build(" from %s", tableMenu->TableName());
+   selectAllMenuItems->build("select ");
+   selectAllMenuItems->bind(cTableMenu::fiId, cDBS::bndOut);
+   selectAllMenuItems->bind(cTableMenu::fiAddress, cDBS::bndOut, ", ");
+   selectAllMenuItems->bind(cTableMenu::fiType, cDBS::bndOut, ", ");
+   selectAllMenuItems->bind(cTableMenu::fiUnit, cDBS::bndOut, ", ");
+   selectAllMenuItems->bind(cTableMenu::fiValue, cDBS::bndOut, ", ");
+   selectAllMenuItems->bind(cTableMenu::fiTitle, cDBS::bndOut, ", ");
+   selectAllMenuItems->build(" from %s", tableMenu->TableName());
 
-   status = selectAllParameters->prepare();
+   status = selectAllMenuItems->prepare();
 
    // ------------------
 
@@ -191,7 +191,7 @@ int P4sd::exitDb()
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
-   delete selectAllParameters;     selectAllParameters = 0;
+   delete selectAllMenuItems;      selectAllMenuItems = 0;
 
    delete connection;      connection = 0;
 
@@ -229,7 +229,7 @@ int P4sd::initialize(int truncate)
    tell(eloAlways, "Requesting value facts from s 3200");
    updateValueFacts();
    tell(eloAlways, "Update html schema configuration");
-   updateConfTables();
+   updateSchemaConfTable();
    tell(eloAlways, "Requesting menu structure from s 3200");
    updateMenu();
 
@@ -277,7 +277,7 @@ int P4sd::setup()
    selectAllValueFacts->freeResult();
 
    tell(eloAlways, "Update html schema configuration");
-   updateConfTables();
+   updateSchemaConfTable();
 
    return done;
 }
@@ -286,7 +286,7 @@ int P4sd::setup()
 // Update Conf Tables
 //***************************************************************************
 
-int P4sd::updateConfTables()
+int P4sd::updateSchemaConfTable()
 {
    const int step = 20;
    int y = 50;
@@ -378,37 +378,52 @@ int P4sd::updateValueFacts()
 
    tell(eloAlways, "Read %d value facts, added %d", count, added);
 
-   // add default fpr digital outputs
+   // add default for digital outputs
 
-   count = 0;
    added = 0;
+   count = 0;
 
-   for (int i = 0; Fs::diditalOutDefinitions[i].title; i++)
+   for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
    {
-      tableValueFacts->clear();
-      tableValueFacts->setValue(cTableValueFacts::fiAddress, diditalOutDefinitions[i].address);
-      tableValueFacts->setValue(cTableValueFacts::fiType, "DO");         // DO -> Digital Out
-      
-      if (!tableValueFacts->find())
-      {
-         string name = diditalOutDefinitions[i].title;
-         
-         removeCharsExcept(name, nameChars);
-
-         tableValueFacts->setValue(cTableValueFacts::fiName, name.c_str());
-         tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-         tableValueFacts->setValue(cTableValueFacts::fiUnit, "dig");
-         tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-         tableValueFacts->setValue(cTableValueFacts::fiTitle, diditalOutDefinitions[i].title);
-         
-         tableValueFacts->store();
-         added++;
-      }
+      const char* type = 0;
+      int structType = tableMenu->getIntValue(cTableMenu::fiType);
 
       count++;
+
+      switch (structType)
+      {
+         case mstDigOut: type = "DO"; break;
+         case mstDigIn:  type = "DI"; break;
+         case mstAnlOut: type = "AO"; break;
+      }
+
+      if (type)
+      {
+         // update table
+         
+         tableValueFacts->clear();
+         tableValueFacts->setValue(cTableValueFacts::fiAddress, tableMenu->getIntValue(cTableMenu::fiAddress));
+         tableValueFacts->setValue(cTableValueFacts::fiType, type);
+         
+         if (!tableValueFacts->find())
+         {
+            string name = tableMenu->getStrValue(cTableMenu::fiTitle);
+
+            removeCharsExcept(name, nameChars);
+            tableValueFacts->setValue(cTableValueFacts::fiName, name.c_str());
+            tableValueFacts->setValue(cTableValueFacts::fiState, "D");
+            tableValueFacts->setValue(cTableValueFacts::fiUnit, tableMenu->getStrValue(cTableMenu::fiUnit));
+            tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+            tableValueFacts->setValue(cTableValueFacts::fiTitle, tableMenu->getStrValue(cTableMenu::fiTitle));
+            
+            tableValueFacts->store();
+            added++;
+         }
+      }
    }
 
-   tell(eloAlways, "Checked %d digital output facts, added %d", count, added);
+   selectAllMenuItems->freeResult();
+   tell(eloAlways, "Checked %d digital lines, added %d", count, added);
 
    // at least add value definitions for special data
 
@@ -500,7 +515,8 @@ int P4sd::updateMenu()
       if (status != success)
          break;
 
-      tell(eloDebug, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'", count++, m.parent, m.child, m.description);
+      tell(eloDebug, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'", 
+           count++, m.parent, m.child, m.description);
 
       // update table    
 
@@ -584,7 +600,18 @@ int P4sd::meanwhile()
 {
    if (!connection->isConnected())
       return fail;
+   
+   performWebifRequests();
 
+   return done;
+}
+
+//***************************************************************************
+// Perform WEBIF Requests
+//***************************************************************************
+
+int P4sd::performWebifRequests()
+{
    tableJobs->clear();
 
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
@@ -645,11 +672,17 @@ int P4sd::meanwhile()
          tableJobs->setValue(cTableJobs::fiResult, "success");
       }
 
+      else if (strcasecmp(command, "initvaluefacts") == 0)
+      {
+         updateValueFacts();
+         tableJobs->setValue(cTableJobs::fiResult, "success");
+      }
+
       else if (strcasecmp(command, "updatemenu") == 0)
       {
          tableMenu->clear();
 
-         for (int f = selectAllParameters->find(); f; f = selectAllParameters->fetch())
+         for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
          {
             // int id = tableMenu->getIntValue(cTableMenu::fiId);
             int type = tableMenu->getIntValue(cTableMenu::fiType);
@@ -745,7 +778,7 @@ int P4sd::meanwhile()
             }
          }
 
-         selectAllParameters->freeResult();
+         selectAllMenuItems->freeResult();
          tableJobs->setValue(cTableJobs::fiResult, "success");
       }
 

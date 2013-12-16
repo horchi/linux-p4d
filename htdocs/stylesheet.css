@@ -33,7 +33,7 @@ A:active
 
 .button1:hover 
 {
-	background: #FF3300;
+  background: #FF3300;
 }
 
 .button2
@@ -43,11 +43,13 @@ A:active
   color: #FFFFFF;
   text-decoration: none;
   font: bold 20px Verdana;
+  border-radius: 10px;
 }
 
 .button2:hover 
 {
-	background: #FF3300;
+  background: #FF3300;
+  border-radius: 10px;
 }
 
 .button3 
@@ -57,6 +59,7 @@ A:active
   color: #FFFFFF;
   text-decoration: none;
   font: 16px Verdana;
+  border-radius: 10px;
 }
 
 .button3:hover {
@@ -69,6 +72,7 @@ A:active
   border: 0;
   text-decoration: none;
   font: 16px Verdana;
+  border-radius: 5px;
 }
 
 .buttont:hover {
@@ -141,7 +145,7 @@ A:active
   padding: 20px;
 }
 
-#aState  
+#aInfo
 { 
   position: absolute; 
   top: 50px; 
@@ -154,10 +158,15 @@ A:active
   border-radius: 10px; 
 }
 
+#aState  
+{ 
+  font: bold 24px Verdana;
+}
+
 #aSelect 
 {
   position: absolute; 
-  top: 160px; 
+  top: 190px; 
   left: 50px; 
   width: 500px; 
   background-color: #FFFFCC;

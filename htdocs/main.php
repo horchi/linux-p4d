@@ -20,7 +20,8 @@ include("header.php");
   // -------------------------
   // get last time stamp
 
-  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
+  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
+     or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];
@@ -36,22 +37,25 @@ include("header.php");
   // ----------------
   // Status
 
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';");
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';")
+     or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $time = $row['text'];
 
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';");
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 1 and type = 'UD';")
+     or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $status = $row['text'];
 
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';");
+  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';")
+     or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $mode = $row['text'];
 
-  echo " <div id=\"aState\">";
+  echo " <div id=\"aInfo\">";
+  echo  "<div id=\"aState\"><center>$status</center></div><br>";
   echo $time ."<br>";
   echo "Betriebsmodus:  " . $mode ."<br>";
-  echo "Status:  " . $status ."<br>";
   echo " </div>";
 
   echo "<br>\n";
@@ -80,7 +84,7 @@ include("header.php");
   // ------------------
   // table
 
-  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:240px; left:50px;\">\n";
+  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:290px; left:50px;\">\n";
 
   echo "    <tr class=\"tableHead\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
 
@@ -94,7 +98,8 @@ include("header.php");
   $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.title as f_title, f.unit as f_unit 
               from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
 
-  $result = mysql_query($strQuery);
+  $result = mysql_query($strQuery)
+     or die("Error" . mysql_error());
 
   $i = 0;
 

@@ -139,46 +139,25 @@ class FroelingService
          udTime
       };
 
-      enum DigitalOut
-      {
-         doHeizungLambdasonde = 0x07,
-         doBrennerrelais      = 0x08,
-         doStandbyRelais      = 0x0D,
-
-         doHeizkreispumpe1    = 0x01,
-         doHeizkreispumpe2    = 0x02,
-         doHeizkreispumpe3    = 0x19,
-         doHeizkreispumpe4    = 0x1A,
-         doHeizkreispumpe5    = 0x1F,
-         doHeizkreispumpe6    = 0x20,
-         doHeizkreispumpe7    = 0x25,
-         doHeizkreispumpe8    = 0x26,
-
-         doMischer1auf        = 0x03,
-         doMischer1zu         = 0x04,
-         doMischer2auf        = 0x05,
-         doMischer2zu         = 0x06,
-         doMischer3auf        = 0x1B,
-         doMischer3zu         = 0x1C,
-         doMischer4auf        = 0x1D,
-         doMischer4zu         = 0x1E,
-         doMischer5auf        = 0x21,
-         doMischer5zu         = 0x22,
-         doMischer6auf        = 0x23,
-         doMischer6zu         = 0x24,
-         doMischer7auf        = 0x27,
-         doMischer7zu         = 0x28,
-         doMischer8auf        = 0x29,
-         doMischer8zu         = 0x2A         
-      };
-
-      struct DigitalOutDef
-      {
-         word address;
-         const char* title;
-      };
+      // menu struct types
       
-      static DigitalOutDef diditalOutDefinitions[];
+      enum MenuStructType
+      {
+         mstPar      = 0x07,
+         mstParDig   = 0x08,
+         mstParDig1  = 0x40,
+         mstParDig2  = 0x39,
+         mstParSet   = 0x32,
+         mstParZeit  = 0x0a,
+         mstDigOut   = 0x11,
+         mstAnlOut   = 0x12, 
+         mstDigIn    = 0x13, 
+         mstEmpty    = 0x22,
+         mstReset    = 0x23,
+         mstZeiten   = 0x26,
+         mstAnzeigen = 0x3a,
+         mstFirmware = 0x16
+      };
 
       // error states
 

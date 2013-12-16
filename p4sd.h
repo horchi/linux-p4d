@@ -69,11 +69,12 @@ class P4sd : public FroelingService
       int meanwhile();
 
       int update();
+      int performWebifRequests();
 
       int store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text = 0);
       int sendMail();
-      int updateConfTables();
+      int updateSchemaConfTable();
       int updateValueFacts();
       int updateMenu();
       int haveMailState();
@@ -93,7 +94,7 @@ class P4sd : public FroelingService
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
       cDbStatement* selectPendingJobs;
-      cDbStatement* selectAllParameters;
+      cDbStatement* selectAllMenuItems;
 
       Sem* sem;
       P4Request* request;

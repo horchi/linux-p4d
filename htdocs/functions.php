@@ -65,4 +65,35 @@ function chkDir($path, $rights = 0777)
       return true; 
 }
 
+// ---------------------------------------------------------------------------
+// Request Action
+// ---------------------------------------------------------------------------
+
+function requestAction($action, $timeout)
+{
+   $timeout = time() + $timeout;
+
+   syslog(LOG_DEBUG, "p4: requesting ". $action);
+
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$action', address = '0'")
+      or die("Error" . mysql_error());
+   $id = mysql_insert_id();
+
+   while (time() < $timeout)
+   {
+      usleep(1000);
+
+      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
+         or die("Error" . mysql_error())
+      $count = mysql_numrows($result);
+
+      if ($count)
+         return;
+   }
+
+   syslog(LOG_DEBUG, "p4: timeout on " . $action);
+
+   // #TODO show timeout
+}
+
 ?>
