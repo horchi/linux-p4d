@@ -37,7 +37,7 @@ include("header.php");
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3);
+  $p4dstate = requestAction("p4d-state", 3, $p4dNext);
 
   // ----------------
   // Status
@@ -73,17 +73,20 @@ include("header.php");
   echo "Betriebsmodus:  " . $mode ."<br>";
   echo " </div>";
 
-  if ($state == 3)
+  if ($state == 0 || $p4dstate != 0)
+     echo "  <img id=\"aStateImage\" src=\"error.png\">";  
+  elseif ($state == 3)
      echo "  <img id=\"aStateImage\" src=\"fire.png\">";
-  elseif ($state == 0)
-     echo "  <img id=\"aStateImage\" src=\"error.png\">";
   else
      echo "  <img id=\"aStateImage\" src=\"p4.png\">";
 
   echo " <div id=\"aP4dInfo\">";
 
   if ($p4dstate == 0)
-    echo  "  <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div>";
+  {
+    echo  "  <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>";
+    echo  "  <center>Nächste Aufzeichnung $p4dNext</center>";
+  }
   else
     echo  "  <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>";
 
@@ -96,7 +99,7 @@ include("header.php");
 
   echo " <div id=\"aSelect\">";
   echo "  <form name='navigation' method='get'>\n";
-  echo "Zeitraum der Charts: <br>\n";
+  echo "    <center>Zeitraum der Charts<br></center>\n";
   echo datePicker("Start", "s", $year, $day, $month);
 
   echo "     <select name=\"range\">\n";

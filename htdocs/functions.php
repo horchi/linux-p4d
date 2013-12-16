@@ -69,9 +69,10 @@ function chkDir($path, $rights = 0777)
 // Request Action
 // ---------------------------------------------------------------------------
 
-function requestAction($action, $timeout)
+function requestAction($action, $timeout, &$value)
 {
    $timeout = time() + $timeout;
+   $value = "";
 
    syslog(LOG_DEBUG, "p4: requesting ". $action);
 
@@ -86,10 +87,16 @@ function requestAction($action, $timeout)
       $result = mysql_query("select * from jobs where id = $id and state = 'D'")
          or die("Error" . mysql_error());
 
-      $count = mysql_numrows($result);
+      if (mysql_numrows($result))
+      {
+         $response = mysql_result($result, 0, "result");
+         list($state, $value) = split(":", $response, 2);
 
-      if ($count)
+         if ($state == "fail")
+            return -2;
+
          return 0;
+      }
    }
 
    syslog(LOG_DEBUG, "p4: timeout on " . $action);

@@ -21,7 +21,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 if ($action == "init")
 {
-   requestAction("initvaluefacts", 20);
+   requestAction("initvaluefacts", 20, $result);
    echo "<br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
 }
 

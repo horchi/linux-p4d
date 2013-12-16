@@ -24,7 +24,7 @@ include("pChart/class/pImage.class.php");
   echo "<br>\n";
   echo " <div id=\"aSelectChart\">";
   echo "  <form name='navigation' method='get'>\n";
-  echo "Zeitraum der Charts: <br>\n";
+  echo "<center>Zeitraum der Charts</center>\n";
   echo datePicker("Start", "s", $year, $day, $month);
 
   echo "   <select name=\"range\">\n";

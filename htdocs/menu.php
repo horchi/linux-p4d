@@ -36,12 +36,12 @@ showMenu();
 
 if ($menu == "update")
 {
-   requestAction("updatemenu", 30);
+   requestAction("updatemenu", 30, $result);
    echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/><br/>";
 }
 elseif ($menu == "init")
 {
-   requestAction("initmenu", 60);
+   requestAction("initmenu", 60, $result);
    echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
 }
 elseif ($menu != "")
