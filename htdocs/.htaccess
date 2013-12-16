@@ -4,6 +4,9 @@ deny from all
 <Files "settings.php">
 require valid-user
 </Files>
+<Files "schemacfg.php">
+require valid-user
+</Files>
 Options Indexes
 AuthUserFile /var/lib/p4/htdocs/.htpasswd
 AuthType Basic

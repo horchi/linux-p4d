@@ -35,6 +35,7 @@ P4sd::P4sd()
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
    selectAllMenuItems = 0;
+   nextAt = time(0);
 
    mailBody = "";
 
@@ -674,7 +675,12 @@ int P4sd::performWebifRequests()
 
       else if (strcasecmp(command, "p4d-state") == 0)
       {
-         tableJobs->setValue(cTableJobs::fiResult, "success");
+         struct tm tim = {0};
+         char buf[100];
+        
+         localtime_r(&nextAt, &tim);
+         strftime(buf, 100, "success:%H:%M:%S", &tim);
+         tableJobs->setValue(cTableJobs::fiResult, buf);
       }
 
       else if (strcasecmp(command, "initvaluefacts") == 0)
@@ -810,7 +816,6 @@ int P4sd::performWebifRequests()
 int P4sd::loop()
 {
    int status;
-   time_t nextAt = 0;
    time_t nextStateAt = 0;
    int lastState = na;
 

@@ -77,6 +77,8 @@ include("header.php");
      echo "  <img id=\"aStateImage\" src=\"fire.png\">";
   elseif ($state == 0)
      echo "  <img id=\"aStateImage\" src=\"error.png\">";
+  else
+     echo "  <img id=\"aStateImage\" src=\"p4.png\">";
 
   echo " <div id=\"aP4dInfo\">";
 

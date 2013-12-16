@@ -96,6 +96,7 @@ class P4sd : public FroelingService
       cDbStatement* selectPendingJobs;
       cDbStatement* selectAllMenuItems;
 
+      time_t nextAt;
       Sem* sem;
       P4Request* request;
       Serial* serial;    

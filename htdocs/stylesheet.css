@@ -164,7 +164,8 @@ A:active
   position: absolute; 
   top: 50px; 
   left: 580px; 
-  width: 200px; 
+  width: 175px; 
+  height: 200px; 
   background-color: #FFFFCC; 
   border: 1px; 
   padding: 5px; 
