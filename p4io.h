@@ -166,7 +166,7 @@ class P4Request : public FroelingService
          return s->write(buffer, sizeBufferContent);
       }
 
-      void show(const char* prefix = "")
+      void show(const char* prefix = "", int elo = eloDebug)
       {
          char tmp[1000];
          *tmp = 0;
@@ -181,7 +181,7 @@ class P4Request : public FroelingService
          for (int i = 0; i < sizeBufferContent; i++)
             sprintf(tmp+strlen(tmp), "%c", isprint(buffer[i]) ? buffer[i] : '.');
 
-         tell(eloDebug, "%s", tmp);
+         tell(elo, "%s", tmp);
       }
 
       void showDecoded(const char* prefix = "")

@@ -688,15 +688,24 @@ int P4Request::getStatus(Status* s)
       status += readText(text, size-sizeCrc);
       status += readByte(b);
  
-      p = strchr(text, ';');
-      *p = 0;
+      if ((p = strchr(text, ';')))
+      {
+         *p = 0;
       
-      s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
-      s->stateinfo = strdup(p+1);
+         s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
+         s->stateinfo = strdup(p+1);
+   
+         free(text);
+         show("<- ");
+      }
+      else
+      {  
+         s->stateinfo = strdup("Communication error");
+         tell(eloAlways, "Communication error while reading state, got size %d, status was %d", size, status);
 
-      free(text);
-
-      show("<- ");
+         status = fail;
+         show("<- ", eloAlways);
+      }
    }
 
    if (status != success)
