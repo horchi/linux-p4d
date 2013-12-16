@@ -153,7 +153,7 @@ A:active
   left: 50px; 
   width: 500px; 
   background-color: #FFFFCC; 
-  border: 1px; solid: #804000; 
+  border: 1px; 
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
@@ -165,8 +165,8 @@ A:active
   top: 50px; 
   left: 600px; 
   width: 300px; 
-  background-color: #FFFFCC; 
-  border: 1px; solid: #804000; 
+  background-color: #FFFFCC;
+  border: 1px; 
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
@@ -180,6 +180,7 @@ A:active
 #aStateFail
 { 
   color: red;
+  text-decoration: blink;
   font: bold 24px Verdana;
 }
 
