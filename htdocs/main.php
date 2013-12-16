@@ -37,7 +37,7 @@ include("header.php");
   // ----------------
   // State of P4 Daemon 
 
-  $p4dstate = requestAction("p4d-state", 5);
+  $p4dstate = requestAction("p4d-state", 3);
 
   // ----------------
   // Status
@@ -78,7 +78,7 @@ include("header.php");
   if ($p4dstate == 0)
     echo  "  <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div>";
   else
-    echo  "  <div id=\"aStateOk\"><center>P4 Daemon OFFLINE</center></div>";
+    echo  "  <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>";
 
   echo " </div>";
 
