@@ -28,17 +28,30 @@ mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
 // -----------------------
-//
+// Menü
+
+showMenu();
+
+// -----------------------
+// 
 
 if ($edit != "")
 {
    syslog(LOG_DEBUG, "p4: edit menu item (to be implemented) " . $edit);
+
+   if (requestParameter($edit, $title, $value, $default, $min, $max, $digits) == 0)
+   {
+      echo "<br/><br/>";
+      echo "<div class=\"input\">\n";
+      
+      echo "Einstellung ändern:<br/><br/>\n";
+      echo $title . "  " . $value;
+      echo "  <input type=text></input>\n";
+      echo "min/max: " . $min . "/" . $max. "default: " . $default . " digits: " $digits;
+      echo "<br/><br/>";
+      echo "</div>\n";
+   }
 }
-
-// -----------------------
-//
-
-showMenu();
 
 if ($menu == "update")
 {
@@ -364,29 +377,44 @@ function getParameter($id)
 // Request Parameter
 //***************************************************************************
 
-function requestParameter($address, $type)
+function requestParameter($id, &$title, &$value, &$default, &$min, &$max, &$digits)
 {
    $timeout = time() + 10;
 
-   syslog(LOG_DEBUG, "p4: requesting parameter " . $address);
+   $address = 0;
+   $type = "";
+
+   $result = mysql_query("select * from menu where id = " . $id)
+         or die("Error" . mysql_error());
+
+   if (mysql_numrows($result) != 1)
+      return -1;
+
+   $address = mysql_result($result, 0, "address");
+   $title = mysql_result($result, 0, "title");
+   $type = mysql_result($result, 0, "type");
+
+   if ($type != 0x07)
+      return -2;
+
+   syslog(LOG_DEBUG, "p4: requesting parameter at address " . $address . " type " . $type);
 
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$address'")
       or die("Error" . mysql_error());
 
-   $id = mysql_insert_id();
+   $jobid = mysql_insert_id();
 
    while (time() < $timeout)
    {
       usleep(1000);
 
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
+      $result = mysql_query("select * from jobs where id = $jobid and state = 'D'")
          or die("Error" . mysql_error());
-      $count = mysql_numrows($result);
 
-      if ($count == 1)
+      if (mysql_numrows($result) > 0)
       {
          $response = mysql_result($result, 0, "result");
-         list($state, $value) = split(":", $response);
+         list($state, $value, $default, $min, $max, $digits) = split(":", $response);
 
          if ($state == "fail")
          {
@@ -397,7 +425,7 @@ function requestParameter($address, $type)
          {
             syslog(LOG_DEBUG, "p4: got response for addr " . $address . "-> " . $value);
 
-            return $value;
+            return 0;
          }
       }
    }
@@ -405,4 +433,6 @@ function requestParameter($address, $type)
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
 
    // #TODO show timeout
+
+   return -1;
 }
