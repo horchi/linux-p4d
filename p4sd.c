@@ -637,7 +637,7 @@ int P4sd::performWebifRequests()
          {
             char* buf = 0;
 
-            asprintf(&buf, "success:%d%s:%d:%d:%d:%d", p.value, p.unit,
+            asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
                      p.def, p.min, p.max, p.digits);
             tableJobs->setValue(cTableJobs::fiResult, buf);
             free(buf);

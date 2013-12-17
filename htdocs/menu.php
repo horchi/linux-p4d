@@ -53,13 +53,13 @@ if ($edit != "")
 {
    syslog(LOG_DEBUG, "p4: edit menu item (to be implemented) " . $edit);
 
-   if (requestParameter($edit, $title, $value, $default, $min, $max, $digits) == 0)
+   if (requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits) == 0)
    {
       echo "<form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
       echo "  <br/><br/>";
       echo "  <div class=\"input\">\n";
-      echo $title . ":  <span style=\"color:blue\">" . $value . "</span><br/><br/>\n";
-      echo "    <input type=text name=new_value></input>\n";
+      echo $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
+      echo "    <input type=text name=new_value value=$value></input>\n";
       echo "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
       echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
       echo "  <br/><br/>";
@@ -392,7 +392,7 @@ function getParameter($id)
 // Request Parameter
 //***************************************************************************
 
-function requestParameter($id, &$title, &$value, &$default, &$min, &$max, &$digits)
+function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max, &$digits)
 {
    $timeout = time() + 10;
 
