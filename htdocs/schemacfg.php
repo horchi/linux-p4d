@@ -1,9 +1,10 @@
 <?php
+
 session_start();
 
 include("header.php");
 
-$jpegTop = 90;
+$jpegTop = 100;
 $jpegLeft = 30;
 
 $selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
@@ -34,25 +35,23 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 echo "\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
-echo "      <div style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\">\n";
+echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
+echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
 echo "      </div>\n";
 
 if ($started == 1)
-  echo "
-      <input type=submit name=cfg value=Stop>";
+   echo "      <button class=\"button3\" type=submit name=cfg value=Stop>Stop</button>\n";
 else
-  echo "
-      <input type=submit name=cfg value=Start>";
+   echo "      <button class=\"button3\" type=submit name=cfg value=Start>Start</button>\n";
 
-  echo "
-      <input type=submit name=cfg value=Skip>
-      <input type=submit name=cfg value=Hide>
-      <input type=submit name=cfg value=Back>
-      <input type=checkbox name=unit value=unit checked>Einheit
-      <input type=radio name=showtext value=Value checked>Value
-      <input type=radio name=showtext value=Text>Text
-  ";
+echo "      <button class=\"button3\" type=submit name=cfg value=Skip>Skip</button>\n";
+echo "      <button class=\"button3\" type=submit name=cfg value=Hide>Hide</button>\n";
+echo "      <button class=\"button3\" type=submit name=cfg value=Back>Back</button>\n";
+echo "      <span class=\"checkbox\">\n";
+echo "        <input type=checkbox name=unit value=unit checked>Einheit</input>\n";
+echo "        <input type=radio name=showtext value=Value checked>Value</input>\n";
+echo "        <input type=radio name=showtext value=Text>Text</input>\n";
+echo "      </span>\n";
 
 if ($cfg == "Start") 
 {
@@ -115,7 +114,7 @@ if ($started == 1)
 
 include("schema.php");
 
-echo "    </form>\n";
+echo "    </form>";
 
 include("footer.php");
 

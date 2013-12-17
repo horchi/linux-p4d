@@ -29,6 +29,7 @@ A:active
   padding: 5px 25px;
   text-decoration: none;
   font: bold 20px Verdana;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .button1:hover 
@@ -39,11 +40,12 @@ A:active
 .button2
 {
   background-color: #FF9900;
-  padding: 5px 25px;
   color: #FFFFFF;
+  padding: 5px 25px;
   text-decoration: none;
   font: bold 20px Verdana;
   border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .button2:hover 
@@ -55,18 +57,32 @@ A:active
 .button3 
 {
   background-color: #FF9900;
-  padding: 5px 25px;
   color: #FFFFFF;
+  padding: 5px 25px;
   text-decoration: none;
   font: 16px Verdana;
   border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
 }
 
-.button3:hover {
+.button3:hover 
+{
 	background: #FF3300;
 }
 
-.buttont {
+.checkbox
+{
+  background-color: #FF9900;
+  color: #FFFFFF;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: 16px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.buttont 
+{
   background-color: rgba(255, 255, 255, 0);
   color: #000000;
   border: 0;
@@ -75,7 +91,8 @@ A:active
   border-radius: 5px;
 }
 
-.buttont:hover {
+.buttont:hover 
+{
   background: #FF6600;
   color: #FFFFFF;
   border: 0;
@@ -86,7 +103,7 @@ A:active
   background-color: green;
   color: white;
   text-decoration: none;
-  font: 28px Verdana;
+  font: 22px Verdana;
   width: 70%;
   padding: 15px;
 }
@@ -104,6 +121,7 @@ A:active
   font: 22px Verdana;
   top: 50px;
   left: 5px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .tableLight
@@ -114,6 +132,7 @@ A:active
   color: #000000;
   font: 14px Verdana;
   padding: 20px 20px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .tableDark
@@ -134,6 +153,7 @@ A:active
   color: #FFFFFF;
   font: bold 20px Verdana;
   padding: 20px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .tableHead1
@@ -144,9 +164,20 @@ A:active
   color: #FFFFFF;
   font: bold 16px Verdana;
   padding: 20px;
+  box-shadow: 8px 8px 8px #666;
 }
 
-#aStateInfo
+.schemaImage
+{ 
+  background-color: #FFFFCC; 
+  border: 1px; 
+  padding: 10px; 
+  font: 20px Verdana;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+.stateInfo
 { 
   position: absolute; 
   top: 50px; 
@@ -157,6 +188,7 @@ A:active
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
 }
 
 #aStateImage
@@ -170,6 +202,7 @@ A:active
   border: 1px; 
   padding: 5px; 
   border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
 }
 
 #aP4dInfo
@@ -183,6 +216,7 @@ A:active
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
 }
 
 #aStateOk
@@ -221,6 +255,7 @@ A:active
   padding: 10px; 
   font: 18px Verdana;
   border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
 }
 
 #aSelectChart 
@@ -234,6 +269,7 @@ A:active
   padding: 10px;
   font: 16px Verdana;
   border-radius:10px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 #aChart 
@@ -245,4 +281,5 @@ A:active
   border: 1px;
   padding: 0px;
   border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
 }

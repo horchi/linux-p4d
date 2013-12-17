@@ -5,6 +5,7 @@
 
 $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
    or die("Error" . mysql_error());
+
 $row = mysql_fetch_array($result, MYSQL_ASSOC);
 $max = $row['max(time)'];
 $maxPretty = $row['maxPretty'];
@@ -45,8 +46,7 @@ while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
       if ($unit == "U")
          $unit = " u/min";
       
-      echo "
-         <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
+      echo "        <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
          "; color:" . $color . "; z-index:2" . "\">";
       
       if ($showText)
@@ -56,8 +56,7 @@ while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
       else
          echo $value;
       
-      echo "
-         </div>\n";
+      echo "</div>\n";
    }
 }
 

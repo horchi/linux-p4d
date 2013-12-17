@@ -13,7 +13,13 @@
   mysql_query("set names 'utf8'");
   mysql_query("SET lc_time_names = 'de_DE'");
 
-  echo "<p><img src=\"schema.png\"></p>";
+  // -------------------------
+  // show image
+
+  echo "<div class=\"schemaImage\">";
+  echo "  <p><img src=\"schema.png\"></p>";
+  echo "</div>";
+
   include("schema.php");
   include("footer.php");
 

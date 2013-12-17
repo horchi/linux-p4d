@@ -1,8 +1,11 @@
 <?php
 
+session_start();
+
 include("header.php");
 include("jfunctions.php");
 
+$lastMenu = "";
 $menu = "";
 $edit = "";
 $table = "";
@@ -12,6 +15,9 @@ if (isset($_POST["menu"]))
 
 if (isset($_POST["edit"]))
    $edit = htmlspecialchars($_POST["edit"]);
+
+if (isset($_SESSION["menu"]))
+   $lastMenu = $_SESSION["menu"];
 
 // -------------------------
 // establish db connection
@@ -26,7 +32,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 if ($edit != "")
 {
-   syslog(LOG_DEBUG, "p4: edit menu item " . $edit);
+   syslog(LOG_DEBUG, "p4: edit menu item (to be implemented) " . $edit);
 }
 
 // -----------------------
@@ -38,17 +44,24 @@ if ($menu == "update")
 {
    requestAction("updatemenu", 30, $result);
    echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/><br/>";
+   $menu = $lastMenu;
 }
 elseif ($menu == "init")
 {
    requestAction("initmenu", 60, $result);
    echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
+   $menu = $lastMenu;
 }
-elseif ($menu != "")
+
+if ($menu != "" || $lastMenu != "")
 {
+   $lastMenu = $menu != "" ? $menu : $lastMenu;
+
    echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-   showChilds($menu, 0);
+   showChilds($lastMenu, 0);
    echo "      </form>\n";
+
+   $_SESSION["menu"] = $lastMenu;
 }
 
 include("footer.php");
@@ -79,7 +92,7 @@ function showMenu()
       $i++;
    }
 
-   echo "          <br>\n";
+   echo "          <br/><br/>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter aktualisieren?')\">Aktualisieren</button>\n";
 
@@ -276,7 +289,7 @@ function getValue($address)
 }
 
 //***************************************************************************
-// Request Parameter
+// Request Value
 //***************************************************************************
 
 function requestValue($address)

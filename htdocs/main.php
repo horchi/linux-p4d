@@ -4,7 +4,7 @@
 // WEB Interface of p4d / Linux - Heizungs Manager
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 08.12.2013  Jörg Wendel
+// Date 04.11.2010 - 17.12.2013  Jörg Wendel
 //***************************************************************************
 
 include("header.php");
@@ -58,7 +58,7 @@ include("header.php");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $mode = $row['text'];
 
-  echo " <div id=\"aStateInfo\">";
+  echo " <div class=\"stateInfo\">";
 
   if ($state == 19)
      echo  "  <div id=\"aStateOk\"><center>$status</center></div><br>";
@@ -124,8 +124,8 @@ include("header.php");
 
   echo "      <tr class=\"tableHead1\">\n";
   echo "        <td>Id</td>\n";
+  echo "        <td>Typ</td>\n";
   echo "        <td>Sensor</td>\n";
-  echo "        <td>Type</td>\n";
   echo "        <td>Wert</td>\n";
   echo "      </tr>\n";
 
