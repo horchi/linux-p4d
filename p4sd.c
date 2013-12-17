@@ -812,7 +812,12 @@ int P4sd::performWebifRequests()
                      if (tableMenu->find())
                      {
                         tableMenu->setValue(cTableMenu::fiValue, buf);
-                        tableMenu->setValue(cTableMenu::fiUnit, unit);
+
+                        if (strcmp(unit, "°") == 0)
+                           tableMenu->setValue(cTableMenu::fiUnit, "°C");
+                        else
+                           tableMenu->setValue(cTableMenu::fiUnit, unit);
+
                         tableMenu->update();
                      }
                      
