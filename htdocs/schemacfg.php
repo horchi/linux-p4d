@@ -35,7 +35,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 echo "\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
 echo "      <div style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"schema.jpg\" value=\"click\" name=\"mouse\">\n";
+echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\">\n";
 echo "      </div>\n";
 
 if ($started == 1)

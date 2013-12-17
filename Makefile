@@ -73,13 +73,20 @@ $(CMDTARGET) : $(CMDOBJS)
 $(MBTARGET) : $(MBOBJS)
 	$(CC) $(CFLAGS) $(MBOBJS) $(LIBS) -o $@
 
-install: $(TARGET) install-config
+install: $(TARGET) install-config install-scripts
 	@cp -p $(TARGET) $(BINDEST)
 
 install-config:
 	if ! test -f $(CONFDEST)/p4d.conf; then \
 	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
 	fi
+
+install-scripts:
+	if ! test -d $(BINDEST); then \
+		mkdir -p "$(BINDEST)" \
+	   chmod a+rx $(BINDEST); \
+	fi
+	install -D ./scripts/p4d-* $(BINDEST)/
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
