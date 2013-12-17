@@ -118,6 +118,20 @@ A:active
   font: 22px Verdana;
   width: 70%;
   padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.infoE
+{
+  background-color: red;
+  color: white;
+  text-decoration: none;
+  font: 22px Verdana;
+  width: 70%;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .content 

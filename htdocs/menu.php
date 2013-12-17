@@ -46,26 +46,30 @@ if ($store == "store_par")
    if (isset($_POST["new_value"]))
       $newValue = $_POST["new_value"];
 
-   echo "      <br/><div class=\"info\"><b><center>to be implemented ;-) - $newValue</center></b></div><br/><br/>";   
+   echo "      <br/><div class=\"info\"><b><center>to be implemented ;-)  (new value $newValue)</center></b></div><br/>";   
 }
 
 if ($edit != "")
 {
-   syslog(LOG_DEBUG, "p4: edit menu item (to be implemented) " . $edit);
+   $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
 
-   if (requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits) == 0)
+   if ($res == 0)
    {
       echo "<form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
       echo "  <br/><br/>";
       echo "  <div class=\"input\">\n";
       echo $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
       echo "    <input type=text name=new_value value=$value></input>\n";
-      echo "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
+      echo $unit . "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
       echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
       echo "  <br/><br/>";
       echo "  </div>\n";
       echo "</form>";
    }
+   else if ($res == -2)
+      echo "      <br/><div class=\"info\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
+   else
+      echo "      <br/><div class=\"infoE\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
 }
 
 if ($menu == "update")
@@ -429,12 +433,12 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
       if (mysql_numrows($result) > 0)
       {
          $response = mysql_result($result, 0, "result");
-         list($state, $value, $default, $min, $max, $digits) = split(":", $response);
+         list($state, $value, $unit, $default, $min, $max, $digits) = split(":", $response);
 
          if ($state == "fail")
          {
             // #TODO show error
-            return "";
+            return -1;
          }
          else
          {
