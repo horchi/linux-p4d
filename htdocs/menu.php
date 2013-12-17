@@ -9,12 +9,16 @@ $lastMenu = "";
 $menu = "";
 $edit = "";
 $table = "";
+$store = "";
 
 if (isset($_POST["menu"]))
    $menu = htmlspecialchars($_POST["menu"]);
 
 if (isset($_POST["edit"]))
    $edit = htmlspecialchars($_POST["edit"]);
+
+if (isset($_POST["store"]))
+   $store = htmlspecialchars($_POST["store"]);
 
 if (isset($_SESSION["menu"]))
    $lastMenu = $_SESSION["menu"];
@@ -35,21 +39,32 @@ showMenu();
 // -----------------------
 // 
 
+if ($store == "store_par")
+{
+   $newValue = "";
+
+   if (isset($_POST["new_value"]))
+      $newValue = $_POST["new_value"];
+
+   echo "      <br/><div class=\"info\"><b><center>to be implemented ;-) - $newValue</center></b></div><br/><br/>";   
+}
+
 if ($edit != "")
 {
    syslog(LOG_DEBUG, "p4: edit menu item (to be implemented) " . $edit);
 
    if (requestParameter($edit, $title, $value, $default, $min, $max, $digits) == 0)
    {
-      echo "<br/><br/>";
-      echo "<div class=\"input\">\n";
-      
-      echo "Einstellung ändern:<br/><br/>\n";
-      echo $title . "  " . $value;
-      echo "  <input type=text></input>\n";
-      echo "min/max: " . $min . "/" . $max. "default: " . $default . " digits: " $digits;
-      echo "<br/><br/>";
-      echo "</div>\n";
+      echo "<form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+      echo "  <br/><br/>";
+      echo "  <div class=\"input\">\n";
+      echo $title . ":  <span style=\"color:blue\">" . $value . "</span><br/><br/>\n";
+      echo "    <input type=text name=new_value></input>\n";
+      echo "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
+      echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
+      echo "  <br/><br/>";
+      echo "  </div>\n";
+      echo "</form>";
    }
 }
 
