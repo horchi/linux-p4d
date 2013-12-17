@@ -102,7 +102,7 @@ cDbService::FieldDef cTableMenu::fields[] =
 
    { "state",            ffAscii,      1, fiState,         ftData },
    { "unit",             ffAscii,      5, fiUnit,          ftData },
-   { "value",            ffAscii,     10, fiValue,         ftData },
+   { "value",            ffAscii,    100, fiValue,         ftData },
    
    { "unknown1",         ffInt,        4, fiUnknown1,      ftData },
    { "unknown2",         ffInt,        4, fiUnknown2,      ftData },

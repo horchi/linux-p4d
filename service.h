@@ -143,6 +143,7 @@ class FroelingService
       
       enum MenuStructType
       {
+         mstMesswert = 0x03,
          mstPar      = 0x07,
          mstParDig   = 0x08,
          mstParDig1  = 0x40,

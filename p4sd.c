@@ -788,6 +788,38 @@ int P4sd::performWebifRequests()
                   free(buf);
                }
             }
+            else if (type == 0x03 || type == 0x46)
+            {
+               int status;
+               Fs::Value v(paddr);
+
+               tableValueFacts->clear();
+               tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
+               tableValueFacts->setValue(cTableValueFacts::fiAddress, paddr);
+
+               if (tableValueFacts->find())
+               {
+                  double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
+                  const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
+
+                  status = request->getValue(&v);
+                  
+                  if (status == success)
+                  {
+                     char* buf = 0;
+                     asprintf(&buf, "%.2f", v.value / factor);
+                     
+                     if (tableMenu->find())
+                     {
+                        tableMenu->setValue(cTableMenu::fiValue, buf);
+                        tableMenu->setValue(cTableMenu::fiUnit, unit);
+                        tableMenu->update();
+                     }
+                     
+                     free(buf);
+                  }
+               }
+            }
          }
 
          selectAllMenuItems->freeResult();
@@ -935,6 +967,7 @@ int P4sd::update()
       double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
       const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
       const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
+      const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
 
       if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
       {
@@ -947,7 +980,7 @@ int P4sd::update()
          }
             
          store(now, type, v.address, v.value, factor);
-         sprintf(num, "%.2f", v.value / factor);
+         sprintf(num, "%.2f%s", v.value / factor, unit);
          mailBody += string(title) + " = " + string(num) + "\n";
       }
 
