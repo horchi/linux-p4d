@@ -235,7 +235,7 @@ A:active
 { 
   position: absolute; 
   top: 50px; 
-  left: 800px; 
+  left: 780px; 
   width: 300px; 
   background-color: #FFFFCC;
   border: 1px; 
@@ -272,7 +272,7 @@ A:active
 #aSelect 
 {
   position: absolute; 
-  top: 190px; 
+  top: 195px; 
   left: 50px; 
   width: 500px; 
   background-color: #FFFFCC;

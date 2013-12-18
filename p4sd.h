@@ -70,6 +70,7 @@ class P4sd : public FroelingService
 
       int update();
       int performWebifRequests();
+      int cleanupWebifRequests();
 
       int store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text = 0);
@@ -95,6 +96,7 @@ class P4sd : public FroelingService
       cDbStatement* selectAllValueFacts;
       cDbStatement* selectPendingJobs;
       cDbStatement* selectAllMenuItems;
+      cDbStatement* cleanupJobs;
 
       time_t nextAt;
       Sem* sem;

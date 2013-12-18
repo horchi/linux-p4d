@@ -35,6 +35,7 @@ P4sd::P4sd()
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
    selectAllMenuItems = 0;
+   cleanupJobs = 0;
    nextAt = time(0);
 
    mailBody = "";
@@ -128,7 +129,7 @@ int P4sd::initDb()
    selectActiveValueFacts->build(" from %s where ", tableValueFacts->TableName());
    selectActiveValueFacts->bind(cTableValueFacts::fiState, cDBS::bndIn | cDBS::bndSet);
 
-   status = selectActiveValueFacts->prepare();
+   status += selectActiveValueFacts->prepare();
 
    // ------------------
 
@@ -143,7 +144,7 @@ int P4sd::initDb()
    selectAllValueFacts->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
    selectAllValueFacts->build(" from %s", tableValueFacts->TableName());
 
-   status = selectAllValueFacts->prepare();
+   status += selectAllValueFacts->prepare();
 
    // ----------------
 
@@ -158,7 +159,7 @@ int P4sd::initDb()
    selectAllMenuItems->bind(cTableMenu::fiTitle, cDBS::bndOut, ", ");
    selectAllMenuItems->build(" from %s", tableMenu->TableName());
 
-   status = selectAllMenuItems->prepare();
+   status += selectAllMenuItems->prepare();
 
    // ------------------
 
@@ -172,11 +173,22 @@ int P4sd::initDb()
    selectPendingJobs->bind(cTableJobs::fiAddress, cDBS::bndOut, ", ");
    selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
 
-   status = selectPendingJobs->prepare();
+   status += selectPendingJobs->prepare();
 
    // ------------------
 
-   tell(eloAlways, "Connection to database established");  
+   cDbStatement* cleanupJobs = new cDbStatement(tableJobs);
+
+   cleanupJobs->build("delete from %s where ", tableJobs->TableName());
+   cleanupJobs->bind(cTableJobs::fiReqAt, cDBS::bndIn | cDBS::bndSet);
+   cleanupJobs->bindCmp(0, cTableJobs::fiReqAt, 0, "<");
+
+   status += cleanupJobs->prepare();
+
+   // ------------------
+
+   if (status == success)
+      tell(eloAlways, "Connection to database established");  
 
    return status;
 }
@@ -193,6 +205,7 @@ int P4sd::exitDb()
    delete selectAllValueFacts;     selectAllValueFacts = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
    delete selectAllMenuItems;      selectAllMenuItems = 0;
+   delete cleanupJobs;             cleanupJobs = 0;
 
    delete connection;      connection = 0;
 
@@ -844,7 +857,24 @@ int P4sd::performWebifRequests()
 
    selectPendingJobs->freeResult();
 
+   cleanupWebifRequests();
+
    return success;
+}
+
+//***************************************************************************
+// Cleanup WEBIF Requests
+//***************************************************************************
+
+int P4sd::cleanupWebifRequests()
+{
+   int status;
+
+   tableJobs->clear();
+   tableJobs->setValue(cTableJobs::fiReqAt, time(0) - 2*tmeSecondsPerDay);
+   status = cleanupJobs->execute();
+
+   return status;
 }
 
 //***************************************************************************

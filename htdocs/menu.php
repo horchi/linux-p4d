@@ -190,34 +190,32 @@ function showChilds($parnt, $level)
       }
 
       if ($type == 0x03 || $type == 0x46)
-      {
-         $txttp = "Messwert";
          $value = getValue($address);
-      }
-      else
-      {
+
+      if ($value == "")
          $value = getParameter($id);
 
-         switch ($type)
-         {
-            case 0x07: $txttp = "Par.";      break;
-            case 0x08: $txttp = "Par Dig";   break;
-            case 0x40:
-            case 0x39:
-            case 0x32: $txttp = "Par Set";   break;
-            case 0x0a: $txttp = "Par Zeit";  break;
-            case 0x11: $txttp = "Dig Out";   break;
-            case 0x12: $txttp = "Anl Out";   break; 
-            case 0x13: $txttp = "Dig In";    break; 
-            case 0x22: $txttp = "Empty?";    break;
-            case 0x23: $txttp = "Reset";     break;
-            case 0x26: $txttp = "Zeiten";    break;
-            case 0x3a: $txttp = "Anzeigen";  break;
-            case 0x16: $txttp = "Firmware";  break;
+      switch ($type)
+      {
+         case 0x03:
+         case 0x46: $txttp = "Messwert";  break;
+         case 0x07: $txttp = "Par.";      break;
+         case 0x08: $txttp = "Par Dig";   break;
+         case 0x40:
+         case 0x39:
+         case 0x32: $txttp = "Par Set";   break;
+         case 0x0a: $txttp = "Par Zeit";  break;
+         case 0x11: $txttp = "Dig Out";   break;
+         case 0x12: $txttp = "Anl Out";   break; 
+         case 0x13: $txttp = "Dig In";    break; 
+         case 0x22: $txttp = "Empty?";    break;
+         case 0x23: $txttp = "Reset";     break;
+         case 0x26: $txttp = "Zeiten";    break;
+         case 0x3a: $txttp = "Anzeigen";  break;
+         case 0x16: $txttp = "Firmware";  break;
 
-            default:
-               $txttp = sprintf("0x%02x", $type);
-         }
+         default:
+            $txttp = sprintf("0x%02x", $type);
       }
 
       $txtu1 = sprintf("0x%02x", $u1);
@@ -317,7 +315,7 @@ function getValue($address)
       return $value . $unit;
    }
 
-   return requestValue($address);
+   return ""; // requestValue($address);
 }
 
 //***************************************************************************
