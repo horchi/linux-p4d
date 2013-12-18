@@ -611,10 +611,18 @@ int P4sd::standbyUntil(time_t until)
 
 int P4sd::meanwhile()
 {
+   static time_t lastCleanup = time(0);
+
    if (!connection->isConnected())
       return fail;
    
    performWebifRequests();
+
+   if (lastCleanup < time(0) - 6*tmeSecondsPerHour)
+   {
+      cleanupWebifRequests();
+      lastCleanup = time(0);
+   }
 
    return done;
 }
@@ -856,8 +864,6 @@ int P4sd::performWebifRequests()
 
    selectPendingJobs->freeResult();
 
-   cleanupWebifRequests();
-
    return success;
 }
 
@@ -870,6 +876,8 @@ int P4sd::cleanupWebifRequests()
    int status;
    
    // delete jobs older than 2 days
+
+   tell(eloAlways, "Cleanup jobs table with history of 2 days");
 
    tableJobs->clear();
    tableJobs->setValue(cTableJobs::fiReqAt, time(0) - 2*tmeSecondsPerDay);
