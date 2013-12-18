@@ -102,6 +102,7 @@ A:active
 .inputEdit
 {
   text-decoration: none;
+  color: blue;
   font: 20px Verdana;
   width: 70px;
   padding: 5px;
@@ -123,6 +124,19 @@ A:active
 .info 
 {
   background-color: green;
+  color: white;
+  text-decoration: none;
+  font: 22px Verdana;
+  width: 70%;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+
+.infoWarn
+{
+  background-color: orange;
   color: white;
   text-decoration: none;
   font: 22px Verdana;

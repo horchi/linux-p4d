@@ -51,9 +51,9 @@ if ($store == "store_par")
       $value = intval($newValue);
 
       if (!is_numeric($newValue))
-         echo "      <br/><div class=\"infoError\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
+         echo "      <br/><div class=\"infoWarn\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
       elseif ($value < $min || $value > $max)
-         echo "      <br/><div class=\"infoError\"><b><center>Spezifizierter Wert '$value' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
+         echo "      <br/><div class=\"infoWarn\"><b><center>Spezifizierter Wert '$value' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
       elseif (storeParameter($storeId, $value, $unit, $state) == 0)
          echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
       else
@@ -66,28 +66,36 @@ if ($store == "store_par")
 
 if ($edit != "")
 {
-   $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
-
-   if ($res == 0)
+   if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
    {
-      echo "<form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-      echo "  <br/><br/>";
-      echo "  <div class=\"input\">\n";
-      echo $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
-      echo "    <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
-      echo "    <input type=\"hidden\" name=\"min_value\" value=$min></input>\n";
-      echo "    <input type=\"hidden\" name=\"max_value\" value=$max></input>\n";
-      echo "    <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
-      echo $unit . "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
-      echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
-      echo "  <br/><br/>";
-      echo "  </div>\n";
-      echo "</form>";
+      $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
+      
+      if ($res == 0)
+      {
+         echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+         echo "        <br/><br/>\n";
+         echo "        <div class=\"input\">\n";
+         echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
+         echo "          <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
+         echo "          <input type=\"hidden\" name=\"min_value\" value=$min></input>\n";
+         echo "          <input type=\"hidden\" name=\"max_value\" value=$max></input>\n";
+         echo "          <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
+         echo "          <span style=\"color:blue\">" . $unit . "</span>\n";
+         echo "          (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
+         echo "          <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
+         echo "          <br/><br/>\n";
+         echo "        </div>\n";
+         echo "      </form>";
+      }
+      else if ($res == -2)
+         echo "      <br/><div class=\"infoWarn\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
+      else
+         echo "      <br/><div class=\"infoError\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
    }
-   else if ($res == -2)
-      echo "      <br/><div class=\"info\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
    else
-      echo "      <br/><div class=\"infoError\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
+   {
+      echo "      <br/><div class=\"infoWarn\"><b><center>Zum ändern der Parameter Login erforderlich!</center></b></div><br/>";
+   }
 }
 
 if ($menu == "update")
@@ -143,9 +151,12 @@ function showMenu()
       $i++;
    }
 
-   echo "          <br/><br/>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
+   if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
+   {
+      echo "          <br/><br/>\n";
+      echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
+      echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
+   }
 
    echo "        </form>\n";
    echo "      </div>\n";
@@ -173,7 +184,6 @@ function beginTable($title)
 function endTable()
 {
    echo "        </table>\n";
-
 }
 
 //***************************************************************************
