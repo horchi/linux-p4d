@@ -180,7 +180,6 @@ int P4sd::initDb()
    cDbStatement* cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
-   cleanupJobs->bind(cTableJobs::fiReqAt, cDBS::bndIn | cDBS::bndSet);
    cleanupJobs->bindCmp(0, cTableJobs::fiReqAt, 0, "<");
 
    status += cleanupJobs->prepare();
@@ -869,6 +868,8 @@ int P4sd::performWebifRequests()
 int P4sd::cleanupWebifRequests()
 {
    int status;
+   
+   // delete jobs older than 2 days
 
    tableJobs->clear();
    tableJobs->setValue(cTableJobs::fiReqAt, time(0) - 2*tmeSecondsPerDay);
