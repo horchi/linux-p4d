@@ -716,7 +716,13 @@ int P4sd::performWebifRequests()
             else
             {
                tell(eloAlways, "Set of parameter failed, error %d", status);
-               tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
+
+               if (status == P4Request::wrnNonUpdate)
+                  tableJobs->setValue(cTableJobs::fiResult, "fail:no update");
+               else if (status == P4Request::wrnOutOfRange)
+                  tableJobs->setValue(cTableJobs::fiResult, "fail:out of range");
+               else
+                  tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
             }
          }
          else

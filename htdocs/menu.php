@@ -54,10 +54,10 @@ if ($store == "store_par")
          echo "      <br/><div class=\"infoError\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
       elseif ($value < $min || $value > $max)
          echo "      <br/><div class=\"infoError\"><b><center>Spezifizierter Wert '$value' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
-      elseif (storeParameter($storeId, $value, $unit) == 0)
+      elseif (storeParameter($storeId, $value, $unit, $state) == 0)
          echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
       else
-         echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von $newValue für Parameter id $storeId</center></b></div><br/>\n";
+         echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von $newValue für Parameter id $storeId<br/>'$state'</center></b></div><br/>\n";
    }
 }
 
@@ -491,9 +491,10 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
 // Store Parameter
 //***************************************************************************
 
-function storeParameter($id, &$value, &$unit)
+function storeParameter($id, &$value, &$unit, &$res)
 {
    $timeout = time() + 5;
+   $state = "";
 
    syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value id " . $value);
 
@@ -513,23 +514,21 @@ function storeParameter($id, &$value, &$unit)
       {
          $response = mysql_result($result, 0, "result");
 
-         if (!strstr($response, "success:"))
+         if (!strstr($response, "success"))
          {
-            // #TODO show error
+            list($state, $res) = split(":", $response);
+
             return -1;
          }
          
          list($state, $value, $unit, $default, $min, $max, $digits) = split(":", $response);
-         
-         syslog(LOG_DEBUG, "p4: got response for parameter " . $id . "-> " . $value);
          
          return 0;
       }
    }
 
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
-
-   // #TODO show timeout
+   $res = "p4d communication timeout";
 
    return -1;
 }
