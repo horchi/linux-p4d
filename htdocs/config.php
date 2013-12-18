@@ -10,7 +10,7 @@ $mysqldb            = "p4";
 
 $addrs_chart1       = "0,1,113";
 $addrs_chart2       = "118,120,21,25,4";
-$cache_dir          = "/var/cache/p4";
+$cache_dir          = "pChart/cache";
 $chart_fontpath     = "pChart/fonts";
 
 // -----------------------------
