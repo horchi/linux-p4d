@@ -177,7 +177,7 @@ int P4sd::initDb()
 
    // ------------------
 
-   cDbStatement* cleanupJobs = new cDbStatement(tableJobs);
+   cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
    cleanupJobs->bindCmp(0, cTableJobs::fiReqAt, 0, "<");
