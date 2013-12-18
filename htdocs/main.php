@@ -20,11 +20,13 @@ include("header.php");
   // -------------------------
   // get last time stamp
 
-  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
+  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
+                        "DATE_FORMAT(max(time),'%H:%i:%S') as maxPrettyShort from samples;")
      or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];
+  $maxPrettyShort = $row['maxPrettyShort'];
 
   // ----------------
   // init
@@ -58,60 +60,67 @@ include("header.php");
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $mode = $row['text'];
 
-  echo " <div class=\"stateInfo\">";
+  $result = mysql_query("select * from samples where time >= CURDATE()")
+     or die("Error" . mysql_error());
+  $p4dCountDay = mysql_numrows($result);
+
+  echo "      <div class=\"stateInfo\">\n";
 
   if ($state == 19)
-     echo  "  <div id=\"aStateOk\"><center>$status</center></div><br>";
+     echo  "        <div id=\"aStateOk\"><center>$status</center></div>\n";
   elseif ($state == 0)
-     echo  "  <div id=\"aStateFail\"><center>$status</center></div><br>";
+     echo  "        <div id=\"aStateFail\"><center>$status</center></div>\n";
   elseif ($state == 3)
-     echo  "  <div id=\"aStateHeating\"><center>$status</center></div><br>";
+     echo  "        <div id=\"aStateHeating\"><center>$status</center></div>\n";
   else
-     echo  "  <div id=\"aStateOther\"><center>$status</center></div><br>";
+     echo  "        <div id=\"aStateOther\"><center>$status</center></div>\n";
 
-  echo $time ."<br>";
-  echo "Betriebsmodus:  " . $mode ."<br>";
-  echo " </div>";
+  echo "        <br/>" . $time . "<br/>";
+  echo "Betriebsmodus:  " . $mode ."<br/>\n";
+  echo "      </div>\n";
+
+  echo "      <div class=\"stateImgContainer\">\n";
 
   if ($state == 0 || $p4dstate != 0)
-     echo "  <img id=\"aStateImage\" src=\"error.png\">";  
+     echo "        <img class=\"centerImage\" src=\"error.png\">\n";
   elseif ($state == 3)
-     echo "  <img id=\"aStateImage\" src=\"fire.png\">";
+     echo "        <img class=\"centerImage\" src=\"fire.png\">\n";
   else
-     echo "  <img id=\"aStateImage\" src=\"p4.png\">";
+     echo "        <img class=\"centerImage\" src=\"p4.png\">\n";
 
-  echo " <div id=\"aP4dInfo\">";
+  echo "      </div>\n";
+
+  echo "      <div id=\"aP4dInfo\">\n";
 
   if ($p4dstate == 0)
   {
-    echo  "  <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>";
-    echo  "  <center>Nächste Aufzeichnung $p4dNext</center>";
+    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/><br/>\n";
+    echo  "          <table><tr><td>Messungen heute:</td><td>&nbsp;&nbsp;$p4dCountDay</td></tr>\n";
+    echo  "          <tr><td>Letzte Messung:</td><td>&nbsp;&nbsp;$maxPrettyShort</td></tr>\n";
+    echo  "          <tr><td>Nächste Messung:</td><td>&nbsp;&nbsp;$p4dNext</td></tr></table>\n";
   }
   else
-    echo  "  <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>";
+    echo  "        <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>\n";
 
-  echo " </div>";
-
-  echo "<br>\n";
+  echo "      </div>\n";
+  echo "      <br/>\n";
 
   // ----------------
   // 
 
-  echo " <div id=\"aSelect\">";
-  echo "  <form name='navigation' method='get'>\n";
-  echo "    <center>Zeitraum der Charts<br></center>\n";
+  echo "      <div id=\"aSelect\">\n";
+  echo "        <form name='navigation' method='get'>\n";
+  echo "          <center>Zeitraum der Charts<br/></center>\n";
   echo datePicker("Start", "s", $year, $day, $month);
 
-  echo "     <select name=\"range\">\n";
-  echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
-  echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
-  echo "        <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
-  echo "     </select>\n";
-
-  echo "     <input type=submit value=\"Go\">";
-
-  echo "  </form>\n";
-  echo " </div>\n";
+  echo "          <select name=\"range\">\n";
+  echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
+  echo "            <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
+  echo "            <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
+  echo "          </select>\n";
+  echo "          <input type=submit value=\"Go\">";
+  echo "        </form>\n";
+  echo "      </div>\n";
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 

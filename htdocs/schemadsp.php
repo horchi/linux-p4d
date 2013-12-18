@@ -16,11 +16,12 @@
   // -------------------------
   // show image
 
-  echo "<div class=\"schemaImage\">";
-  echo "  <p><img src=\"schema.png\"></p>";
-  echo "</div>";
+  echo "      <div class=\"schemaImage\" style=\"position:absolute;\">\n";
+  echo "        <p><img src=\"schema.png\"></p>\n";
+  echo "      </div>\n";
 
   include("schema.php");
+
   include("footer.php");
 
 ?>

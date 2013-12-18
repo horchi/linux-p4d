@@ -92,9 +92,19 @@ A:active
   background-color: #FFFFCC; 
   color: #000000;
   width: 70%;
-  padding: 5px 25px;
+  padding: 15px;
   text-decoration: none;
-  font: 16px Verdana;
+  font: 18px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.inputEdit
+{
+  text-decoration: none;
+  font: 20px Verdana;
+  width: 70px;
+  padding: 5px;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }
@@ -122,7 +132,7 @@ A:active
   box-shadow: 8px 8px 8px #666;
 }
 
-.infoE
+.infoError
 {
   background-color: red;
   color: white;
@@ -196,8 +206,7 @@ A:active
 .schemaImage
 { 
   background-color: #FFFFCC; 
-  border: 1px; 
-  padding: 10px; 
+  padding: 10px;
   font: 20px Verdana;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
@@ -210,14 +219,13 @@ A:active
   left: 50px; 
   width: 500px; 
   background-color: #FFFFCC; 
-  border: 1px; 
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
 }
 
-#aStateImage
+.stateImgContainer
 { 
   position: absolute; 
   top: 50px; 
@@ -225,10 +233,19 @@ A:active
   width: 175px; 
   height: 200px; 
   background-color: #FFFFCC; 
-  border: 1px; 
   padding: 5px; 
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
+}
+
+.centerImage
+{
+  position: absolute;
+  top: 0; 
+  bottom:0; 
+  left: 0; 
+  right:0;
+  margin: auto;
 }
 
 #aP4dInfo
@@ -236,9 +253,9 @@ A:active
   position: absolute; 
   top: 50px; 
   left: 780px; 
-  width: 300px; 
+  width: 400px; 
+  height: 190px; 
   background-color: #FFFFCC;
-  border: 1px; 
   padding: 10px; 
   font: 20px Verdana;
   border-radius: 10px; 
@@ -276,7 +293,6 @@ A:active
   left: 50px; 
   width: 500px; 
   background-color: #FFFFCC;
-  border: 1px; 
   solid: #804000; 
   padding: 10px; 
   font: 18px Verdana;
@@ -291,7 +307,6 @@ A:active
   left: 30px;
   width: 500px;
   background-color: #FFFFCC;
-  border: 1px;
   padding: 10px;
   font: 16px Verdana;
   border-radius:10px;
@@ -304,7 +319,6 @@ A:active
   top: 130px;
   left: 30px;
   background-color: #FFFFCC;
-  border: 1px;
   padding: 0px;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;

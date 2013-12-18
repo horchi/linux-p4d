@@ -640,6 +640,7 @@ int P4sd::performWebifRequests()
       int start = time(0);
       int addr = tableJobs->getIntValue(cTableJobs::fiAddress);
       const char* command = tableJobs->getStrValue(cTableJobs::fiCommand);
+      const char* result = tableJobs->getStrValue(cTableJobs::fiResult);
 
       tableJobs->find();
       tableJobs->setValue(cTableJobs::fiDoneAt, time(0));
@@ -661,6 +662,33 @@ int P4sd::performWebifRequests()
                      p.def, p.min, p.max, p.digits);
             tableJobs->setValue(cTableJobs::fiResult, buf);
             free(buf);
+         }
+      }
+
+      else if (strcasecmp(command, "setp") == 0)
+      {
+         ConfigParameter p(addr);
+         int status;
+
+         tell(eloAlways, "Storing value %s for parameter at address 0x%x", result, addr);
+
+         // Set Value 
+
+         p.value = atoi(result);
+            
+         if ((status = request->setParameter(&p)) == success)
+         {
+            char* buf = 0;
+
+            asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
+                     p.def, p.min, p.max, p.digits);
+            tableJobs->setValue(cTableJobs::fiResult, buf);
+            free(buf);
+         }
+         else
+         {
+            tell(eloAlways, "Set of parameter failed, error %d", status);
+            tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
          }
       }
 

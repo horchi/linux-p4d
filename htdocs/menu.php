@@ -5,6 +5,7 @@ session_start();
 include("header.php");
 include("jfunctions.php");
 
+$debug = 1;
 $lastMenu = "";
 $menu = "";
 $edit = "";
@@ -37,17 +38,26 @@ mysql_query("SET lc_time_names = 'de_DE'");
 showMenu();
 
 // -----------------------
-// 
+// Store Parameter
 
 if ($store == "store_par")
 {
-   $newValue = "";
-
-   if (isset($_POST["new_value"]))
+   if (isset($_POST["new_value"]) && isset($_POST["store_id"]))
+   {
       $newValue = $_POST["new_value"];
+      $storeId = $_POST["store_id"];
 
-   echo "      <br/><div class=\"info\"><b><center>to be implemented ;-)  (new value $newValue)</center></b></div><br/>";   
+      if (!is_numeric($newValue))
+         echo "      <br/><div class=\"infoError\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
+      elseif (storeParameter($storeId, $newValue, $unit) == 0)
+         echo "      <br/><div class=\"info\"><b><center>to be implemented ;-)  (new value for $storeId is $newValue)</center></b></div><br/>\n";
+      else
+         echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von $newValue für Parameter id $storeId</center></b></div><br/>\n";
+   }
 }
+
+// -----------------------
+// Edit Parameter
 
 if ($edit != "")
 {
@@ -59,7 +69,8 @@ if ($edit != "")
       echo "  <br/><br/>";
       echo "  <div class=\"input\">\n";
       echo $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
-      echo "    <input type=text name=new_value value=$value></input>\n";
+      echo "    <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
+      echo "    <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
       echo $unit . "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
       echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
       echo "  <br/><br/>";
@@ -69,15 +80,16 @@ if ($edit != "")
    else if ($res == -2)
       echo "      <br/><div class=\"info\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
    else
-      echo "      <br/><div class=\"infoE\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
+      echo "      <br/><div class=\"infoError\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
 }
 
 if ($menu == "update")
 {
    requestAction("updatemenu", 30, $result);
-   echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/><br/>";
+   echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/>";
    $menu = $lastMenu;
 }
+
 elseif ($menu == "init")
 {
    requestAction("initmenu", 60, $result);
@@ -138,7 +150,7 @@ function showMenu()
 
 function beginTable($title)
 {
-   echo "        <br>\n";
+   echo "        <br/>\n";
 
    echo "        <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
    echo "          <tr style=\"color:white\" bgcolor=\"#CC0033\">\n";
@@ -146,7 +158,7 @@ function beginTable($title)
    echo "          </tr>\n";
    echo "        </table>\n";
 
-   echo "        <br>\n";
+   echo "        <br/>\n";
 
    echo "        <table class=\"tableLight\" cellspacing=0 rules=rows>\n";
 }
@@ -163,6 +175,8 @@ function endTable()
 
 function showChilds($parnt, $level)
 {
+   global $debug;
+
    $i = 0;
 
    $result = mysql_query("select * from menu where parent = " . $parnt)
@@ -183,6 +197,12 @@ function showChilds($parnt, $level)
       $u2      = mysql_result($result, $i, "unknown2");
       $value   = "";
 
+      if (rtrim($title) == "" && !$debug)
+      {
+         $i++;
+         continue;
+      }
+
       if ($type == 0x31)
       {
          $i++;
@@ -195,33 +215,36 @@ function showChilds($parnt, $level)
       if ($value == "")
          $value = getParameter($id);
 
-      switch ($type)
+      if ($debug)
       {
-         case 0x03:
-         case 0x46: $txttp = "Messwert";  break;
-         case 0x07: $txttp = "Par.";      break;
-         case 0x08: $txttp = "Par Dig";   break;
-         case 0x40:
-         case 0x39:
-         case 0x32: $txttp = "Par Set";   break;
-         case 0x0a: $txttp = "Par Zeit";  break;
-         case 0x11: $txttp = "Dig Out";   break;
-         case 0x12: $txttp = "Anl Out";   break; 
-         case 0x13: $txttp = "Dig In";    break; 
-         case 0x22: $txttp = "Empty?";    break;
-         case 0x23: $txttp = "Reset";     break;
-         case 0x26: $txttp = "Zeiten";    break;
-         case 0x3a: $txttp = "Anzeigen";  break;
-         case 0x16: $txttp = "Firmware";  break;
-
-         default:
-            $txttp = sprintf("0x%02x", $type);
+         switch ($type)
+         {
+            case 0x03:
+            case 0x46: $txttp = "Messwert";  break;
+            case 0x07: $txttp = "Par.";      break;
+            case 0x08: $txttp = "Par Dig";   break;
+            case 0x40:
+            case 0x39:
+            case 0x32: $txttp = "Par Set";   break;
+            case 0x0a: $txttp = "Par Zeit";  break;
+            case 0x11: $txttp = "Dig Out";   break;
+            case 0x12: $txttp = "Anl Out";   break; 
+            case 0x13: $txttp = "Dig In";    break; 
+            case 0x22: $txttp = "Empty?";    break;
+            case 0x23: $txttp = "Reset";     break;
+            case 0x26: $txttp = "Zeiten";    break;
+            case 0x3a: $txttp = "Anzeigen";  break;
+            case 0x16: $txttp = "Firmware";  break;
+               
+            default:
+               $txttp = sprintf("0x%02x", $type);
+         }
+         
+         $txtu1 = sprintf("0x%02x", $u1);
+         $txtu2 = sprintf("0x%04x", $u2);
+         $txtchild = $child ? sprintf("0x%04x", $child) : "-";
+         $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
       }
-
-      $txtu1 = sprintf("0x%02x", $u1);
-      $txtu2 = sprintf("0x%04x", $u2);
-      $txtchild = $child ? sprintf("0x%04x", $child) : "-";
-      $txtaddr  = $address ? sprintf("0x%04x", $address) : "";
 
       if (!$level && $child)
       {
@@ -254,21 +277,24 @@ function showChilds($parnt, $level)
          }
 
          echo "          <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
-         
-         echo "            <td style=\"color:red\">($id)</td>\n";
-         echo "            <td>$txtaddr</td>\n";
-         echo "            <td style=\"color:blue\">$level</td>\n";
-         echo "            <td>$txtchild</td>\n";
-         echo "            <td style=\"color:red\">$txttp</td>\n";
-         echo "            <td>$txtu1</td>\n";
-         echo "            <td>$txtu2</td>\n";
+
+         if ($debug)
+         {
+            echo "            <td style=\"color:red\">($id)</td>\n";
+            echo "            <td>$txtaddr</td>\n";
+            echo "            <td style=\"color:blue\">$level</td>\n";
+            echo "            <td>$txtchild</td>\n";
+            echo "            <td style=\"color:red\">$txttp</td>\n";
+            echo "            <td>$txtu1</td>\n";
+            echo "            <td>$txtu2</td>\n";
+         }
 
          if ($child)
             echo "            <td><center><b>$title</b></center></td>\n";
          elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32 || $type == 0x0a)
             echo "            <td><button class=buttont type=submit name=edit value=$id>$title</button></td>\n";
          else
-            echo "            <td>$title</td>\n";
+            echo "            <td>&nbsp;&nbsp;$title</td>\n";
          
          if ($value != "on (A)")
             echo "            <td style=\"color:blue\">$value</td>\n";
@@ -396,7 +422,7 @@ function getParameter($id)
 
 function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max, &$digits)
 {
-   $timeout = time() + 10;
+   $timeout = time() + 5;
 
    $address = 0;
    $type = "";
@@ -447,6 +473,66 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
       }
    }
    
+   syslog(LOG_DEBUG, "p4: timeout on parameter request ");
+
+   // #TODO show timeout
+
+   return -1;
+}
+
+//***************************************************************************
+// Store Parameter
+//***************************************************************************
+
+function storeParameter($id, &$value, &$unit)
+{
+   $timeout = time() + 5;
+
+   $result = mysql_query("select * from menu where id = " . $id)
+         or die("Error" . mysql_error());
+
+   if (mysql_numrows($result) != 1)
+      return -1;
+
+   $address = mysql_result($result, 0, "address");
+   $title = mysql_result($result, 0, "title");
+   $type = mysql_result($result, 0, "type");
+
+   if ($type != 0x07)
+      return -2;
+
+   syslog(LOG_DEBUG, "p4: Storing parameter " . $id . " at address " . $address . "value " . $value . " (type " . $type . ")");
+
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$address', result = '$value'")
+      or die("Error" . mysql_error());
+
+   $jobid = mysql_insert_id();
+
+   while (time() < $timeout)
+   {
+      usleep(1000);
+
+      $result = mysql_query("select * from jobs where id = $jobid and state = 'D'")
+         or die("Error" . mysql_error());
+
+      if (mysql_numrows($result) > 0)
+      {
+         $response = mysql_result($result, 0, "result");
+
+         if (!strstr($response, "success:"))
+         {
+            // #TODO show error
+            return -1;
+         }
+         
+         list($state, $value, $unit, $default, $min, $max, $digits) = split(":", $response);
+         
+         syslog(LOG_DEBUG, "p4: got response for addr " . $address . "-> " . $value);
+         
+         return 0;
+      }
+   }
+
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
 
    // #TODO show timeout

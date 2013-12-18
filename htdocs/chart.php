@@ -21,7 +21,7 @@ include("pChart/class/pImage.class.php");
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
-  echo "<br>\n";
+  echo "<br/>\n";
   echo " <div id=\"aSelectChart\">";
   echo "  <form name='navigation' method='get'>\n";
   echo "<center>Zeitraum der Charts</center>\n";
@@ -41,14 +41,14 @@ include("pChart/class/pImage.class.php");
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   echo " <div id=\"aChart\">";
-  echo "<br>\n";
+  echo "<br/>\n";
   $condition = "address in (" . $addrs_chart1 . ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
-  echo "<br><br>\n";
+  echo "<br/><br/>\n";
 
   $condition = "address in (" . $addrs_chart2. ")";
   echo "<img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "'>\n";
-  echo "<br><br>\n";
+  echo "<br/><br/>\n";
   echo " </div>";
 
 include("footer.php");
