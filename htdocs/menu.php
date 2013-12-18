@@ -5,7 +5,7 @@ session_start();
 include("header.php");
 include("jfunctions.php");
 
-$debug = 1;
+$debug = 0;
 $lastMenu = "";
 $menu = "";
 $edit = "";
