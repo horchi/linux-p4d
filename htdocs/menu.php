@@ -48,13 +48,14 @@ if ($store == "store_par")
       $storeId = $_POST["store_id"];
       $min = $_POST["min_value"];
       $max = $_POST["max_value"];
+      $value = intval($newValue);
 
       if (!is_numeric($newValue))
          echo "      <br/><div class=\"infoError\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
       elseif ($value < $min || $value > $max)
-         echo "      <br/><div class=\"infoError\"><b><center>Spezifizierter Wert '$newValue' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
-      elseif (storeParameter($storeId, $newValue, $unit) == 0)
-         echo "      <br/><div class=\"info\"><b><center>to be implemented ;-)  (new value for $storeId is $newValue)</center></b></div><br/>\n";
+         echo "      <br/><div class=\"infoError\"><b><center>Spezifizierter Wert '$value' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
+      elseif (storeParameter($storeId, $value, $unit) == 0)
+         echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
       else
          echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von $newValue für Parameter id $storeId</center></b></div><br/>\n";
    }
