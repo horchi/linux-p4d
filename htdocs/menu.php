@@ -46,9 +46,13 @@ if ($store == "store_par")
    {
       $newValue = $_POST["new_value"];
       $storeId = $_POST["store_id"];
+      $min = $_POST["min_value"];
+      $max = $_POST["max_value"];
 
       if (!is_numeric($newValue))
          echo "      <br/><div class=\"infoError\"><b><center>Fehlerhaftes Zahlenformat '$newValue' - speichern abgebrochen</center></b></div><br/>\n";
+      elseif ($value < $min || $value > $max)
+         echo "      <br/><div class=\"infoError\"><b><center>Spezifizierter Wert '$newValue' außerhalb des erlaubten Bereichs ($min-$max)<br/>speichern abgebrochen</center></b></div><br/>\n";
       elseif (storeParameter($storeId, $newValue, $unit) == 0)
          echo "      <br/><div class=\"info\"><b><center>to be implemented ;-)  (new value for $storeId is $newValue)</center></b></div><br/>\n";
       else
@@ -70,6 +74,8 @@ if ($edit != "")
       echo "  <div class=\"input\">\n";
       echo $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
       echo "    <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
+      echo "    <input type=\"hidden\" name=\"min_value\" value=$min></input>\n";
+      echo "    <input type=\"hidden\" name=\"max_value\" value=$max></input>\n";
       echo "    <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
       echo $unit . "  (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")   digits: " . $digits;
       echo "    <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
@@ -138,7 +144,7 @@ function showMenu()
 
    echo "          <br/><br/>\n";
    echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
-   echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter aktualisieren?')\">Aktualisieren</button>\n";
+   echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
 
    echo "        </form>\n";
    echo "      </div>\n";
@@ -488,22 +494,9 @@ function storeParameter($id, &$value, &$unit)
 {
    $timeout = time() + 5;
 
-   $result = mysql_query("select * from menu where id = " . $id)
-         or die("Error" . mysql_error());
+   syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value id " . $value);
 
-   if (mysql_numrows($result) != 1)
-      return -1;
-
-   $address = mysql_result($result, 0, "address");
-   $title = mysql_result($result, 0, "title");
-   $type = mysql_result($result, 0, "type");
-
-   if ($type != 0x07)
-      return -2;
-
-   syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . ") at address " . $address . ", new value id " . $value . " (type " . $type . ")");
-
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$address', result = '$value'")
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$id', result = '$value'")
       or die("Error" . mysql_error());
 
    $jobid = mysql_insert_id();
@@ -527,7 +520,7 @@ function storeParameter($id, &$value, &$unit)
          
          list($state, $value, $unit, $default, $min, $max, $digits) = split(":", $response);
          
-         syslog(LOG_DEBUG, "p4: got response for addr " . $address . "-> " . $value);
+         syslog(LOG_DEBUG, "p4: got response for parameter " . $id . "-> " . $value);
          
          return 0;
       }

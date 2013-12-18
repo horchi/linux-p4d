@@ -668,28 +668,61 @@ int P4sd::performWebifRequests()
 
       else if (strcasecmp(command, "setp") == 0)
       {
-         ConfigParameter p(addr);
          int status;
 
-         tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", result, addr);
+         // in case of command 'setp' the menu id is delivered instead of addr !!
 
-         // Set Value 
+         tableMenu->clear();
+         tableMenu->setValue(cTableMenu::fiId, addr);
 
-         p.value = atoi(result);
-            
-         if ((status = request->setParameter(&p)) == success)
+         if (tableMenu->find())
          {
-            char* buf = 0;
+            int type = tableMenu->getIntValue(cTableMenu::fiType);
+            int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
-            asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
-                     p.def, p.min, p.max, p.digits);
-            tableJobs->setValue(cTableJobs::fiResult, buf);
-            free(buf);
+            ConfigParameter p(paddr);
+  
+            tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", result, paddr);
+            
+            // Set Value 
+            
+            p.value = atoi(result);
+            
+            if ((status = request->setParameter(&p)) == success)
+            {
+               char* buf = 0;
+               
+               // store job result
+
+               asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
+                        p.def, p.min, p.max, p.digits);
+               tableJobs->setValue(cTableJobs::fiResult, buf);
+               free(buf);
+
+               // update menu table
+
+               if (type == 0x08)
+                  asprintf(&buf, "%s", p.value ? "ja" : "nein");
+               else if (type == 0x0a)
+                  asprintf(&buf, "%02d:%02d", p.value/60, p.value%60);
+               else
+                  asprintf(&buf, "%d", p.value);
+
+               tableMenu->setValue(cTableMenu::fiValue, buf);
+               tableMenu->setValue(cTableMenu::fiUnit, p.unit);
+               tableMenu->update();
+               free(buf);
+            }
+            else
+            {
+               tell(eloAlways, "Set of parameter failed, error %d", status);
+               tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
+            }
          }
          else
          {
-            tell(eloAlways, "Set of parameter failed, error %d", status);
-            tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
+            tell(eloAlways, "Set of parameter failed, id 0x%x not found", addr);
+            tableJobs->setValue(cTableJobs::fiResult, "fail:id not found");
          }
       }
 
@@ -720,7 +753,7 @@ int P4sd::performWebifRequests()
       else if (strcasecmp(command, "initmenu") == 0)
       {
          updateMenu();
-         tableJobs->setValue(cTableJobs::fiResult, "success");
+         tableJobs->setValue(cTableJobs::fiResult, "success:done");
       }
 
       else if (strcasecmp(command, "p4d-state") == 0)
@@ -736,7 +769,7 @@ int P4sd::performWebifRequests()
       else if (strcasecmp(command, "initvaluefacts") == 0)
       {
          updateValueFacts();
-         tableJobs->setValue(cTableJobs::fiResult, "success");
+         tableJobs->setValue(cTableJobs::fiResult, "success:done");
       }
 
       else if (strcasecmp(command, "updatemenu") == 0)
@@ -877,7 +910,7 @@ int P4sd::performWebifRequests()
          }
 
          selectAllMenuItems->freeResult();
-         tableJobs->setValue(cTableJobs::fiResult, "success");
+         tableJobs->setValue(cTableJobs::fiResult, "success:done");
       }
 
       else
@@ -1053,7 +1086,13 @@ int P4sd::update()
          }
             
          store(now, type, v.address, v.value, factor);
-         sprintf(num, "%.2f%s", v.value / factor, unit);
+         sprintf(num, "%.2f", v.value / factor);
+
+         if (strcmp(unit, "°") == 0)
+            strcat(num, "°C");
+         else
+            strcat(num, unit);
+         
          mailBody += string(title) + " = " + string(num) + "\n";
       }
 
