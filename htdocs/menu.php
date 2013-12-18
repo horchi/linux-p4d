@@ -501,7 +501,7 @@ function storeParameter($id, &$value, &$unit)
    if ($type != 0x07)
       return -2;
 
-   syslog(LOG_DEBUG, "p4: Storing parameter " . $id . " at address " . $address . "value " . $value . " (type " . $type . ")");
+   syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . ") at address " . $address . ", new value id " . $value . " (type " . $type . ")");
 
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$address', result = '$value'")
       or die("Error" . mysql_error());

@@ -171,6 +171,7 @@ int P4sd::initDb()
    selectPendingJobs->bind(cTableJobs::fiState, cDBS::bndOut, ", ");
    selectPendingJobs->bind(cTableJobs::fiCommand, cDBS::bndOut, ", ");
    selectPendingJobs->bind(cTableJobs::fiAddress, cDBS::bndOut, ", ");
+   selectPendingJobs->bind(cTableJobs::fiResult, cDBS::bndOut, ", ");
    selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
 
    status += selectPendingJobs->prepare();
@@ -670,7 +671,7 @@ int P4sd::performWebifRequests()
          ConfigParameter p(addr);
          int status;
 
-         tell(eloAlways, "Storing value %s for parameter at address 0x%x", result, addr);
+         tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", result, addr);
 
          // Set Value 
 
