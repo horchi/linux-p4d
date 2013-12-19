@@ -1,0 +1,366 @@
+
+Body 
+{
+  background-color: #EEEEEE; 
+  font: 12px Verdana;
+  color: #111111;
+}
+
+.content 
+{
+  padding: 20px;
+  background-color: #EEEEEE; 
+  font: 14px Verdana;
+  color: #111111;
+}
+
+.button1
+{
+  background-color: #1100EE;
+  color: white;
+  margin: 4px;
+  padding: 4px 25px;
+  text-decoration: none;
+  font: bold 20px Verdana;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.button1:hover 
+{
+  background: #000077;
+}
+
+.button2
+{
+  background-color: #0066FF;
+  color: white;
+  margin: 2px;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: bold 20px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.button2:hover 
+{
+  background: #1100EE;
+  border-radius: 10px;
+}
+
+.button3 
+{
+  background-color: #00DDEE;
+  color: black;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: 16px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.button3:hover 
+{
+  background: #00EE88;
+}
+
+.buttont 
+{
+  background-color: rgba(255, 255, 255, 0);
+  color: black;
+  border: 0;
+  text-decoration: none;
+  font: 16px Verdana;
+  border-radius: 5px;
+}
+
+.buttont:hover 
+{
+  background-color: #0066FF;
+  color: white;
+  border: 0;
+}
+
+.input
+{
+  background-color: #AAEEFF;
+  color: black;
+  width: 70%;
+  padding: 15px;
+  text-decoration: none;
+  font: 18px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.inputEdit
+{
+  text-decoration: none;
+  color: blue;
+  font: 20px Verdana;
+  width: 70px;
+  padding: 5px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.checkbox
+{
+  background-color: #00DDEE;
+  color: black;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: 16px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.info 
+{
+  background-color: green;
+  color: white;
+  text-decoration: none;
+  font: 22px Verdana;
+  width: 70%;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+
+.infoWarn
+{
+  background-color: orange;
+  color: white;
+  text-decoration: none;
+  font: 22px Verdana;
+  width: 70%;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.infoError
+{
+  background-color: red;
+  color: white;
+  text-decoration: none;
+  font: 22px Verdana;
+  width: 70%;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.schema 
+{
+  font: 22px Verdana;
+  top: 50px;
+  left: 5px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableLight
+{
+  width: 90%;
+  border: 1;
+  background-color: #AAEEFF;
+  color: black;
+  font: 14px Verdana;
+  padding: 20px 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableDark
+{
+  width: 90%;
+  border: 1;
+  background-color: #77FFFF;
+  color: black;
+  font: 14px Verdana;
+  padding: 20px 20px;
+}
+
+.tableHead 
+{
+  width: 90%;
+  border: 1;
+  background-color: #0066FF;
+  color: black;
+  font: bold 20px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableTitle
+{
+  width: 90%;
+  border: 1;
+  background-color: blue;
+  color: white;
+  font: bold 20px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableHead1
+{
+  width: 90%;
+  border: 1;
+  background-color: #0066FF;
+  color: black;
+  font: bold 16px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.cellL0
+{
+  background-color: #FFFFCC;
+  color: black;  
+}
+
+.cellL1
+{ 
+  background-color: #0066FF;
+  color: black;
+}
+
+.cellL2
+{ 
+  background-color: #00DDEE;
+  color: black;
+}
+
+.cellL3
+{ 
+  background-color: #FFAA66;
+  color: black;
+}
+
+.cellL4
+{ 
+  background-color: white;
+  color: black;
+}
+
+.schemaImage
+{ 
+  background-color: #AAEEFF;
+  padding: 10px;
+  font: 20px Verdana;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+.stateInfo
+{ 
+  position: absolute; 
+  top: 50px; 
+  left: 50px; 
+  width: 500px; 
+  background-color: #AAEEFF;
+  padding: 10px; 
+  font: 20px Verdana;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+.stateImgContainer
+{ 
+  position: absolute; 
+  top: 50px; 
+  left: 580px; 
+  width: 175px; 
+  height: 200px; 
+  background-color: #AAEEFF;
+  padding: 5px; 
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+.centerImage
+{
+  position: absolute;
+  top: 0; 
+  bottom:0; 
+  left: 0; 
+  right:0;
+  margin: auto;
+}
+
+#aP4dInfo
+{ 
+  position: absolute; 
+  top: 50px; 
+  left: 780px; 
+  width: 400px; 
+  height: 190px; 
+  background-color: #AAEEFF;
+  padding: 10px; 
+  font: 20px Verdana;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+#aStateOk
+{ 
+  font: bold 24px Verdana;
+}
+
+#aStateFail
+{ 
+  color: red;
+  text-decoration: blink;
+  font: bold 24px Verdana;
+}
+
+#aStateHeating
+{ 
+  color: green;
+  font: bold 24px Verdana;
+}
+
+#aStateOther
+{ 
+  color: blue;
+  font: bold 24px Verdana;
+}
+
+#aSelect 
+{
+  position: absolute; 
+  top: 195px; 
+  left: 50px; 
+  width: 500px; 
+  background-color: #AAEEFF;
+  solid: #804000; 
+  padding: 10px; 
+  font: 18px Verdana;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
+
+#aSelectChart 
+{ 
+  position: absolute;
+  top: 50px;
+  left: 30px;
+  width: 500px;
+  background-color: #AAEEFF;
+  padding: 10px;
+  font: 16px Verdana;
+  border-radius:10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+#aChart 
+{ 
+  position: absolute;
+  top: 130px;
+  left: 30px;
+  background-color: #AAEEFF;
+  padding: 0px;
+  border-radius: 10px; 
+  box-shadow: 8px 8px 8px #666;
+}
