@@ -662,16 +662,14 @@ int P4sd::performWebifRequests()
 
          if ((pwd = strchr(user, ':')))
          {
-            md5Buf loginMd5;
             md5Buf webMd5;
 
             *pwd = 0; pwd++;
-            createMd5(pwd, loginMd5);
             createMd5(webPass, webMd5);
 
-            tell(eloAlways, "'%s/%s' - '%s/%s'", pwd, loginMd5, webPass, webMd5);
+            tell(eloDebug, "'%s' - '%s/%s'", pwd, webPass, webMd5);
 
-            if (strcmp(webUser, user) == 0 && strcmp(loginMd5, webMd5) == 0)
+            if (strcmp(webUser, user) == 0 && strcmp(pwd, webMd5) == 0)
                tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
             else
                tableJobs->setValue(cTableJobs::fiResult, "fail:login-denied");
