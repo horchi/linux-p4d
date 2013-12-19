@@ -276,22 +276,22 @@ function showChilds($parnt, $level)
       else
       {
          if (!$child)
-            $bgc = "#FFFFCC";
+            $style = "cellL0";
          elseif ($level == 1)
-            $bgc = "#FF6600";
+            $style = "cellL1";
          elseif ($level == 2)
-            $bgc = "#FFF66";
+            $style = "cellL2";
          elseif ($level == 3)
-            $bgc = "#FFAA66";
+            $style = "cellL3";
          elseif ($level == 4)
-            $bgc = "white";
+            $style = "cellL4";
          else
          {
             syslog(LOG_DEBUG, "p4: unexpected menu level " . $level);
             return;
          }
 
-         echo "          <tr style=\"color:black\" bgcolor=\"$bgc\">\n";
+         echo "          <tr class=\"$style\">\n";
 
          if ($debug)
          {
@@ -390,13 +390,11 @@ function requestValue($address)
 
          if ($state == "fail")
          {
-            // #TODO show error
             return "";
          }
          else
          {
             syslog(LOG_DEBUG, "p4: got response for value at addr " . $address . "-> " . $value);
-
             return $value;
          }
       }
@@ -475,7 +473,6 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
 
          if ($state == "fail")
          {
-            // #TODO show error
             return -1;
          }
          else
@@ -488,8 +485,6 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
    }
    
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
-
-   // #TODO show timeout
 
    return -1;
 }
