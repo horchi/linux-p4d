@@ -169,13 +169,11 @@ function showMenu()
 function beginTable($title)
 {
    echo "        <br/>\n";
-
-   echo "        <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
-   echo "          <tr style=\"color:white\" bgcolor=\"#CC0033\">\n";
+   echo "        <table class=\"tableTitle\" cellspacing=0 rules=rows>\n";
+   echo "          <tr>\n";
    echo "            <td><center><b>$title</b></center></td>\n";
    echo "          </tr>\n";
    echo "        </table>\n";
-
    echo "        <br/>\n";
 
    echo "        <table class=\"tableLight\" cellspacing=0 rules=rows>\n";

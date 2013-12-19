@@ -6,20 +6,12 @@ Body
   color: #111111;
 }
 
-A:link 
+.content 
 {
-  color: #000000;
-}
-
-A:visited 
-{
-  color: #000000;
-}
-
-A:active 
-{
-  color: #000000;
-  text-decoration : underline;
+  padding: 20px;
+  background-color: #EEEEEE; 
+  font: 14px Verdana;
+  color: #111111;
 }
 
 .button1
@@ -40,7 +32,7 @@ A:active
 .button2
 {
   background-color: #FF9900;
-  color: #FFFFFF;
+  color: white;
   padding: 5px 25px;
   text-decoration: none;
   font: bold 20px Verdana;
@@ -57,7 +49,7 @@ A:active
 .button3 
 {
   background-color: #FF9900;
-  color: #FFFFFF;
+  color: white;
   padding: 5px 25px;
   text-decoration: none;
   font: 16px Verdana;
@@ -158,14 +150,6 @@ A:active
   box-shadow: 8px 8px 8px #666;
 }
 
-.content 
-{
-  padding: 20px;
-  background-color: #EEEEEE; 
-  font: 12px Verdana;
-  color: #111111;
-}
-
 .schema 
 {
   font: 22px Verdana;
@@ -200,6 +184,17 @@ A:active
   width: 90%;
   border: 1;
   background-color: #FF9900;
+  color: #FFFFFF;
+  font: bold 20px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableTitle
+{
+  width: 90%;
+  border: 1;
+  background-color: #CC0033;
   color: #FFFFFF;
   font: bold 20px Verdana;
   padding: 20px;

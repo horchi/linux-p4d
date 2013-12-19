@@ -1,8 +1,9 @@
 <?php
 
 include("header.php");
+include("setup.php");
 
-$jpegTop = 100;
+$jpegTop = 140;
 $jpegLeft = 30;
 
 $selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
@@ -29,9 +30,9 @@ mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
 // -------------------------
-// show image / form
+// show buttons
 
-echo "\n";
+echo "    <br/>\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
 echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
 echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
@@ -50,6 +51,15 @@ echo "        <input type=checkbox name=unit value=unit checked>Einheit</input>\
 echo "        <input type=radio name=showtext value=Value checked>Value</input>\n";
 echo "        <input type=radio name=showtext value=Text>Text</input>\n";
 echo "      </span>\n";
+
+// -------------------------
+// show image
+
+echo "\n";
+echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
+echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
+echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
+echo "      </div>\n";
 
 if ($cfg == "Start") 
 {

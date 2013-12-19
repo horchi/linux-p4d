@@ -1,6 +1,7 @@
 <?php
 
 include("header.php");
+include("setup.php");
 
 $action = "";
 
@@ -47,9 +48,13 @@ else if ($action == "store")
    }
 }
 
-echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>";
+echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
 showButtons();
-showTable();
+showTable("UD", "Allgemein");
+showTable("VA", "Messwerte");
+showTable("DI", "Digitale Eingänge");
+showTable("DO", "Digitale Ausgänge");
+showTable("AO", "Analoge Ausgänge");
 echo "      </form>\n";
 
 mysql_close();
@@ -62,23 +67,30 @@ include("footer.php");
 
 function showButtons()
 {
-   echo "      <div>\n";
+   echo "        <div>\n";
+   echo "          <br/>\n";
    echo "          <button class=\"button3\" type=submit name=action value=init onclick=\"return confirmSubmit('Stammdaten der Messwerte initialisieren')\">Init</button>\n";
    echo "          <button class=\"button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
-   echo "          <br/><br/>\n";
-   echo "      </div>\n";
+   echo "        </div>\n";
 }
 
 //***************************************************************************
 // Show Table
 //***************************************************************************
 
-function showTable()
+function showTable($type, $tableTitle)
 {
    $i = 0;
 
-   echo "
-        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
+   echo "        <br/>\n";
+   echo "        <table class=\"tableTitle\" cellspacing=0 rules=rows>\n";
+   echo "          <tr>\n";
+   echo "            <td><center><b>$tableTitle</b></center></td>\n";
+   echo "          </tr>\n";
+   echo "        </table>\n";
+   echo "        <br/>\n";
+
+   echo "        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
           <tr class=\"tableHead1\">
             <td> Adresse </td>
             <td> Typ </td>
@@ -87,7 +99,7 @@ function showTable()
             <td> Aufzeichnen </td>
           </tr>\n";
 
-   $result = mysql_query("select * from valuefacts")
+   $result = mysql_query("select * from valuefacts where type = '$type'")
       or die("Error" . mysql_error());
 
    $num = mysql_numrows($result);

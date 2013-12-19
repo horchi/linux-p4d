@@ -26,9 +26,7 @@ echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">
 
 if (haveLogin())
 {
-   echo "    <a class=\"button1\" href=\"settings.php\">Setup</a>\n";
-   echo "    <a class=\"button1\" href=\"schemacfg.php\">Schema Setup</a>\n";
-
+   echo "    <a class=\"button1\" href=\"basecfg.php\">Setup</a>\n";
    echo "    <a class=\"button1\" href=\"logout.php\">Logout</a>\n";
 }
 else
