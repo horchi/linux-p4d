@@ -1,7 +1,4 @@
 
-
-- speedup 'updatemenu' by collecting parameters for the s-3200 request
-- implement set of parameters via WEBIF
-- implement own session/login handling
-- provide a 'blue' stylesheet
-- implement a setup page at WEBIF with most options of p4d.conf and config.php
+- implement set of main config items via WEBIF
+- provide a 'blue' stylesheet :o
+- implement a setup page at WEBIF with main options of p4d.conf and config.php
