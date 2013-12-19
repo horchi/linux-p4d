@@ -16,6 +16,8 @@
 
 #include <string>
 
+#include <openssl/md5.h> // MD5_*
+
 struct MemoryStruct;
 extern int loglevel;
 extern int logstdout;
@@ -79,6 +81,8 @@ enum Misc
    no      = 0,
    TB      = 1,
 
+   sizeMd5 = 2 * MD5_DIGEST_LENGTH,
+
    tmeSecondsPerMinute = 60,
    tmeSecondsPerHour = 60 * tmeSecondsPerMinute,
    tmeSecondsPerDay = 24 * tmeSecondsPerHour
@@ -131,6 +135,13 @@ int removeFile(const char* filename);
 
 const char* getHostName();
 const char* getFirstIp();
+
+#ifdef USEMD5
+  typedef char md5Buf[sizeMd5+TB];
+  typedef char md5;
+  int createMd5(const char* buf, md5* md5);
+  int createMd5OfFile(const char* path, const char* name, md5* md5);
+#endif
 
 #ifdef WITH_GUNZIP
 

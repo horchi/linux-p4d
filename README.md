@@ -70,6 +70,9 @@ Installation Apache Webserver:
 Installation p4d Application:
 -----------------------------
 
+- install build essentials like make, g++, ...
+- install libssl-dev 
+  apt-get install libssl-dev
 - change to directory /tmp (or another folder if download should be persistent stay on the device)
 - run command to download current version
 	git clone https://github.com/horchi/linux-p4d/

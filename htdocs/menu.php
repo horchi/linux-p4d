@@ -1,9 +1,9 @@
 <?php
 
-session_start();
-
 include("header.php");
-include("jfunctions.php");
+
+// ----------------
+// variables
 
 $debug = 0;
 $lastMenu = "";
@@ -66,7 +66,7 @@ if ($store == "store_par")
 
 if ($edit != "")
 {
-   if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
+   if (haveLogin()) 
    {
       $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
       
@@ -85,7 +85,7 @@ if ($edit != "")
          echo "          <button class=\"button3\" type=submit name=store value=store_par>Speichern</button>\n";
          echo "          <br/><br/>\n";
          echo "        </div>\n";
-         echo "      </form>";
+         echo "      </form>\n";
       }
       else if ($res == -2)
          echo "      <br/><div class=\"infoWarn\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
@@ -94,20 +94,20 @@ if ($edit != "")
    }
    else
    {
-      echo "      <br/><div class=\"infoWarn\"><b><center>Zum ändern der Parameter Login erforderlich!</center></b></div><br/>";
+      echo "      <br/><div class=\"infoWarn\"><b><center>Zum ändern der Parameter Login erforderlich :o</center></b></div><br/>";
    }
 }
 
 if ($menu == "update")
 {
-   requestAction("updatemenu", 30, $result);
+   requestAction("updatemenu", 30, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/>";
    $menu = $lastMenu;
 }
 
 elseif ($menu == "init")
 {
-   requestAction("initmenu", 60, $result);
+   requestAction("initmenu", 60, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
    $menu = $lastMenu;
 }
@@ -151,7 +151,7 @@ function showMenu()
       $i++;
    }
 
-   if (isset($_SERVER["PHP_AUTH_USER"]) && $_SERVER["PHP_AUTH_USER"] != "logout")
+   if (haveLogin()) 
    {
       echo "          <br/><br/>\n";
       echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
@@ -542,3 +542,5 @@ function storeParameter($id, &$value, &$unit, &$res)
 
    return -1;
 }
+
+include("jfunctions.php");

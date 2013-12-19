@@ -1,4 +1,0 @@
-AuthUserFile /var/lib/p4/htdocs/logout/.htpasswd
-AuthType Basic
-AuthName "Logout"
-Require valid-user

@@ -31,6 +31,7 @@ P4sd::P4sd()
    tableSchemaConf = 0;
    tableValueFacts = 0;
    tableMenu = 0;
+   tableConfig = 0;
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
@@ -116,6 +117,9 @@ int P4sd::initDb()
    tableSchemaConf = new cTableSchemaConf(connection);
    if (tableSchemaConf->open() != success) return fail;
 
+   tableConfig = new cTableConfig(connection);
+   if (tableConfig->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -171,7 +175,7 @@ int P4sd::initDb()
    selectPendingJobs->bind(cTableJobs::fiState, cDBS::bndOut, ", ");
    selectPendingJobs->bind(cTableJobs::fiCommand, cDBS::bndOut, ", ");
    selectPendingJobs->bind(cTableJobs::fiAddress, cDBS::bndOut, ", ");
-   selectPendingJobs->bind(cTableJobs::fiResult, cDBS::bndOut, ", ");
+   selectPendingJobs->bind(cTableJobs::fiData, cDBS::bndOut, ", ");
    selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
 
    status += selectPendingJobs->prepare();
@@ -195,19 +199,19 @@ int P4sd::initDb()
 
 int P4sd::exitDb()
 {
-   delete tableSamples;        tableSamples = 0;
-   delete tableValueFacts;     tableValueFacts = 0;
-   delete tableMenu; tableMenu = 0;
-   delete tableJobs;           tableJobs = 0;
-   delete tableSchemaConf;     tableSchemaConf = 0;
+   delete tableSamples;            tableSamples = 0;
+   delete tableValueFacts;         tableValueFacts = 0;
+   delete tableMenu;               tableMenu = 0;
+   delete tableJobs;               tableJobs = 0;
+   delete tableSchemaConf;         tableSchemaConf = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
    delete selectAllMenuItems;      selectAllMenuItems = 0;
    delete cleanupJobs;             cleanupJobs = 0;
-
-   delete connection;      connection = 0;
+   delete tableConfig;          tableConfig = 0;
+   delete connection;              connection = 0;
 
    return done;
 }
@@ -641,7 +645,7 @@ int P4sd::performWebifRequests()
       int start = time(0);
       int addr = tableJobs->getIntValue(cTableJobs::fiAddress);
       const char* command = tableJobs->getStrValue(cTableJobs::fiCommand);
-      const char* result = tableJobs->getStrValue(cTableJobs::fiResult);
+      const char* data = tableJobs->getStrValue(cTableJobs::fiData);
 
       tableJobs->find();
       tableJobs->setValue(cTableJobs::fiDoneAt, time(0));
@@ -651,7 +655,29 @@ int P4sd::performWebifRequests()
            tableJobs->getIntValue(cTableJobs::fiId),
            command, addr);
 
-      if (strcasecmp(command, "getp") == 0)
+      if (strcasecmp(command, "check-login") == 0)
+      {
+         char* user = strdup(data);
+         char* pwd = 0;
+
+         if ((pwd = strchr(user, ':')))
+         {
+            md5Buf loginMd5;
+            md5Buf webMd5;
+
+            *pwd = 0; pwd++;
+            createMd5(pwd, loginMd5);
+            createMd5(webPass, webMd5);
+
+            if (strcmp(webUser, user) == 0 && strcmp(loginMd5, webMd5) == 0)
+               tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
+            else
+               tableJobs->setValue(cTableJobs::fiResult, "fail:login-denied");
+         }
+
+         free(user);
+      }
+      else if (strcasecmp(command, "getp") == 0)
       {
          ConfigParameter p(addr);
 
@@ -682,11 +708,11 @@ int P4sd::performWebifRequests()
 
             ConfigParameter p(paddr);
   
-            tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", result, paddr);
+            tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", data, paddr);
             
             // Set Value 
             
-            p.value = atoi(result);
+            p.value = atoi(data);
             
             if ((status = request->setParameter(&p)) == success)
             {
@@ -1257,3 +1283,35 @@ int P4sd::haveMailState()
 
    return result;
 }
+
+//***************************************************************************
+// Stored Parameters
+//***************************************************************************
+
+int P4sd::getConfigItem(const char* name, char* value)
+{
+   *value = 0;
+
+   tableConfig->clear();
+   tableConfig->setValue(cTableConfig::fiOwner, "p4d");
+   tableConfig->setValue(cTableConfig::fiName, name);
+
+   if (tableConfig->find())
+      sprintf(value, "%s", tableConfig->getStrValue(cTableConfig::fiValue));
+
+   tableConfig->reset();
+
+   return success;
+}
+
+int P4sd::setConfigItem(const char* name, const char* value)
+{
+   tell(eloAlways, "Storing '%s' with value '%s'", name, value);
+   tableConfig->clear();
+   tableConfig->setValue(cTableConfig::fiOwner, "p4d");
+   tableConfig->setValue(cTableConfig::fiName, name);
+   tableConfig->setValue(cTableConfig::fiValue, value);
+
+   return tableConfig->store();
+}
+

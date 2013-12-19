@@ -146,6 +146,33 @@ class cTableSchemaConf : public cDbTable
 };
 
 //***************************************************************************
+// class cTableParameters
+//***************************************************************************
+
+class cTableConfig : public cDbTable
+{
+   public:
+
+      cTableConfig(cDbConnection* aConnection, const char* aName = "config")
+         : cDbTable(aConnection, aName, fields) { }
+
+      enum FieldIndex
+      {
+         fiOwner,
+         fiName,
+
+         fiInsSp,
+         fiUpdSp,
+
+         fiValue,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
 // class cTableJobs
 //***************************************************************************
 
@@ -169,6 +196,7 @@ class cTableJobs : public cDbTable
          fiCommand,
          fiAddress,
          fiResult,
+         fiData,
 
          fiCount
       };

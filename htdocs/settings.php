@@ -20,7 +20,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 if ($action == "init")
 {
-   requestAction("initvaluefacts", 20, $result);
+   requestAction("initvaluefacts", 20, 0, "", $resonse);
    echo "<br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
 }
 

@@ -142,6 +142,25 @@ cDbService::FieldDef cTableSchemaConf::fields[] =
 };
 
 //***************************************************************************
+// Config Fields
+//***************************************************************************
+
+cDbService::FieldDef cTableConfig::fields[] =
+{
+   // name               format     size index           type
+
+   { "owner",            ffAscii,    40, fiOwner,        ftPrimary },
+   { "name",             ffAscii,    40, fiName,         ftPrimary },
+
+   { "inssp",            ffInt,       0, fiInsSp,        ftMeta },
+   { "updsp",            ffInt,       0, fiUpdSp,        ftMeta },
+
+   { "value",            ffAscii,   100, fiValue,        ftData },
+
+   { 0 }
+};
+
+//***************************************************************************
 // Jobs
 //***************************************************************************
 
@@ -166,6 +185,7 @@ cDbService::FieldDef cTableJobs::fields[] =
    { "command",          ffAscii,    100, fiCommand,       ftData },
    { "address",          ffUInt,       4, fiAddress,       ftData },
    { "result",           ffAscii,    100, fiResult,        ftData },
+   { "data",             ffAscii,    100, fiData,          ftData },
 
    { 0 }
 };

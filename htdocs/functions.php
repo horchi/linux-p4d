@@ -1,6 +1,30 @@
 <?php
 
 // ---------------------------------------------------------------------------
+// Have Login
+// ---------------------------------------------------------------------------
+
+function haveLogin()
+{
+   if (isset($_SESSION['angemeldet']) && $_SESSION['angemeldet'])
+      return true;
+
+   return false;
+}
+
+function checkLogin($user, $passwd)
+{
+   $md5 = md5($passwd);
+
+   if ($user == 'p4' && $passwd == 'pass')
+      return true;
+
+   if requestAction("check-login", 5, 0, "$user:$md5", $resonse);
+
+   return false;
+}
+
+// ---------------------------------------------------------------------------
 // Date Picker
 // ---------------------------------------------------------------------------
 
@@ -69,14 +93,14 @@ function chkDir($path, $rights = 0777)
 // Request Action
 // ---------------------------------------------------------------------------
 
-function requestAction($action, $timeout, &$value)
+function requestAction($cmd, $timeout, $address, $data, &$response)
 {
    $timeout = time() + $timeout;
-   $value = "";
+   $response = "";
 
-   syslog(LOG_DEBUG, "p4: requesting ". $action);
+   syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$action', address = '0'")
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
       or die("Error" . mysql_error());
    $id = mysql_insert_id();
 
@@ -89,8 +113,8 @@ function requestAction($action, $timeout, &$value)
 
       if (mysql_numrows($result))
       {
-         $response = mysql_result($result, 0, "result");
-         list($state, $value) = split(":", $response, 2);
+         $buffer = mysql_result($result, 0, "result");
+         list($state, $response) = split(":", $buffer, 2);
 
          if ($state == "fail")
             return -2;
@@ -99,7 +123,7 @@ function requestAction($action, $timeout, &$value)
       }
    }
 
-   syslog(LOG_DEBUG, "p4: timeout on " . $action);
+   syslog(LOG_DEBUG, "p4: timeout on " . $cmd);
 
    return -1;
 }

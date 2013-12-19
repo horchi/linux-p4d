@@ -28,6 +28,9 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
+char webUser[100+TB] = "p4";
+char webPass[100+TB] = "p4-3200";
+
 char ttyDevice[100+TB]    = "/dev/ttyUSB0";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
@@ -52,6 +55,9 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
+
+   else if (!strcasecmp(Name, "webUser"))     sstrcpy(webUser, Value, sizeof(webUser));
+   else if (!strcasecmp(Name, "webPass"))     sstrcpy(webPass, Value, sizeof(webPass));
    
    else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
    else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);

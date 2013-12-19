@@ -93,6 +93,68 @@ unsigned int getHostId()
 }
 
 //***************************************************************************
+// Create MD5
+//***************************************************************************
+
+#ifdef USEMD5
+
+int createMd5(const char* buf, md5* md5)
+{
+   MD5_CTX c;
+   unsigned char out[MD5_DIGEST_LENGTH];
+
+   MD5_Init(&c);
+   MD5_Update(&c, buf, strlen(buf));
+   MD5_Final(out, &c);
+
+   for (int n = 0; n < MD5_DIGEST_LENGTH; n++)
+      sprintf(md5+2*n, "%02x", out[n]);
+
+   md5[sizeMd5] = 0;
+
+   return done;
+}
+
+int createMd5OfFile(const char* path, const char* name, md5* md5)
+{
+   FILE* f;
+   char buffer[1000];
+   int nread = 0;
+   MD5_CTX c;
+   unsigned char out[MD5_DIGEST_LENGTH];
+   char* file = 0;
+
+   asprintf(&file, "%s/%s", path, name);
+   
+   if (!(f = fopen(file, "r")))
+   {
+      tell(0, "Fatal: Can't access '%s'; %m", file);
+      free(file);
+      return fail;
+   }
+
+   free(file);
+
+   MD5_Init(&c);   
+   
+   while ((nread = fread(buffer, 1, 1000, f)) > 0)
+      MD5_Update(&c, buffer, nread);
+   
+   fclose(f);
+
+   MD5_Final(out, &c);
+   
+   for (int n = 0; n < MD5_DIGEST_LENGTH; n++)
+      sprintf(md5+2*n, "%02x", out[n]);
+
+   md5[sizeMd5] = 0;
+
+   return success;
+}
+
+#endif // USEMD5
+
+//***************************************************************************
 // String Operations
 //***************************************************************************
 

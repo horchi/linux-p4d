@@ -23,7 +23,7 @@ CMDTARGET = p4
 CHARTTARGET = p4chart
 MBTARGET = p4mb
 
-LIBS = -lmysqlclient_r -lrt
+LIBS = -lmysqlclient_r -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 CFLAGS   = -Wreturn-type -Wall -Wformat -Wunused-variable -Wunused-label \
@@ -47,7 +47,7 @@ CMDOBJS = p4cmd.o p4io.o serial.o service.o lib/common.o
 MBOBJS = mbp4.o serial.o lib/common.o
 
 ifdef USE_SVC_INTERFACE
-  DEFINES += -DSVC_INTERFACE -DDEAMON=P4sd
+  DEFINES += -DSVC_INTERFACE -DDEAMON=P4sd -DUSEMD5
   OBJS += p4sd.o
 else
   DEFINES += -DDEAMON=Linpellet

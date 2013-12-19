@@ -27,6 +27,9 @@ extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
 
+extern char webUser[];
+extern char webPass[];
+
 extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
@@ -79,6 +82,9 @@ class P4sd : public FroelingService
       int updateValueFacts();
       int updateMenu();
       int haveMailState();
+
+      int getConfigItem(const char* name, char* value);
+      int setConfigItem(const char* name, const char* value);
       
       int doShutDown() { return shutdown; }
 
@@ -91,6 +97,7 @@ class P4sd : public FroelingService
       cTableMenu* tableMenu;
       cTableJobs* tableJobs;
       cTableSchemaConf* tableSchemaConf;
+      cTableConfig* tableConfig;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;

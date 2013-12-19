@@ -39,7 +39,7 @@ include("header.php");
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3, $p4dNext);
+  $p4dstate = requestAction("p4d-state", 3, 0, "", $p4dNext);
 
   // ----------------
   // Status

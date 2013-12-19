@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 include("header.php");
 
 $jpegTop = 100;
