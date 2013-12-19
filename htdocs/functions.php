@@ -16,10 +16,11 @@ function checkLogin($user, $passwd)
 {
    $md5 = md5($passwd);
 
-   if ($user == 'p4' && $passwd == 'pass')
-      return true;
+//    if ($user == 'p4' && $passwd == 'pass')
+//       return true;
 
-   if requestAction("check-login", 5, 0, "$user:$md5", $resonse);
+   if (requestAction("check-login", 5, 0, "$user:$md5", $resonse) == 0)
+      return true;
 
    return false;
 }
