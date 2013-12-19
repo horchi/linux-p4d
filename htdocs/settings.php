@@ -115,9 +115,13 @@ function showTable()
             <td> $txtaddr </td>
             <td> $type </td>
             <td> $title </td>
-            <td> $unit </td>
-            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>
-          </tr>\n";
+            <td> $unit </td>\n";
+      
+      if ($type != "UD")
+         echo "            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>\n";
+      else
+         echo "            <td>[x]</td>\n";
+      echo "          </tr>\n";
 
       $i++;
    }

@@ -162,7 +162,7 @@ function nextConf($dir)
    
    // show
 
-   echo "<div style=\"position:absolute; left:450px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "<div style=\"position:absolute; left:750px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
 
    $_SESSION["cur"]++;
    

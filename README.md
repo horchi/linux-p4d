@@ -80,8 +80,7 @@ Installation p4d Application:
 - call "make" in the source directory
 - call "make install" in the source directory (file configs/p4d.conf is copied to /etc)
 - p4 daemon is installed in folder /usr/local/bin
-- check /etc/p4d.conf file for setting ttyDeviceSvc
-	change device if required
+- check /etc/p4d.conf file for setting db-login, web-login, ttyDeviceSvc (change device if required),
 	check in /dev which ttyUSB devices is used for USB-Serial converter (/dev/ttyUSB0, /dev/ttyUSB1)
 
 
