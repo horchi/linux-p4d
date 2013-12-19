@@ -4,6 +4,16 @@ include("header.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') 
 {
+   // -------------------------
+   // establish db connection
+   
+   mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
+   mysql_select_db($mysqldb);
+   mysql_query("set names 'utf8'");
+   mysql_query("SET lc_time_names = 'de_DE'");
+
+   // --------------------------
+
    $user = $_POST['username'];
    $passwd = $_POST['passwort'];
    

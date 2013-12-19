@@ -669,6 +669,8 @@ int P4sd::performWebifRequests()
             createMd5(pwd, loginMd5);
             createMd5(webPass, webMd5);
 
+            tell(eloAlways, "'%s/%s' - '%s/%s'", pwd, loginMd5, webPass, webMd5);
+
             if (strcmp(webUser, user) == 0 && strcmp(loginMd5, webMd5) == 0)
                tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
             else
@@ -677,6 +679,7 @@ int P4sd::performWebifRequests()
 
          free(user);
       }
+
       else if (strcasecmp(command, "getp") == 0)
       {
          ConfigParameter p(addr);
@@ -952,8 +955,10 @@ int P4sd::performWebifRequests()
       }
 
       tableJobs->store();
-      tell(eloAlways, "Processing WEBIF job %d done after %d seconds", 
-           tableJobs->getIntValue(cTableJobs::fiId), time(0) - start);
+      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %d seconds", 
+           tableJobs->getIntValue(cTableJobs::fiId), 
+           tableJobs->getStrValue(cTableJobs::fiResult),
+           time(0) - start);
    }
 
    selectPendingJobs->freeResult();
