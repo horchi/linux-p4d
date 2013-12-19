@@ -651,9 +651,9 @@ int P4sd::performWebifRequests()
       tableJobs->setValue(cTableJobs::fiDoneAt, time(0));
       tableJobs->setValue(cTableJobs::fiState, "D");
 
-      tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x'", 
+      tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x/%s'", 
            tableJobs->getIntValue(cTableJobs::fiId),
-           command, addr);
+           command, addr, data);
 
       if (strcasecmp(command, "check-login") == 0)
       {

@@ -413,8 +413,7 @@ function requestValue($address)
 
 function getParameter($id)
 {   
-   $strQuery = sprintf("select value, unit from menu 
-              where id = '$id'");
+   $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
    $result = mysql_query($strQuery)
       or die("Error" . mysql_error());
@@ -506,7 +505,7 @@ function storeParameter($id, &$value, &$unit, &$res)
 
    syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value id " . $value);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$id', result = '$value'")
+   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', address = '$id', data = '$value'")
       or die("Error" . mysql_error());
 
    $jobid = mysql_insert_id();
