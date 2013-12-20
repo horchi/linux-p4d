@@ -678,6 +678,36 @@ int P4sd::performWebifRequests()
          free(user);
       }
 
+      else if (strcasecmp(command, "write-config") == 0)
+      {
+         char* name = strdup(data);
+         char* value = 0;
+
+         if ((value = strchr(name, ':')))
+         {
+            *value = 0; value++;
+
+            setConfigItem(name, value);
+
+            tableJobs->setValue(cTableJobs::fiResult, "success:stored");
+         }
+
+         free(name);
+      }
+
+      else if (strcasecmp(command, "read-config") == 0)
+      {
+         char* buf = 0;
+         char value[200+TB];
+
+         getConfigItem(data, value);
+
+         asprintf(&buf, "success:%s", value);
+         tableJobs->setValue(cTableJobs::fiResult, buf);
+
+         free(buf);
+      }
+
       else if (strcasecmp(command, "getp") == 0)
       {
          ConfigParameter p(addr);
@@ -1317,4 +1347,3 @@ int P4sd::setConfigItem(const char* name, const char* value)
 
    return tableConfig->store();
 }
-

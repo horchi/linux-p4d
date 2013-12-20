@@ -12,7 +12,7 @@ if (isset($_POST["action"]))
 // establish db connection
 
 mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb) or die("DB error");
+mysql_select_db($mysqldb) or die("<br/>DB error");
 mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
@@ -31,7 +31,7 @@ else if ($action == "store")
    {
       $sql = "UPDATE valuefacts SET state = 'D'";
       $result = mysql_query($sql) 
-         or die("Error" . mysql_error());
+         or die("<br/>Error" . mysql_error());
       
       foreach ($_POST['selected'] as $key => $value) 
       {
@@ -41,7 +41,7 @@ else if ($action == "store")
          $sql = "UPDATE valuefacts set state = 'A' where address = '$addr' and type = '$type'";
 
          $result = mysql_query($sql) 
-            or die("Error" . mysql_error());
+            or die("<br/>Error" . mysql_error());
       }
 
       echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
@@ -100,17 +100,17 @@ function showTable($type, $tableTitle)
           </tr>\n";
 
    $result = mysql_query("select * from valuefacts where type = '$type'")
-      or die("Error" . mysql_error());
+      or die("<br/>Error" . mysql_error());
 
    $num = mysql_numrows($result);
    
    while ($i < $num) 
    {
-      $address = mysql_result($result,$i,"address");
-      $type    = mysql_result($result,$i,"type");
-      $title   = mysql_result($result,$i,"title");
-      $unit    = mysql_result($result,$i,"unit");
-      $state   = mysql_result($result,$i,"state");
+      $address = mysql_result($result, $i, "address");
+      $type    = mysql_result($result, $i, "type");
+      $title   = mysql_result($result, $i, "title");
+      $unit    = mysql_result($result, $i, "unit");
+      $state   = mysql_result($result, $i, "state");
       $txtaddr = sprintf("0x%04x", $address);
 
       if ($state == "A") 

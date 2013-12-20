@@ -199,7 +199,7 @@ function showChilds($parnt, $level)
 
    $count = mysql_numrows($result);
    
-   // syslog(LOG_DEBUG, "p4: menu with " . $count . " childs of parent " . $parnt . " on level " . $level);
+   // syslog(LOG_DEBUG, "p4: menu width " . $count . " childs of parent " . $parnt . " on level " . $level);
 
    while ($i < $count)
    {

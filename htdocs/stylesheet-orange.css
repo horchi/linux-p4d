@@ -10,15 +10,16 @@ Body
 {
   padding: 20px;
   background-color: #EEEEEE; 
-  font: 14px Verdana;
+  font: 18px Verdana;
   color: #111111;
 }
 
 .button1
 {
   background-color: #FF6600;
-  color: #FFFFFF;
-  padding: 5px 25px;
+  color: white;
+  margin: 4px;
+  padding: 4px 25px;
   text-decoration: none;
   font: bold 20px Verdana;
   box-shadow: 8px 8px 8px #666;
@@ -33,6 +34,7 @@ Body
 {
   background-color: #FF9900;
   color: white;
+  margin: 2px;
   padding: 5px 25px;
   text-decoration: none;
   font: bold 20px Verdana;
@@ -51,6 +53,8 @@ Body
   background-color: #FF9900;
   color: white;
   padding: 5px 25px;
+  margin: 2px;
+  padding: 5px 25px;
   text-decoration: none;
   font: 16px Verdana;
   border-radius: 10px;
@@ -59,13 +63,13 @@ Body
 
 .button3:hover 
 {
-	background: #FF3300;
+  background: #FF3300;
 }
 
 .buttont 
 {
   background-color: rgba(255, 255, 255, 0);
-  color: #000000;
+  color: black;
   border: 0;
   text-decoration: none;
   font: 16px Verdana;
@@ -75,20 +79,38 @@ Body
 .buttont:hover 
 {
   background: #FF6600;
-  color: #FFFFFF;
+  color: white;
   border: 0;
+}
+
+.seperatorTitle
+{
+  background-color: #CC0033;
+  color: white;
+  width: 70%;
+  padding: 2px 15px;
+  text-decoration: none;
+  font: 18px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .input
 {
   background-color: #FFFFCC; 
-  color: #000000;
+  color: black;
   width: 70%;
   padding: 15px;
   text-decoration: none;
   font: 18px Verdana;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
+}
+
+.inputComment
+{
+  text-decoration: none;
+  font: 14px Verdana;
 }
 
 .inputEdit
@@ -105,7 +127,7 @@ Body
 .checkbox
 {
   background-color: #FF9900;
-  color: #FFFFFF;
+  color: white;
   padding: 5px 25px;
   text-decoration: none;
   font: 16px Verdana;
@@ -163,7 +185,7 @@ Body
   width: 90%;
   border: 1;
   background-color: #FFFFCC;
-  color: #000000;
+  color: black;
   font: 14px Verdana;
   padding: 20px 20px;
   box-shadow: 8px 8px 8px #666;
@@ -174,7 +196,7 @@ Body
   width: 90%;
   border: 1;
   background-color: #FFFF66;
-  color: #000000;
+  color: black;
   font: 14px Verdana;
   padding: 20px 20px;
 }
@@ -184,7 +206,7 @@ Body
   width: 90%;
   border: 1;
   background-color: #FF9900;
-  color: #FFFFFF;
+  color: white;
   font: bold 20px Verdana;
   padding: 20px;
   box-shadow: 8px 8px 8px #666;
@@ -195,7 +217,7 @@ Body
   width: 90%;
   border: 1;
   background-color: #CC0033;
-  color: #FFFFFF;
+  color: white;
   font: bold 20px Verdana;
   padding: 20px;
   box-shadow: 8px 8px 8px #666;
@@ -206,7 +228,7 @@ Body
   width: 90%;
   border: 1;
   background-color: #FF9900;
-  color: #FFFFFF;
+  color: white;
   font: bold 16px Verdana;
   padding: 20px;
   box-shadow: 8px 8px 8px #666;
@@ -219,6 +241,36 @@ Body
   font: 20px Verdana;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
+}
+
+.cellL0
+{
+  background-color: #FFFFCC;
+  color: black;  
+}
+
+.cellL1
+{ 
+  background-color: #FF6600;
+  color: black;
+}
+
+.cellL2
+{ 
+  background-color: #FFF660;
+  color: black;
+}
+
+.cellL3
+{ 
+  background-color: #FFAA66;
+  color: black;
+}
+
+.cellL4
+{ 
+  background-color: white;
+  color: black;
 }
 
 .stateInfo

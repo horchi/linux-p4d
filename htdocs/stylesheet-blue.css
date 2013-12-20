@@ -10,7 +10,7 @@ Body
 {
   padding: 20px;
   background-color: #EEEEEE; 
-  font: 14px Verdana;
+  font: 18px Verdana;
   color: #111111;
 }
 
@@ -81,6 +81,18 @@ Body
   border: 0;
 }
 
+.seperatorTitle
+{
+  background-color: blue;
+  color: white;
+  width: 70%;
+  padding: 2px 15px;
+  text-decoration: none;
+  font: 18px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .input
 {
   background-color: #AAEEFF;
@@ -91,6 +103,12 @@ Body
   font: 18px Verdana;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
+}
+
+.inputComment
+{
+  text-decoration: none;
+  font: 14px Verdana;
 }
 
 .inputEdit
