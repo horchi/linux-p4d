@@ -1,13 +1,13 @@
 //***************************************************************************
 // Group p4d / Linux - Heizungs Manager
-// File p4sd.h
+// File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 // Date 04.11.2010 - 24.12.2013  Jörg Wendel
 //***************************************************************************
 
-#ifndef _P4SD_H_
-#define _P4SD_H_
+#ifndef _P4D_H_
+#define _P4D_H_
 
 //***************************************************************************
 // Includes
@@ -121,4 +121,4 @@ class P4d : public FroelingService
 };
 
 //***************************************************************************
-#endif // _P4SD_H_
+#endif // _P4D_H_
