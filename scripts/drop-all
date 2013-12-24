@@ -1,2 +1,0 @@
-mysql -u wde1 -pwde1 -Dwde1 -e 'drop table samples;'
-

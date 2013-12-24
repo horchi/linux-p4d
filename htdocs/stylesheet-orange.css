@@ -48,6 +48,24 @@ Body
   border-radius: 10px;
 }
 
+.button2sel
+{
+  background-color: #FF6600;
+  color: white;
+  margin: 2px;
+  padding: 5px 25px;
+  text-decoration: none;
+  font: bold 20px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.button2sel:hover 
+{
+  background: #FF3300;
+  border-radius: 10px;
+}
+
 .button3 
 {
   background-color: #FF9900;
@@ -83,11 +101,23 @@ Body
   border: 0;
 }
 
-.seperatorTitle
+.seperatorTitle1
 {
   background-color: #CC0033;
   color: white;
-  width: 70%;
+  width: 1000px;
+  padding: 2px 15px;
+  text-decoration: none;
+  font: bold 18px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.seperatorTitle2
+{
+  background-color: #FF9900;
+  color: white;
+  width: 1000px;
   padding: 2px 15px;
   text-decoration: none;
   font: 18px Verdana;
@@ -99,7 +129,7 @@ Body
 {
   background-color: #FFFFCC; 
   color: black;
-  width: 70%;
+  width: 1000px;
   padding: 15px;
   text-decoration: none;
   font: 18px Verdana;
@@ -141,7 +171,7 @@ Body
   color: white;
   text-decoration: none;
   font: 22px Verdana;
-  width: 70%;
+  width: 1000px;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
@@ -154,7 +184,7 @@ Body
   color: white;
   text-decoration: none;
   font: 22px Verdana;
-  width: 70%;
+  width: 1000px;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
@@ -166,7 +196,7 @@ Body
   color: white;
   text-decoration: none;
   font: 22px Verdana;
-  width: 70%;
+  width: 1000px;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
@@ -180,9 +210,42 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.tableTitle
+{
+  width: 1150px;
+  border: 1;
+  background-color: #CC0033;
+  color: white;
+  font: bold 20px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableHead 
+{
+  width: 1150px;
+  border: 1;
+  background-color: #FF9900;
+  color: white;
+  font: bold 20px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableHead1
+{
+  width: 1150px;
+  border: 1;
+  background-color: #FF9900;
+  color: white;
+  font: bold 16px Verdana;
+  padding: 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .tableLight
 {
-  width: 90%;
+  width: 1150px;
   border: 1;
   background-color: #FFFFCC;
   color: black;
@@ -193,45 +256,12 @@ Body
 
 .tableDark
 {
-  width: 90%;
+  width: 1150px;
   border: 1;
   background-color: #FFFF66;
   color: black;
   font: 14px Verdana;
   padding: 20px 20px;
-}
-
-.tableHead 
-{
-  width: 90%;
-  border: 1;
-  background-color: #FF9900;
-  color: white;
-  font: bold 20px Verdana;
-  padding: 20px;
-  box-shadow: 8px 8px 8px #666;
-}
-
-.tableTitle
-{
-  width: 90%;
-  border: 1;
-  background-color: #CC0033;
-  color: white;
-  font: bold 20px Verdana;
-  padding: 20px;
-  box-shadow: 8px 8px 8px #666;
-}
-
-.tableHead1
-{
-  width: 90%;
-  border: 1;
-  background-color: #FF9900;
-  color: white;
-  font: bold 16px Verdana;
-  padding: 20px;
-  box-shadow: 8px 8px 8px #666;
 }
 
 .schemaImage
@@ -325,6 +355,7 @@ Body
 
 #aStateOk
 { 
+  color: green;
   font: bold 24px Verdana;
 }
 
@@ -337,7 +368,7 @@ Body
 
 #aStateHeating
 { 
-  color: green;
+  color: red;
   font: bold 24px Verdana;
 }
 
@@ -374,13 +405,11 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-#aChart 
+.chart
 { 
-  position: absolute;
-  top: 130px;
-  left: 30px;
   background-color: #FFFFCC;
-  padding: 0px;
+  padding: 10px;
+  width: 1010px;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
 }

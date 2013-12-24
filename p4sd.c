@@ -3,7 +3,7 @@
 // File p4sd.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 08.12.2013  Jörg Wendel
+// Date 04.11.2010 - 24.12.2013  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -40,6 +40,11 @@ P4sd::P4sd()
    nextAt = time(0);
 
    mailBody = "";
+   mail = no;
+   mailScript = 0;
+   stateMailAtStates = 0;
+   stateMailTo = 0;
+   errorMailTo = 0;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -58,6 +63,11 @@ P4sd::~P4sd()
 {
    exit();
 
+   free(mailScript);
+   free(stateMailAtStates);
+   free(stateMailTo);
+   free(errorMailTo);
+
    delete serial;
    delete request;
 
@@ -72,6 +82,8 @@ int P4sd::init()
 {
    if (initDb() != success)
       return fail;
+
+   readConfiguration();
 
    if (mail && !isEmpty(stateMailTo))
       tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
@@ -188,7 +200,7 @@ int P4sd::initDb()
    cleanupJobs->bindCmp(0, cTableJobs::fiReqAt, 0, "<");
 
    status += cleanupJobs->prepare();
-
+   
    // ------------------
 
    if (status == success)
@@ -212,6 +224,21 @@ int P4sd::exitDb()
    delete cleanupJobs;             cleanupJobs = 0;
    delete tableConfig;          tableConfig = 0;
    delete connection;              connection = 0;
+
+   return done;
+}
+
+//***************************************************************************
+// Read Configuration
+//***************************************************************************
+
+int P4sd::readConfiguration()
+{
+   getConfigItem("mail", mail, no);
+   getConfigItem("mailScript", mailScript, "/usr/local/bin/p4d-mail.sh");
+   getConfigItem("stateMailStates", stateMailAtStates);
+   getConfigItem("stateMailTo", stateMailTo);
+   getConfigItem("errorMailTo", errorMailTo);
 
    return done;
 }
@@ -593,7 +620,7 @@ int P4sd::standby(int t)
    while (time(0) < end && !doShutDown())
    {
       meanwhile();
-      usleep(100000);
+      usleep(50000);
    }
 
    return done;
@@ -604,7 +631,7 @@ int P4sd::standbyUntil(time_t until)
    while (time(0) < until && !doShutDown())
    {
       meanwhile();
-      usleep(100000);
+      usleep(50000);
    }
 
    return done;
@@ -657,24 +684,32 @@ int P4sd::performWebifRequests()
 
       if (strcasecmp(command, "check-login") == 0)
       {
+         char* webUser = 0;
+         char* webPass = 0;
+         md5Buf defaultPwd;
+
+         createMd5("p4-3200", defaultPwd);
+
+         getConfigItem("user", webUser, "p4");
+         getConfigItem("passwd", webPass, defaultPwd);
+
          char* user = strdup(data);
          char* pwd = 0;
-
+ 
          if ((pwd = strchr(user, ':')))
          {
-            md5Buf webMd5;
-
             *pwd = 0; pwd++;
-            createMd5(webPass, webMd5);
 
-            tell(eloDebug, "'%s' - '%s/%s'", pwd, webPass, webMd5);
+            // tell(eloAlways, "%s/%s", pwd, webPass);
 
-            if (strcmp(webUser, user) == 0 && strcmp(pwd, webMd5) == 0)
+            if (strcmp(webUser, user) == 0 && strcmp(pwd, webPass) == 0)
                tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
             else
                tableJobs->setValue(cTableJobs::fiResult, "fail:login-denied");
          }
-
+         
+         free(webPass);
+         free(webUser);
          free(user);
       }
 
@@ -693,12 +728,16 @@ int P4sd::performWebifRequests()
          }
 
          free(name);
+
+         // read the config from table to apply changes
+
+         readConfiguration();
       }
 
       else if (strcasecmp(command, "read-config") == 0)
       {
          char* buf = 0;
-         char value[200+TB];
+         char* value = 0;
 
          getConfigItem(data, value);
 
@@ -706,28 +745,44 @@ int P4sd::performWebifRequests()
          tableJobs->setValue(cTableJobs::fiResult, buf);
 
          free(buf);
+         free(value);
       }
 
       else if (strcasecmp(command, "getp") == 0)
       {
-         ConfigParameter p(addr);
+         tableMenu->clear();
+         tableMenu->setValue(cTableMenu::fiId, addr);
 
-         if (request->getParameter(&p) == success)
+         if (tableMenu->find())
          {
-            char* buf = 0;
+            int type = tableMenu->getIntValue(cTableMenu::fiType);
+            int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
-            asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
-                     p.def, p.min, p.max, p.digits);
-            tableJobs->setValue(cTableJobs::fiResult, buf);
-            free(buf);
+            ConfigParameter p(paddr);
+
+            if (request->getParameter(&p) == success)
+            {
+               char* buf = 0;
+               cRetBuf value = ConfigParameter::toNice(p.value, type);
+
+               // special for time min/max/default 
+
+               // #TODO
+               if (type == mstParZeit)
+                  ;
+
+               asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, type == 0x0a ? "Uhr" : p.unit,
+                        p.def, p.min, p.max, p.digits);
+               tableJobs->setValue(cTableJobs::fiResult, buf);
+               
+               free(buf);
+            }
          }
       }
 
       else if (strcasecmp(command, "setp") == 0)
       {
          int status;
-
-         // in case of command 'setp' the menu id is delivered instead of addr !!
 
          tableMenu->clear();
          tableMenu->setValue(cTableMenu::fiId, addr);
@@ -739,53 +794,52 @@ int P4sd::performWebifRequests()
 
             ConfigParameter p(paddr);
   
-            tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", data, paddr);
-            
             // Set Value 
             
-            p.value = atoi(data);
-            
-            if ((status = request->setParameter(&p)) == success)
+            if (ConfigParameter::toValue(data, type, p.value) == success)
             {
-               char* buf = 0;
-               
-               // store job result
+               tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", data, p.value, paddr);
 
-               asprintf(&buf, "success:%d:%s:%d:%d:%d:%d", p.value, p.unit,
-                        p.def, p.min, p.max, p.digits);
-               tableJobs->setValue(cTableJobs::fiResult, buf);
-               free(buf);
+               if ((status = request->setParameter(&p)) == success)
+               {
+                  char* buf = 0;
+                  cRetBuf value = ConfigParameter::toNice(p.value, type);
 
-               // update menu table
-
-               if (type == 0x08)
-                  asprintf(&buf, "%s", p.value ? "ja" : "nein");
-               else if (type == 0x0a)
-                  asprintf(&buf, "%02d:%02d", p.value/60, p.value%60);
+                  // store job result
+                                    
+                  asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, p.unit,
+                           p.def, p.min, p.max, p.digits);
+                  tableJobs->setValue(cTableJobs::fiResult, buf);
+                  free(buf);
+                  
+                  // update menu table
+                  
+                  tableMenu->setValue(cTableMenu::fiValue, value);
+                  tableMenu->setValue(cTableMenu::fiUnit, p.unit);
+                  tableMenu->update();
+               }
                else
-                  asprintf(&buf, "%d", p.value);
-
-               tableMenu->setValue(cTableMenu::fiValue, buf);
-               tableMenu->setValue(cTableMenu::fiUnit, p.unit);
-               tableMenu->update();
-               free(buf);
+               {
+                  tell(eloAlways, "Set of parameter failed, error %d", status);
+                  
+                  if (status == P4Request::wrnNonUpdate)
+                     tableJobs->setValue(cTableJobs::fiResult, "fail#no update");
+                  else if (status == P4Request::wrnOutOfRange)
+                     tableJobs->setValue(cTableJobs::fiResult, "fail#out of range");
+                  else
+                     tableJobs->setValue(cTableJobs::fiResult, "fail#communication error");
+               }
             }
             else
             {
-               tell(eloAlways, "Set of parameter failed, error %d", status);
-
-               if (status == P4Request::wrnNonUpdate)
-                  tableJobs->setValue(cTableJobs::fiResult, "fail:no update");
-               else if (status == P4Request::wrnOutOfRange)
-                  tableJobs->setValue(cTableJobs::fiResult, "fail:out of range");
-               else
-                  tableJobs->setValue(cTableJobs::fiResult, "fail:communication error");
+               tell(eloAlways, "Set of parameter failed, wrong format");
+               tableJobs->setValue(cTableJobs::fiResult, "fail#format error");
             }
          }
          else
          {
             tell(eloAlways, "Set of parameter failed, id 0x%x not found", addr);
-            tableJobs->setValue(cTableJobs::fiResult, "fail:id not found");
+            tableJobs->setValue(cTableJobs::fiResult, "fail#id not found");
          }
       }
 
@@ -841,7 +895,6 @@ int P4sd::performWebifRequests()
 
          for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
          {
-            // int id = tableMenu->getIntValue(cTableMenu::fiId);
             int type = tableMenu->getIntValue(cTableMenu::fiType);
             int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
 
@@ -852,23 +905,14 @@ int P4sd::performWebifRequests()
                
                if (request->getParameter(&p) == success)
                {
-                  char* buf = 0;
-                  
-                  if (type == 0x08)
-                     asprintf(&buf, "%s", p.value ? "ja" : "nein");
-                  else if (type == 0x0a)
-                     asprintf(&buf, "%02d:%02d", p.value/60, p.value%60);
-                  else
-                     asprintf(&buf, "%d", p.value);
+                  cRetBuf value = ConfigParameter::toNice(p.value, type);
 
                   if (tableMenu->find())
                   {
-                     tableMenu->setValue(cTableMenu::fiValue, buf);
+                     tableMenu->setValue(cTableMenu::fiValue, value);
                      tableMenu->setValue(cTableMenu::fiUnit, p.unit);
                      tableMenu->update();
                   }
-
-                  free(buf);
                }
             }
             else if (type == 0x16)
@@ -1264,7 +1308,7 @@ int P4sd::sendMail()
       mailBody = errorBody + string("\n\n") + mailBody;
    }
 
-   else if (haveMailState())
+   else if (isMailState())
    {
       subject = "Heizung - Status: " + string(currentState.stateinfo);
       receiver = stateMailTo;
@@ -1290,10 +1334,10 @@ int P4sd::sendMail()
 }
 
 //***************************************************************************
-// Have Mail State
+// Is Mail State
 //***************************************************************************
 
-int P4sd::haveMailState()
+int P4sd::isMailState()
 {
    int result = no;
    char* mailStates = 0;
@@ -1303,7 +1347,7 @@ int P4sd::haveMailState()
 
    mailStates = strdup(stateMailAtStates);
 
-   for (const char* p = strtok(mailStates, ":,"); p; p = strtok(0, ":,"))
+   for (const char* p = strtok(mailStates, ","); p; p = strtok(0, ","))
    {
       if (atoi(p) == currentState.state)
       {
@@ -1321,17 +1365,20 @@ int P4sd::haveMailState()
 // Stored Parameters
 //***************************************************************************
 
-int P4sd::getConfigItem(const char* name, char* value)
+int P4sd::getConfigItem(const char* name, char*& value, const char* def)
 {
-   *value = 0;
+   free(value);
+   value = 0;
 
    tableConfig->clear();
    tableConfig->setValue(cTableConfig::fiOwner, "p4d");
    tableConfig->setValue(cTableConfig::fiName, name);
 
    if (tableConfig->find())
-      sprintf(value, "%s", tableConfig->getStrValue(cTableConfig::fiValue));
-
+      value = strdup(tableConfig->getStrValue(cTableConfig::fiValue));
+   else
+      value = strdup(def);
+      
    tableConfig->reset();
 
    return success;
@@ -1346,4 +1393,31 @@ int P4sd::setConfigItem(const char* name, const char* value)
    tableConfig->setValue(cTableConfig::fiValue, value);
 
    return tableConfig->store();
+}
+
+int P4sd::getConfigItem(const char* name, int& value, int def)
+{
+   char* txt = 0;
+   
+   getConfigItem(name, txt);
+
+   if (!isEmpty(txt))
+      value = atoi(txt);
+   else if (isEmpty(txt) && def != na)
+      value = def;
+   else
+      value = 0;
+
+   free(txt);
+
+   return success;
+}
+
+int P4sd::setConfigItem(const char* name, int value)
+{
+   char txt[16];
+
+   snprintf(txt, sizeof(txt), "%d", value);
+
+   return setConfigItem(name, txt);
 }

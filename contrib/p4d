@@ -1,51 +1,97 @@
-#!/bin/sh
+#!/bin/bash -p
+#
+# p4d start-stop script
+#
 ### BEGIN INIT INFO
 # Provides:          p4d
-# Required-Start:    hostname $local_fs $network
-# Required-Stop:
-# Should-Start:
-# Default-Start:     1 2 3 4 5
-# Default-Stop:
+# Required-Start:    hostname $local_fs $network $syslog
+# Required-Stop:     
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
 # Short-Description: Deamon to capture data of the P4 pellet heating
-# Description:       
+# Description:       Deamon to capture data of the P4 pellet heating
 ### END INIT INFO
 
-BIN="/usr/local/bin/p4d"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=p4d
+DESC="Deamon to capture data of the P4 pellet heating"
 
-do_start () {
-        $BIN
+DAEMON=/usr/local/bin/runp4d
+BIN=/usr/local/bin/p4d
+PIDFILE=/var/run/p4d.pid
+
+test -x $DAEMON || exit 0
+
+get_status()
+{
+    if start-stop-daemon --start --startas $DAEMON --test \
+        --name $(basename $DAEMON) --pidfile $PIDFILE >/dev/null
+    then
+        echo " - is not running."
+        exit 3
+    else
+        echo " - is running."
+        exit 0
+    fi
 }
 
-do_status () {
+startp4d()
+{
+   # only start if there is no other instance running
+   if start-stop-daemon --start --startas $DAEMON --test \
+       --name $(basename $DAEMON) --pidfile $PIDFILE >/dev/null
+   then
+       export LC_TIME="de_DE.UTF-8"
+       ulimit -c unlimited
+       # echo "/var/log/cores/core.%e" > /proc/sys/kernel/core_pattern
 
-   CHK=$(ps aux | grep "$BIN" | grep -vc grep)
-
-   if [ $CHK = '0' ]; then
-      echo "not running"
-      return 0
+       start-stop-daemon --start --quiet --startas $DAEMON --background \
+           --name $(basename $DAEMON) --pidfile $PIDFILE --make-pidfile -- \
+           -n 
    else
-      echo "running"
-      return 4
+       echo -n " - seems to be running already"
    fi
 }
 
+stopp4d()
+{
+    if start-stop-daemon --stop --retry 30 \
+        --name $(basename $DAEMON) --pidfile $PIDFILE >/dev/null
+    then
+        start-stop-daemon --stop --retry 30 --oknodo --exec $BIN >/dev/null
+        rm -f $PIDFILE
+    else
+        echo -n " - seems not to be running"
+    fi
+}
+
 case "$1" in
-  start|"")
-        do_start
+    start)
+        echo -n "Starting $DESC: $NAME"
+        startp4d
+        echo "."
         ;;
-  restart|reload|force-reload)
-        echo "Error: argument '$1' not supported" >&2
-        exit 3
+    stop)
+        echo -n "Stopping $DESC: $NAME"
+        stopp4d
+        echo "."
         ;;
-  stop)
-        killall p4d
+    restart|force-reload)
+        echo -n "Restarting $DESC: $NAME"
+        stopp4d
+        sleep 1
+        startp4d
+        echo "."
         ;;
-  status)
-        do_status
-        exit $?
+    status)
+        echo -n "Getting status of $DESC: $NAME"
+        get_status
         ;;
-  *)
-        echo "Usage: ip4d [start|stop|status]" >&2
-        exit 3
+    *)
+        N=/etc/init.d/$NAME
+        echo "Usage: $N {start|stop|restart|force-reload}" >&2
+        exit 1
         ;;
 esac
+
+exit 0

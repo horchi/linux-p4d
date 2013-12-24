@@ -16,12 +16,9 @@ DEBUG = 1
 
 CC = g++
 
-USE_SVC_INTERFACE = 1
-
 TARGET = p4d
 CMDTARGET = p4
 CHARTTARGET = p4chart
-MBTARGET = p4mb
 
 LIBS = -lmysqlclient_r -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
@@ -40,19 +37,13 @@ ARCHIVE = $(TARGET)-$(VERSION)
 
 # object files 
 
-LOBJS =  lib/db.o lib/tabledef.o lib/common.o
-OBJS += $(LOBJS) main.o serial.o p4io.o service.o
+LOBJS =  lib/db.o lib/tabledef.o lib/common.o lib/serial.o
+OBJS += $(LOBJS) main.o p4io.o service.o
 CLOBJS = $(LOBJS) chart.o
-CMDOBJS = p4cmd.o p4io.o serial.o service.o lib/common.o
-MBOBJS = mbp4.o serial.o lib/common.o
+CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
 
-ifdef USE_SVC_INTERFACE
-  DEFINES += -DSVC_INTERFACE -DDEAMON=P4sd -DUSEMD5
-  OBJS += p4sd.o
-else
-  DEFINES += -DDEAMON=Linpellet
-  OBJS += p4d.o
-endif
+DEFINES += -DDEAMON=P4sd -DUSEMD5
+OBJS += p4sd.o
 
 # rules:
 
@@ -69,9 +60,6 @@ $(CHARTTARGET): $(CLOBJS)
 
 $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
-
-$(MBTARGET) : $(MBOBJS)
-	$(CC) $(CFLAGS) $(MBOBJS) $(LIBS) -o $@
 
 install: $(TARGET) install-config install-scripts
 	@cp -p $(TARGET) $(BINDEST)
@@ -98,7 +86,7 @@ dist: clean
 
 clean:
 	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg
-	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(MBTARGET) $(ARCHIVE).tgz
+	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
 
 cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
@@ -107,18 +95,18 @@ cppchk:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/tabledef.h lib/common.h p4d.h p4sd.h
+HEADER = lib/db.h lib/tabledef.h lib/common.h p4sd.h
 
 lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
 lib/config.o    :  lib/config.c      lib/config.h $(HEADER)
 lib/db.o        :  lib/db.c          lib/db.h $(HEADER)
 lib/tabledef.o  :  lib/tabledef.c    $(HEADER)
+lib/serial.o    :  lib/serial.c       $(HEADER) lib/serial.h
 
 main.o			 :  main.c         $(HEADER)
 p4d.o           :  p4d.c          $(HEADER)
 p4sd.o          :  p4sd.c         $(HEADER)
 p4.o            :  p4.c           $(HEADER)
-serial.o        :  serial.c       $(HEADER) serial.h
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
 service.o       :  service.c      $(HEADER) service.h
 chart.o         :  chart.c

@@ -9,6 +9,8 @@
 #ifndef _FSERVICE_H_
 #define _FSERVICE_H_
 
+#include <stdio.h>
+
 #include "lib/common.h"
 
 //***************************************************************************
@@ -144,12 +146,14 @@ class FroelingService
       enum MenuStructType
       {
          mstMesswert = 0x03,
+
          mstPar      = 0x07,
          mstParDig   = 0x08,
-         mstParDig1  = 0x40,
-         mstParDig2  = 0x39,
          mstParSet   = 0x32,
+         mstParSet1  = 0x39,
+         mstParSet2  = 0x40,
          mstParZeit  = 0x0a,
+
          mstDigOut   = 0x11,
          mstAnlOut   = 0x12, 
          mstDigIn    = 0x13, 
@@ -175,19 +179,77 @@ class FroelingService
 
       struct ConfigParameter
       {
-         ConfigParameter(word addr = addrUnknown)  { unit = 0; address = addr; }
-         ~ConfigParameter() { free(unit); }
+         public:
 
-         void setUnit(const char* u) { free(unit); unit = strdup(u); }
+            ConfigParameter(word addr = addrUnknown)  { unit = 0; address = addr; }
+            ~ConfigParameter() { free(unit); }
             
-         word address;
-         char* unit;
-         byte digits;
-         word factor;
-         sword value;
-         sword min;
-         sword max;
-         sword def;
+            static cRetBuf toNice(sword value, byte type)
+            {
+               char nice[100+TB];
+               
+               if (type == mstParDig)
+                  sprintf(nice, "%s", value ? "ja" : "nein");
+               else if (type == mstParZeit)
+                  sprintf(nice, "%02d:%02d", value/60, value%60);
+               else
+                  sprintf(nice, "%d", value);
+
+               return nice;
+            }
+
+            static int toValue(const char* nice, byte type, sword& value)
+            {
+               if (type == mstParDig)
+               {
+                  if (strcmp(nice, "ja") != 0 && strcmp(nice, "nein") != 0)
+                     return fail;
+
+                  value = strcmp(nice, "ja") == 0 ? 1 : 0;
+               }
+               else if (type == mstParZeit)
+               {
+                  char* h = strdup(nice);
+                  char* m;
+
+                  if ((m = strchr(h, ':')))
+                  {
+                     *m++ = 0;
+
+                     if (!isNum(h) || !isNum(m))
+                        return fail;
+
+                     value = atoi(h)*60 + atoi(m);
+                  }
+                  else 
+                     return fail;
+
+                  free(h);
+               }
+               else if (type == mstPar || type == mstParSet || 
+                        type == mstParSet1  || type == mstParSet2)
+               {
+                  if (!isNum(nice))
+                     return fail;
+                  
+                  value = atoi(nice);
+               }
+               else
+                  return fail;
+
+               return success;
+            }
+
+            void setUnit(const char* u) { free(unit); unit = strdup(u); }
+            
+            word address;
+            char* unit;
+            byte digits;
+            word factor;
+            sword value;
+            sword min;
+            sword max;
+            sword def;
       };
 
       struct Status

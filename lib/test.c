@@ -97,6 +97,15 @@ void chkStatement1()
    delete db;
 }
 
+cRetBuf tst()
+{
+   char x[200];
+
+   sprintf(x, "test '%s'", "hallo");
+
+   return x;
+}
+
 //***************************************************************************
 // Main
 //***************************************************************************
@@ -106,15 +115,19 @@ int main(int argc, char** argv)
    logstdout = yes;
    loglevel = 2;
 
-   Sem* sem = new Sem(0x3da00001);
+//    Sem* sem = new Sem(0x3da00001);
 
-   sem->p();
-   printf("got lock\n");
+//    sem->p();
+//    printf("got lock\n");
 
-   sleep(5);
+//    sleep(5);
 
-   sem->v();
-   printf("freed lock\n");
+//    sem->v();
+//    printf("freed lock\n");
+
+   cRetBuf b = tst();
+
+   printf("%s\n", *b);
 
 //  initConnection();
 //  chkStatement2();

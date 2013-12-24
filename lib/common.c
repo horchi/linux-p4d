@@ -351,6 +351,21 @@ char* allTrim(char* buf)
 }
 
 //***************************************************************************
+// Is Number
+//***************************************************************************
+
+int isNum(const char* value)
+{
+   char* p = (char*)value;
+
+   while(*p)
+      if (!isdigit(*p++))
+         return no;
+
+   return yes;
+}
+
+//***************************************************************************
 // Number to String
 //***************************************************************************
 
@@ -701,6 +716,48 @@ byte crc(const byte* data, int size)
 
    return crc;
 }
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+cRetBuf::cRetBuf(const char* buf)
+{
+  s = buf ? strdup(buf) : 0;
+}
+
+cRetBuf::cRetBuf(const cRetBuf& buf)
+{
+  s = buf.s ? strdup(buf.s) : 0;
+}
+
+cRetBuf::~cRetBuf()
+{
+  free(s);
+}
+
+cRetBuf& cRetBuf::operator = (const cRetBuf& buf)
+{
+  if (this == &buf)
+     return *this;
+
+  free(s);
+  s = buf.s ? strdup(buf.s) : 0;
+
+  return *this;
+}
+
+cRetBuf& cRetBuf::operator=(const char* buf)
+{
+  if (s == buf)
+    return *this;
+
+  free(s);
+  s = buf ? strdup(buf) : 0;
+
+  return *this;
+}
+
 //***************************************************************************
 // cTimeMs 
 //***************************************************************************

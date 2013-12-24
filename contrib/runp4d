@@ -1,0 +1,26 @@
+#!/bin/bash
+
+P4DCMD="/usr/local/bin/p4d $*"
+P4D_ERR=`mktemp -p /tmp p4d-err.XXXXXX`
+
+while (true) do
+
+    eval $P4DCMD >/dev/null 2>"$P4D_ERR"
+
+    case $? in
+        0)
+            exit
+        ;;
+        2)
+            ERROR=`cat "$P4D_ERR"`
+            logger -t runp4d "stopping after fatal fail ($ERROR)"
+            exit
+        ;;
+    esac
+
+    logger -t runp4d "restarting p4d"
+    killall -q -TERM /usr/bin/p4d
+    wait `pidof p4d`
+
+done
+

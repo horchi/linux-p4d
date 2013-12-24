@@ -1,5 +1,10 @@
 <?php
 
+if(!function_exists("functions_once")) 
+{
+
+function functions_once()  {  }
+
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
@@ -96,7 +101,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
    $timeout = time() + $timeout;
    $response = "";
 
-   syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address);
+   syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address . ", '" . $data . "'");
 
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
       or die("Error" . mysql_error());
@@ -104,7 +109,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
 
    while (time() < $timeout)
    {
-      usleep(1000);
+      usleep(10000);
 
       $result = mysql_query("select * from jobs where id = $id and state = 'D'")
          or die("Error" . mysql_error());
@@ -124,6 +129,58 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
    syslog(LOG_DEBUG, "p4: timeout on " . $cmd);
 
    return -1;
+}
+
+// ---------------------------------------------------------------------------
+// Seperator
+// ---------------------------------------------------------------------------
+
+function seperator($title, $top = 0, $level = 1)
+{
+   if ($level == 1)
+      $style = "seperatorTitle1";
+   else 
+      $style = "seperatorTitle2";
+
+   if ($top)
+      echo "        <div class=\"" . $style . "\" style=\"position:absolute; top:"."$top"."px;\">\n";
+   else
+      echo "        <div class=\"" . $style . "\">\n";
+
+   echo "          <center>$title</center>\n";
+   echo "        </div><br/>\n";
+}
+
+// ---------------------------------------------------------------------------
+// Write Config Item
+// ---------------------------------------------------------------------------
+
+function writeConfigItem($name, $value)
+{
+   if (requestAction("write-config", 3, 0, "$name:$value", $res) != 0)
+   {
+      echo " <br/>failed to write config item $name\n";
+      return -1;
+   }
+
+   return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Read Config Item
+// ---------------------------------------------------------------------------
+
+function readConfigItem($name, &$value)
+{
+   if (requestAction("read-config", 3, 0, "$name", $value) != 0)
+   {
+      echo " <br/>failed to read config item $name\n";
+      return -1;
+   }
+
+   return 0;
+}
+
 }
 
 ?>

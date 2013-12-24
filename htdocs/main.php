@@ -124,13 +124,12 @@ include("header.php");
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
+  seperator($maxPretty, 290);
+
   // ------------------
   // table
 
-  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:290px; left:50px;\">\n";
-
-  echo "    <tr class=\"tableHead\"><td/><td/><td><center>" . $maxPretty . "</center><td/><td/></tr>\n";
-
+  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
   echo "        <td>Id</td>\n";
   echo "        <td>Typ</td>\n";

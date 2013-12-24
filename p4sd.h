@@ -3,7 +3,7 @@
 // File p4sd.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 08.12.2013  Jörg Wendel
+// Date 04.11.2010 - 24.12.2013  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4SD_H_
@@ -18,7 +18,7 @@
 
 #include "lib/tabledef.h"
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -27,19 +27,10 @@ extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
 
-extern char webUser[];
-extern char webPass[];
-
 extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
 extern int  stateCheckInterval;
-
-extern int  mail;
-extern char mailScript[];
-extern char stateMailAtStates[];
-extern char stateMailTo[];
-extern char errorMailTo[];
 
 //***************************************************************************
 // Class P4sd
@@ -66,6 +57,7 @@ class P4sd : public FroelingService
       int exit();
       int initDb();
       int exitDb();
+      int readConfiguration();
 
       int standby(int t);
       int standbyUntil(time_t until);
@@ -81,10 +73,12 @@ class P4sd : public FroelingService
       int updateSchemaConfTable();
       int updateValueFacts();
       int updateMenu();
-      int haveMailState();
+      int isMailState();
 
-      int getConfigItem(const char* name, char* value);
+      int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
+      int getConfigItem(const char* name, int& value, int def = na);
+      int setConfigItem(const char* name, int value);
       
       int doShutDown() { return shutdown; }
 
@@ -112,6 +106,16 @@ class P4sd : public FroelingService
 
       Status currentState;
       string mailBody;
+
+      // config
+
+      int  mail;
+      char* mailScript;
+      char* stateMailAtStates;
+      char* stateMailTo;
+      char* errorMailTo;
+
+      // 
 
       static int shutdown;
 };

@@ -12,11 +12,7 @@
 #include <signal.h>
 #include <string.h>
 
-#ifdef SVC_INTERFACE
-#  include "p4sd.h"
-#else
-#  include "p4d.h"
-#endif
+#include "p4sd.h"
 
 char* confDir = (char*)confDirDefault;
 
@@ -28,19 +24,9 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
-char webUser[100+TB] = "p4";
-char webPass[100+TB] = "p4-3200";
-
-char ttyDevice[100+TB]    = "/dev/ttyUSB0";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 int  stateCheckInterval = 0;
-
-int  mail = no;
-char mailScript[200+TB] = "/usr/local/bin/p4d-mail.sh";
-char stateMailAtStates[200+TB] = "";
-char stateMailTo[200+TB] = "";
-char errorMailTo[200+TB] = "";
 
 //***************************************************************************
 // Configuration
@@ -55,26 +41,13 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
-
-   else if (!strcasecmp(Name, "webUser"))     sstrcpy(webUser, Value, sizeof(webUser));
-   else if (!strcasecmp(Name, "webPass"))     sstrcpy(webPass, Value, sizeof(webPass));
    
    else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
    else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);
    else if (!strcasecmp(Name, "stateCheckInterval")) stateCheckInterval = atoi(Value);
 
-   else if (!strcasecmp(Name, "ttyDevice"))     sstrcpy(ttyDevice, Value, sizeof(ttyDevice));
    else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
 
-   else if (!strcasecmp(Name, "mail"))              mail = atoi(Value);
-   else if (!strcasecmp(Name, "mailScript"))        sstrcpy(mailScript, Value, sizeof(mailScript));
-   else if (!strcasecmp(Name, "stateMailAtStates")) sstrcpy(stateMailAtStates, Value, sizeof(stateMailAtStates));
-   else if (!strcasecmp(Name, "stateMailTo"))       sstrcpy(stateMailTo, Value, sizeof(stateMailTo));
-   else if (!strcasecmp(Name, "errorMailTo"))       sstrcpy(errorMailTo, Value, sizeof(errorMailTo));
-   
-   else
-      return fail;
-   
    return success;
 }
 

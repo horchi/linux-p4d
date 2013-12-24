@@ -122,6 +122,7 @@ void prepareCompressed(std::string& pattern);
 char* rTrim(char* buf);
 char* lTrim(char* buf);
 char* allTrim(char* buf);
+int isNum(const char* value);
 char* sstrcpy(char* dest, const char* src, int max);
 string num2Str(int num);
 string num2Str(double num);
@@ -153,6 +154,29 @@ int gunzip(MemoryStruct* zippedData, MemoryStruct* unzippedData);
 void tellZipError(int errorCode, const char* op, const char* msg);
 
 #endif // WITH_GUNZIP
+
+//***************************************************************************
+// 
+//***************************************************************************
+
+class cRetBuf
+{
+   public:
+
+      cRetBuf(const char* buf = 0);
+      cRetBuf(const cRetBuf& buf);
+      virtual ~cRetBuf();
+
+      operator const void* () const { return s; } // to catch cases where operator*() should be used
+      operator const char* () const { return s; } // for use in (const char *) context
+      const char* operator*() const { return s; } // for use in (const void *) context (printf() etc.)
+      cRetBuf& operator = (const cRetBuf& buf);
+      cRetBuf& operator = (const char* buf);
+
+   private:
+
+      char* s;
+};
 
 //***************************************************************************
 // cTimeMs 
