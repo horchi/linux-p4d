@@ -15,15 +15,15 @@
 
 #include <vector>
 
-#include "p4sd.h"
+#include "p4d.h"
 
-int P4sd::shutdown = no;
+int P4d::shutdown = no;
 
 //***************************************************************************
 // Object
 //***************************************************************************
 
-P4sd::P4sd()
+P4d::P4d()
 {
    connection = 0;
    tableSamples = 0;
@@ -59,7 +59,7 @@ P4sd::P4sd()
    request = new P4Request(serial);
 }
 
-P4sd::~P4sd()
+P4d::~P4d()
 {
    exit();
 
@@ -78,7 +78,7 @@ P4sd::~P4sd()
 // Init / Exit
 //***************************************************************************
 
-int P4sd::init()
+int P4d::init()
 {
    if (initDb() != success)
       return fail;
@@ -91,7 +91,7 @@ int P4sd::init()
    return success;
 }
 
-int P4sd::exit()
+int P4d::exit()
 {
    exitDb();
    serial->close();
@@ -103,7 +103,7 @@ int P4sd::exit()
 // Init/Exit Database
 //***************************************************************************
 
-int P4sd::initDb()
+int P4d::initDb()
 {
    int status = success;
 
@@ -209,7 +209,7 @@ int P4sd::initDb()
    return status;
 }
 
-int P4sd::exitDb()
+int P4d::exitDb()
 {
    delete tableSamples;            tableSamples = 0;
    delete tableValueFacts;         tableValueFacts = 0;
@@ -232,7 +232,7 @@ int P4sd::exitDb()
 // Read Configuration
 //***************************************************************************
 
-int P4sd::readConfiguration()
+int P4d::readConfiguration()
 {
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript, "/usr/local/bin/p4d-mail.sh");
@@ -247,7 +247,7 @@ int P4sd::readConfiguration()
 // Initialize
 //***************************************************************************
 
-int P4sd::initialize(int truncate)
+int P4d::initialize(int truncate)
 {
    if (!connection)
       return fail;
@@ -289,7 +289,7 @@ int P4sd::initialize(int truncate)
 // Setup
 //***************************************************************************
 
-int P4sd::setup()
+int P4d::setup()
 {
    if (!connection)
       return fail;
@@ -331,7 +331,7 @@ int P4sd::setup()
 // Update Conf Tables
 //***************************************************************************
 
-int P4sd::updateSchemaConfTable()
+int P4d::updateSchemaConfTable()
 {
    const int step = 20;
    int y = 50;
@@ -370,7 +370,7 @@ int P4sd::updateSchemaConfTable()
 // Update Value Facts
 //***************************************************************************
 
-int P4sd::updateValueFacts()
+int P4d::updateValueFacts()
 {
    int status;
    Fs::ValueSpec v;
@@ -532,7 +532,7 @@ int P4sd::updateValueFacts()
 // Update Menu Structure
 //***************************************************************************
 
-int P4sd::updateMenu()
+int P4d::updateMenu()
 {
    int status;
    Fs::MenuItem m;
@@ -593,7 +593,7 @@ int P4sd::updateMenu()
 // Store
 //***************************************************************************
 
-int P4sd::store(time_t now, const char* type, long address, double value, 
+int P4d::store(time_t now, const char* type, long address, double value, 
                 unsigned int factor, const char* text)
 {
    tableSamples->clear();
@@ -613,7 +613,7 @@ int P4sd::store(time_t now, const char* type, long address, double value,
 // standby
 //***************************************************************************
 
-int P4sd::standby(int t)
+int P4d::standby(int t)
 {
    time_t end = time(0) + t;
 
@@ -626,7 +626,7 @@ int P4sd::standby(int t)
    return done;
 }
 
-int P4sd::standbyUntil(time_t until)
+int P4d::standbyUntil(time_t until)
 {
    while (time(0) < until && !doShutDown())
    {
@@ -641,7 +641,7 @@ int P4sd::standbyUntil(time_t until)
 // Meanwhile
 //***************************************************************************
 
-int P4sd::meanwhile()
+int P4d::meanwhile()
 {
    static time_t lastCleanup = time(0);
 
@@ -663,7 +663,7 @@ int P4sd::meanwhile()
 // Perform WEBIF Requests
 //***************************************************************************
 
-int P4sd::performWebifRequests()
+int P4d::performWebifRequests()
 {
    tableJobs->clear();
 
@@ -1042,7 +1042,7 @@ int P4sd::performWebifRequests()
 // Cleanup WEBIF Requests
 //***************************************************************************
 
-int P4sd::cleanupWebifRequests()
+int P4d::cleanupWebifRequests()
 {
    int status;
    
@@ -1061,7 +1061,7 @@ int P4sd::cleanupWebifRequests()
 // Loop
 //***************************************************************************
 
-int P4sd::loop()
+int P4d::loop()
 {
    int status;
    time_t nextStateAt = 0;
@@ -1164,7 +1164,7 @@ int P4sd::loop()
 // Update
 //***************************************************************************
 
-int P4sd::update()
+int P4d::update()
 {
    int status;
    int count = 0;
@@ -1267,7 +1267,7 @@ int P4sd::update()
 // Send Mail
 //***************************************************************************
 
-int P4sd::sendMail()
+int P4d::sendMail()
 {
    char* command = 0;
    const char* receiver = 0;
@@ -1337,7 +1337,7 @@ int P4sd::sendMail()
 // Is Mail State
 //***************************************************************************
 
-int P4sd::isMailState()
+int P4d::isMailState()
 {
    int result = no;
    char* mailStates = 0;
@@ -1365,7 +1365,7 @@ int P4sd::isMailState()
 // Stored Parameters
 //***************************************************************************
 
-int P4sd::getConfigItem(const char* name, char*& value, const char* def)
+int P4d::getConfigItem(const char* name, char*& value, const char* def)
 {
    free(value);
    value = 0;
@@ -1384,7 +1384,7 @@ int P4sd::getConfigItem(const char* name, char*& value, const char* def)
    return success;
 }
 
-int P4sd::setConfigItem(const char* name, const char* value)
+int P4d::setConfigItem(const char* name, const char* value)
 {
    tell(eloAlways, "Storing '%s' with value '%s'", name, value);
    tableConfig->clear();
@@ -1395,7 +1395,7 @@ int P4sd::setConfigItem(const char* name, const char* value)
    return tableConfig->store();
 }
 
-int P4sd::getConfigItem(const char* name, int& value, int def)
+int P4d::getConfigItem(const char* name, int& value, int def)
 {
    char* txt = 0;
    
@@ -1413,7 +1413,7 @@ int P4sd::getConfigItem(const char* name, int& value, int def)
    return success;
 }
 
-int P4sd::setConfigItem(const char* name, int value)
+int P4d::setConfigItem(const char* name, int value)
 {
    char txt[16];
 

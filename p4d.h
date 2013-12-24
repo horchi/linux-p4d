@@ -33,17 +33,17 @@ extern int  interval;
 extern int  stateCheckInterval;
 
 //***************************************************************************
-// Class P4sd
+// Class P4d
 //***************************************************************************
 
-class P4sd : public FroelingService
+class P4d : public FroelingService
 {
    public:
 
       // object
 
-      P4sd();
-      ~P4sd();
+      P4d();
+      ~P4d();
 
       int init();
 	   int loop();

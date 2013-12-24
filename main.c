@@ -3,7 +3,7 @@
 // File main.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 19.11.2013  Jörg Wendel
+// Date 04.11.2010 - 24.12.2013  Jörg Wendel
 //***************************************************************************
 
 #include <unistd.h>
@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <string.h>
 
-#include "p4sd.h"
+#include "p4d.h"
 
 char* confDir = (char*)confDirDefault;
 
@@ -134,7 +134,7 @@ void showUsage(const char* bin)
 
 int main(int argc, char** argv)
 {
-   DEAMON* job;
+   P4d* job;
    int nofork = no;
    int pid;
    int setup = no;

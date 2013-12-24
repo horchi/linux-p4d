@@ -31,7 +31,7 @@ ifdef DEBUG
   CFLAGS += -ggdb -O0
 endif
 
-VERSION = $(shell grep 'define VERSION ' p4sd.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
+VERSION = $(shell grep 'define VERSION ' p4d.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 TMPDIR = /tmp
 ARCHIVE = $(TARGET)-$(VERSION)
 
@@ -42,8 +42,8 @@ OBJS += $(LOBJS) main.o p4io.o service.o
 CLOBJS = $(LOBJS) chart.o
 CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
 
-DEFINES += -DDEAMON=P4sd -DUSEMD5
-OBJS += p4sd.o
+DEFINES += -DDEAMON=P4d -DUSEMD5
+OBJS += p4d.o
 
 # rules:
 
@@ -95,7 +95,7 @@ cppchk:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/tabledef.h lib/common.h p4sd.h
+HEADER = lib/db.h lib/tabledef.h lib/common.h p4d.h
 
 lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
 lib/config.o    :  lib/config.c      lib/config.h $(HEADER)
@@ -105,7 +105,7 @@ lib/serial.o    :  lib/serial.c       $(HEADER) lib/serial.h
 
 main.o			 :  main.c         $(HEADER)
 p4d.o           :  p4d.c          $(HEADER)
-p4sd.o          :  p4sd.c         $(HEADER)
+p4d.o           :  p4d.c          $(HEADER)
 p4.o            :  p4.c           $(HEADER)
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
 service.o       :  service.c      $(HEADER) service.h
