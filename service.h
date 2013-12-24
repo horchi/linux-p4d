@@ -254,9 +254,10 @@ class FroelingService
 
       struct Status
       {
-         Status()  { modeinfo = 0; stateinfo = 0; *version = 0; }
-         ~Status() { free(modeinfo); free(stateinfo); }
+         Status()  { clear(); }
+         ~Status() { clear(); }
  
+         void clear() { free(modeinfo); free(stateinfo); modeinfo = 0; stateinfo = 0; *version = 0; }
          time_t time; 
          byte mode;           // Betriebsart
          byte state;          // Zustand

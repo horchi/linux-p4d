@@ -673,7 +673,8 @@ int P4Request::getStatus(Status* s)
 
    clear();
    request(cmdGetState);
-   
+   s->clear();
+
    if ((status += readHeader()) == success)
    {
       char* text = 0;
