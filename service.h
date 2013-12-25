@@ -254,7 +254,7 @@ class FroelingService
 
       struct Status
       {
-         Status()  { clear(); }
+         Status()  { modeinfo = 0; stateinfo = 0; clear(); }
          ~Status() { clear(); }
  
          void clear() { free(modeinfo); free(stateinfo); modeinfo = 0; stateinfo = 0; *version = 0; }
