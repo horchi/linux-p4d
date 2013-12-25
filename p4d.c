@@ -700,8 +700,8 @@ int P4d::performWebifRequests()
          if ((pwd = strchr(user, ':')))
          {
             *pwd = 0; pwd++;
-
-            // tell(eloAlways, "%s/%s", pwd, webPass);
+            
+            tell(eloDetail, "%s/%s", pwd, webPass);
 
             if (strcmp(webUser, user) == 0 && strcmp(pwd, webPass) == 0)
                tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
