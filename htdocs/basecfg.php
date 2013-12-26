@@ -56,8 +56,11 @@ if ($action == "store")
    if (isset($_POST["user"]))
       $_SESSION['user'] = htmlspecialchars($_POST["user"]);
 
-   if (isset($_POST["passwd"]))
-      $_SESSION['passwd'] = md5(htmlspecialchars($_POST["passwd"]));
+   if (isset($_POST["passwd1"]) && $_POST["passwd1"] != "")
+      $_SESSION['passwd1'] = md5(htmlspecialchars($_POST["passwd1"]));
+   
+   if (isset($_POST["passwd2"]) && $_POST["passwd2"] != "")
+      $_SESSION['passwd2'] = md5(htmlspecialchars($_POST["passwd2"]));
 
    // ------------------
    // store settings
@@ -71,8 +74,20 @@ if ($action == "store")
    writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
    writeConfigItem("errorMailTo", $_SESSION['errorMailTo']);
    writeConfigItem("mailScript", $_SESSION['mailScript']);
-   writeConfigItem("user", $_SESSION['user']);
-   writeConfigItem("passwd", $_SESSION['passwd']);
+
+   if ($_POST["passwd2"] != "")
+   {
+      if ($_POST["passwd1"] == $_POST["passwd2"])
+      {
+         writeConfigItem("user", $_SESSION['user']);
+         writeConfigItem("passwd", $_SESSION['passwd1']);
+         echo "      <br/><div class=\"info\"><b><center>Passwort gespeichert</center></div><br/>\n";
+      }
+      else
+      {
+         echo "      <br/><div class=\"infoError\"><b><center>Passwort stimmt nicht überein</center></div><br/>\n";
+      }
+   }
 }
 
 // ------------------
@@ -95,7 +110,7 @@ configStrItem("Chart 2", "chart2", $_SESSION['chart2'], "Komma separierte Werte-
 
 seperator("Login", 0, 2);
 configStrItem("User", "user", $_SESSION['user'], "", 400);
-configStrItem("Passwort", "passwd", $_SESSION['passwd'], "", 400, true);
+configStrItem("Passwort", "passwd1", "", "", 350, true);
 
 seperator("Daemon Konfiguration", 0, 1);
 
@@ -160,15 +175,17 @@ function applyColorScheme($style)
 
 function configStrItem($title, $name, $value, $comment = "", $width = 200, $ispwd = false)
 {
-   $actual = readlink("stylesheet.css");
-   
    echo "        <div class=\"input\">\n";
    echo "          $title: \n";
 
    if ($ispwd)
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=$name value=$value></input>\n";
+   {
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"></input>\n";
+      echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"></input>\n";
+   }
    else
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"text\" name=$name value=$value></input>\n";
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"text\" name=\"$name\" value=\"$value\"></input>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
@@ -180,8 +197,6 @@ function configStrItem($title, $name, $value, $comment = "", $width = 200, $ispw
 
 function configBoolItem($title, $name, $value, $comment = "")
 {
-   $actual = readlink("stylesheet.css");
-   
    echo "        <div class=\"input\">\n";
    echo "          $title:\n";
 
