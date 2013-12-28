@@ -85,6 +85,8 @@ include("header.php");
      echo "        <img class=\"centerImage\" src=\"error.png\">\n";
   elseif ($state == 3)
      echo "        <img class=\"centerImage\" src=\"fire.png\">\n";
+  elseif (($state >= 10 && $state <= 14) || $state == 35)
+     echo "        <img class=\"centerImage\" src=\"wait.png\">\n";
   else
      echo "        <img class=\"centerImage\" src=\"p4.png\">\n";
 
