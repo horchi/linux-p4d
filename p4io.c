@@ -777,8 +777,8 @@ int P4Request::syncTime()
    addByte(tim.tm_hour);
 
    addByte(tim.tm_mday);
-   addByte(tim.tm_mon);
-   addByte(tim.tm_wday+1);
+   addByte(tim.tm_mon+1);
+   addByte(tim.tm_wday);
    addByte(tim.tm_year-100);
 
    request(cmdSetDateTime);
