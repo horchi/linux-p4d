@@ -311,6 +311,8 @@ int P4Request::prepareRequest()
 
    if (addressCount)
       header.size = htons((addressCount * sizeAddress) + sizeCrc);
+   else if (byteCount)
+      header.size = htons(byteCount + sizeCrc);
    else if (!isEmpty(text))
       header.size = htons(strlen(text) + sizeCrc);
    else
