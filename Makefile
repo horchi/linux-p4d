@@ -61,7 +61,7 @@ $(CHARTTARGET): $(CLOBJS)
 $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
 
-install: $(TARGET) install-config install-scripts
+install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 
 install-config:
