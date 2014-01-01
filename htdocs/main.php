@@ -97,9 +97,11 @@ include("header.php");
   if ($p4dstate == 0)
   {
     echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/><br/>\n";
-    echo  "          <table><tr><td>Messungen heute:</td><td>&nbsp;&nbsp;$p4dCountDay</td></tr>\n";
-    echo  "          <tr><td>Letzte Messung:</td><td>&nbsp;&nbsp;$maxPrettyShort</td></tr>\n";
-    echo  "          <tr><td>Nächste Messung:</td><td>&nbsp;&nbsp;$p4dNext</td></tr></table>\n";
+    echo  "          <table>\n";
+    echo  "            <tr><td>Messungen heute:</td><td>&nbsp;&nbsp;$p4dCountDay</td></tr>\n";
+    echo  "            <tr><td>Letzte Messung:</td><td>&nbsp;&nbsp;$maxPrettyShort</td></tr>\n";
+    echo  "            <tr><td>Nächste Messung:</td><td>&nbsp;&nbsp;$p4dNext</td></tr>\n";
+    echo  "          </table>\n";
   }
   else
     echo  "        <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>\n";
@@ -161,6 +163,8 @@ include("header.php");
         $unit = "";
      else if ($unit == "U")
         $unit = " u/min";
+     else if ($unit == "°")
+        $unit = "°C";
      else if ($unit == "T")
      {
         $unit = "";

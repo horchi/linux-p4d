@@ -62,7 +62,7 @@ $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
 
 install: $(TARGET) install-config install-scripts
-	@cp -p $(TARGET) $(BINDEST)
+	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 
 install-config:
 	if ! test -f $(CONFDEST)/p4d.conf; then \

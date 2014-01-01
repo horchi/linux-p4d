@@ -5,7 +5,7 @@ include("header.php");
 // ----------------
 // variables
 
-$debug = 1;
+$debug = 0;
 $lastMenu = "";
 $menu = "";
 $edit = "";
