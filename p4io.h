@@ -119,20 +119,20 @@ class P4Request : public FroelingService
       { 
          free(text);
          text = 0;
-         theByte = 0;
          sizeBufferContent = 0;
          sizeDecodedContent = 0;
          memset(&header, 0, sizeof(Header)); 
          memset(buffer, 0, sizeof(buffer)); 
          memset(decoded, 0, sizeof(buffer)); 
-         return clearAddresses();
+         clearBytes();
+         clearAddresses();
+         return done;
       }
 
-      int clearAddresses()
+      void clearAddresses()
       {
          memset(addresses, 0, sizeof(addresses)); 
          addressCount = 0;
-         return success;
       }
 
       int addAddress(word address)
@@ -144,7 +144,21 @@ class P4Request : public FroelingService
          return success; 
       }
 
-      int addByte(byte b) { theByte = b; return success; }
+      void clearBytes()
+      {
+         memset(bytes, 0, sizeof(bytes)); 
+         byteCount = 0;
+      }
+
+      int addByte(byte b)
+      { 
+         if (byteCount >= maxBytes) 
+            return fail; 
+
+         bytes[byteCount++] = b; 
+         return success; 
+      }
+
       int addText(const char* t)
       {
          free(text);
@@ -248,6 +262,7 @@ class P4Request : public FroelingService
       // interface
 
       int getStatus(Status* s);
+      int syncTime();
 
       int getParameter(ConfigParameter* p);
       int setParameter(ConfigParameter* p);
@@ -291,9 +306,11 @@ class P4Request : public FroelingService
 
       Header header;
       char* text;
-      byte theByte;
       word addresses[maxAddresses];
       int addressCount;
+      byte bytes[maxBytes];
+      int byteCount;
+
       byte buffer[sizeMaxRequest*2+TB];
       int sizeBufferContent;
 

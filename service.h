@@ -70,11 +70,13 @@ class FroelingService
          sizeCrc  = 1,        // CRC (over all bytes incl. complete header)
          
          sizeAddress = 2,
+         sizeByte    = 1,
 
          sizeMaxRequest = sizeId + sizeSize + sizeCommand + sizeDataMax + sizeCrc,
-         sizeMaxReply = sizeMaxRequest,
+         sizeMaxReply   = sizeMaxRequest,
 
-         maxAddresses = sizeDataMax / sizeAddress,
+         maxAddresses   = sizeDataMax / sizeAddress,
+         maxBytes       = sizeDataMax / sizeByte,
 
          //
 

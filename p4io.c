@@ -321,7 +321,7 @@ int P4Request::prepareRequest()
    memcpy(tmp+sizeNetto, &header, sizeof(Header));
    sizeNetto += sizeof(Header);
 
-   // add text or addresses, both together is not implemented (needed?)
+   // add text, bytes or addresses, a combination is not implemented (needed?)
 
    if (addressCount)
    {
@@ -329,6 +329,13 @@ int P4Request::prepareRequest()
       
       memcpy(tmp+sizeNetto, addresses, addressCount*sizeAddress);
       sizeNetto += addressCount*sizeAddress;
+   }
+   else if (byteCount)
+   {
+      // add bytes
+      
+      memcpy(tmp+sizeNetto, bytes, byteCount);
+      sizeNetto += byteCount;
    }
    else if (!isEmpty(text))
    {
@@ -741,6 +748,47 @@ int P4Request::getStatus(Status* s)
          status += readByte(b);
 
       show("<- ");
+   }
+
+   return status;
+}
+
+//***************************************************************************
+// Sync Time
+//***************************************************************************
+
+int P4Request::syncTime()
+{
+   RequestClean clean(this);
+
+   struct tm tim = {0};
+   int status = success;
+   byte b;
+   time_t now = time(0);
+
+   clear();
+
+   localtime_r(&now, &tim);
+
+   addByte(tim.tm_sec);
+   addByte(tim.tm_min);
+   addByte(tim.tm_hour);
+
+   addByte(tim.tm_mday);
+   addByte(tim.tm_mon);
+   addByte(tim.tm_wday+1);
+   addByte(tim.tm_year-100);
+
+   request(cmdSetDateTime);
+
+   if ((status += readHeader()) == success)
+   {
+      status += readByte(b);
+      
+      if (b != 0)
+         status = fail;
+
+      status += readByte(b); // crc
    }
 
    return status;

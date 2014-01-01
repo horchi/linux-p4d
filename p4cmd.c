@@ -26,6 +26,7 @@ enum UserCommand
    ucErrorList,
    ucMenuList,
    ucState,
+   ucSyncTime,
    ucGetDo,
    ucGetAo,
    ucUser,
@@ -44,7 +45,8 @@ void showUsage(const char* bin)
 
    printf("\n");
    printf("  commands:\n");
-   printf("     state   show state\n");
+   printf("     state    show state\n");
+   printf("     tsync    set s-3200 time to systime\n");
    printf("     errors   show error buffer\n");
    printf("     values   list value addrsses\n");
    printf("     menu     list menu items (available parameters)\n");
@@ -98,6 +100,8 @@ int main(int argc, char** argv)
       cmd = ucMenuList;
    else if (strcasecmp(argv[1], "state") == 0)
       cmd = ucState;
+   else if (strcasecmp(argv[1], "tsync") == 0)
+      cmd = ucSyncTime;
    else if (strcasecmp(argv[1], "getdo") == 0)
       cmd = ucGetDo;
    else if (strcasecmp(argv[1], "getao") == 0)
@@ -205,6 +209,14 @@ int main(int argc, char** argv)
          }
 
          break;
+      }
+
+      case ucSyncTime:
+      {
+         if (request.syncTime() == success)
+            tell(eloAlways, "success");
+         else
+            tell(eloAlways, "failed");
       }
 
       case ucGetParameter:
