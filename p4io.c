@@ -793,6 +793,8 @@ int P4Request::syncTime()
       status += readByte(b); // crc
    }
 
+   show("<- ");
+
    return status;
 }
 
