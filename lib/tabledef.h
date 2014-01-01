@@ -146,7 +146,7 @@ class cTableSchemaConf : public cDbTable
 };
 
 //***************************************************************************
-// class cTableParameters
+// class cTableConfig
 //***************************************************************************
 
 class cTableConfig : public cDbTable
@@ -165,6 +165,36 @@ class cTableConfig : public cDbTable
          fiUpdSp,
 
          fiValue,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
+// class cTableErrors
+//***************************************************************************
+
+class cTableErrors : public cDbTable
+{
+   public:
+
+      cTableErrors(cDbConnection* aConnection, const char* aName = "errors")
+         : cDbTable(aConnection, aName, fields) { }
+
+      enum FieldIndex
+      {
+         fiId,    
+         
+         fiInsSp, 
+         fiUpdSp, 
+         
+         fiTime,  
+         fiNumber,
+         fiInfo,  
+         fiState, 
+         fiText, 
 
          fiCount
       };

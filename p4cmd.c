@@ -292,7 +292,8 @@ int main(int argc, char** argv)
             ct = strdup(ctime(&e.time));
             ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
             
-            tell(eloAlways, "%s:  %03d/%03d  '%s' - %s", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
+            tell(eloAlways, "%s:  %03d/%03d  '%s' - %s", 
+                 ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
             
             free(ct);
          }

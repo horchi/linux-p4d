@@ -64,6 +64,7 @@ class P4d : public FroelingService
       int meanwhile();
 
       int update();
+      int updateErrors();
       int performWebifRequests();
       int cleanupWebifRequests();
 
@@ -89,6 +90,7 @@ class P4d : public FroelingService
       cTableSamples* tableSamples;
       cTableValueFacts* tableValueFacts;
       cTableMenu* tableMenu;
+      cTableErrors* tableErrors;
       cTableJobs* tableJobs;
       cTableSchemaConf* tableSchemaConf;
       cTableConfig* tableConfig;

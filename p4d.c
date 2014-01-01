@@ -32,11 +32,14 @@ P4d::P4d()
    tableValueFacts = 0;
    tableMenu = 0;
    tableConfig = 0;
+   tableErrors = 0;
+
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
    selectAllMenuItems = 0;
    cleanupJobs = 0;
+
    nextAt = time(0);
 
    mailBody = "";
@@ -117,6 +120,9 @@ int P4d::initDb()
 
    tableValueFacts = new cTableValueFacts(connection);
    if (tableValueFacts->open() != success) return fail;
+
+   tableErrors = new cTableErrors(connection);
+   if (tableErrors->open() != success) return fail;
 
    tableMenu = new cTableMenu(connection);
    if (tableMenu->open() != success) return fail;
@@ -217,6 +223,7 @@ int P4d::exitDb()
    delete tableMenu;               tableMenu = 0;
    delete tableJobs;               tableJobs = 0;
    delete tableSchemaConf;         tableSchemaConf = 0;
+   delete tableErrors;             tableErrors = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
@@ -1261,6 +1268,35 @@ int P4d::update()
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 
+   updateErrors();
+
+   return success;
+}
+
+//***************************************************************************
+// Update Errors
+//***************************************************************************
+
+int P4d::updateErrors()
+{
+   int status;
+   Fs::ErrorInfo e;
+
+   tableErrors->truncate();
+
+   for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
+   {
+      tableErrors->clear();
+
+      tableErrors->setValue(cTableErrors::fiTime, e.time);
+      tableErrors->setValue(cTableErrors::fiNumber, e.number);
+      tableErrors->setValue(cTableErrors::fiInfo, e.info);
+      tableErrors->setValue(cTableErrors::fiState, Fs::errState2Text(e.state));
+      tableErrors->setValue(cTableErrors::fiText, e.text);
+
+      tableErrors->insert();
+   }
+   
    return success;
 }
 

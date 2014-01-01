@@ -161,6 +161,28 @@ cDbService::FieldDef cTableConfig::fields[] =
 };
 
 //***************************************************************************
+// Errors
+//***************************************************************************
+
+cDbService::FieldDef cTableErrors::fields[] =
+{
+   // name               format     size index           type
+
+   { "id",               ffUInt,     11,  fiId,           ftPrimary | ftAutoinc },
+
+   { "inssp",            ffInt,       0,  fiInsSp,        ftMeta },
+   { "updsp",            ffInt,       0,  fiUpdSp,        ftMeta },
+
+   { "time",             ffDateTime,  0,  fiTime,         ftData },
+   { "number",           ffInt,      10,  fiNumber,       ftData },
+   { "info",             ffInt,      10,  fiInfo,         ftData },
+   { "state",            ffAscii,    10,  fiState,        ftData },
+   { "text",             ffAscii,    100, fiText,         ftData },
+
+   { 0 }
+};
+
+//***************************************************************************
 // Jobs
 //***************************************************************************
 
