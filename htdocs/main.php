@@ -90,11 +90,11 @@ include("header.php");
   {
     echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>\n";
     echo  "          <table>\n";
-    echo  "            <tr><td>Läuft seit:</td><td>&nbsp;&nbsp;$p4dSince</td></tr>\n";
-    echo  "            <tr><td>Messungen heute:</td><td>&nbsp;&nbsp;$p4dCountDay</td></tr>\n";
-    echo  "            <tr><td>Letzte Messung:</td><td>&nbsp;&nbsp;$maxPrettyShort</td></tr>\n";
-    echo  "            <tr><td>Nächste Messung:</td><td>&nbsp;&nbsp;$p4dNext</td></tr>\n";
-    echo  "            <tr><td>Version:</td><td>&nbsp;&nbsp;$p4dVersion</td></tr>\n";
+    echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
+    echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
+    echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
+    echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
+    echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
     echo  "          </table>\n";
   }
   else
