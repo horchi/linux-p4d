@@ -897,7 +897,7 @@ int P4d::performWebifRequests()
          localtime_r(&nextAt, &tim);
          strftime(dt1, 10, "%H:%M:%S", &tim);
          localtime_r(&startedAt, &tim);
-         strftime(dt2, 50, "%d.%m.%G %H:%M:%S", &tim);
+         strftime(dt2, 50, "%d.%m.%y %H:%M:%S", &tim);
 
          asprintf(&buf, "success:%s#%s#%s", dt1, VERSION, dt2);
          tableJobs->setValue(cTableJobs::fiResult, buf);
