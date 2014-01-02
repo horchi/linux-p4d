@@ -6,6 +6,8 @@ include("pChart/class/pData.class.php");
 include("pChart/class/pDraw.class.php");
 include("pChart/class/pImage.class.php");
 
+printHeader();
+
   // -------------------------
   // establish db connection
 

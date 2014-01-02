@@ -9,6 +9,8 @@
 
 include("header.php");
 
+printHeader(60);
+
   // -------------------------
   // establish db connection
 

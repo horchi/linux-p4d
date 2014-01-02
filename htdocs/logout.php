@@ -2,6 +2,8 @@
 
 include("header.php");
 
+printHeader();
+
 session_destroy();
 
 $hostname = $_SERVER['HTTP_HOST'];

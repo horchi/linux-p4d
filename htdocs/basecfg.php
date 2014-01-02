@@ -1,6 +1,9 @@
 <?php
 
 include("header.php");
+
+printHeader();
+
 include("setup.php");
 
 // -------------------------

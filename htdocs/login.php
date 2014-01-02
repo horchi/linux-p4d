@@ -2,6 +2,8 @@
 
 include("header.php");
 
+printHeader();
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') 
 {
    // -------------------------

@@ -2,6 +2,8 @@
 
   include("header.php");
 
+  printHeader();
+
   $jpegTop = 70;
   $jpegLeft = 30;
 
