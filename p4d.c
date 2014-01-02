@@ -896,6 +896,23 @@ int P4d::performWebifRequests()
          tableJobs->setValue(cTableJobs::fiResult, buf);
       }
 
+      else if (strcasecmp(command, "s3200-state") == 0)
+      {
+         struct tm tim = {0};
+         char date[100];
+         char* buf = 0;
+
+         localtime_r(&currentState.time, &tim);
+         strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
+
+         asprintf(&buf, "success:%s#%d#%s#%s", date, 
+                  currentState.state, currentState.stateinfo,
+                  currentState.modeinfo);
+
+         tableJobs->setValue(cTableJobs::fiResult, buf);
+         free(buf);
+      }
+
       else if (strcasecmp(command, "initvaluefacts") == 0)
       {
          updateValueFacts();
@@ -1179,8 +1196,7 @@ int P4d::updateState(Status* state)
    static time_t nextSyncAt = 0;
 
    int status;
-   struct tm tim = {0};
-   char date[100];
+   struct tm tm = {0};
    time_t now;
 
    // get state
@@ -1191,39 +1207,26 @@ int P4d::updateState(Status* state)
    now = time(0);
    sem->v();
 
-   // store to database
-
-   localtime_r(&state->time, &tim);
-   strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
-   
-   store(now, "UD", udState, state->state, 1, state->stateinfo);
-   store(now, "UD", udMode, state->mode, 1, state->modeinfo);
-   store(now, "UD", udTime, state->time, 1, date);
-
    // check time sync
 
    if (!nextSyncAt)
    {
-      struct tm tm = {0};
-
       localtime_r(&now, &tm);
 
-      tim.tm_sec = 0;
-      tim.tm_min = 0;
-      tim.tm_hour = 23;
+      tm.tm_sec = 0;
+      tm.tm_min = 0;
+      tm.tm_hour = 23;
 
       nextSyncAt = mktime(&tm);
    }
 
    if (tSync && now > nextSyncAt)
    {
-      struct tm tm = {0};
-
       localtime_r(&nextSyncAt, &tm);
 
-      tim.tm_sec = 0;
-      tim.tm_min = 0;
-      tim.tm_hour = 23;
+      tm.tm_sec = 0;
+      tm.tm_min = 0;
+      tm.tm_hour = 23;
 
       nextSyncAt = mktime(&tm);
       nextSyncAt += tmeSecondsPerDay;      

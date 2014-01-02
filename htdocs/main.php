@@ -41,6 +41,10 @@ include("header.php");
 
   $p4dstate = requestAction("p4d-state", 3, 0, "", $p4dNext);
 
+  $result = mysql_query("select * from samples where time >= CURDATE()")
+     or die("Error" . mysql_error());
+  $p4dCountDay = mysql_numrows($result);
+
   // ----------------
   // Status
 
@@ -59,10 +63,6 @@ include("header.php");
      or die("Error" . mysql_error());
   $row = mysql_fetch_array($result, MYSQL_ASSOC);
   $mode = $row['text'];
-
-  $result = mysql_query("select * from samples where time >= CURDATE()")
-     or die("Error" . mysql_error());
-  $p4dCountDay = mysql_numrows($result);
 
   echo "      <div class=\"stateInfo\">\n";
 
