@@ -337,7 +337,7 @@ Body
   margin: auto;
 }
 
-#aP4dInfo
+.P4dInfo
 { 
   position: absolute; 
   top: 50px; 
@@ -346,7 +346,7 @@ Body
   height: 190px; 
   background-color: #AAEEFF;
   padding: 10px; 
-  font: 20px Verdana;
+  font: 19px Verdana;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
 }

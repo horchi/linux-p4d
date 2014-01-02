@@ -84,7 +84,7 @@ include("header.php");
 
   echo "      </div>\n";
 
-  echo "      <div id=\"aP4dInfo\">\n";
+  echo "      <div class=\"P4dInfo\">\n";
 
   if ($p4dstate == 0)
   {
@@ -122,7 +122,7 @@ include("header.php");
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
-  seperator("Messwerte von " . $maxPretty, 290);
+  seperator("Messwerte vom " . $maxPretty, 290);
 
   // ------------------
   // table
