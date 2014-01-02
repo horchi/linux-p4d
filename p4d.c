@@ -1494,7 +1494,10 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
    if (tableConfig->find())
       value = strdup(tableConfig->getStrValue(cTableConfig::fiValue));
    else
+   {
       value = strdup(def);
+      setConfigItem(name, value);  // store the default
+   }
       
    tableConfig->reset();
 
