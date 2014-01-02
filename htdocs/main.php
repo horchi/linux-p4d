@@ -90,11 +90,11 @@ include("header.php");
   {
     echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>\n";
     echo  "          <table>\n";
-    echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
-    echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
-    echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
-    echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
-    echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
+    echo  "            <tr><td>Läuft seit:</td><td>&nbsp;$p4dSince</td></tr>\n";
+    echo  "            <tr><td>Messungen heute:</td><td>&nbsp;$p4dCountDay</td></tr>\n";
+    echo  "            <tr><td>Letzte Messung:</td><td>&nbsp;$maxPrettyShort</td></tr>\n";
+    echo  "            <tr><td>Nächste Messung:</td><td>&nbsp$p4dNext</td></tr>\n";
+    echo  "            <tr><td>Version:</td><td>&nbsp;$p4dVersion</td></tr>\n";
     echo  "          </table>\n";
   }
   else
@@ -122,7 +122,7 @@ include("header.php");
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
-  seperator($maxPretty, 290);
+  seperator("Messung von " . $maxPretty, 290);
 
   // ------------------
   // table
