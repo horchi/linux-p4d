@@ -26,7 +26,7 @@ char dbPass[100+TB] = "p4";
 
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
-int  stateCheckInterval = 0;
+int  stateCheckInterval = 10;
 
 //***************************************************************************
 // Configuration

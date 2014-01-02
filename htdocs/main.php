@@ -45,24 +45,13 @@ include("header.php");
      or die("Error" . mysql_error());
   $p4dCountDay = mysql_numrows($result);
 
-  // ----------------
-  // Status
+  // ------------------
+  // State of S 3200
 
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 3 and type = 'UD';")
-     or die("Error" . mysql_error());
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  $time = $row['text'];
+  $state = requestAction("s3200-state", 3, 0, "", $response);
 
-  $result = mysql_query("select text,value from samples where time = '" . $max . "' and address = 1 and type = 'UD';")
-     or die("Error" . mysql_error());
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  $status = $row['text'];
-  $state = $row['value'];
-
-  $result = mysql_query("select text from samples where time = '" . $max . "' and address = 2 and type = 'UD';")
-     or die("Error" . mysql_error());
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
-  $mode = $row['text'];
+  if ($state == 0)
+     list($time, $state, $status, $mode) = split("#", $response, 4);
 
   echo "      <div class=\"stateInfo\">\n";
 

@@ -1048,7 +1048,7 @@ int P4Request::getError(ErrorInfo* e, int first)
    {
       readByte(crc);
       show("<- ");
-      tell(eloAlways, "Got 'end of list'");
+      tell(eloDebug, "Got 'end of list'");
 
       return wrnLast;
    }
@@ -1097,7 +1097,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    {
       readByte(crc);
       show("<- ");
-      tell(eloAlways, "Got 'end of list'");
+      tell(eloDebug, "Got 'end of list'");
 
       return wrnLast;
    }
@@ -1169,7 +1169,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
       readByte(crc);
       show("<- ");
 
-      tell(eloDetail, "Got 'end of list'");
+      tell(eloDebug, "Got 'end of list'");
       return wrnLast;
    }
 
@@ -1310,7 +1310,7 @@ int P4Request::getItem(int first)
    {
       readByte(crc);
       show("<- ");
-      tell(eloAlways, "Got 'end of list'");
+      tell(eloDebug, "Got 'end of list'");
 
       return wrnLast;
    }

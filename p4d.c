@@ -1194,6 +1194,7 @@ int P4d::loop()
 int P4d::updateState(Status* state)
 {
    static time_t nextSyncAt = 0;
+   static time_t nextReportAt = 0;
 
    int status;
    struct tm tm = {0};
@@ -1220,19 +1221,25 @@ int P4d::updateState(Status* state)
       nextSyncAt = mktime(&tm);
    }
 
-   if (tSync && now > nextSyncAt)
+   if (tSync && maxTimeLeak && abs(state->time - now) > maxTimeLeak)
    {
-      localtime_r(&nextSyncAt, &tm);
-
-      tm.tm_sec = 0;
-      tm.tm_min = 0;
-      tm.tm_hour = 23;
-
-      nextSyncAt = mktime(&tm);
-      nextSyncAt += tmeSecondsPerDay;      
-
-      if (abs(state->time-now) > maxTimeLeak)
+      if (now > nextReportAt)
       {
+         tell(eloAlways, "Time drift is %d", state->time-now);
+         nextReportAt = now + 2 * tmeSecondsPerMinute;
+      }
+
+      if (now > nextSyncAt)
+      {
+         localtime_r(&nextSyncAt, &tm);
+         
+         tm.tm_sec = 0;
+         tm.tm_min = 0;
+         tm.tm_hour = 23;
+         
+         nextSyncAt = mktime(&tm);
+         nextSyncAt += tmeSecondsPerDay;      
+         
          tell(eloAlways, "Time drift is %d, syncing now", state->time-now);
          request->syncTime();
       }
