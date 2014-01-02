@@ -41,6 +41,7 @@ P4d::P4d()
    cleanupJobs = 0;
 
    nextAt = time(0);
+   startedAt = time(0);
 
    mailBody = "";
    mail = no;
@@ -889,11 +890,18 @@ int P4d::performWebifRequests()
       else if (strcasecmp(command, "p4d-state") == 0)
       {
          struct tm tim = {0};
-         char buf[100];
-        
+         char dt1[10];
+         char dt2[50];
+         char* buf;
+
          localtime_r(&nextAt, &tim);
-         strftime(buf, 100, "success:%H:%M:%S", &tim);
+         strftime(dt1, 10, "%H:%M:%S", &tim);
+         localtime_r(&startedAt, &tim);
+         strftime(dt2, 50, "%A, %d. %b. %G %H:%M:%S", &tim);
+
+         asprintf(&buf, "success:%s#%s#%s", dt1, VERSION, dt2);
          tableJobs->setValue(cTableJobs::fiResult, buf);
+         free(buf);
       }
 
       else if (strcasecmp(command, "s3200-state") == 0)

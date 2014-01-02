@@ -103,6 +103,7 @@ class P4d : public FroelingService
       cDbStatement* cleanupJobs;
 
       time_t nextAt;
+      time_t startedAt;
       Sem* sem;
       P4Request* request;
       Serial* serial;    
