@@ -39,7 +39,10 @@ include("header.php");
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3, 0, "", $p4dNext);
+  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+
+  if ($state == 0)
+     list($p4dNext, $p4dVersion, $p4dSince) = split("#", $response, 3);
 
   $result = mysql_query("select * from samples where time >= CURDATE()")
      or die("Error" . mysql_error());
@@ -85,11 +88,13 @@ include("header.php");
 
   if ($p4dstate == 0)
   {
-    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/><br/>\n";
+    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>\n";
     echo  "          <table>\n";
+    echo  "            <tr><td>Läuft seit:</td><td>&nbsp;&nbsp;$p4dSince</td></tr>\n";
     echo  "            <tr><td>Messungen heute:</td><td>&nbsp;&nbsp;$p4dCountDay</td></tr>\n";
     echo  "            <tr><td>Letzte Messung:</td><td>&nbsp;&nbsp;$maxPrettyShort</td></tr>\n";
     echo  "            <tr><td>Nächste Messung:</td><td>&nbsp;&nbsp;$p4dNext</td></tr>\n";
+    echo  "            <tr><td>Version:</td><td>&nbsp;&nbsp;$p4dVersion</td></tr>\n";
     echo  "          </table>\n";
   }
   else
