@@ -41,7 +41,7 @@ include("header.php");
 
   $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
 
-  if ($state == 0)
+  if ($p4dstate == 0)
      list($p4dNext, $p4dVersion, $p4dSince) = split("#", $response, 3);
 
   $result = mysql_query("select * from samples where time >= CURDATE()")
@@ -122,7 +122,7 @@ include("header.php");
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
-  seperator("Messung von " . $maxPretty, 290);
+  seperator("Messwerte von " . $maxPretty, 290);
 
   // ------------------
   // table

@@ -68,10 +68,11 @@ echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">
     <title>Fröhling P4</title>
   </head>
   <body>
-    <a class=\"button1\" href=\"main.php\">Aktuell</a>
-    <a class=\"button1\" href=\"chart.php\">Charts</a>
-    <a class=\"button1\" href=\"schemadsp.php\">Schema</a>
-    <a class=\"button1\" href=\"menu.php\">Menü</a>\n";
+    <a class=\"button1\" href=\"main.php\">Aktuell</a>\n
+    <a class=\"button1\" href=\"chart.php\">Charts</a>\n
+    <a class=\"button1\" href=\"schemadsp.php\">Schema</a>\n
+    <a class=\"button1\" href=\"menu.php\">Menü</a>\n
+    <a class=\"button1\" href=\"error.php\">Fehler</a>\n";
 
 if (haveLogin())
 {

@@ -529,3 +529,5 @@ function storeParameter($id, &$value, &$unit, &$res)
 }
 
 include("jfunctions.php");
+
+?>
