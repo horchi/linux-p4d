@@ -35,6 +35,9 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    readConfigItem("errorMailTo", $_SESSION['errorMailTo']);
    readConfigItem("mailScript", $_SESSION['mailScript']);
 
+   readConfigItem("tsync", $_SESSION['tsync']);
+   readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
+
    // ------------------
    // check for defaults
    

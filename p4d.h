@@ -27,7 +27,6 @@ extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
 
-extern char ttyDevice[];
 extern char ttyDeviceSvc[];
 extern int  interval;
 extern int  stateCheckInterval;
@@ -64,6 +63,8 @@ class P4d : public FroelingService
       int meanwhile();
 
       int update();
+      int updateState(Status* state);
+
       int updateErrors();
       int performWebifRequests();
       int cleanupWebifRequests();
@@ -111,11 +112,13 @@ class P4d : public FroelingService
 
       // config
 
-      int  mail;
+      int mail;
       char* mailScript;
       char* stateMailAtStates;
       char* stateMailTo;
       char* errorMailTo;
+      int tSync;
+      int maxTimeLeak;
 
       // 
 

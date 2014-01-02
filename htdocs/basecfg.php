@@ -62,6 +62,12 @@ if ($action == "store")
    if (isset($_POST["passwd2"]) && $_POST["passwd2"] != "")
       $_SESSION['passwd2'] = md5(htmlspecialchars($_POST["passwd2"]));
 
+   if (isset($_POST["tsync"]))
+      $_SESSION['tsync'] = htmlspecialchars($_POST["tsync"]);
+
+   if (isset($_POST["maxTimeLeak"]))
+      $_SESSION['maxTimeLeak'] = htmlspecialchars($_POST["maxTimeLeak"]);
+
    // ------------------
    // store settings
 
@@ -74,6 +80,8 @@ if ($action == "store")
    writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
    writeConfigItem("errorMailTo", $_SESSION['errorMailTo']);
    writeConfigItem("mailScript", $_SESSION['mailScript']);
+   writeConfigItem("tsync", $_SESSION['tsync']);
+   writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
 
    if ($_POST["passwd2"] != "")
    {
@@ -120,6 +128,10 @@ configStrItem("Status Mail Empfänger", "stateMailTo", $_SESSION['stateMailTo'],
 configStrItem("Fehler Mail Empfänger", "errorMailTo", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500);
 configStrItem("Status Mail für folgende Status", "stateMailStates", $_SESSION['stateMailStates'], "Komma separierte Liste der Status", 400);
 configStrItem("p4d sendet Mails über das Skript", "mailScript", $_SESSION['mailScript'], "", 400);
+
+seperator("Sonstiges", 0, 2);
+configBoolItem("Tägliche Zeitsynchronisation", "tsync", $_SESSION['tsync'], "Zeit der Heizung täglich um 23:00 synchronisieren?");
+configStrItem("Maximale Abweichung [s]", "maxTimeLeak", $_SESSION['maxTimeLeak'], "Abweichung ab der die tägliche Synchronisation ausgeführt wird");
 
 echo "      </form>\n";
 

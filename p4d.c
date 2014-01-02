@@ -48,6 +48,8 @@ P4d::P4d()
    stateMailAtStates = 0;
    stateMailTo = 0;
    errorMailTo = 0;
+   tSync = no;
+   maxTimeLeak = 10;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -247,6 +249,9 @@ int P4d::readConfiguration()
    getConfigItem("stateMailStates", stateMailAtStates);
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
+
+   getConfigItem("tsync", tSync, no);
+   getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
    return done;
 }
@@ -1104,12 +1109,9 @@ int P4d::loop()
 
       standbyUntil(min(nextStateAt, nextAt));
 
-      // check state
-
-      sem->p();
-      tell(eloDetail, "Checking state ...");
-      status = request->getStatus(&currentState);
-      sem->v();
+      // update/check state
+      
+      status = updateState(&currentState);
 
       if (status != success)
          continue;
@@ -1169,6 +1171,74 @@ int P4d::loop()
 }
 
 //***************************************************************************
+// Update State
+//***************************************************************************
+
+int P4d::updateState(Status* state)
+{
+   static time_t nextSyncAt = 0;
+
+   int status;
+   struct tm tim = {0};
+   char date[100];
+   time_t now;
+
+   // get state
+
+   sem->p();
+   tell(eloDetail, "Checking state ...");
+   status = request->getStatus(state);
+   now = time(0);
+   sem->v();
+
+   // store to database
+
+   localtime_r(&state->time, &tim);
+   strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
+   
+   store(now, "UD", udState, state->state, 1, state->stateinfo);
+   store(now, "UD", udMode, state->mode, 1, state->modeinfo);
+   store(now, "UD", udTime, state->time, 1, date);
+
+   // check time sync
+
+   if (!nextSyncAt)
+   {
+      struct tm tm = {0};
+
+      localtime_r(&now, &tm);
+
+      tim.tm_sec = 0;
+      tim.tm_min = 0;
+      tim.tm_hour = 23;
+
+      nextSyncAt = mktime(&tm);
+   }
+
+   if (tSync && now > nextSyncAt)
+   {
+      struct tm tm = {0};
+
+      localtime_r(&nextSyncAt, &tm);
+
+      tim.tm_sec = 0;
+      tim.tm_min = 0;
+      tim.tm_hour = 23;
+
+      nextSyncAt = mktime(&tm);
+      nextSyncAt += tmeSecondsPerDay;      
+
+      if (abs(state->time-now) > maxTimeLeak)
+      {
+         tell(eloAlways, "Time drift is %d, syncing now", state->time-now);
+         request->syncTime();
+      }
+   }
+
+   return status;
+}
+
+//***************************************************************************
 // Update
 //***************************************************************************
 
@@ -1178,7 +1248,7 @@ int P4d::update()
    int count = 0;
    time_t now = time(0);
    char num[100];
-
+   
    tell(eloDetail, "Reading values ...");
 
    tableValueFacts->clear();
