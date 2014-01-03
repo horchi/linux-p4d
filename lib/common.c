@@ -442,7 +442,7 @@ const char* toElapsed(int seconds, char* buf)
       parts++;
    }
 
-   return buf + 1;
+   return lTrim(buf);
 }
 
 //***************************************************************************
