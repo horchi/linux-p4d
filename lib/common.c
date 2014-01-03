@@ -420,25 +420,25 @@ const char* toElapsed(int seconds, char* buf)
 
    if (days)
    {
-      p += sprintf(p, " %d tag%s", days, plural(days, "e"));
+      p += sprintf(p, " %d Tag%s", days, plural(days, "en"));
       parts++;
    }
    
    if (parts < 2 && hours)
    {
-      p += sprintf(p, " %d stunde%s", hours, plural(hours, "n"));
+      p += sprintf(p, " %d Stunde%s", hours, plural(hours, "n"));
       parts++;
    }
    
    if (parts < 2 && minutes)
    {
-      p += sprintf(p, " %d minute%s", minutes, plural(minutes, "n"));
+      p += sprintf(p, " %d Minute%s", minutes, plural(minutes, "n"));
       parts++;
    }
    
    if (!parts)
    {
-      p += sprintf(p, " %d sekunde%s", seconds, plural(seconds, "n"));
+      p += sprintf(p, " %d Sekunde%s", seconds, plural(seconds, "n"));
       parts++;
    }
 
