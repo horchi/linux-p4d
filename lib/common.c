@@ -303,9 +303,9 @@ void prepareCompressed(std::string& pattern)
    removeCharsExcept(pattern, notignore);
 }
 
-const char* plural(int n)
+const char* plural(int n, const char* s)
 { 
-   return n > 0 ? "s" : ""; 
+   return n > 0 ? s : ""; 
 }
 
 //***************************************************************************
@@ -420,25 +420,25 @@ const char* toElapsed(int seconds, char* buf)
 
    if (days)
    {
-      p += sprintf(p, " %d day%s", days, plural(days));
+      p += sprintf(p, " %d tag%s", days, plural(days, "e"));
       parts++;
    }
    
    if (parts < 2 && hours)
    {
-      p += sprintf(p, " %d hour%s", hours, plural(hours));
+      p += sprintf(p, " %d stunde%s", hours, plural(hours, "n"));
       parts++;
    }
    
    if (parts < 2 && minutes)
    {
-      p += sprintf(p, " %d minute%s", minutes, plural(minutes));
+      p += sprintf(p, " %d minute%s", minutes, plural(minutes, "n"));
       parts++;
    }
    
    if (!parts)
    {
-      p += sprintf(p, " %d second%s", seconds, plural(seconds));
+      p += sprintf(p, " %d sekunde%s", seconds, plural(seconds, "n"));
       parts++;
    }
 

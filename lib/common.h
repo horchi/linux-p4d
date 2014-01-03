@@ -119,7 +119,7 @@ void removeCharsExcept(std::string& str, const char* except);
 void removeWord(std::string& pattern, std::string word);
 void prepareCompressed(std::string& pattern);
 
-const char* plural(int n);
+const char* plural(int n, const char* s = "s");
 char* rTrim(char* buf);
 char* lTrim(char* buf);
 char* allTrim(char* buf);
