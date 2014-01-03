@@ -305,7 +305,7 @@ void prepareCompressed(std::string& pattern)
 
 const char* plural(int n, const char* s)
 { 
-   return n > 0 ? s : ""; 
+   return n == 1 ? "" : s; 
 }
 
 //***************************************************************************
