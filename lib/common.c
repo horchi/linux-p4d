@@ -442,7 +442,7 @@ const char* toElapsed(int seconds, char* buf)
       parts++;
    }
 
-   return buf;
+   return buf + 1;
 }
 
 //***************************************************************************
