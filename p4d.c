@@ -3,7 +3,7 @@
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 24.12.2013  Jörg Wendel
+// Date 04.11.2010 - 03.01.2014  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -890,16 +890,15 @@ int P4d::performWebifRequests()
       else if (strcasecmp(command, "p4d-state") == 0)
       {
          struct tm tim = {0};
-         char dt1[10];
-         char dt2[50];
+         char dt[10];
+         char d[100];
          char* buf;
 
          localtime_r(&nextAt, &tim);
-         strftime(dt1, 10, "%H:%M:%S", &tim);
-         localtime_r(&startedAt, &tim);
-         strftime(dt2, 50, "%d.%m.%y %H:%M:%S", &tim);
+         strftime(dt, 10, "%H:%M:%S", &tim);
+         toElapsed(time(0)-startedAt, d);
 
-         asprintf(&buf, "success:%s#%s#%s", dt1, VERSION, dt2);
+         asprintf(&buf, "success:%s#%s#%s", dt, VERSION, d);
          tableJobs->setValue(cTableJobs::fiResult, buf);
          free(buf);
       }

@@ -119,6 +119,7 @@ void removeCharsExcept(std::string& str, const char* except);
 void removeWord(std::string& pattern, std::string word);
 void prepareCompressed(std::string& pattern);
 
+const char* plural(int n);
 char* rTrim(char* buf);
 char* lTrim(char* buf);
 char* allTrim(char* buf);
@@ -127,6 +128,7 @@ char* sstrcpy(char* dest, const char* src, int max);
 string num2Str(int num);
 string num2Str(double num);
 string l2pTime(time_t t);
+const char* toElapsed(int seconds, char* buf);
 
 int fileExists(const char* path);
 int createLink(const char* link, const char* dest, int force);

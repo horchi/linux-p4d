@@ -303,6 +303,11 @@ void prepareCompressed(std::string& pattern)
    removeCharsExcept(pattern, notignore);
 }
 
+const char* plural(int n)
+{ 
+   return n > 0 ? "s" : ""; 
+}
+
 //***************************************************************************
 // Left Trim
 //***************************************************************************
@@ -399,6 +404,45 @@ string l2pTime(time_t t)
    strftime(txt, sizeof(txt), "%d.%m.%Y %T", tmp);
    
    return string(txt);
+}
+
+const char* toElapsed(int seconds, char* buf)
+{   
+   char* p = buf;
+   int parts = 0;
+
+   int days = seconds / tmeSecondsPerDay;
+   seconds %= tmeSecondsPerDay;
+   int hours = seconds / tmeSecondsPerHour;
+   seconds %= tmeSecondsPerHour;
+   int minutes = seconds / tmeSecondsPerMinute;
+   seconds %= tmeSecondsPerMinute;
+
+   if (days)
+   {
+      p += sprintf(p, " %d day%s", days, plural(days));
+      parts++;
+   }
+   
+   if (parts < 2 && hours)
+   {
+      p += sprintf(p, " %d hour%s", hours, plural(hours));
+      parts++;
+   }
+   
+   if (parts < 2 && minutes)
+   {
+      p += sprintf(p, " %d minute%s", minutes, plural(minutes));
+      parts++;
+   }
+   
+   if (!parts)
+   {
+      p += sprintf(p, " %d second%s", seconds, plural(seconds));
+      parts++;
+   }
+
+   return buf;
 }
 
 //***************************************************************************

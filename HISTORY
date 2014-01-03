@@ -1,0 +1,18 @@
+
+-------------------------------------
+ p4 Daemon / p4d -  Revision History
+-------------------------------------
+
+2014-01-03:  version 0.1.2
+   - added:  error history to WEBIF
+   - added:  auto refresh to view 'Aktuell'
+   - change: improved status display
+
+2013-12-23: version 0.1.1
+   - added: settings to WEBIF
+
+2013-12-18: version 0.1.0
+   - first official release
+
+2010-11-04: version 0.0.1
+   - start of implementation

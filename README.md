@@ -32,6 +32,7 @@ Prerequisits:
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - a Linux based device is required
 - a Raspberry Pi with a default OS setup (e.g. wheezy-raspbian) is a very good option for the p4d
+- de_DE.UTF-8 is required as language package (Raspberry command: dpkg-reconfigure locales)
 
 
 Installation MySql Database:
@@ -90,9 +91,10 @@ Enable automatic p4d startup during boot:
 - if MySQL database is located on the same device as p4d is running you have to do the next steps
 	edit file /tmp/linux-p4d/contrib/p4d
 	append the parameter 'mysql' at the end of the next line
-		# Required-Start:    hostname $local_fs $network
+		# Required-Start:    hostname $local_fs $network $syslog
 - enable p4d start during RPi boot, run the commands
 	cp contrib/p4d /etc/init.d/
+	chmod 750 /etc/init.d/p4d
 	update-rc.d p4d defaults
 
 
@@ -100,12 +102,14 @@ Setup and configure WEBIF:
 --------------------------
 
 - copy content of folder /tmp/linux-p4d/htdocs to your webroot (eg. /var/www)
-- download the tool pChart2.1.x from http://www.pchart.net/download
+- download the tool pChart2.1.x from http://www.pchart.net/download (version 2.1.3 in our example)
 - store the extracted download in folder /var/www/pChart2.1.3
 - create symbolic link
 	ln -s /var/www/pChart2.1.3/ /var/www/pChart
 - change access to cache folder 
 	chmod 777 /var/www/pChart/cache
+- change owner of www folder
+	chown www-data /var/www
 - for test enter the web address http://<IP_of_RPi>/index.php 
 
 
@@ -115,14 +119,7 @@ Setup and configure sending mails:
 The next steps are an example to setup the sending of mails. If another tool is preferred it can be used as well. The config is based on GMX. If you have another provider please search in the Internet for the required config.
 - install required components
 	apt-get install ssmtp mailutils
-- enable sending status mails of p4d, change the following parameters in the file /etc/p4d.conf or remove # character
-	mail = 1
-	stateMailTo = me@gmx.de,whoever@foobar.de
-	errorMailTo = hausmeister@blablub.de
-- the line '#stateMailAtStates' in file /etc/p4d.conf will be described in a new version of that file
-	for now you will get a mail for each status change of the heating
-- copy required mailscript
-	cp /tmp/linux-p4d/scripts/p4d-mail.sh /usr/local/bin
+- the mailscript p4d-mail.sh is copied during the "make install" to the folder /usr/local/bin. This script is used in our case to send mails
 - change revaliases file	
   edit file /etc/ssmtp/revaliases and add line (gmx is used as an example)
 	p4d:MyMailAddress@gmx.de:mail.gmx.net:25
@@ -134,6 +131,24 @@ The next steps are an example to setup the sending of mails. If another tool is 
 	UseSTARTTLS=YES
 	AuthUser=MyMailAddress@gmx.de
 	AuthPass=MyPassword
+
+- start the WEBIF and Login, go to the Setup page
+- configure the "Mail Benachrichtigungen" options (status and Fehler Mail Empfänger)
+- if no Status options are set you will get a mail for each status change
+- set the script option /usr/local/bin/p4d-mail.sh
+
+
+Configure Time sync:
+--------------------
+
+With the next steps you can enable a time synchronization of the p4d and the heating.
+If the you enable the feature you can set the max time difference between the LINUX time and the time of the heating. The p4d will set the time of the heating to the same time as the LINUX time.
+
+- check if ntpd is running "/etc/init.d/ntp status"
+	if not you have to install the daemon
+- start the WEBIF and Login, go to the Setup page
+- enable "Tägliche Zeitsynchronisation" and set the max time difference in seconds in the line "Maximale Abweichung"
+- save configuration
 
 
 points to check:
