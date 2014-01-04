@@ -10,7 +10,7 @@ $mysqldb         = "p4";
 
 $cache_dir       = "pChart/cache";
 $chart_fontpath  = "pChart/fonts";
-$debug           = 1;
+$debug           = 0;
 
 // -----------------------------
 // don't touch below ;-)
