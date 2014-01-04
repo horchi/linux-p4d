@@ -3,13 +3,14 @@
 // -----------------------------
 // user settings
 
-$mysqlhost          = "localhost";
-$mysqluser          = "p4";
-$mysqlpass          = "p4";
-$mysqldb            = "p4";
+$mysqlhost       = "localhost";
+$mysqluser       = "p4";
+$mysqlpass       = "p4";
+$mysqldb         = "p4";
 
-$cache_dir          = "pChart/cache";
-$chart_fontpath     = "pChart/fonts";
+$cache_dir       = "pChart/cache";
+$chart_fontpath  = "pChart/fonts";
+$debug           = 1;
 
 // -----------------------------
 // don't touch below ;-)

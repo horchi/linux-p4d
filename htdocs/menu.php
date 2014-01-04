@@ -7,7 +7,6 @@ printHeader();
 // ----------------
 // variables
 
-$debug = 0;
 $lastMenu = "";
 $menu = "";
 $edit = "";

@@ -92,11 +92,11 @@ printHeader(60);
   {
     echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>\n";
     echo  "          <table>\n";
-    echo  "            <tr><td>Läuft seit:</td><td>&nbsp;$p4dSince</td></tr>\n";
-    echo  "            <tr><td>Messungen heute:</td><td>&nbsp;$p4dCountDay</td></tr>\n";
-    echo  "            <tr><td>Letzte Messung:</td><td>&nbsp;$maxPrettyShort</td></tr>\n";
-    echo  "            <tr><td>Nächste Messung:</td><td>&nbsp$p4dNext</td></tr>\n";
-    echo  "            <tr><td>Version:</td><td>&nbsp;$p4dVersion</td></tr>\n";
+    echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
+    echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
+    echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
+    echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
+    echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
     echo  "          </table>\n";
   }
   else
@@ -131,10 +131,15 @@ printHeader(60);
 
   echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
-  echo "        <td>Id</td>\n";
-  echo "        <td>Typ</td>\n";
+
+  if ($debug)
+  {
+     echo "        <td>Id</td>\n";
+     echo "        <td>Typ</td>\n";
+  }
+
   echo "        <td>Sensor</td>\n";
-  echo "        <td>Wert</td>\n";
+  echo "        <td>Wert</td>\n";  
   echo "      </tr>\n";
 
   $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.title as f_title, f.unit as f_unit 
@@ -174,9 +179,13 @@ printHeader(60);
         echo "   <tr class=\"tableDark\">\n";
      else
         echo "   <tr class=\"tableLight\">\n";
-     
-     echo "      <td>" . $txtaddr . "</td>\n";   
-     echo "      <td>" . $type . "</td>\n";   
+
+     if ($debug)
+     {
+        echo "      <td>" . $txtaddr . "</td>\n";
+        echo "      <td>" . $type . "</td>\n";
+     }
+
      echo "      <td>" . $url . $title . "</a></td>\n";
      echo "      <td>$value$unit</td>\n";
      echo "   </tr>\n";
