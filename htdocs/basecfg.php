@@ -66,7 +66,9 @@ if ($action == "store")
       $_SESSION['passwd2'] = md5(htmlspecialchars($_POST["passwd2"]));
 
    if (isset($_POST["tsync"]))
-      $_SESSION['tsync'] = htmlspecialchars($_POST["tsync"]);
+      $_SESSION['tsync'] = true;
+   else
+      $_SESSION['tsync'] = false;
 
    if (isset($_POST["maxTimeLeak"]))
       $_SESSION['maxTimeLeak'] = htmlspecialchars($_POST["maxTimeLeak"]);

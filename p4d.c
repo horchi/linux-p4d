@@ -1228,7 +1228,7 @@ int P4d::updateState(Status* state)
       nextSyncAt = mktime(&tm);
    }
 
-   if (tSync && maxTimeLeak && abs(state->time - now) > maxTimeLeak)
+   if (tSync && maxTimeLeak && labs(state->time - now) > maxTimeLeak)
    {
       if (now > nextReportAt)
       {
