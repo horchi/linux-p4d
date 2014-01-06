@@ -104,9 +104,7 @@ lib/tabledef.o  :  lib/tabledef.c    $(HEADER)
 lib/serial.o    :  lib/serial.c       $(HEADER) lib/serial.h
 
 main.o			 :  main.c         $(HEADER)
-p4d.o           :  p4d.c          $(HEADER)
-p4d.o           :  p4d.c          $(HEADER)
-p4.o            :  p4.c           $(HEADER)
+p4d.o           :  p4d.c          $(HEADER) p4io.h 
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
 service.o       :  service.c      $(HEADER) service.h
 chart.o         :  chart.c

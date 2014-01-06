@@ -771,14 +771,14 @@ int P4Request::syncTime(int offset)
    if (offset)
    {
       now += offset;
-      tell(eloAlways, "Syncing time with offset %d", offset);
+      tell(eloAlways, "Syncing time with offset of %d seconds", offset);
    }
 
    clear();
 
    localtime_r(&now, &tim);
 
-   addByte(tim.tm_sec);
+   addByte(tim.tm_sec+1);  // s-3200 is NOT the fastest ;-)
    addByte(tim.tm_min);
    addByte(tim.tm_hour);
 
