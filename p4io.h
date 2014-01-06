@@ -262,7 +262,7 @@ class P4Request : public FroelingService
       // interface
 
       int getStatus(Status* s);
-      int syncTime();
+      int syncTime(int offset = 0);
 
       int getParameter(ConfigParameter* p);
       int setParameter(ConfigParameter* p);

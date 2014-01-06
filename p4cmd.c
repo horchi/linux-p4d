@@ -35,13 +35,14 @@ enum UserCommand
 
 void showUsage(const char* bin)
 {
-   printf("Usage: %s <command> [-a <address> [-v <value>]] [-l <log-level>] [-d <device>]\n", bin);
+   printf("Usage: %s <command> [-a <address> [-v <value>]] [-o <offset>] [-l <log-level>] [-d <device>]\n", bin);
    printf("\n");
    printf("  options:\n");
    printf("     -a <address>    address of parameter or value\n");
    printf("     -v <value>      new value\n");
    printf("     -l <log-level>  set log level\n");
    printf("     -d <device>     serial device file (defaults to /dev/ttyUSB0)\n");
+   printf("     -o <offset>     optional offset for time sync in seconds\n");
 
    printf("\n");
    printf("  commands:\n");
@@ -67,6 +68,7 @@ int main(int argc, char** argv)
    int status;
    byte b;
    word addr = Fs::addrUnknown;
+   int offset = 0;
    word value = Fs::addrUnknown;
    UserCommand cmd = ucUnknown;
    const char* device = "/dev/ttyUSB0";
@@ -125,10 +127,11 @@ int main(int argc, char** argv)
 
       switch (argv[i][1])
       {
-         case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);  break;
-         case 'v': if (argv[i+1]) value = strtol(argv[++i], 0, 0); break;
-         case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);      break;
-         case 'd': if (argv[i+1]) device = argv[++i];              break;
+         case 'o': if (argv[i+1]) offset = strtol(argv[++i], 0, 0);  break;
+         case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);    break;
+         case 'v': if (argv[i+1]) value = strtol(argv[++i], 0, 0);   break;
+         case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);        break;
+         case 'd': if (argv[i+1]) device = argv[++i];                break;
       }
    }
 
@@ -213,7 +216,7 @@ int main(int argc, char** argv)
 
       case ucSyncTime:
       {
-         if (request.syncTime() == success)
+         if (request.syncTime(offset) == success)
             tell(eloAlways, "success");
          else
             tell(eloAlways, "failed");

@@ -759,7 +759,7 @@ int P4Request::getStatus(Status* s)
 // Sync Time
 //***************************************************************************
 
-int P4Request::syncTime()
+int P4Request::syncTime(int offset)
 {
    RequestClean clean(this);
 
@@ -767,6 +767,12 @@ int P4Request::syncTime()
    int status = success;
    byte b;
    time_t now = time(0);
+
+   if (offset)
+   {
+      now += offset;
+      tell(eloAlways, "Syncing time with offset %d", offset);
+   }
 
    clear();
 
