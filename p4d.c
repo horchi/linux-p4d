@@ -732,6 +732,12 @@ int P4d::performWebifRequests()
          free(user);
       }
 
+      else if (strcasecmp(command, "update-schemacfg") == 0)
+      {
+         updateSchemaConfTable();
+         tableJobs->setValue(cTableJobs::fiResult, "success:done");
+      }
+
       else if (strcasecmp(command, "write-config") == 0)
       {
          char* name = strdup(data);
