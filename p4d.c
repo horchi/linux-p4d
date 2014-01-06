@@ -1232,7 +1232,7 @@ int P4d::updateState(Status* state)
    {
       if (now > nextReportAt)
       {
-         tell(eloAlways, "Time drift is %d", state->time-now);
+         tell(eloAlways, "Time drift is %d", state->time - now);
          nextReportAt = now + 2 * tmeSecondsPerMinute;
       }
 
@@ -1245,10 +1245,23 @@ int P4d::updateState(Status* state)
          tm.tm_hour = 23;
          
          nextSyncAt = mktime(&tm);
-         nextSyncAt += tmeSecondsPerDay;      
+         nextSyncAt += tmeSecondsPerDay;
          
-         tell(eloAlways, "Time drift is %d, syncing now", state->time-now);
-         request->syncTime();
+         tell(eloAlways, "Time drift is %d, syncing now", state->time - now);
+
+         sem->p();
+
+         if (request->syncTime() == success)
+            tell(eloAlways, "Time sync succeeded");
+         else
+            tell(eloAlways, "Time sync failed");
+
+         status = request->getStatus(state);
+         now = time(0);
+
+         sem->v();
+
+         tell(eloAlways, "Time drift now %d", state->time - now);
       }
    }
 
