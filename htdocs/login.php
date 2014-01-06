@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
    // --------------------------
 
-   $user = $_POST['username'];
-   $passwd = $_POST['passwort'];
+   $user = htmlspecialchars($_POST['username']);
+   $passwd = htmlspecialchars($_POST['passwort']);
    
    $hostname = $_SERVER['HTTP_HOST'];
    $path = dirname($_SERVER['PHP_SELF']);

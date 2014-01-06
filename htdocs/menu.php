@@ -45,8 +45,8 @@ if ($store == "store")
 {
    if (isset($_POST["new_value"]) && isset($_POST["store_id"]))
    {
-      $newValue = $_POST["new_value"];
-      $storeId = $_POST["store_id"];
+      $newValue = htmlspecialchars($_POST["new_value"]);
+      $storeId = htmlspecialchars($_POST["store_id"]);
 
       if (storeParameter($storeId, $newValue, $unit, $state) == 0)
          echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
@@ -188,6 +188,7 @@ function showChilds($parnt, $level)
 {
    global $debug;
 
+   $parnt = mysql_real_escape_string($parnt);
    $i = 0;
 
    $result = mysql_query("select * from menu where parent = " . $parnt)
@@ -331,6 +332,8 @@ function showChilds($parnt, $level)
 
 function getValue($address)
 {
+   $address = mysql_real_escape_string($address);
+
    $result = mysql_query("select max(time) as max from samples")
       or die("Error" . mysql_error());
 
@@ -361,6 +364,7 @@ function getValue($address)
 
 function requestValue($address)
 {
+   $address = mysql_real_escape_string($address);
    $timeout = time() + 10;
 
    syslog(LOG_DEBUG, "p4: requesting value " . $address);
@@ -407,6 +411,7 @@ function requestValue($address)
 
 function getParameter($id)
 {   
+   $id = mysql_real_escape_string($id);
    $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
    $result = mysql_query($strQuery)
@@ -430,6 +435,8 @@ function getParameter($id)
 
 function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max, &$digits)
 {
+   $id = mysql_real_escape_string($id);
+
    $timeout = time() + 5;
 
    $address = 0;
@@ -488,6 +495,8 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
 
 function storeParameter($id, &$value, &$unit, &$res)
 {
+   $id = mysql_real_escape_string($id);
+   $value = mysql_real_escape_string($value);
    $timeout = time() + 5;
    $state = "";
 

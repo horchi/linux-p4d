@@ -9,7 +9,7 @@ include("setup.php");
 $jpegTop = 140;
 $jpegLeft = 30;
 
-$selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
+$selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type and c.state = 'A'";
 
 $action = "";
 $cfg = "";
@@ -103,8 +103,8 @@ if ($started == 1)
    
    if ($action == "click") 
    {
-      $mouseX = $_POST["mouse_x"];
-      $mouseY = $_POST["mouse_y"];
+      $mouseX = htmlspecialchars($_POST["mouse_x"]);
+      $mouseY = htmlspecialchars($_POST["mouse_y"]);
       
       if ($_SESSION["cur"] > 0)
       {
@@ -164,7 +164,9 @@ function nextConf($dir)
 
    $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", 
                        $max, $_SESSION["addr"], $_SESSION["type"]);
-   $result = mysql_query($strQuery);
+
+   $result = mysql_query($strQuery)
+      or die("Error" . mysql_error());
    
    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
    {
@@ -198,7 +200,7 @@ function store($state, $xpos, $ypos, $color)
    if (isset($_POST["unit"]))
       $showUnit = 1;
    
-   if ($_POST["showtext"] == "Text")
+   if (htmlspecialchars($_POST["showtext"]) == "Text")
       $showText = 1;
 
    if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)

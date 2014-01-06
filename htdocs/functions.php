@@ -103,6 +103,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
 
    $address = mysql_real_escape_string($address);
    $data = mysql_real_escape_string($data);
+   $cmd = mysql_real_escape_string($cmd);
 
    syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address . ", '" . $data . "'");
 

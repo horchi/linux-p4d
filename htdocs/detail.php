@@ -10,40 +10,47 @@ include("functions.php");
 
 $fontText = $chart_fontpath . "/Forgotte.ttf";
 $fontScale = $chart_fontpath . "/MankSans.ttf";
-
 // date_default_timezone_set('Europe/Berlin');
+
+// -----------------------------
+// db connection
+
+mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
+mysql_select_db($mysqldb);
+mysql_query("set names 'utf8'");
+mysql_query("SET lc_time_names = 'de_DE'");
 
 // parameters
 
 if (isset($_GET['address']) && is_numeric($_GET['address']))
-   $sensorCond = " address = " .  $_GET['address'] . " ";
+   $sensorCond = " address = " .  mysql_real_escape_string(htmlspecialchars($_GET['address'])) . " ";
 elseif (isset($_GET['condition']))
-   $sensorCond = " " . $_GET['condition'] . " ";
+   $sensorCond = " " . mysql_real_escape_string(htmlspecialchars($_GET['condition'])) . " ";
 else
    $sensorCond = " address in (0,1,21,25,4) ";
 
 if (isset($_GET['type']))
-   $sensorCond .= "and type = '" .  $_GET['type'] . "' ";
+   $sensorCond .= "and type = '" .  mysql_real_escape_string(htmlspecialchars($_GET['type'])) . "' ";
 else
    $sensorCond .= "and type = 'VA' ";
 
 if (isset($_GET['width']) && is_numeric($_GET['width']))
-   $width = $_GET['width'];
+   $width = htmlspecialchars($_GET['width']);
 else
    $width = 1200;
 
 if (isset($_GET['height']) && is_numeric($_GET['height']))
-   $height = $_GET['height'];
+   $height = htmlspecialchars($_GET['height']);
 else
    $height = 600;
 
 if (isset($_GET['from']) && is_numeric($_GET['from']))
-   $from = $_GET['from'];
+   $from = mysql_real_escape_string(htmlspecialchars($_GET['from']));
 else
    $from  = time() - (36 * 60 * 60);
 
 if (isset($_GET['range']) && is_numeric($_GET['range']))
-   $range = $_GET['range'];
+   $range = mysql_real_escape_string(htmlspecialchars($_GET['range']));
 else
    $range = 1;
 
@@ -56,14 +63,6 @@ $range = ($to - $from) / (24*60*60);
 
 syslog(LOG_DEBUG, "p4: ---------");
 
-// -----------------------------
-// db connection
-
-mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb);
-mysql_query("set names 'utf8'");
-mysql_query("SET lc_time_names = 'de_DE'");
-
 // ------------------------------
 // get data from db
 
@@ -72,7 +71,7 @@ syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $fro
        . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
 $factResult = mysql_query($factsQuery)
-   or die("Error" . mysql_error());
+   or die("Error" . mysql_error() . "query [" . $factsQuery . "]");
 
 
 $skipTicks = 0;
@@ -107,7 +106,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
    syslog(LOG_DEBUG, "p4: $query");
 
    $result = mysql_query($query)
-      or die("Error" . mysql_error());
+      or die("Error" . mysql_error() . "query [" . $query . "]");
 
    syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($address)");
 

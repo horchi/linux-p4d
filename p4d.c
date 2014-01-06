@@ -351,6 +351,9 @@ int P4d::updateSchemaConfTable()
    int y = 50;
    int added = 0;
 
+   connection->query("update schemaconf set state = 'D'");
+   connection->queryReset();
+
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
@@ -369,9 +372,11 @@ int P4d::updateSchemaConfTable()
          tableSchemaConf->setValue(cTableSchemaConf::fiXPos, 12);
          tableSchemaConf->setValue(cTableSchemaConf::fiYPos, y);
 
-         tableSchemaConf->store();
          added++;
       }
+
+      tableSchemaConf->setValue(cTableSchemaConf::fiState, "A");
+      tableSchemaConf->store();
    }
 
    selectActiveValueFacts->freeResult();

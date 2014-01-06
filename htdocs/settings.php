@@ -40,10 +40,16 @@ else if ($action == "store")
       {
          $value = htmlspecialchars($value);
          list ($addr, $type) = split(":", $value);
-         
+
+         $addr = mysql_real_escape_string($addr);
+         $type = mysql_real_escape_string($type);
+
          $sql = "UPDATE valuefacts set state = 'A' where address = '$addr' and type = '$type'";
 
-         $result = mysql_query($sql) 
+         mysql_query($sql) 
+            or die("<br/>Error" . mysql_error());
+
+         mysql_query("update valuefacts set state = 'A' where type = 'UD'")
             or die("<br/>Error" . mysql_error());
       }
 

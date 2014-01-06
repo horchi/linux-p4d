@@ -7,6 +7,16 @@ printHeader();
 include("setup.php");
 
 // -------------------------
+// chaeck login
+
+if (!haveLogin())
+{
+   echo "<br/><div class=\"infoError\"><b><center>Login erforderlich!</center></b></div><br/>\n";
+
+   die("<br/>");
+}
+
+// -------------------------
 // establish db connection
 
 mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
@@ -90,7 +100,7 @@ if ($action == "store")
 
    if ($_POST["passwd2"] != "")
    {
-      if ($_POST["passwd1"] == $_POST["passwd2"])
+      if (htmlspecialchars($_POST["passwd1"]) ==  htmlspecialchars(($_POST["passwd2"])))
       {
          writeConfigItem("user", $_SESSION['user']);
          writeConfigItem("passwd", $_SESSION['passwd1']);
