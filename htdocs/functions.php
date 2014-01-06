@@ -101,6 +101,9 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
    $timeout = time() + $timeout;
    $response = "";
 
+   $address = mysql_real_escape_string($address);
+   $data = mysql_real_escape_string($data);
+
    syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address . ", '" . $data . "'");
 
    mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
