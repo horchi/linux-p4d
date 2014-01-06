@@ -9,7 +9,7 @@ include("setup.php");
 $jpegTop = 140;
 $jpegLeft = 30;
 
-$selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type and c.state = 'A'";
+$selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type and f.state = 'A'";
 
 $action = "";
 $cfg = "";
@@ -33,6 +33,27 @@ mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
 // -------------------------
+
+if ($cfg == "Start") 
+{
+   $_SESSION["started"] = 1;
+   $started = 1;
+   syslog(LOG_DEBUG, "p4: starting config");
+
+   $result = mysql_query($selectAllSchemaConf);
+   $_SESSION["cur"] = 0;
+   $_SESSION["addr"] = -1;
+
+   nextConf(1);
+}
+elseif ($cfg == "Stop") 
+{
+   $_SESSION["started"] = 0;
+   $started = 0;
+   syslog(LOG_DEBUG, "p4: stop");
+}
+
+// -------------------------
 // show buttons
 
 echo "    <br/>\n";
@@ -42,18 +63,19 @@ echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mo
 echo "      </div>\n";
 
 if ($started == 1)
+{
    echo "      <button class=\"button3\" type=submit name=cfg value=Stop>Stop</button>\n";
+   echo "      <button class=\"button3\" type=submit name=cfg value=Skip>Skip</button>\n";
+   echo "      <button class=\"button3\" type=submit name=cfg value=Hide>Hide</button>\n";
+   echo "      <button class=\"button3\" type=submit name=cfg value=Back>Back</button>\n";
+   echo "      <span class=\"checkbox\">\n";
+   echo "        <input type=checkbox name=unit value=unit checked>Einheit</input>\n";
+   echo "        <input type=radio name=showtext value=Value checked>Value</input>\n";
+   echo "        <input type=radio name=showtext value=Text>Text</input>\n";
+   echo "      </span>\n";
+}
 else
    echo "      <button class=\"button3\" type=submit name=cfg value=Start>Start</button>\n";
-
-echo "      <button class=\"button3\" type=submit name=cfg value=Skip>Skip</button>\n";
-echo "      <button class=\"button3\" type=submit name=cfg value=Hide>Hide</button>\n";
-echo "      <button class=\"button3\" type=submit name=cfg value=Back>Back</button>\n";
-echo "      <span class=\"checkbox\">\n";
-echo "        <input type=checkbox name=unit value=unit checked>Einheit</input>\n";
-echo "        <input type=radio name=showtext value=Value checked>Value</input>\n";
-echo "        <input type=radio name=showtext value=Text>Text</input>\n";
-echo "      </span>\n";
 
 // -------------------------
 // show image
@@ -64,26 +86,9 @@ echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpeg
 echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
 echo "      </div>\n";
 
-if ($cfg == "Start") 
-{
-   $_SESSION["started"] = 1;
-   syslog(LOG_DEBUG, "p4: starting config");
-
-   $result = mysql_query($selectAllSchemaConf);
-   $_SESSION["cur"] = 0;
-   $_SESSION["addr"] = -1;
-
-   nextConf(1);
-}
-
 if ($started == 1)
 {
-   if ($cfg == "Stop") 
-   {
-      $_SESSION["started"] = 0;
-      syslog(LOG_DEBUG, "p4: stop");
-   }
-   elseif ($cfg == "Skip")
+   if ($cfg == "Skip")
    {
       nextConf(1);
    }
@@ -135,7 +140,7 @@ include("footer.php");
 
 function nextConf($dir)
 {
-   $selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type";
+   global $selectAllSchemaConf;
 
    if ($dir == -1)
       $_SESSION["cur"] -= 2;
@@ -177,7 +182,7 @@ function nextConf($dir)
    
    // show
 
-   echo "<div style=\"position:absolute; left:750px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "<div style=\"position:absolute; left:830px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
 
    $_SESSION["cur"]++;
    
