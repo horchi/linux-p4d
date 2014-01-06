@@ -33,6 +33,7 @@ mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
 // -------------------------
+// start / stop
 
 if ($cfg == "Start") 
 {
@@ -182,7 +183,7 @@ function nextConf($dir)
    
    // show
 
-   echo "<div style=\"position:absolute; left:830px; top:50px; font-size:28px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "<div style=\"position:absolute; left:830px; top:50px; font-size:26px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
 
    $_SESSION["cur"]++;
    

@@ -51,9 +51,9 @@ else if ($action == "store")
 
          mysql_query("update valuefacts set state = 'A' where type = 'UD'")
             or die("<br/>Error" . mysql_error());
-
-         requestAction("update-schemacfg", 2, 0, "", $resonse);
       }
+
+      requestAction("update-schemacfg", 2, 0, "", $resonse);
 
       echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
    }
