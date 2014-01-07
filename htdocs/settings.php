@@ -6,6 +6,16 @@ printHeader();
 
 include("setup.php");
 
+// -------------------------
+// chaeck login
+
+if (!haveLogin())
+{
+   echo "<br/><div class=\"infoError\"><b><center>Login erforderlich!</center></b></div><br/>\n";
+
+   die("<br/>");
+}
+
 $action = "";
 
 if (isset($_POST["action"]))
@@ -91,6 +101,8 @@ function showButtons()
 
 function showTable($type, $tableTitle)
 {
+   global $debug;
+
    $i = 0;
 
    echo "        <br/>\n";
@@ -102,13 +114,18 @@ function showTable($type, $tableTitle)
    echo "        <br/>\n";
 
    echo "        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
-          <tr class=\"tableHead1\">
-            <td> Adresse </td>
-            <td> Typ </td>
-            <td> Name </td>
-            <td> Einheit </td>
-            <td> Aufzeichnen </td>
-          </tr>\n";
+          <tr class=\"tableHead1\">\n";
+   
+   if ($debug)
+   {
+      echo "            <td> Adresse </td>\n";
+      echo "            <td> Typ </td>\n";
+   }
+
+   echo "            <td> Name </td>\n";
+   echo "            <td> Einheit </td>\n";
+   echo "            <td> Aufzeichnen </td>\n";
+   echo "          </tr>\n";
 
    $result = mysql_query("select * from valuefacts where type = '$type'")
       or die("<br/>Error" . mysql_error());
@@ -134,11 +151,14 @@ function showTable($type, $tableTitle)
       else
          echo "         <tr class=\"tableDark\">";
 
-      echo "
-            <td> $txtaddr </td>
-            <td> $type </td>
-            <td> $title </td>
-            <td> $unit </td>\n";
+      if ($debug)
+      {
+         echo "            <td> $txtaddr </td>\n";
+         echo "            <td> $type </td>\n";
+      }
+
+      echo "            <td> $title </td>\n";
+      echo "            <td> $unit </td>\n";
       
       if ($type != "UD")
          echo "            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>\n";

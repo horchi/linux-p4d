@@ -961,7 +961,8 @@ int P4d::performWebifRequests()
                   }
                }
             }
-            else if (type == 0x16)
+
+            else if (type == mstFirmware)
             {
                Fs::Status s;
                
@@ -975,43 +976,32 @@ int P4d::performWebifRequests()
                   }
                }
             }
-            else if (type == 0x11 || type == 0x13)
+
+            else if (type == mstDigOut || type == mstDigIn || type == mstAnlOut)
             {
                int status;
                Fs::IoValue v(paddr);
 
-               if (type == 0x11)
+               if (type == mstDigOut)
                   status = request->getDigitalOut(&v);
-               else
+               else if (type == mstDigIn)
                   status = request->getDigitalIn(&v);
+               else
+                  status = request->getAnalogOut(&v);
 
                if (status == success)
                {
                   char* buf = 0;
-                  asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
 
-                  if (tableMenu->find())
+                  if (type == mstAnlOut)
                   {
-                     tableMenu->setValue(cTableMenu::fiValue, buf);
-                     tableMenu->setValue(cTableMenu::fiUnit, "");
-                     tableMenu->update();
+                     if (v.mode == 0xff)
+                        asprintf(&buf, "%d (A)", v.state);
+                     else
+                        asprintf(&buf, "%d (%d)", v.state, v.mode);
                   }
-
-                  free(buf);
-               }
-            }
-            else if (type == 0x12)
-            {
-               Fs::IoValue v(paddr);
-               
-               if (request->getAnalogOut(&v) == success)
-               {
-                  char* buf = 0;
-
-                  if (v.mode == 0xff)
-                     asprintf(&buf, "%d (A)", v.state);
                   else
-                     asprintf(&buf, "%d (%d)", v.state, v.mode);
+                     asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
 
                   if (tableMenu->find())
                   {
@@ -1023,7 +1013,8 @@ int P4d::performWebifRequests()
                   free(buf);
                }
             }
-            else if (type == 0x03 || type == 0x46)
+
+            else if (type == mstMesswert || type == mstMesswert1)
             {
                int status;
                Fs::Value v(paddr);
@@ -1331,6 +1322,36 @@ int P4d::update()
          if (request->getDigitalOut(&v) != success)
          {
             tell(eloAlways, "Getting digital out 0x%04x failed, error %d", addr, status);
+            continue;
+         }
+
+         store(now, type, v.address, v.state, factor);
+         sprintf(num, "%d", v.state);
+         mailBody += string(title) + " = " + string(num) + "\n";
+      }
+
+      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "DI"))
+      {
+         Fs::IoValue v(addr);
+
+         if (request->getDigitalIn(&v) != success)
+         {
+            tell(eloAlways, "Getting digital in 0x%04x failed, error %d", addr, status);
+            continue;
+         }
+
+         store(now, type, v.address, v.state, factor);
+         sprintf(num, "%d", v.state);
+         mailBody += string(title) + " = " + string(num) + "\n";
+      }
+
+      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "AO"))
+      {
+         Fs::IoValue v(addr);
+
+         if (request->getAnalogOut(&v) != success)
+         {
+            tell(eloAlways, "Getting analog out 0x%04x failed, error %d", addr, status);
             continue;
          }
 

@@ -6,7 +6,17 @@ printHeader();
 
 include("setup.php");
 
-$jpegTop = 140;
+// -------------------------
+// chaeck login
+
+if (!haveLogin())
+{
+   echo "<br/><div class=\"infoError\"><b><center>Login erforderlich!</center></b></div><br/>\n";
+
+   die("<br/>");
+}
+
+$jpegTop = 260;
 $jpegLeft = 30;
 
 $selectAllSchemaConf = "select * from schemaconf c, valuefacts f where f.address = c.address and f.type = c.type and f.state = 'A'";
@@ -42,10 +52,8 @@ if ($cfg == "Start")
    syslog(LOG_DEBUG, "p4: starting config");
 
    $result = mysql_query($selectAllSchemaConf);
-   $_SESSION["cur"] = 0;
+   $_SESSION["cur"] = -1;
    $_SESSION["addr"] = -1;
-
-   nextConf(1);
 }
 elseif ($cfg == "Stop") 
 {
@@ -71,9 +79,14 @@ if ($started == 1)
    echo "      <button class=\"button3\" type=submit name=cfg value=Back>Back</button>\n";
    echo "      <span class=\"checkbox\">\n";
    echo "        <input type=checkbox name=unit value=unit checked>Einheit</input>\n";
-   echo "        <input type=radio name=showtext value=Value checked>Value</input>\n";
+   echo "        <input type=radio name=showtext value=Value checked>Wert</input>\n";
    echo "        <input type=radio name=showtext value=Text>Text</input>\n";
    echo "      </span>\n";
+   echo "      <br/><br/>";
+   echo "      <div class=\"seperatorTitle2\">\n";
+   echo "Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren, mit Hide verbergen oder mit Skip unverändert beibehalten";
+   echo "      </div>\n";
+   echo "      <br/>";
 }
 else
    echo "      <button class=\"button3\" type=submit name=cfg value=Start>Start</button>\n";
@@ -89,7 +102,11 @@ echo "      </div>\n";
 
 if ($started == 1)
 {
-   if ($cfg == "Skip")
+   if ($_SESSION["cur"] == -1)
+   {
+      nextConf(1);
+   }
+   else if ($cfg == "Skip")
    {
       nextConf(1);
    }
@@ -107,7 +124,7 @@ if ($started == 1)
       nextConf(1);
    }
    
-   if ($action == "click") 
+   if ($action == "click")
    {
       $mouseX = htmlspecialchars($_POST["mouse_x"]);
       $mouseY = htmlspecialchars($_POST["mouse_y"]);
@@ -180,10 +197,15 @@ function nextConf($dir)
       $unit = $row['f_unit'];
       $text = $row['s_text'];
    }
-   
+  
    // show
 
-   echo "<div style=\"position:absolute; left:830px; top:50px; font-size:26px; color:blue; z-index:2;\">" . $title . " (" . $value . $unit . ")  " . $text . "</div>\n";
+   echo "      <div class=\"seperatorTitle2\">\n";
+//   echo "<div style=\"position:absolute; left:30px; top:240px; font-size:26px; color:blue; z-index:2;\">\n";
+   echo $title . " - ";
+   echo "  Wert: " . $value . $unit;
+   echo "  Text: " . $text;
+   echo "</div>\n";
 
    $_SESSION["cur"]++;
    
