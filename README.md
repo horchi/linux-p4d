@@ -101,16 +101,20 @@ Enable automatic p4d startup during boot:
 Setup and configure WEBIF:
 --------------------------
 
-- copy content of folder /tmp/linux-p4d/htdocs to your webroot (eg. /var/www)
+- copy content of folder /tmp/linux-p4d/htdocs to your webroot (/var/www is used as example in the next steps)
 - download the tool pChart2.1.x from http://www.pchart.net/download (version 2.1.3 in our example)
-- store the extracted download in folder /var/www/pChart2.1.3
+- store the extracted download in the webroot folder (eg. /var/www/pChart2.1.3)
 - create symbolic link
 	ln -s /var/www/pChart2.1.3/ /var/www/pChart
 - change access to cache folder 
 	chmod 777 /var/www/pChart/cache
 - change owner of www folder
 	chown www-data /var/www
-- for test enter the web address http://<IP_of_RPi>/index.php 
+- for a test enter the web address http://<IP_of_RPi>/index.php 
+
+The default username and password for the login is
+Benutzername: p4
+Passwort: p4-3200
 
 
 Setup and configure sending mails:
@@ -122,7 +126,7 @@ The next steps are an example to setup the sending of mails. If another tool is 
 - the mailscript p4d-mail.sh is copied during the "make install" to the folder /usr/local/bin. This script is used in our case to send mails
 - change revaliases file	
   edit file /etc/ssmtp/revaliases and add line (gmx is used as an example)
-	p4d:MyMailAddress@gmx.de:mail.gmx.net:25
+	root:MyMailAddress@gmx.de:mail.gmx.net:25
 - change ssmtp.conf file
   edit file /etc/ssmtp/ssmtp.conf (gmx is used as an example)
 	root=MyMailAddress@gmx.de
@@ -137,15 +141,22 @@ The next steps are an example to setup the sending of mails. If another tool is 
 - if no Status options are set you will get a mail for each status change
 - set the script option /usr/local/bin/p4d-mail.sh
 
+(If the heating values are added as attachment to the mail please check the next steps.
+- check if heirloom-mailx is installed (ls -lah /etc/alternatives/mail)
+- if output link is /etc/alternatives/mail -> /usr/bin/mail.mailutils
+- remove heirloom-mailx (aptitude remove heirloom-mailx))
+
 
 Configure Time sync:
 --------------------
 
-With the next steps you can enable a time synchronization of the p4d and the heating.
-If the you enable the feature you can set the max time difference between the LINUX time and the time of the heating. The p4d will set the time of the heating to the same time as the LINUX time.
+With the next steps you can enable a time synchronization of the p4d and the heating:
+If you enable this feature you can set the max time difference between the p4d systemtime and the time 
+of the heating. The p4d will set the time of the heating (once a day) to his the systemtime. Therefore it is
+revcommended to hold your system time in sync, e.g. by running the ntp daemon.
 
-- check if ntpd is running "/etc/init.d/ntp status"
-	if not you have to install the daemon
+- check if ntpd (openntpd, ...) is running "/etc/init.d/ntp status"
+	if not you have to install it
 - start the WEBIF and Login, go to the Setup page
 - enable "Tägliche Zeitsynchronisation" and set the max time difference in seconds in the line "Maximale Abweichung"
 - save configuration
@@ -155,8 +166,7 @@ points to check:
 ----------------
 
 - reboot the device to check if p4d is starting automatically during startup
-	
-	
+
 
 *********** Additional information *********************************************************************
 

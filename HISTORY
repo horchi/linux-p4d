@@ -3,13 +3,17 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2014-01-07:  version 0.1.5
+   - change: added default unit % for analog outputs
+   - change: update of README thx Thomas!
+
 2014-01-07:  version 0.1.4
    - added:  recording of digital inputs
    - added:  recording of analog outouts
    - bugfix: Fixed another security issue
 
 2014-01-06:  version 0.1.3
-   - bugfix: Fixed security issue reported by b_a_s_t_i !Thx!
+   - bugfix: Fixed security issues reported by b_a_s_t_i !Thx!
 
 2014-01-03:  version 0.1.2
    - added:  time synchronisation to adjust s3200's system time

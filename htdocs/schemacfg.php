@@ -12,7 +12,6 @@ include("setup.php");
 if (!haveLogin())
 {
    echo "<br/><div class=\"infoError\"><b><center>Login erforderlich!</center></b></div><br/>\n";
-
    die("<br/>");
 }
 
@@ -84,7 +83,7 @@ if ($started == 1)
    echo "      </span>\n";
    echo "      <br/><br/>";
    echo "      <div class=\"seperatorTitle2\">\n";
-   echo "Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren, mit Hide verbergen oder mit Skip unverändert beibehalten";
+   echo "Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren, mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten";
    echo "      </div>\n";
    echo "      <br/>";
 }

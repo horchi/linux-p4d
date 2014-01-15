@@ -95,16 +95,15 @@ cppchk:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/tabledef.h lib/common.h p4d.h
+HEADER = lib/db.h lib/tabledef.h lib/common.h
 
-lib/common.o    :  lib/common.c      lib/common.h $(HEADER)
-lib/config.o    :  lib/config.c      lib/config.h $(HEADER)
-lib/db.o        :  lib/db.c          lib/db.h $(HEADER)
-lib/tabledef.o  :  lib/tabledef.c    $(HEADER)
-lib/serial.o    :  lib/serial.c       $(HEADER) lib/serial.h
+lib/common.o    :  lib/common.c    $(HEADER)
+lib/db.o        :  lib/db.c        $(HEADER)
+lib/tabledef.o  :  lib/tabledef.c  $(HEADER)
+lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 
-main.o			 :  main.c         $(HEADER)
-p4d.o           :  p4d.c          $(HEADER) p4io.h 
+main.o			 :  main.c         $(HEADER) p4d.h
+p4d.o           :  p4d.c          $(HEADER) p4d.h p4io.h 
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
 service.o       :  service.c      $(HEADER) service.h
 chart.o         :  chart.c

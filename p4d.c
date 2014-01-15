@@ -351,9 +351,6 @@ int P4d::updateSchemaConfTable()
    int y = 50;
    int added = 0;
 
-//    connection->query("update schemaconf set state = 'D'");
-//    connection->queryReset();
-
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
@@ -585,7 +582,7 @@ int P4d::updateMenu()
       tableMenu->clear();
 
       tableMenu->setValue(cTableMenu::fiState, "D");
-      tableMenu->setValue(cTableMenu::fiUnit, m.unit);
+      tableMenu->setValue(cTableMenu::fiUnit, m.type == mstAnlOut && isEmpty(m.unit) ? "%" : m.unit);
       
       tableMenu->setValue(cTableMenu::fiParent, m.parent);
       tableMenu->setValue(cTableMenu::fiChild, m.child);
