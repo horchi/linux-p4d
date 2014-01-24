@@ -208,6 +208,17 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.tableLight
+{
+  width: 1150px;;
+  border: 1;
+  background-color: #AAEEFF;
+  color: black;
+  font: 14px Verdana;
+  padding: 20px 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .tableTitle
 {
   width: 1150px;;
@@ -227,7 +238,6 @@ Body
   color: white;
   font: bold 20px Verdana;
   padding: 20px;
-  box-shadow: 8px 8px 8px #666;
 }
 
 .tableHead1
@@ -238,7 +248,6 @@ Body
   color: white;
   font: bold 16px Verdana;
   padding: 20px;
-  box-shadow: 8px 8px 8px #666;
 }
 
 .tableLight
@@ -249,7 +258,6 @@ Body
   color: black;
   font: 14px Verdana;
   padding: 20px 20px;
-  box-shadow: 8px 8px 8px #666;
 }
 
 .tableDark

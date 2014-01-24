@@ -245,9 +245,21 @@ int P4d::exitDb()
 
 int P4d::readConfiguration()
 {
+   char* webUser = 0;
+   char* webPass = 0;
+   md5Buf defaultPwd;
+   
+   // init default user and password
+
+   createMd5("p4-3200", defaultPwd);
+   getConfigItem("user", webUser, "p4");
+   getConfigItem("passwd", webPass, defaultPwd);
+
+   // init configuration
+
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript, "/usr/local/bin/p4d-mail.sh");
-   getConfigItem("stateMailStates", stateMailAtStates);
+   getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
 

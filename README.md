@@ -116,6 +116,16 @@ The default username and password for the login is
 Benutzername: p4
 Passwort: p4-3200
 
+Fist WEBIF steps to enable data logging:
+
+1.) log in
+2.) Setup -> Aufzeichnung -> Init
+  select the values you like to record and save by clicking 'Speichern'
+3.) Menu -> Init
+4.) Menu -> Aktualisieren
+
+After this you can set up the schema configuration. The schema configuration seems not to be working with the firefox!
+
 
 Setup and configure sending mails:
 ----------------------------------

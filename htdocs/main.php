@@ -129,7 +129,7 @@ printHeader(60);
   // ------------------
   // table
 
-  echo "  <table class=\"tableLight\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
+  echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
 
   if ($debug)
@@ -176,19 +176,19 @@ printHeader(60);
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
      
      if ($i++ % 2)
-        echo "   <tr class=\"tableDark\">\n";
+        echo "     <tr class=\"tableDark\">\n";
      else
-        echo "   <tr class=\"tableLight\">\n";
+        echo "     <tr class=\"tableLight\">\n";
 
      if ($debug)
      {
-        echo "      <td>" . $txtaddr . "</td>\n";
-        echo "      <td>" . $type . "</td>\n";
+        echo "        <td>" . $txtaddr . "</td>\n";
+        echo "        <td>" . $type . "</td>\n";
      }
 
-     echo "      <td>" . $url . $title . "</a></td>\n";
-     echo "      <td>$value$unit</td>\n";
-     echo "   </tr>\n";
+     echo "        <td>" . $url . $title . "</a></td>\n";
+     echo "        <td>$value$unit</td>\n";
+     echo "     </tr>\n";
   }
 
   echo "  </table>\n";
