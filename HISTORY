@@ -3,6 +3,10 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2014-01-30:  version 0.1.7
+   - added :  index for jobs table
+   - bugfix:  fixed mail body of 'STÖRUNGs' mails
+
 2014-01-24:  version 0.1.6
    - change: fixed table shadow for firefox
    - bugfix: fixed passwort check fpr initial login

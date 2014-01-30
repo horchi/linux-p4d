@@ -211,3 +211,13 @@ cDbService::FieldDef cTableJobs::fields[] =
 
    { 0 }
 };
+
+cDbService::IndexDef cTableJobs::indices[] =
+{
+   // index             fields  
+
+   { "state",           { fiState, na      }, 0 },
+   { "requestat",       { fiReqAt, na      }, 0 },
+
+   { 0 }
+};

@@ -211,7 +211,7 @@ class cTableJobs : public cDbTable
    public:
 
       cTableJobs(cDbConnection* aConnection, const char* aName = "jobs")
-         : cDbTable(aConnection, aName, fields) { }
+         : cDbTable(aConnection, aName, fields, indices) { }
 
       enum FieldIndex
       {
@@ -232,6 +232,7 @@ class cTableJobs : public cDbTable
       };
 
       static FieldDef fields[];
+      static IndexDef indices[];
 };
 
 //***************************************************************************

@@ -1475,7 +1475,7 @@ int P4d::sendMail()
             
             ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
 
-            asprintf(&line, "%s:  %03d/%03d  '%s' (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
+            asprintf(&line, "%s:  %03d/%03d  %s (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
             errorBody += line;
 
             free(line);
