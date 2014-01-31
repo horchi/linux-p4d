@@ -1147,7 +1147,13 @@ int P4d::loop()
       status = updateState(&currentState);
 
       if (status != success)
+      {
+         serial->close();
+         tell(eloAlways, "Error reading serial interface, repopen now!");
+         serial->open(ttyDeviceSvc);
+
          continue;
+      }
 
       stateChanged = lastState != currentState.state;
       
@@ -1223,6 +1229,9 @@ int P4d::updateState(Status* state)
    status = request->getStatus(state);
    now = time(0);
    sem->v();
+
+   if (status != success)
+      return status;
 
    // check time sync
 
