@@ -53,6 +53,10 @@ printHeader(60);
   // ------------------
   // State of S 3200
 
+  $status = "";
+  $mode = "";
+  $time = "";
+
   $state = requestAction("s3200-state", 3, 0, "", $response);
 
   if ($state == 0)
