@@ -18,8 +18,10 @@
   // -------------------------
   // show image
 
+  $schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+
   echo "      <div class=\"schemaImage\" style=\"position:absolute;\">\n";
-  echo "        <p><img src=\"schema.png\"></p>\n";
+  echo "        <p><img src=\"$schemaImg\"></p>\n";
   echo "      </div>\n";
 
   include("schema.php");

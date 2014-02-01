@@ -48,7 +48,6 @@ FroelingService::StateInfo FroelingService::stateInfos[] =
    { 33,        "Abgestellt" },
    { 34,        "Nachzuenden" },
    { 35,        "Zünden warten"  },
-
    { 36,        "Fehlerbehebung" },
    { 37,        "Fehlerbehebung 1" },
    { 38,        "Fehlerbehebung 2" },

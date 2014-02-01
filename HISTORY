@@ -8,6 +8,7 @@
    - added:  more state and heater images.
    - added:  config of heating type to WEBIF
    - added:  more heater states
+   - added:  configuration of schema image to WENIF
 
 2014-01-30:  version 0.1.7
    - added :  index for jobs table
