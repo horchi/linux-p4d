@@ -73,6 +73,16 @@ int main(int argc, char** argv)
    UserCommand cmd = ucUnknown;
    const char* device = "/dev/ttyUSB0";
 
+//    {
+//       md5Buf defaultPwd;
+      
+//       // init default user and password
+      
+//       createMd5("p4-3200", defaultPwd);
+//       printf("'%s'\n", defaultPwd);
+//       return done;
+//    }
+
    Sem sem(0x3da00001);
 
    loglevel = 0;

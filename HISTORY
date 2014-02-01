@@ -3,8 +3,11 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
-2014-01-31:  version 0.1.8
+2014-02-01:  version 0.1.8
    - change: improved recover handling of serial communication
+   - added:  more state and heater images.
+   - added:  config of heating type to WEBIF
+   - added:  more heater states
 
 2014-01-30:  version 0.1.7
    - added :  index for jobs table
