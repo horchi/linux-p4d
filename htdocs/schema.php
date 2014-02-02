@@ -52,9 +52,9 @@ while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
       if ($showText)
          echo $text;
       else if ($showUnit)
-         echo $value . ($unit == "°" ? "°C" : $unit);
+         echo round($value, 2) . ($unit == "°" ? "°C" : $unit);
       else
-         echo $value;
+         echo round($value, 2);
       
       echo "</div>\n";
    }
