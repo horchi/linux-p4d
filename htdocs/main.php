@@ -101,7 +101,7 @@ printHeader(60);
      echo "        <img class=\"centerImage\" src=\"state-clean.png\">\n";
   elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
      echo "        <img class=\"centerImage\" src=\"state-wait.png\">\n";
-  elseif ($state == 60 || $state == 61)
+  elseif ($state == 60 || $state == 61  || $state == 72)
      echo "        <img class=\"centerImage\" src=\"state-shfire.png\">\n";
   else
      echo "        <img class=\"centerImage\" src=\"heating-$heatingType.png\">\n";
