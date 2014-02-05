@@ -366,7 +366,10 @@ int isNum(const char* value)
    while (*p)
    {
       if (p == value && *p == '-')
+      {
+         p++;
          continue;
+      }
 
       if (!isdigit(*p))
          return no;
