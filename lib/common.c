@@ -361,11 +361,18 @@ char* allTrim(char* buf)
 
 int isNum(const char* value)
 {
-   char* p = (char*)value;
+   const char* p = value;
 
-   while(*p)
-      if (!isdigit(*p++))
+   while (*p)
+   {
+      if (p == value && *p == '-')
+         continue;
+
+      if (!isdigit(*p))
          return no;
+
+      p++;
+   }
 
    return yes;
 }
