@@ -37,6 +37,8 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    
    readConfigItem("tsync", $_SESSION['tsync']);
    readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
+   readConfigItem("heatingType", $_SESSION['heatingType']);
+   readConfigItem("schema", $_SESSION['schema']);
    
    // ------------------
    // check for defaults
@@ -47,6 +49,12 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    if ($_SESSION['chart2'] == "")
       $_SESSION['chart2'] = "118,120,21,25,4";
    
+   if ($_SESSION['heatingType'] == "")
+      $_SESSION['heatingType'] = "p4";
+
+   if ($_SESSION['schema'] == "")
+      $_SESSION['schema'] = "p4-2hk-puffer";
+
    mysql_close();
 }
 

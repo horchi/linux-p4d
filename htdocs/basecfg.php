@@ -40,6 +40,12 @@ if ($action == "store")
    // ------------------
    // store settings
 
+   if (isset($_POST["heatingType"]))
+      $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
+
+   if (isset($_POST["schema"]))
+      $_SESSION['schema'] = htmlspecialchars($_POST["schema"]);
+
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
    
@@ -97,6 +103,8 @@ if ($action == "store")
    writeConfigItem("mailScript", $_SESSION['mailScript']);
    writeConfigItem("tsync", $_SESSION['tsync']);
    writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
+   writeConfigItem("heatingType", $_SESSION['heatingType']);
+   writeConfigItem("schema", $_SESSION['schema']);
 
    if ($_POST["passwd2"] != "")
    {
@@ -147,6 +155,8 @@ configStrItem("p4d sendet Mails über das Skript", "mailScript", $_SESSION['mail
 seperator("Sonstiges", 0, 2);
 configBoolItem("Tägliche Zeitsynchronisation", "tsync", $_SESSION['tsync'], "Zeit der Heizung täglich um 23:00 synchronisieren?");
 configStrItem("Maximale Abweichung [s]", "maxTimeLeak", $_SESSION['maxTimeLeak'], "Abweichung ab der die tägliche Synchronisation ausgeführt wird");
+heatingTypeItem("Heizung", $_SESSION['heatingType']);
+schemaItem("Schema", $_SESSION['schema']);
 
 echo "      </form>\n";
 
@@ -175,6 +185,7 @@ function colorSchemeItem($title)
    echo "        </div><br/>\n";
 }
 
+
 function applyColorScheme($style)
 {
    $target = "stylesheet-$style.css";
@@ -194,6 +205,52 @@ function applyColorScheme($style)
       else
          echo '<script>parent.window.location.reload(true);</script>';
    }
+}
+
+// ---------------------------------------------------------------------------
+// Heating Type - p4/s4/...
+// ---------------------------------------------------------------------------
+
+function heatingTypeItem($title, $type)
+{
+   $actual = "heating-$type.png";
+   
+   echo "        <div class=\"input\">\n";
+   echo "          $title: \n";
+   echo "          <select class=checkbox name=\"heatingType\">\n";
+   
+   foreach (glob("heating-*.png") as $filename) 
+   {
+      $sel = $actual == $filename ? "SELECTED" : "";
+      $tp = substr(strstr($filename, ".", true), 8);
+      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+   }
+   
+   echo "          </select>\n";
+   echo "        </div><br/>\n";
+}
+
+// ---------------------------------------------------------------------------
+// Schema Selection
+// ---------------------------------------------------------------------------
+
+function schemaItem($title, $schema)
+{
+   $actual = "schema-$schema.png";
+   
+   echo "        <div class=\"input\">\n";
+   echo "          $title: \n";
+   echo "          <select class=checkbox name=\"schema\">\n";
+   
+   foreach (glob("schema-*.png") as $filename) 
+   {
+      $sel = $actual == $filename ? "SELECTED" : "";
+      $tp = substr(strstr($filename, ".", true), 7);
+      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+   }
+   
+   echo "          </select>\n";
+   echo "        </div><br/>\n";
 }
 
 // ---------------------------------------------------------------------------

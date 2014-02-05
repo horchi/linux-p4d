@@ -79,14 +79,32 @@ printHeader(60);
 
   echo "      <div class=\"stateImgContainer\">\n";
 
+  $heatingType = $_SESSION['heatingType'];
+
   if ($state == 0 || $p4dstate != 0)
-     echo "        <img class=\"centerImage\" src=\"error.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"state-error.png\">\n";
+  elseif ($state == 1)
+     echo "        <img class=\"centerImage\" src=\"state-fireoff.png\">\n";
+  elseif ($state == 2)
+     echo "        <img class=\"centerImage\" src=\"state-heatup.png\">\n";
   elseif ($state == 3)
-     echo "        <img class=\"centerImage\" src=\"fire.png\">\n";
-  elseif (($state >= 10 && $state <= 14) || $state == 35)
-     echo "        <img class=\"centerImage\" src=\"wait.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"state-fire.png\">\n";
+  elseif ($state == 4)
+     echo "        <img class=\"centerImage\" src=\"state-firehold.png\">\n";
+  elseif ($state == 5)
+     echo "        <img class=\"centerImage\" src=\"state-fireoff.png\">\n";
+  elseif ($state == 6)
+     echo "        <img class=\"centerImage\" src=\"state-dooropen.png\">\n";
+  elseif ($state == 7 || $state == 8 || $state == 9)
+     echo "        <img class=\"centerImage\" src=\"state-heatup.png\">\n";
+  elseif ($state == 15 || $state == 70 || $state == 69)
+     echo "        <img class=\"centerImage\" src=\"state-clean.png\">\n";
+  elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
+     echo "        <img class=\"centerImage\" src=\"state-wait.png\">\n";
+  elseif ($state == 60 || $state == 61  || $state == 72)
+     echo "        <img class=\"centerImage\" src=\"state-shfire.png\">\n";
   else
-     echo "        <img class=\"centerImage\" src=\"p4.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"heating-$heatingType.png\">\n";
 
   echo "      </div>\n";
 

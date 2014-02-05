@@ -6,8 +6,12 @@
 2014-02-05:  version 0.1.9
    - bugfix:  fixed problem with negative parameter values
 
-2014-01-31:  version 0.1.8
+2014-02-01:  version 0.1.8
    - change: improved recover handling of serial communication
+   - added:  more state and heater images.
+   - added:  config of heating type to WEBIF
+   - added:  more heater states
+   - added:  configuration of schema image to WENIF
 
 2014-01-30:  version 0.1.7
    - added :  index for jobs table

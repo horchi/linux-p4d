@@ -1475,9 +1475,9 @@ int P4d::sendMail()
 
       for (int status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
       {
-         // nur Fehler der letzten 24 Stunden 
+         // nur Fehler der letzten 2 Tage 
 
-         if (e.time > time(0) - 24 * tmeSecondsPerDay)
+         if (e.time > time(0) - 2*tmeSecondsPerDay)
          {  
             char* ct = strdup(ctime(&e.time));
             char* line;

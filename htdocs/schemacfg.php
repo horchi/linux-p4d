@@ -61,13 +61,15 @@ elseif ($cfg == "Stop")
    syslog(LOG_DEBUG, "p4: stop");
 }
 
+$schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+
 // -------------------------
 // show buttons
 
 echo "    <br/>\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
 echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
+echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\"></input>\n";
 echo "      </div>\n";
 
 if ($started == 1)
@@ -93,10 +95,12 @@ else
 // -------------------------
 // show image
 
+$schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+
 echo "\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
 echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"schema.png\" value=\"click\" name=\"mouse\"></input>\n";
+echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\"></input>\n";
 echo "      </div>\n";
 
 if ($started == 1)
