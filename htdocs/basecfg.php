@@ -55,6 +55,18 @@ if ($action == "store")
    if (isset($_POST["chart2"]))
       $_SESSION['chart2'] = htmlspecialchars($_POST["chart2"]);
    
+   // optional charts for HK2
+
+   $_SESSION['HK2'] = isset($_POST["HK2"]);
+	  
+   if (isset($_POST["chart3"]))
+      $_SESSION['chart3'] = htmlspecialchars($_POST["chart3"]);
+   
+   if (isset($_POST["chart4"]))
+      $_SESSION['chart4'] = htmlspecialchars($_POST["chart4"]);
+
+   // ---
+
    if (isset($_POST["mail"]))
       $_SESSION['mail'] = true;
    else
@@ -96,6 +108,11 @@ if ($action == "store")
 
    writeConfigItem("chart1", $_SESSION['chart1']);
    writeConfigItem("chart2", $_SESSION['chart2']);
+
+   writeConfigItem("HK2", $_SESSION['HK2']);              // HK2
+   writeConfigItem("chart3", $_SESSION['chart3']);
+   writeConfigItem("chart4", $_SESSION['chart4']);
+
    writeConfigItem("mail", $_SESSION['mail']);
    writeConfigItem("stateMailTo", $_SESSION['stateMailTo']);
    writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
@@ -135,9 +152,13 @@ echo "        <br/></br>\n";
 seperator("Web Interface", 0, 1);
 colorSchemeItem("Farbschema");
 
-seperator("Charting", 0, 2);
+seperator("Charting", 0, 4);
 configStrItem("Chart 1", "chart1", $_SESSION['chart1'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
 configStrItem("Chart 2", "chart2", $_SESSION['chart2'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
+configBoolItem("2.Heizkreis", "HK2", $_SESSION['HK2'], "Charts für 2. Heizkreis aktivieren/deaktivieren");
+configStrItem("Chart 3", "chart3", $_SESSION['chart3'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
+configStrItem("Chart 4", "chart4", $_SESSION['chart4'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
+
 
 seperator("Login", 0, 2);
 configStrItem("User", "user", $_SESSION['user'], "", 400);

@@ -26,6 +26,12 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    readConfigItem("chart1", $_SESSION['chart1']);
    readConfigItem("chart2", $_SESSION['chart2']);
    
+   // HK2
+
+   readConfigItem("HK2", $_SESSION['HK2']);
+   readConfigItem("chart3", $_SESSION['chart3']);
+   readConfigItem("chart4", $_SESSION['chart4']);
+
    readConfigItem("user", $_SESSION['user']);
    readConfigItem("passwd", $_SESSION['passwd']);
    
@@ -81,8 +87,12 @@ function printHeader($refresh = 0)
   </head>
   <body>
     <a class=\"button1\" href=\"main.php\">Aktuell</a>
-    <a class=\"button1\" href=\"chart.php\">Charts</a>
-    <a class=\"button1\" href=\"schemadsp.php\">Schema</a>
+    <a class=\"button1\" href=\"chart.php\">Charts</a>";
+
+   if ($_SESSION['HK2'] == "1")
+      echo "<a class=\"button1\" href=\"chart2.php\">Charts HK2</a>";
+
+   echo "<a class=\"button1\" href=\"schemadsp.php\">Schema</a>
     <a class=\"button1\" href=\"menu.php\">Menü</a>
     <a class=\"button1\" href=\"error.php\">Fehler</a>\n";
 
