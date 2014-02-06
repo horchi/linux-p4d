@@ -83,7 +83,7 @@ function printHeader($refresh = 0)
    echo "    <meta name=\"author\" content=\"Jörg Wendel\">
     <meta name=\"copyright\" content=\"Jörg Wendel\">
     <link rel=\"stylesheet\" type=\"text/css\" href=\"stylesheet.css\">
-    <title>Fröhling P4</title>
+    <title>Fröhling  " . $_SESSION['heatingType'] . "</title>
   </head>
   <body>
     <a class=\"button1\" href=\"main.php\">Aktuell</a>
