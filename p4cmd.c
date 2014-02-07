@@ -188,6 +188,12 @@ int main(int argc, char** argv)
       return 0;
    }
 
+   if (cmd == ucShowW1)
+   {
+      showW1();
+      return 0;
+   }
+   
    // parse options
 
    for (int i = 1; argv[i]; i++)
@@ -231,12 +237,6 @@ int main(int argc, char** argv)
 
    switch (cmd)
    {
-      case ucShowW1:
-      {
-         showW1();
-         break;
-      }
-
       case ucUser:
       {
          request.getUser(addr);
