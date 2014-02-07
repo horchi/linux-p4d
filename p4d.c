@@ -1140,6 +1140,7 @@ int P4d::loop()
          standby(10);
       }
 
+      meanwhile();
       standbyUntil(min(nextStateAt, nextAt));
 
       // update/check state
