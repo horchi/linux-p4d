@@ -29,7 +29,7 @@
 - Hinblick auf die Einstellungen der Heizungsparameter und den damit verbundenen Risiken
 - hinsichtlich Fehlfunktion, Störung, Brand, etc. Falsche Einstellung können unter anderem 
 - durch Bedienfehler und Fehler in dieser Software ausgelöst werden!
-- Die Vorgaben, Vorschriften und AGP des Herstellers der Heizung bleiben Maßgebend!
+- Die Vorgaben, Vorschriften und AGB des Herstellers der Heizung bleiben Maßgebend!
 - Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalten, 
 - auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder 
 - weniger kritischen Fehlfunktionen derselben kommen kann!
