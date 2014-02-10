@@ -15,7 +15,25 @@
 - This code is distributed under the terms and conditions of the
 - GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 -
-- Disclaimer: USE AT YOUR OWN RISK. No warranty.
+- Disclaimer: USE AT YOUR OWN RISK. No warranty. 
+-
+- Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der 
+- GPLv2 veröffentlicht.
+-
+- Es ist kein fertiges Produkt, die Software entstand als Studie was hinsichtlich der Kommunikation
+- mit der s3200 Steuerung möglich ist und kann Bastlern als Basis und Anregung für eigene
+- Projekte dienen.
+-
+- Es besteht kein Anspruch auf Funktion, jeder der sie einsetzen möchte 
+- muss das Risiko selbst abschätzen können und wissen was er tut, insbesondere auch in 
+- Hinblick auf die Einstellungen der Heizungsparameter und den damit verbundenen Risiken
+- hinsichtlich Fehlfunktion, Störung, Brand, etc. Falsche Einstellung können unter anderem 
+- durch Bedienfehler und Fehler in dieser Software ausgelöst werden!
+- Die Vorgaben, Vorschriften und AGP des Herstellers der Heizung bleiben Maßgebend!
+- Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalten, 
+- auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder 
+- weniger kritischen Fehlfunktionen derselben kommen kann!
+-
 -----------------------------------------------------------------------------------
 
 
