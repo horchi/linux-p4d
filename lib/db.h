@@ -329,13 +329,9 @@ class cDbValue : public cDbService
       time_t getTimeValue()
       {
          struct tm tm;
-//         time_t t;
-
-//          gmtime(&t);
-//          localtime_r(&t, &tm); 
-         
          memset(&tm, 0, sizeof(tm));
-         tm.tm_isdst = -1;
+
+         tm.tm_isdst = -1;               // force DST auto detect
          tm.tm_year = timeValue.year - 1900;
          tm.tm_mon  = timeValue.month - 1;
          tm.tm_mday  = timeValue.day;
