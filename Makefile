@@ -18,7 +18,7 @@ CC = g++
 
 TARGET = p4d
 CMDTARGET = p4
-CHARTTARGET = p4chart
+CHARTTARGET = dbchart
 
 LIBS = -lmysqlclient_r -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
