@@ -42,6 +42,7 @@ startp4d()
        --name $(basename $DAEMON) --pidfile $PIDFILE >/dev/null
    then
        export LC_TIME="de_DE.UTF-8"
+       export TZ=CET
        ulimit -c unlimited
        # echo "/var/log/cores/core.%e" > /proc/sys/kernel/core_pattern
 
