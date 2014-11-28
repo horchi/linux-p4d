@@ -47,7 +47,7 @@ while ($rowConf = mysql_fetch_array($resultConf, MYSQL_ASSOC))
          $unit = " u/min";
       
       echo "        <div style=\"position:absolute; top:" . ($top + $jpegTop) . "px; left:" . ($left + $jpegLeft) . "px" .
-         "; color:" . $color . "; z-index:2" . "\">";
+         "; color:" . $color . "; z-index:11" . "\">";
       
       if ($showText)
          echo $text;

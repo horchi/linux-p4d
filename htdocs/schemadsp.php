@@ -18,7 +18,7 @@
   // -------------------------
   // show image
 
-  $schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+  $schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 
   echo "      <div class=\"schemaImage\" style=\"position:absolute;\">\n";
   echo "        <p><img src=\"$schemaImg\"></p>\n";

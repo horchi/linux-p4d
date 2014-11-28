@@ -17,7 +17,7 @@ cDbService::FieldDef cTableSamples::fields[] =
 
    // primary key
 
-   { "address",          ffInt,        4, fiAddress,       ftPrimary },
+   { "address",          ffUInt,       4, fiAddress,       ftPrimary },
    { "type",             ffAscii,      2, fiType,          ftPrimary },
    { "time",             ffDateTime,   0, fiTime,          ftPrimary },
 
@@ -54,7 +54,7 @@ cDbService::FieldDef cTableValueFacts::fields[] =
 
    // primary key
 
-   { "address",          ffInt,        4, fiAddress,       ftPrimary },
+   { "address",          ffUInt,       4, fiAddress,       ftPrimary },
    { "type",             ffAscii,      2, fiType,          ftPrimary },
 
    // meta                                                         

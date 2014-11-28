@@ -9,6 +9,7 @@
 
 include("header.php");
 
+
 printHeader(60);
 
   // -------------------------
@@ -42,9 +43,10 @@ printHeader(60);
   // State of P4 Daemon
 
   $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+  $load = "";
 
   if ($p4dstate == 0)
-     list($p4dNext, $p4dVersion, $p4dSince) = split("#", $response, 3);
+     list($p4dNext, $p4dVersion, $p4dSince, $load) = split("#", $response, 4);
 
   $result = mysql_query("select * from samples where time >= CURDATE()")
      or die("Error" . mysql_error());
@@ -82,29 +84,29 @@ printHeader(60);
   $heatingType = $_SESSION['heatingType'];
 
   if ($state == 0 || $p4dstate != 0)
-     echo "        <img class=\"centerImage\" src=\"state-error.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-error.png\">\n";
   elseif ($state == 1)
-     echo "        <img class=\"centerImage\" src=\"state-fireoff.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-fireoff.png\">\n";
   elseif ($state == 2)
-     echo "        <img class=\"centerImage\" src=\"state-heatup.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
   elseif ($state == 3)
-     echo "        <img class=\"centerImage\" src=\"state-fire.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.png\">\n";
   elseif ($state == 4)
-     echo "        <img class=\"centerImage\" src=\"state-firehold.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-firehold.png\">\n";
   elseif ($state == 5)
-     echo "        <img class=\"centerImage\" src=\"state-fireoff.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-fireoff.png\">\n";
   elseif ($state == 6)
-     echo "        <img class=\"centerImage\" src=\"state-dooropen.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-dooropen.png\">\n";
   elseif ($state == 7 || $state == 8 || $state == 9)
-     echo "        <img class=\"centerImage\" src=\"state-heatup.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
   elseif ($state == 15 || $state == 70 || $state == 69)
-     echo "        <img class=\"centerImage\" src=\"state-clean.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-clean.png\">\n";
   elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
-     echo "        <img class=\"centerImage\" src=\"state-wait.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-wait.png\">\n";
   elseif ($state == 60 || $state == 61  || $state == 72)
-     echo "        <img class=\"centerImage\" src=\"state-shfire.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-shfire.png\">\n";
   else
-     echo "        <img class=\"centerImage\" src=\"heating-$heatingType.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/type/heating-$heatingType.png\">\n";
 
   echo "      </div>\n";
 
@@ -112,13 +114,14 @@ printHeader(60);
 
   if ($p4dstate == 0)
   {
-    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div><br/>\n";
+    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div>\n";
     echo  "          <table>\n";
     echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
     echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
     echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
     echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
     echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
+    echo  "            <tr><td>Last:</td><td>$load</td></tr>\n";
     echo  "          </table>\n";
   }
   else

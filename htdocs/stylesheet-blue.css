@@ -202,7 +202,7 @@ Body
 
 .schema 
 {
-  font: 22px Verdana;
+  font: bold 12px Verdana;
   top: 50px;
   left: 5px;
   box-shadow: 8px 8px 8px #666;
@@ -303,7 +303,6 @@ Body
 .schemaImage
 { 
   background-color: #AAEEFF;
-  padding: 10px;
   font: 20px Verdana;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;

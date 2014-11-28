@@ -11,6 +11,7 @@
 
 #include "lib/common.h"
 #include "p4io.h"
+#include "w1.h"
 
 //***************************************************************************
 // Choice
@@ -58,62 +59,7 @@ void showUsage(const char* bin)
    printf("     setp     set parameter at <addr> to <value>\n");
    printf("     getdo    show digital output at <addr>\n");
    printf("     getao    show analog output at <addr>\n");
-   printf("     w1       show data of one wire sensors\n");
-
-}
-
-//***************************************************************************
-// Show W1 Sensors
-//***************************************************************************
-
-int showW1()
-{
-   const char* w1Path = "/sys/bus/w1/devices";
-   DIR* dir;
-   dirent* dp;
-
-   tell(0, "sanning '%s'", w1Path);
-
-   if (!(dir = opendir(w1Path)))
-   {
-      tell(0, "Error: Opening directory '%s' failed, %m", w1Path);
-      return fail;
-   }
-
-   while ((dp = readdir(dir)))
-   {
-      if (strncmp(dp->d_name, "28-", 3) == 0)
-      {
-         char line[100+TB];
-         FILE* in;
-         char* path;
-
-         asprintf(&path, "%s/%s/w1_slave", w1Path, dp->d_name);
-         tell(0, "%s", path);
-         
-         in = fopen(path, "r");
-
-         while (fgets(line, 100, in))
-         {
-            char* p;
-
-            line[strlen(line)-1] = 0;
-            
-            if ((p = strstr(line, " t=")))
-            {
-               double temp = atoi(p+3) / 1000.0;
-               tell(0, "%2.2f", temp);
-            }
-         }
-
-         fclose(in);
-         free(path);
-      }
-   }
-
-   closedir(dir);
-
-   return done;
+   printf("     w1       show data of all connected one wire sensors\n");
 }
 
 //***************************************************************************
@@ -190,7 +136,14 @@ int main(int argc, char** argv)
 
    if (cmd == ucShowW1)
    {
-      showW1();
+      W1 w1;
+
+      if (w1.scan() == success)
+      {
+         w1.update();
+         w1.show();
+      }
+
       return 0;
    }
    

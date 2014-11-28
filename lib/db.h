@@ -41,6 +41,8 @@ class cDbService
       {
          ffInt,
          ffUInt,
+         ffBigInt,
+         ffUBigInt,
          ffAscii,      // -> VARCHAR
          ffText,
          ffMlob,       // -> MEDIUMBLOB
@@ -154,6 +156,7 @@ class cDbValue : public cDbService
 
          strValueSize = 0;
          numValue = 0;
+         longlongValue = 0;
          floatValue = 0;
          memset(&timeValue, 0, sizeof(timeValue));
 
@@ -226,23 +229,31 @@ class cDbValue : public cDbService
          setValue(tmp);
       }
 
-//       void setValue(long value)
-//       { 
-//          if (field->format != ffInt && field->format != ffUInt)
-//          {
-//             tell(0, "Setting invalid field format for '%s', expected INT", field->name);
-//             return ;
-//          }
-
-//          numValue = value;
-//          nullValue = 0;
-//       }
+      void setIntValue(long long value)
+      { 
+         if (field->format == ffInt || field->format == ffUInt)
+         {
+            numValue = value;
+            nullValue = 0;
+         }
+         
+         else if (field->format == ffBigInt || field->format == ffUBigInt)
+         {
+            longlongValue = value;
+            nullValue = 0;
+         }
+      }
 
       void setValue(double value)
       { 
          if (field->format == ffInt || field->format == ffUInt)
          {
             numValue = value;
+            nullValue = 0;
+         }
+         else if (field->format == ffBigInt || field->format == ffUBigInt)
+         {
+            longlongValue = value;
             nullValue = 0;
          }
          else if (field->format == ffFloat)
@@ -279,6 +290,9 @@ class cDbValue : public cDbService
          if (field->format == ffInt || field->format == ffUInt)
             return numValue == value;
 
+         if (field->format == ffBigInt || field->format == ffUBigInt)
+            return longlongValue == value;
+
          if (field->format == ffFloat)
             return floatValue == value;
 
@@ -301,17 +315,6 @@ class cDbValue : public cDbService
          return floatValue == value;
       }
 
-//       int hasValue(long value)
-//       {
-//          if (field->format != ffInt && field->format != ffUInt)
-//          {
-//             tell(0, "Checking invalid field format for '%s', expected INT", field->name);
-//             return no;
-//          }
-
-//          return numValue == value;
-//       }
-
       int hasValue(const char* value)
       { 
          if (!value)
@@ -329,9 +332,8 @@ class cDbValue : public cDbService
       time_t getTimeValue()
       {
          struct tm tm;
+         
          memset(&tm, 0, sizeof(tm));
-
-         tm.tm_isdst = -1;               // force DST auto detect
          tm.tm_year = timeValue.year - 1900;
          tm.tm_mon  = timeValue.month - 1;
          tm.tm_mday  = timeValue.day;
@@ -346,12 +348,21 @@ class cDbValue : public cDbService
       unsigned long* getStrValueSizeRef()  { return &strValueSize; }
       unsigned long getStrValueSize()      { return strValueSize; }
       const char* getStrValue()            { return !isNull() && strValue ? strValue : ""; }
-      long getIntValue()                   { return !isNull() ? numValue : 0; }
+      long long getIntValue()              
+      { 
+         if (isNull())
+            return 0;
+
+         return field->format == ffBigInt || field->format == ffUBigInt ? longlongValue : numValue; 
+      }
+
       float getFloatValue()                { return !isNull() ? floatValue : 0; }
       int isNull()                         { return nullValue; }
 
       char* getStrValueRef()               { return strValue; }
       long* getIntValueRef()               { return &numValue; }
+      long long* getBigIntValueRef()       { return &longlongValue; }
+
       MYSQL_TIME* getTimeValueRef()        { return &timeValue; }
       float* getFloatValueRef()            { return &floatValue; }
       my_bool* getNullRef()                { return &nullValue; }
@@ -361,6 +372,7 @@ class cDbValue : public cDbService
       FieldDef* ownField;
       FieldDef* field;
       long numValue;
+      long long longlongValue;
       float floatValue;
       MYSQL_TIME timeValue;
       char* strValue;
@@ -460,13 +472,14 @@ class cDbRow : public cDbService
       void setValue(int f, const char* value, 
                     int size = 0)                  { dbValues[f].setValue(value, size); }
       void setValue(int f, double value)           { dbValues[f].setValue(value); }
+      void setIntValue(int f, long long value)     { dbValues[f].setIntValue(value); }
       void setCharValue(int f, char value)         { dbValues[f].setCharValue(value); }
       int hasValue(int f, double value)      const { return dbValues[f].hasValue(value); }
       int hasValue(int f, const char* value) const { return dbValues[f].hasValue(value); }
       cDbValue* getValue(int f)                    { return &dbValues[f]; }
 
       const char* getStrValue(int f)         const { return dbValues[f].getStrValue(); }
-      long getIntValue(int f)                const { return dbValues[f].getIntValue(); }
+      long long getIntValue(int f)           const { return dbValues[f].getIntValue(); }
       float getFloatValue(int f)             const { return dbValues[f].getFloatValue(); }
       int isNull(int f)                      const { return dbValues[f].isNull(); }
 
@@ -788,11 +801,12 @@ class cDbTable : public cDbService
       void clear()                                           { row->clear(); }
       void setValue(int f, const char* value, int size = 0)  { row->setValue(f, value, size); }
       void setValue(int f, double value)                     { row->setValue(f, value); }
+      void setIntValue(int f, long long value)               { row->setIntValue(f, value); }
       void setCharValue(int f, char value)                   { row->setCharValue(f, value); }
       int hasValue(int f, const char* value)                 { return row->hasValue(f, value); }
       int hasValue(int f, double value)                      { return row->hasValue(f, value); }
       const char* getStrValue(int f)       const             { return row->getStrValue(f); }
-      long getIntValue(int f)              const             { return row->getIntValue(f); }
+      long long getIntValue(int f)         const             { return row->getIntValue(f); }
       float getFloatValue(int f)           const             { return row->getFloatValue(f); }
       int isNull(int f)                    const             { return row->isNull(f); }
 

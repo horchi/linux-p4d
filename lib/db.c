@@ -11,8 +11,6 @@
 
 #include "db.h"
 
-// #define DEB_HANDLER
-
 //***************************************************************************
 // DB Statement
 //***************************************************************************
@@ -307,11 +305,21 @@ int cDbStatement::appendBinding(cDbValue* value, BindType bt)
       newBinding->is_null =  value->getNullRef();
       newBinding->error = 0;             // #TODO
    }
+   else if (value->getField()->format == ffBigInt || value->getField()->format == ffUBigInt)
+   {
+      newBinding->buffer_type = MYSQL_TYPE_LONGLONG;
+      newBinding->buffer = value->getBigIntValueRef();
+      newBinding->is_unsigned = value->getField()->format == ffUBigInt;
+
+      newBinding->length = 0;
+      newBinding->is_null =  value->getNullRef();
+      newBinding->error = 0;             // #TODO
+   }
    else
    {
       newBinding->buffer_type = MYSQL_TYPE_LONG;
       newBinding->buffer = value->getIntValueRef();
-      newBinding->is_unsigned = (value->getField()->format == ffUInt);
+      newBinding->is_unsigned = value->getField()->format == ffUInt;
 
       newBinding->length = 0;
       newBinding->is_null =  value->getNullRef();
@@ -363,6 +371,8 @@ const char* cDbService::formats[] =
 {
    "INT",
    "INT",
+   "BIGINT",
+   "BIGINT",
    "VARCHAR",
    "TEXT",
    "MEDIUMBLOB",
@@ -618,7 +628,7 @@ int cDbTable::createTable()
          {
             if (getField(i)->format == ffAscii || getField(i)->format == ffText)
                size = 100;
-            else if (getField(i)->format == ffInt)
+            else if (getField(i)->format == ffInt || getField(i)->format == ffBigInt || getField(i)->format == ffUBigInt)
                size = 11;
             else if (getField(i)->format == ffFloat)
                size = 10;
@@ -633,7 +643,7 @@ int cDbTable::createTable()
             
             statement += "(" + string(num) + ")";
             
-            if (getField(i)->format == ffUInt)
+            if (getField(i)->format == ffUInt || getField(i)->format == ffUBigInt)
                statement += " unsigned";
             
             if (getField(i)->type & ftAutoinc)
@@ -994,13 +1004,6 @@ int cDbTable::insert()
          setValue(getField(i)->index, time(0));
    }
 
-#ifdef DEB_HANDLER
-
-   if (strcmp(TableName(), "events") == 0)
-      tell(1, "inserting vdr event %d for '%s', starttime = %ld, updflg = '%s'", 
-           getIntValue(0), getStrValue(1), getIntValue(15), getStrValue(6));
-#endif
-
    if (stmtInsert->execute())
       return fail;
 
@@ -1027,12 +1030,6 @@ int cDbTable::update()
          break;
       }
    }
-
-#ifdef DEB_HANDLER
-   if (strcmp(TableName(), "events") == 0)
-      tell(1, "updating vdr event %d for '%s', starttime = %ld, updflg = '%s'", 
-           getIntValue(0), getStrValue(1), getIntValue(15), getStrValue(6));
-#endif
 
    if (stmtUpdate->execute())
       return fail;

@@ -88,7 +88,7 @@ int P4Packet::getItem(Parameter* p)
    if (!p)
       return fail;
 
-   memset(p, sizeof(Parameter), 0);
+   memset(p, 0, sizeof(Parameter));
 
    // get parameter parts
 

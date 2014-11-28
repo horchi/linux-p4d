@@ -18,13 +18,13 @@ CC = g++
 
 TARGET = p4d
 CMDTARGET = p4
-CHARTTARGET = dbchart
+CHARTTARGET = p4chart
 
 LIBS = -lmysqlclient_r -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 CFLAGS   = -Wreturn-type -Wall -Wformat -Wunused-variable -Wunused-label \
-           -pedantic -Wunused-value -Wunused-function \
+           -pedantic -Wunused-value -Wunused-function -Wno-long-long \
            -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 ifdef DEBUG
@@ -38,9 +38,9 @@ ARCHIVE = $(TARGET)-$(VERSION)
 # object files 
 
 LOBJS =  lib/db.o lib/tabledef.o lib/common.o lib/serial.o
-OBJS += $(LOBJS) main.o p4io.o service.o
+OBJS += $(LOBJS) main.o p4io.o service.o w1.o webif.o
 CLOBJS = $(LOBJS) chart.o
-CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
+CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
 DEFINES += -DDEAMON=P4d -DUSEMD5
 OBJS += p4d.o
@@ -87,9 +87,13 @@ dist: clean
 clean:
 	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg
 	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
+	rm -f com2
 
 cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
+
+com2: $(LOBJS) c2tst.c p4io.c service.c
+	$(CC) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
 
 #***************************************************************************
 # dependencies
@@ -103,7 +107,9 @@ lib/tabledef.o  :  lib/tabledef.c  $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 
 main.o			 :  main.c         $(HEADER) p4d.h
-p4d.o           :  p4d.c          $(HEADER) p4d.h p4io.h 
+p4d.o           :  p4d.c          $(HEADER) p4d.h p4io.h w1.h
 p4io.o          :  p4io.c         $(HEADER) p4io.h 
+webif.o			 :  webif.c        $(HEADER) p4d.h
+w1.o			    :  w1.c           $(HEADER) w1.h
 service.o       :  service.c      $(HEADER) service.h
 chart.o         :  chart.c

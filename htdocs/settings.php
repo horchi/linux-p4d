@@ -76,6 +76,7 @@ showTable("VA", "Messwerte");
 showTable("DI", "Digitale Eingänge");
 showTable("DO", "Digitale Ausgänge");
 showTable("AO", "Analoge Ausgänge");
+showTable("W1", "One Wire Sensoren");
 echo "      </form>\n";
 
 mysql_close();

@@ -61,7 +61,7 @@ elseif ($cfg == "Stop")
    syslog(LOG_DEBUG, "p4: stop");
 }
 
-$schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+$schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 
 // -------------------------
 // show buttons
@@ -95,7 +95,7 @@ else
 // -------------------------
 // show image
 
-$schemaImg = "schema-" . $_SESSION["schema"] . ".png";
+$schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 
 echo "\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 

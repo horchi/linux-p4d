@@ -12,7 +12,6 @@ include("setup.php");
 if (!haveLogin())
 {
    echo "<br/><div class=\"infoError\"><b><center>Login erforderlich!</center></b></div><br/>\n";
-
    die("<br/>");
 }
 
@@ -42,6 +41,8 @@ if ($action == "store")
 
    if (isset($_POST["heatingType"]))
       $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
+
+   // Schema
 
    if (isset($_POST["schema"]))
       $_SESSION['schema'] = htmlspecialchars($_POST["schema"]);
@@ -156,9 +157,12 @@ seperator("Charting", 0, 4);
 configStrItem("Chart 1", "chart1", $_SESSION['chart1'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
 configStrItem("Chart 2", "chart2", $_SESSION['chart2'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
 configBoolItem("2.Heizkreis", "HK2", $_SESSION['HK2'], "Charts für 2. Heizkreis aktivieren/deaktivieren");
-configStrItem("Chart 3", "chart3", $_SESSION['chart3'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
-configStrItem("Chart 4", "chart4", $_SESSION['chart4'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
 
+if ($_SESSION['HK2'] == "1")
+{
+   configStrItem("Chart 3", "chart3", $_SESSION['chart3'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
+   configStrItem("Chart 4", "chart4", $_SESSION['chart4'], "Komma separierte Werte-Adressen, siehe 'Aufzeichnung'", 400);
+}
 
 seperator("Login", 0, 2);
 configStrItem("User", "user", $_SESSION['user'], "", 400);
@@ -239,9 +243,13 @@ function heatingTypeItem($title, $type)
    echo "        <div class=\"input\">\n";
    echo "          $title: \n";
    echo "          <select class=checkbox name=\"heatingType\">\n";
-   
-   foreach (glob("heating-*.png") as $filename) 
-   {
+
+   $path = "img/type/";
+
+   foreach (glob($path . "heating-*.png") as $filename) 
+   { 
+      $filename = basename($filename);
+
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 8);
       echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
@@ -262,9 +270,13 @@ function schemaItem($title, $schema)
    echo "        <div class=\"input\">\n";
    echo "          $title: \n";
    echo "          <select class=checkbox name=\"schema\">\n";
+
+   $path = "img/schema/";
    
    foreach (glob("schema-*.png") as $filename) 
    {
+      $filename = basename($filename);
+
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 7);
       echo "            <option value='$tp' " . $sel . ">$tp</option>\n";

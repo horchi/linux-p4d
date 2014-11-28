@@ -13,12 +13,13 @@
 // Includes
 //***************************************************************************
 
-#include "service.h"
-#include "p4io.h"
-
 #include "lib/tabledef.h"
 
-#define VERSION "0.1.10"
+#include "service.h"
+#include "p4io.h"
+#include "w1.h"
+
+#define VERSION "0.1.11"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -69,7 +70,7 @@ class P4d : public FroelingService
       int performWebifRequests();
       int cleanupWebifRequests();
 
-      int store(time_t now, const char* type, long address, double value, 
+      int store(time_t now, const char* type, unsigned int address, double value, 
                 unsigned int factor, const char* text = 0);
       int sendMail();
       int updateSchemaConfTable();
@@ -105,8 +106,11 @@ class P4d : public FroelingService
       time_t nextAt;
       time_t startedAt;
       Sem* sem;
+
       P4Request* request;
       Serial* serial;    
+
+      W1 w1;                       // for one wire sensors
 
       Status currentState;
       string mailBody;

@@ -3,6 +3,11 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2014-11-28:  version 0.1.11
+   - added:  support for 1W sensors
+   - change: moved webif images to subfolder
+   - change: minor changes and fixes
+
 2014-02-07:  version 0.1.10
    - change: supporting WEBIF communication event if 
              serial line is disturbed

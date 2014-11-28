@@ -55,6 +55,9 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    if ($_SESSION['chart2'] == "")
       $_SESSION['chart2'] = "118,120,21,25,4";
    
+   if ($_SESSION['HK2'] == "")
+      $_SESSION['HK2'] = "0";
+	  
    if ($_SESSION['heatingType'] == "")
       $_SESSION['heatingType'] = "p4";
 
@@ -66,7 +69,6 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
 
 function printHeader($refresh = 0)
 {
-   
    // ----------------
    // HTML Head
    

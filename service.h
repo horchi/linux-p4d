@@ -260,7 +260,16 @@ class FroelingService
          Status()  { modeinfo = 0; stateinfo = 0; clear(); }
          ~Status() { clear(); }
  
-         void clear() { free(modeinfo); free(stateinfo); modeinfo = 0; stateinfo = 0; *version = 0; }
+         void clear() 
+         { 
+            free(modeinfo);  modeinfo = 0;
+            free(stateinfo); stateinfo = 0;
+            *version = 0; 
+            time = 0; 
+            mode = 0; 
+            state = 0;
+         }
+
          time_t time; 
          byte mode;           // Betriebsart
          byte state;          // Zustand
