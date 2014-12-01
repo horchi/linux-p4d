@@ -25,6 +25,7 @@ class cTableSamples : public cDbTable
       {
          fiAddress,      // Sensor ID
          fiType,         // Sensor Type (VA, DI, DO, AI, AO)
+         fiAggregate,    // aggregate - 'A' or single sample - NULL or 'S'
          fiTime,         // Zeitpunkt der Aufzeichnung
 
          fiInsSp,
@@ -32,6 +33,7 @@ class cTableSamples : public cDbTable
 
          fiValue,
          fiText,
+         fiSamples,      // sample count for aggregate ('A') rows, otherwise 1 or NULL
 
          fiCount
       };
@@ -54,7 +56,7 @@ class cTableValueFacts : public cDbTable
       enum FieldIndex
       {
          fiAddress,     // Sensor Address
-         fiType,        // Sensor Type (VA, DI, DO, AI, AO)
+         fiType,        // Sensor Type (VA, DI, DO, AI, AO, W1)
 
          fiInsSp,
          fiUpdSp,

@@ -19,6 +19,7 @@ cDbService::FieldDef cTableSamples::fields[] =
 
    { "address",          ffUInt,       4, fiAddress,       ftPrimary },
    { "type",             ffAscii,      2, fiType,          ftPrimary },
+   { "aggregate",        ffAscii,      1, fiAggregate,     ftPrimary },
    { "time",             ffDateTime,   0, fiTime,          ftPrimary },
 
    // meta
@@ -30,6 +31,7 @@ cDbService::FieldDef cTableSamples::fields[] =
                                                                    
    { "value",            ffFloat,    122, fiValue,         ftData }, 
    { "text",             ffAscii,     50, fiText,          ftData }, 
+   { "samples",          ffInt,        3, fiSamples,       ftData },
 
    { 0 }
 };

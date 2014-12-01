@@ -664,10 +664,13 @@ int P4d::store(time_t now, const char* type, unsigned int address, double value,
    tableSamples->clear();
 
    tableSamples->setValue(cTableSamples::fiTime, now);
-   tableSamples->setValue(cTableSamples::fiType, type);
    tableSamples->setIntValue(cTableSamples::fiAddress, address);
+   tableSamples->setValue(cTableSamples::fiType, type);
+   tableSamples->setValue(cTableSamples::fiAggregate, "S");
+
    tableSamples->setValue(cTableSamples::fiValue, value / (double)factor);
    tableSamples->setValue(cTableSamples::fiText, text);
+   tableSamples->setValue(cTableSamples::fiSamples, 1);
 
    tableSamples->store();
    

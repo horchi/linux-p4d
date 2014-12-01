@@ -1,0 +1,38 @@
+
+#----------------------------------------------------------
+# -> update auf Version 0.1.11
+#----------------------------------------------------------
+
+alter table samples change address address int(4) unsigned;
+alter table valuefacts change address address int(4) unsigned;
+alter table menu change address address int(4) unsigned;
+alter table schemaconf change address address int(4) unsigned;
+alter table jobs change address address int(4) unsigned;
+
+
+#----------------------------------------------------------
+# -> updateauf Version 0.1.12
+#----------------------------------------------------------
+
+alter table samples drop column sensorid;
+alter table samples add column aggregate varchar(1) after type;
+alter table samples add column samples integer(3) after text;
+alter table samples drop primary key, add primary key(address, type, aggregate, time);
+
+#----------------------------------------------------------
+# -> im Anschuss manuell aggregieren: 
+#    Beispiel 1 Wert alle 15 Minuten
+
+insert into samples select address, type, 'A' as aggregate, 
+      CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900)) + INTERVAL 15 MINUTE time, 
+      unix_timestamp(sysdate()) as inssp, unix_timestamp(sysdate()) as updsp, 
+      round(sum(value)/count(*), 2) as value, text, count(*) samples 
+    from 
+      samples 
+    where 
+      time < '2013-12-31' group by CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900) )+ INTERVAL 15 MINUTE, address, type;
+
+# und die Einzelaufzeichnungen vor dem 1. Januar 2014 löschen:
+
+delete from samples where time < '2013-12-31' and aggregate != 'A':
+OPTIMIZE TABLE samples;
