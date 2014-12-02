@@ -1,4 +1,4 @@
------------------------------------------------------------------------------------
+﻿-----------------------------------------------------------------------------------
 --                             Linux - P4 Daemon (p4d)                           --
 -----------------------------------------------------------------------------------
 -
@@ -52,6 +52,16 @@ Prerequisits:
 - a Raspberry Pi with a default OS setup (e.g. wheezy-raspbian) is a very good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: dpkg-reconfigure locales)
 
+
+Automated Installation by script:
+----------------------------
+
+- download the Script form the Philipps Wikipage
+	"cd .."
+	"cd p4d"
+	"wget http://hungerphilipp.de/files/p4d/install.sh"
+	"chmod +x install.sh"
+	"./install.sh" or "sudo ./install.sh/"
 
 Installation MySql Database:
 ----------------------------
