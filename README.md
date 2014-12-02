@@ -56,7 +56,7 @@ Prerequisits:
 Automated Installation by script:
 ----------------------------
 
-- download the Script form the Philipps Wikipage
+- download the Script form Philipps Wikipage
 	"cd .."
 	"cd p4d"
 	"wget http://hungerphilipp.de/files/p4d/install.sh"
