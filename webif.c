@@ -404,7 +404,7 @@ int P4d::performWebifRequests()
 
       tableJobs->store();
 
-      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %d seconds", 
+      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %ld seconds", 
            jobId, tableJobs->getStrValue(cTableJobs::fiResult),
            time(0) - start);
    }

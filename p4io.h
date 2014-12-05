@@ -239,8 +239,8 @@ class P4Request : public FroelingService
 
          if (header.id != commId)
          {
-            tell(eloAlways, "Got wrong communication id %04.4x "
-                 "expected %04.4x", header.id, commId);
+            tell(eloAlways, "Got wrong communication id %4.4x "
+                 "expected %4.4x", header.id, commId);
             return fail;
          }
 

@@ -102,7 +102,7 @@ enum Eloquence
    eloDebug3                 // 4
 };
 
-void tell(int eloquence, const char* format, ...);
+void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* format, ...);
 
 //***************************************************************************
 // Tools

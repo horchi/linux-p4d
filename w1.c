@@ -34,7 +34,7 @@ int W1::update()
       
       if (!(in = fopen(path, "r")))
       {
-         tell(eloAlways, "Error: Opening '%s' failed, %m", path);
+         tell(eloAlways, "Error: Opening '%s' failed, %s", path, strerror(errno));
          free(path);
          continue;
       }
@@ -70,7 +70,7 @@ int W1::scan()
 
    if (!(dir = opendir(w1Path)))
    {
-      tell(0, "Error: Opening directory '%s' failed, %m", w1Path);
+      tell(0, "Error: Opening directory '%s' failed, %s", w1Path, strerror(errno));
       return fail;
    }
 

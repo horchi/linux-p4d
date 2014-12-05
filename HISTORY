@@ -3,6 +3,10 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2014-12-01:  version 0.1.13
+   - change: implemented aggregation
+   - change: support of html mails
+
 2014-12-01:  version 0.1.12
    - change: p4d 'prepared' for aggregation of samples
 

@@ -334,6 +334,8 @@ class cDbValue : public cDbService
          struct tm tm;
          
          memset(&tm, 0, sizeof(tm));
+
+         tm.tm_isdst = -1;                   // force DST auto detect
          tm.tm_year = timeValue.year - 1900;
          tm.tm_mon  = timeValue.month - 1;
          tm.tm_mday  = timeValue.day;
@@ -588,6 +590,47 @@ class cDbConnection
 
       virtual int query(const char* format, ...)
       {
+         va_list more;
+         
+         if (format)
+            va_start(more, format);
+
+         return vquery(format, more);
+      }
+
+      virtual int query(int& count, const char* format, ...)
+      {
+         int status;
+         va_list more;
+         
+         count = 0;
+
+         if (format)
+            va_start(more, format);
+
+         if ((status = vquery(format, more)) == success)
+         {
+            MYSQL_RES* res;
+            MYSQL_ROW data;
+            
+            // get affected rows ..
+            
+            if ((res = mysql_store_result(getMySql())))
+            {
+               data = mysql_fetch_row(res);
+               
+               if (data)
+                  count = atoi(data[0]);
+               
+               mysql_free_result(res);
+            }
+         }
+
+         return status; 
+      }
+
+      virtual int vquery(const char* format, va_list more)
+      {
          int status = 1;
          MYSQL* h = getMySql();
 
@@ -595,8 +638,6 @@ class cDbConnection
          {
             char* stmt;
             
-            va_list more;
-            va_start(more, format);
             vasprintf(&stmt, format, more);
             
             if ((status = mysql_query(h, stmt)))
@@ -630,7 +671,7 @@ class cDbConnection
          
          if (!(f = fopen(file, "r")))
          {
-            tell(0, "Fatal: Can't access '%s'; %m", file);
+            tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
             return fail;
          }
          
@@ -792,7 +833,7 @@ class cDbTable : public cDbService
       virtual int update();
       virtual int store();
 
-      virtual int deleteWhere(const char* where);
+      virtual int deleteWhere(const char* where, int& count);
       virtual int countWhere(const char* where, int& count, const char* what = 0);
       virtual int truncate();
 

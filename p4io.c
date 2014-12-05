@@ -158,7 +158,7 @@ int P4Packet::getToken(char* token)
 
    if (*pBuf != delimiter)
    {
-      tell(eloAlways, "Error: Missing delimiter at (%d/%d) [%s] [%s]", 
+      tell(eloAlways, "Error: Missing delimiter at (%p/%p) [%s] [%s]", 
            pBuf, buffer, pBuf, buffer);
       return fail;
    }
@@ -212,7 +212,7 @@ int P4Packet::readPacket(const char*& packet)
 
    if (b != seqEnd)
    {
-      tell(eloAlways, "Timeout of %d seconds after %d reads and %d bytes while reading packet",
+      tell(eloAlways, "Timeout of %ld seconds after %d reads and %d bytes while reading packet",
            time(0)-startAt, looks, pos);
 
       return fail;

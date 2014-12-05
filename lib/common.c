@@ -128,7 +128,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
    
    if (!(f = fopen(file, "r")))
    {
-      tell(0, "Fatal: Can't access '%s'; %m", file);
+      tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
       free(file);
       return fail;
    }
@@ -482,7 +482,7 @@ int isLink(const char* path)
    if (lstat(path, &sb) == 0)
       return S_ISLNK(sb.st_mode);
 
-   tell(0, "Error: Detecting state for '%s' failed, error was '%m'", path);
+   tell(0, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
 
    return false;
 }
@@ -503,7 +503,7 @@ int createLink(const char* link, const char* dest, int force)
       
       if (symlink(dest, link) != 0)
       {
-         tell(0, "Failed to create symlink '%s', error was '%m'", link);
+         tell(0, "Failed to create symlink '%s', error was '%s'", link, strerror(errno));
          return fail;
       }
    }
@@ -520,7 +520,7 @@ int removeFile(const char* filename)
 {
    if (unlink(filename) != 0)
    {
-      tell(0, "Can't remove file '%s', '%m'", filename);
+      tell(0, "Can't remove file '%s', '%s'", filename, strerror(errno));
       
       return 1;
    }

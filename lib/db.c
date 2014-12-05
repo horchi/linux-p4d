@@ -357,7 +357,7 @@ int cDbStatement::prepare()
          return connection->errorSql(connection, "buildPrimarySelect(bind_param)", stmt);
    }
 
-   tell(2, "Statement '%s' with (%d) in parameters and (%d) out bindings prepared", 
+   tell(2, "Statement '%s' with (%ld) in parameters and (%d) out bindings prepared", 
         stmtTxt.c_str(), mysql_stmt_param_count(stmt), outCount);
    
    return success;
@@ -893,7 +893,7 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix, MYSQL
 // Delete Where
 //***************************************************************************
 
-int cDbTable::deleteWhere(const char* where)
+int cDbTable::deleteWhere(const char* where, int& count)
 {
    string tmp;
 
@@ -902,7 +902,7 @@ int cDbTable::deleteWhere(const char* where)
 
    tmp = "delete from " + string(TableName()) + " where " + string(where);
    
-   if (connection->query(tmp.c_str()))
+   if (connection->query(count, tmp.c_str()))
       return connection->errorSql(connection, "deleteWhere()", 0, tmp.c_str());
 
    return success;
@@ -915,8 +915,6 @@ int cDbTable::deleteWhere(const char* where)
 int cDbTable::countWhere(const char* where, int& count, const char* what)
 {
    string tmp;
-   MYSQL_RES* res;
-   MYSQL_ROW data;
 
    count = 0;
    
@@ -928,18 +926,8 @@ int cDbTable::countWhere(const char* where, int& count, const char* what)
    else
       tmp = "select " + string(what) + " from " + string(TableName());
    
-   if (connection->query(tmp.c_str()))
+   if (connection->query(count, tmp.c_str()))
       return connection->errorSql(connection, "countWhere()", 0, tmp.c_str());
-
-   if ((res = mysql_store_result(connection->getMySql())))
-   {
-      data = mysql_fetch_row(res);
-
-      if (data)
-         count = atoi(data[0]);
-
-      mysql_free_result(res);
-   }
 
    return success;
 }
@@ -959,7 +947,6 @@ int cDbTable::truncate()
 
    return success;
 }
-
 
 //***************************************************************************
 // Store
