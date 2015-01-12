@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-01-12:  version 0.1.14
+   - change: On missing one-wire sensor show 'Info' instead of 'Error'
+
 2014-12-01:  version 0.1.13
    - change: implemented aggregation
    - change: support of html mails

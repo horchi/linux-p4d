@@ -70,7 +70,7 @@ int W1::scan()
 
    if (!(dir = opendir(w1Path)))
    {
-      tell(0, "Error: Opening directory '%s' failed, %s", w1Path, strerror(errno));
+      tell(0, "Info: No One-Wire sensors found, path '%s' not exist (%s)", w1Path, strerror(errno));
       return fail;
    }
 

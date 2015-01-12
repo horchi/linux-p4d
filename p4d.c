@@ -560,38 +560,41 @@ int P4d::updateValueFacts()
    // ---------------------------------
    // add one wire sensor data
 
-   W1::SensorList* list = w1.getList();
-
-   w1.scan();
-
-   count = 0;
-   added = 0;
-
-   for (W1::SensorList::iterator it = list->begin(); it != list->end(); ++it)
+   if (w1.scan() == success)
    {
-      // update table
+      W1::SensorList* list = w1.getList();
+
+      // yes, we have one-wire sensors
+
+      count = 0;
+      added = 0;
       
-      tableValueFacts->clear();
-      tableValueFacts->setIntValue(cTableValueFacts::fiAddress, W1::toId(it->first.c_str()));
-      tableValueFacts->setValue(cTableValueFacts::fiType, "W1");
-      
-      if (!tableValueFacts->find())
+      for (W1::SensorList::iterator it = list->begin(); it != list->end(); ++it)
       {
-         tableValueFacts->setValue(cTableValueFacts::fiName, it->first.c_str());
-         tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-         tableValueFacts->setValue(cTableValueFacts::fiUnit, "°");
-         tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-         tableValueFacts->setValue(cTableValueFacts::fiTitle, it->first.c_str());
+         // update table
          
-         tableValueFacts->store();
-         added++;
+         tableValueFacts->clear();
+         tableValueFacts->setIntValue(cTableValueFacts::fiAddress, W1::toId(it->first.c_str()));
+         tableValueFacts->setValue(cTableValueFacts::fiType, "W1");
+         
+         if (!tableValueFacts->find())
+         {
+            tableValueFacts->setValue(cTableValueFacts::fiName, it->first.c_str());
+            tableValueFacts->setValue(cTableValueFacts::fiState, "D");
+            tableValueFacts->setValue(cTableValueFacts::fiUnit, "°");
+            tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
+            tableValueFacts->setValue(cTableValueFacts::fiTitle, it->first.c_str());
+            
+            tableValueFacts->store();
+            added++;
+         }
+         
+         count++;
       }
-
-      count++;
+      
+      tell(eloAlways, "Found %d one wire sensors, added %d", count, added);
    }
-
-   tell(eloAlways, "Found %d one wire sensors, added %d", count, added);
-
+      
    return success;
 }
 
