@@ -1,4 +1,4 @@
-﻿-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
 --                             Linux - P4 Daemon (p4d)                           --
 -----------------------------------------------------------------------------------
 -
@@ -107,11 +107,26 @@ Installation p4d Application:
 	git clone https://github.com/horchi/linux-p4d/
 - change to directory /tmp/linux-p4d
 - call "make" in the source directory
-- call "make install" in the source directory (file configs/p4d.conf is copied to /etc)
+- call "make install" in the source directory (file configs/p4d.conf is copied to /etc if not already present)
 - p4 daemon is installed in folder /usr/local/bin
-- check /etc/p4d.conf file for setting db-login, web-login, ttyDeviceSvc (change device if required),
-	check in /dev which ttyUSB devices is used for USB-Serial converter (/dev/ttyUSB0, /dev/ttyUSB1)
+- check /etc/p4d.conf file for setting db-login, ttyDeviceSvc device (change device if required),
+  check which /dev/ttyUSB? devices is used for USB-Serial converter (/dev/ttyUSB0, /dev/ttyUSB1)
 
+Aggregation / Cleanup:
+----------------------
+
+The samples will recorded in the configured interval (parameter interval in p4d.conf), the default is 60 Seconds.
+After a while the database will grow and the selects become slower. Therefore you can setup a automatic aggregation in the p4d.conf with this two parameters:
+The aggregateHistory is the history for aggregation in days, the default is 0 days -> aggegation turned OFF
+The aggregateInterval is the aggregation interval in minutes - 'one sample per interval will be build' (default 15 minutes)
+
+For example:
+aggregateHistory = 365
+aggregateInterval = 15
+
+Means that all samples older than 365 days will be aggregated to one sample per 15 Minutes.
+If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :o ?).
+Maybe i implement it later ;)
 
 Enable automatic p4d startup during boot:
 -----------------------------------------
@@ -120,6 +135,7 @@ Enable automatic p4d startup during boot:
 	edit file /tmp/linux-p4d/contrib/p4d
 	append the parameter 'mysql' at the end of the next line
 		# Required-Start:    hostname $local_fs $network $syslog
+
 - enable p4d start during RPi boot, run the commands
 	cp contrib/p4d /etc/init.d/
 	chmod 750 /etc/init.d/p4d
@@ -141,14 +157,14 @@ Setup and configure WEBIF:
 - for a test enter the web address http://<IP_of_RPi>/index.php 
 
 The default username and password for the login is
-Benutzername: p4
-Passwort: p4-3200
+User: p4
+Pass: p4-3200
 
-Fist WEBIF steps to enable data logging:
+Fist steps to enable data logging:
 
 1.) log in
 2.) Setup -> Aufzeichnung -> Init
-  select the values you like to record and save by clicking 'Speichern'
+    select the values you like to record and store your selection (click 'Speichern')
 3.) Menu -> Init
 4.) Menu -> Aktualisieren
 
@@ -165,6 +181,7 @@ The next steps are an example to setup the sending of mails. If another tool is 
 - change revaliases file	
   edit file /etc/ssmtp/revaliases and add line (gmx is used as an example)
 	root:MyMailAddress@gmx.de:mail.gmx.net:25
+
 - change ssmtp.conf file
   edit file /etc/ssmtp/ssmtp.conf (gmx is used as an example)
 	root=MyMailAddress@gmx.de
