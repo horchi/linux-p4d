@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-02-27:  version 0.1.16
+   - added:  New table for sensor alerts (not implemented yet)
+
 2015-02-27:  version 0.1.15
    - change: Improved trouble handling
    - added:  Setup of aggregation to README

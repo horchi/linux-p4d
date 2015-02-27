@@ -238,4 +238,41 @@ class cTableJobs : public cDbTable
 };
 
 //***************************************************************************
+// class cTableSensorAlert
+//***************************************************************************
+
+class cTableSensorAlert : public cDbTable
+{
+   public:
+
+      cTableSensorAlert(cDbConnection* aConnection, const char* aName = "sensoralert")
+         : cDbTable(aConnection, aName, fields, indices) { }
+
+      enum FieldIndex
+      {
+         fiId,
+         
+         fiInsSp,
+         fiUpdSp,
+         
+         fiAddress,
+         fiType,
+         
+         fiMin,
+         fiMax,
+
+         fiRange,
+         fiDelta,
+
+         fiMAddress,
+         fiMSubject,
+         fiMBody,
+
+         fiCount
+      };
+
+      static FieldDef fields[];
+};
+
+//***************************************************************************
 #endif //__TABLEDEF_H
