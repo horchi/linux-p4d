@@ -3,6 +3,11 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-02-27:  version 0.1.15
+   - change: Improved trouble handling
+   - added:  Setup of aggregation to README
+   - added:  Setup of One-Wire-Sensors to README
+
 2015-01-12:  version 0.1.14
    - change: On missing one-wire sensor show 'Info' instead of 'Error'
 

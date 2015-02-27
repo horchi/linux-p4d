@@ -92,12 +92,6 @@ int P4d::init()
 
    readConfiguration();
 
-   if (mail && !isEmpty(stateMailTo))
-      tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
-
-   if (mail && !isEmpty(errorMailTo))
-      tell(eloAlways, "Mail at error to '%s'", errorMailTo);
-
    w1.scan();
 
    return success;
@@ -745,16 +739,20 @@ int P4d::loop()
    time_t nextStateAt = 0;
    int lastState = na;
 
+   // info
+
+   if (mail && !isEmpty(stateMailTo))
+      tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
+
+   if (mail && !isEmpty(errorMailTo))
+      tell(eloAlways, "Mail at errors to '%s'", errorMailTo);
+
+   // init
+
    scheduleAggregate();
 
    sem->p();
-
-   if (serial->open(ttyDeviceSvc) != success)
-   {
-      sem->v();
-      return fail;
-   }
-
+   serial->open(ttyDeviceSvc);
    sem->v();
 
    while (!doShutDown())
@@ -789,10 +787,17 @@ int P4d::loop()
 
       if (status != success)
       {
+         sem->p();
          serial->close();
          tell(eloAlways, "Error reading serial interface, repopen now!");
-         serial->open(ttyDeviceSvc);
+         status = serial->open(ttyDeviceSvc);
+         sem->v();
 
+         if (status != success)
+         {
+            tell(eloAlways, "Retrying in 10 seconds");
+            standby(10);
+         }            
          continue;
       }
 
