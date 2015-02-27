@@ -246,7 +246,7 @@ class cTableSensorAlert : public cDbTable
    public:
 
       cTableSensorAlert(cDbConnection* aConnection, const char* aName = "sensoralert")
-         : cDbTable(aConnection, aName, fields, indices) { }
+         : cDbTable(aConnection, aName, fields) { }
 
       enum FieldIndex
       {
@@ -261,7 +261,7 @@ class cTableSensorAlert : public cDbTable
          fiMin,
          fiMax,
 
-         fiRange,
+         fiRangeM,
          fiDelta,
 
          fiMAddress,

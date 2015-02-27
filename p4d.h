@@ -103,6 +103,7 @@ class P4d : public FroelingService
       cTableMenu* tableMenu;
       cTableErrors* tableErrors;
       cTableJobs* tableJobs;
+      cTableSensorAlert* tableSensorAlert;
       cTableSchemaConf* tableSchemaConf;
       cTableConfig* tableConfig;
 

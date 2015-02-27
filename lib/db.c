@@ -721,7 +721,7 @@ int cDbTable::createIndices()
    if (!indices)
       return done;
 
-   for (int i = 0; getIndex(i)->name; i++)
+   for (int i = 0; getIndex(i) && getIndex(i)->name; i++)
    {
       IndexDef* index = getIndex(i);
       int fCount;

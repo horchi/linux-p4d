@@ -26,6 +26,7 @@ P4d::P4d()
    connection = 0;
    tableSamples = 0;
    tableJobs = 0;
+   tableSensorAlert = 0;
    tableSchemaConf = 0;
    tableValueFacts = 0;
    tableMenu = 0;
@@ -135,6 +136,9 @@ int P4d::initDb()
    tableJobs = new cTableJobs(connection);
    if (tableJobs->open() != success) return fail;
 
+   tableSensorAlert = new cTableSensorAlert(connection);
+   if (tableSensorAlert->open() != success) return fail;
+
    tableSchemaConf = new cTableSchemaConf(connection);
    if (tableSchemaConf->open() != success) return fail;
 
@@ -225,6 +229,7 @@ int P4d::exitDb()
    delete tableValueFacts;         tableValueFacts = 0;
    delete tableMenu;               tableMenu = 0;
    delete tableJobs;               tableJobs = 0;
+   delete tableSensorAlert;        tableSensorAlert = 0;
    delete tableSchemaConf;         tableSchemaConf = 0;
    delete tableErrors;             tableErrors = 0;
 

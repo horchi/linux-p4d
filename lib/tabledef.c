@@ -249,7 +249,7 @@ cDbService::FieldDef cTableSensorAlert::fields[] =
    { "min",              ffInt,       10, fiMin,           ftData },
    { "max",              ffInt,       10, fiMax,           ftData },
 
-   { "range",            ffInt,       10, fiRange,         ftData },
+   { "rangem",           ffInt,       10, fiRangeM,        ftData },
    { "delta",            ffInt,       10, fiDelta,         ftData },
 
    { "maddress",         ffAscii,    100, fiMAddress,      ftData },
