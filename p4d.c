@@ -95,6 +95,9 @@ int P4d::init()
    if (mail && !isEmpty(stateMailTo))
       tell(eloAlways, "Mail at states '%s' to '%s'", stateMailAtStates, stateMailTo);
 
+   if (mail && !isEmpty(errorMailTo))
+      tell(eloAlways, "Mail at error to '%s'", errorMailTo);
+
    w1.scan();
 
    return success;
