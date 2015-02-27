@@ -1149,7 +1149,7 @@ int P4d::aggregate()
    int aggCount = 0;
 
    asprintf(&stmt, 
-            "insert into samples "
+            "replace into samples "
             "  select address, type, 'A' as aggregate, "
             "    CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV %d) * %d)) + INTERVAL %d MINUTE time, "
             "    unix_timestamp(sysdate()) as inssp, unix_timestamp(sysdate()) as updsp, "
@@ -1165,12 +1165,13 @@ int P4d::aggregate()
             history,
             aggregateInterval * tmeSecondsPerMinute, aggregateInterval * tmeSecondsPerMinute, aggregateInterval);
   
+   tell(eloAlways, "Starting aggregation ...");
+
    if (connection->query(aggCount, stmt) == success)
    {
       int delCount = 0;
 
       tell(eloDebug, "Aggregation: [%s]", stmt);
-
       free(stmt);
 
       // Einzelmesspunkte löschen ...
