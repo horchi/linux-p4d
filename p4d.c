@@ -3,7 +3,7 @@
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 03.01.2014  Jörg Wendel
+// Date 04.11.2010 - 27.02.2015  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************

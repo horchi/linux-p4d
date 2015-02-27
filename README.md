@@ -216,6 +216,15 @@ revcommended to hold your system time in sync, e.g. by running the ntp daemon.
 - enable "Tägliche Zeitsynchronisation" and set the max time difference in seconds in the line "Maximale Abweichung"
 - save configuration
 
+One Wire Sensors:
+------------------
+
+The p4d checks automatically if there are 'One Wire Sensors' connected, each detected sensor will be
+configurable via the web interface after reading the sensor facts by clicking [init].
+
+To make the sensors available to the raspi you have to load the w1-gpio module,
+this can be done by calling 'modprobe w1-gpio' or automatically at boot by registering it in /etc/modules:
+#> echo "w1-gpio" >> /etc/modules
 
 points to check:
 ----------------
