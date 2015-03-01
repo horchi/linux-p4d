@@ -27,6 +27,10 @@ char dbPass[100+TB] = "p4";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 int  stateCheckInterval = 10;
+int  aggregateInterval = 15;     // aggregate interval in minutes
+int  aggregateHistory = 0;       // history in days
+
+int htmlMail = yes;
 
 //***************************************************************************
 // Configuration
@@ -44,9 +48,13 @@ int atConfigItem(const char* Name, const char* Value)
    
    else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
    else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);
-   else if (!strcasecmp(Name, "stateCheckInterval")) stateCheckInterval = atoi(Value);
+   else if (!strcasecmp(Name, "stateCheckInterval"))  stateCheckInterval = atoi(Value);
+   else if (!strcasecmp(Name, "ttyDeviceSvc"))        sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
 
-   else if (!strcasecmp(Name, "ttyDeviceSvc"))  sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
+   else if (!strcasecmp(Name, "aggregateInterval"))  aggregateInterval = atoi(Value);
+   else if (!strcasecmp(Name, "aggregateHistory"))   aggregateHistory = atoi(Value);
+
+   else if (!strcasecmp(Name, "htmlMail"))           htmlMail = atoi(Value);
 
    return success;
 }

@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.12"
+#define VERSION "0.1.16"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -31,6 +31,10 @@ extern char dbPass[];
 extern char ttyDeviceSvc[];
 extern int  interval;
 extern int  stateCheckInterval;
+extern int aggregateInterval;        // aggregate interval in minutes
+extern int aggregateHistory;         // history in days
+
+extern int htmlMail;
 
 //***************************************************************************
 // Class P4d
@@ -65,6 +69,8 @@ class P4d : public FroelingService
 
       int update();
       int updateState(Status* state);
+      int scheduleAggregate();
+      int aggregate();
 
       int updateErrors();
       int performWebifRequests();
@@ -72,7 +78,10 @@ class P4d : public FroelingService
 
       int store(time_t now, const char* type, unsigned int address, double value, 
                 unsigned int factor, const char* text = 0);
+
+      void addParameter2Mail(const char* name, const char* value);
       int sendMail();
+
       int updateSchemaConfTable();
       int updateValueFacts();
       int updateMenu();
@@ -94,6 +103,7 @@ class P4d : public FroelingService
       cTableMenu* tableMenu;
       cTableErrors* tableErrors;
       cTableJobs* tableJobs;
+      cTableSensorAlert* tableSensorAlert;
       cTableSchemaConf* tableSchemaConf;
       cTableConfig* tableConfig;
 
@@ -114,6 +124,7 @@ class P4d : public FroelingService
 
       Status currentState;
       string mailBody;
+      string mailBodyHtml;
 
       // config
 
@@ -124,6 +135,8 @@ class P4d : public FroelingService
       char* errorMailTo;
       int tSync;
       int maxTimeLeak;
+
+      time_t nextAggregateAt;
 
       // 
 

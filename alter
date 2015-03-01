@@ -30,9 +30,11 @@ insert into samples select address, type, 'A' as aggregate,
     from 
       samples 
     where 
-      time < '2013-12-31' group by CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900) )+ INTERVAL 15 MINUTE, address, type;
+      aggregate != 'A' and 
+      time <= '2013-12-31 23:59:59' group by CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900) )+ INTERVAL 15 MINUTE, address, type;
 
 # und die Einzelaufzeichnungen vor dem 1. Januar 2014 löschen:
 
-delete from samples where time < '2013-12-31' and aggregate != 'A':
+
+delete from samples where time <= '2013-12-31 23:59:59' and aggregate != 'A';
 OPTIMIZE TABLE samples;

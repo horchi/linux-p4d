@@ -223,3 +223,38 @@ cDbService::IndexDef cTableJobs::indices[] =
 
    { 0 }
 };
+
+//***************************************************************************
+// Sensor Alert
+//***************************************************************************
+
+cDbService::FieldDef cTableSensorAlert::fields[] =
+{
+   // name               format     size  index            type 
+
+   // primary key
+
+   { "id",               ffUInt,      11, fiId,            ftPrimary | ftAutoinc },
+
+   // meta                                                         
+
+   { "inssp",            ffInt,       10, fiInsSp,         ftMeta },
+   { "updsp",            ffInt,       10, fiUpdSp,         ftMeta },
+
+   // data
+
+   { "address",          ffUInt,       4, fiAddress,       ftData },
+   { "type",             ffAscii,      2, fiType,          ftData },
+
+   { "min",              ffInt,       10, fiMin,           ftData },
+   { "max",              ffInt,       10, fiMax,           ftData },
+
+   { "rangem",           ffInt,       10, fiRangeM,        ftData },
+   { "delta",            ffInt,       10, fiDelta,         ftData },
+
+   { "maddress",         ffAscii,    100, fiMAddress,      ftData },
+   { "msubject",         ffAscii,    100, fiMSubject,      ftData },
+   { "mbody",            ffText,    2000, fiMBody,         ftData },
+
+   { 0 }
+};
