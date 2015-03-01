@@ -58,10 +58,29 @@ Automated Installation by script:
 
 - download the Script form Philipps Wikipage
 	"cd .."
-	"cd p4d"
+	"cd /usr/src/p4d"
 	"wget http://hungerphilipp.de/files/p4d/install.sh"
 	"chmod +x install.sh"
 	"./install.sh" or "sudo ./install.sh/"
+
+
+Automated Update by script:
+----------------------------
+
+- download the Script form Philipps Wikipage
+	"cd .."
+	"cd /usr/src/p4d"
+	"wget http://hungerphilipp.de/files/p4d/update.sh"
+	"chmod +x update.sh"
+	"./update.sh" or "sudo ./update.sh/"
+
+- or with update of the html files
+	"cd .."
+	"cd /usr/src/p4d"
+	"wget http://hungerphilipp.de/files/p4d/update_whtml.sh"
+	"chmod +x update_whtml.sh"
+	"./update_whtml.sh" or "sudo ./update_whtml.sh/"
+	
 
 Installation MySql Database:
 ----------------------------
