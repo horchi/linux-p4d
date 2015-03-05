@@ -182,7 +182,8 @@ class cDbValue : public cDbService
 
          if (field->format != ffAscii && field->format != ffText && field->format != ffMlob)
          {
-            tell(0, "Setting invalid field format for '%s', expected ASCII or MLOB", field->name);
+            tell(0, "Setting invalid field format for '%s', expected '%s' got string", 
+                 field->name, cDBS::toString(field->format));
             return;
          }
 
@@ -358,7 +359,7 @@ class cDbValue : public cDbService
          return field->format == ffBigInt || field->format == ffUBigInt ? longlongValue : numValue; 
       }
 
-      float getFloatValue()                { return !isNull() ? floatValue : 0; }
+      float getDoubleValue()               { return !isNull() ? floatValue : 0; }
       int isNull()                         { return nullValue; }
 
       char* getStrValueRef()               { return strValue; }
@@ -482,7 +483,7 @@ class cDbRow : public cDbService
 
       const char* getStrValue(int f)         const { return dbValues[f].getStrValue(); }
       long long getIntValue(int f)           const { return dbValues[f].getIntValue(); }
-      float getFloatValue(int f)             const { return dbValues[f].getFloatValue(); }
+      float getDoubleValue(int f)            const { return dbValues[f].getDoubleValue(); }
       int isNull(int f)                      const { return dbValues[f].isNull(); }
 
    protected:
@@ -848,7 +849,7 @@ class cDbTable : public cDbService
       int hasValue(int f, double value)                      { return row->hasValue(f, value); }
       const char* getStrValue(int f)       const             { return row->getStrValue(f); }
       long long getIntValue(int f)         const             { return row->getIntValue(f); }
-      float getFloatValue(int f)           const             { return row->getFloatValue(f); }
+      float getDoubleValue(int f)          const             { return row->getDoubleValue(f); }
       int isNull(int f)                    const             { return row->isNull(f); }
 
       cDbValue* getValue(int f)                              { return row->getValue(f); }

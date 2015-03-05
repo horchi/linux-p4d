@@ -3,7 +3,7 @@
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 27.02.2015  Jörg Wendel
+// Date 04.11.2010 - 05.03.2015  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -37,6 +37,7 @@ P4d::P4d()
    selectAllValueFacts = 0;
    selectPendingJobs = 0;
    selectAllMenuItems = 0;
+   selectSensorAlerts = 0;
    cleanupJobs = 0;
 
    nextAt = time(0);
@@ -208,6 +209,27 @@ int P4d::initDb()
 
    // ------------------
 
+   selectSensorAlerts = new cDbStatement(tableSensorAlert);
+
+   selectSensorAlerts->build("select ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiId, cDBS::bndOut);
+   selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMin, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMax, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiRangeM, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiDelta, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMAddress, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMSubject, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMBody, cDBS::bndOut, ", ");
+   selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
+   selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectSensorAlerts->prepare();
+
+   // ------------------
+
    cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
@@ -232,13 +254,15 @@ int P4d::exitDb()
    delete tableSensorAlert;        tableSensorAlert = 0;
    delete tableSchemaConf;         tableSchemaConf = 0;
    delete tableErrors;             tableErrors = 0;
+   delete tableConfig;             tableConfig = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
    delete selectAllMenuItems;      selectAllMenuItems = 0;
+   delete selectSensorAlerts;      selectSensorAlerts = 0;
    delete cleanupJobs;             cleanupJobs = 0;
-   delete tableConfig;             tableConfig = 0;
+
    delete connection;              connection = 0;
 
    return done;
@@ -985,7 +1009,8 @@ int P4d::update()
             strcat(num, "°C");
          else
             strcat(num, unit);
-         
+
+         sensorAlertCheck(type, addr, v.value/factor, unit);
          addParameter2Mail(title, num);
       }
 
@@ -1092,6 +1117,75 @@ int P4d::update()
    updateErrors();
 
    return success;
+}
+
+//***************************************************************************
+// Sensor Alert Check
+//***************************************************************************
+
+void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, const char* unit)
+{
+   tableSensorAlert->clear();
+   tableSensorAlert->setValue(cTableSensorAlert::fiType, type);
+   tableSensorAlert->setValue(cTableSensorAlert::fiAddress, addr);
+
+   // iterate over all alert roulse of this sensor ...
+
+   for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
+   {
+      int minIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMin)->isNull();
+      int maxIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMax)->isNull();
+      int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
+      int max = tableSensorAlert->getIntValue(cTableSensorAlert::fiMax);
+
+      int rangeIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiRangeM)->isNull();
+      int deltaIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiDelta)->isNull();
+      int range = tableSensorAlert->getIntValue(cTableSensorAlert::fiRangeM);
+      int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
+
+      const char* subject = tableSensorAlert->getStrValue(cTableSensorAlert::fiMSubject);
+      const char* to = tableSensorAlert->getStrValue(cTableSensorAlert::fiMAddress);
+
+      if (!minIsNull || !maxIsNull)
+      {
+         if ((!minIsNull && value < min) || (!maxIsNull && value > max))
+         {
+            tell(eloAlways, "Alert for sensor %s/%d, value %.2f not in range %d - %d", 
+                 type, addr, value, min, max);
+            
+            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
+         }
+      }
+
+      if (!rangeIsNull && !deltaIsNull)
+      {
+         // select value of this sensor from samples at 'time = (now - range)'
+         
+         tableSamples->clear();
+         
+         tableSamples->setValue(cTableSamples::fiTime, time(0) - range*tmeSecondsPerMinute);
+         tableSamples->setIntValue(cTableSamples::fiAddress, addr);
+         tableSamples->setValue(cTableSamples::fiType, type);
+         tableSamples->setValue(cTableSamples::fiAggregate, "S");
+         
+         // ... TODO ... select nearest sample at given time!
+         
+         if (tableSamples->find())
+         {
+            double oldValue = tableSamples->getDoubleValue(cTableSamples::fiValue);
+
+            if (labs(value - oldValue) > delta)
+               tell(eloAlways, "Alert for sensor %s/%d, value %.2f changed more than %d in %d minutes", 
+                    type, addr, value, delta, range);
+
+            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);               
+         }
+
+         tableSamples->reset();
+      }
+   }
+
+   selectSensorAlerts->freeResult();
 }
 
 //***************************************************************************
