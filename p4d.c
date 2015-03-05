@@ -1143,6 +1143,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
       int range = tableSensorAlert->getIntValue(cTableSensorAlert::fiRangeM);
       int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
 
+      int id = tableSensorAlert->getIntValue(cTableSensorAlert::fiId);
       const char* subject = tableSensorAlert->getStrValue(cTableSensorAlert::fiMSubject);
       const char* to = tableSensorAlert->getStrValue(cTableSensorAlert::fiMAddress);
 
@@ -1150,8 +1151,8 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
       {
          if ((!minIsNull && value < min) || (!maxIsNull && value > max))
          {
-            tell(eloAlways, "Alert for sensor %s/%d, value %.2f not in range %d - %d", 
-                 type, addr, value, min, max);
+            tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
+                 id, type, addr, value, min, max);
             
             tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
          }
@@ -1175,8 +1176,8 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
             double oldValue = tableSamples->getDoubleValue(cTableSamples::fiValue);
 
             if (labs(value - oldValue) > delta)
-               tell(eloAlways, "Alert for sensor %s/%d, value %.2f changed more than %d in %d minutes", 
-                    type, addr, value, delta, range);
+               tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
+                    id, type, addr, value, delta, range);
 
             tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);               
          }
