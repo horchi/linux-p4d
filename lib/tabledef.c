@@ -246,6 +246,8 @@ cDbService::FieldDef cTableSensorAlert::fields[] =
    { "address",          ffUInt,       4, fiAddress,       ftData },
    { "type",             ffAscii,      2, fiType,          ftData },
 
+   { "state",            ffAscii,      1, fiState,         ftData },
+
    { "min",              ffInt,       10, fiMin,           ftData },
    { "max",              ffInt,       10, fiMax,           ftData },
 
