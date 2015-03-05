@@ -1129,7 +1129,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
    tableSensorAlert->setValue(cTableSensorAlert::fiType, type);
    tableSensorAlert->setValue(cTableSensorAlert::fiAddress, addr);
 
-   // iterate over all alert roulse of this sensor ...
+   // iterate over all alert roules of this sensor ...
 
    for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
    {
@@ -1155,12 +1155,13 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
                  id, type, addr, value, min, max);
             
             tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
+            // #TODO - create and send the mail
          }
       }
 
       if (!rangeIsNull && !deltaIsNull)
       {
-         // select value of this sensor from samples at 'time = (now - range)'
+         // select value of this sensor around 'time = (now - range)'
          
          tableSamples->clear();
          
@@ -1169,7 +1170,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
          tableSamples->setValue(cTableSamples::fiType, type);
          tableSamples->setValue(cTableSamples::fiAggregate, "S");
          
-         // ... TODO ... select nearest sample at given time!
+         // #TODO ... select nearest sample at given time!
          
          if (tableSamples->find())
          {
@@ -1179,7 +1180,8 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
                tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
                     id, type, addr, value, delta, range);
 
-            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);               
+            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
+            // #TODO - create and send the mail
          }
 
          tableSamples->reset();
