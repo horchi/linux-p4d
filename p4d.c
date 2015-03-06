@@ -1358,13 +1358,15 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    char* sensor = 0;
    char* command = 0;
    string sbody, ssubject;
-   char svalue[100];
 
    const char* subject = alertRow->getStrValue(cTableSensorAlert::fiMSubject);
    const char* body = alertRow->getStrValue(cTableSensorAlert::fiMBody);
    const char* to = alertRow->getStrValue(cTableSensorAlert::fiMAddress);
    unsigned int addr = alertRow->getIntValue(cTableSensorAlert::fiAddress);
    const char* type = alertRow->getStrValue(cTableSensorAlert::fiType);
+
+   int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
+   int max = tableSensorAlert->getIntValue(cTableSensorAlert::fiMax);
 
    // check
 
@@ -1378,21 +1380,23 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
 
    sbody = body;
    ssubject = subject;
-
-   sprintf(svalue, "%.2f", value);
    asprintf(&sensor, "%s/0x%x", type, addr);
 
    // templating
 
    sbody = strReplace("%sensorid%", sensor, sbody);
-   sbody = strReplace("%value%", svalue, sbody);
+   sbody = strReplace("%value%", value, sbody);
    sbody = strReplace("%unit%", unit, sbody);
    sbody = strReplace("%title%", title, sbody);
+   sbody = strReplace("%min%", (long)min, sbody);
+   sbody = strReplace("%max%", (long)max, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
-   ssubject = strReplace("%value%", svalue, ssubject);
+   ssubject = strReplace("%value%", value, ssubject);
    ssubject = strReplace("%unit%", unit, ssubject);
    ssubject = strReplace("%title%", title, ssubject);
+   ssubject = strReplace("%min%", (long)min, ssubject);
+   ssubject = strReplace("%max%", (long)max, ssubject);
    
    // prepare command and perform system call 
 

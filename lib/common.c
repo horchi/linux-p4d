@@ -313,6 +313,26 @@ string strReplace(const string& what, const string& with, const string& subject)
    return str;
 }
 
+string strReplace(const string& what, long with, const string& subject)
+{
+   char swith[100];
+   size_t pos = 0;
+
+   sprintf(swith, "%ld", with);
+
+   return strReplace(what, swith, subject);
+}
+
+string strReplace(const string& what, double with, const string& subject)
+{
+   char swith[100];
+   size_t pos = 0;
+
+   sprintf(swith, "%.2f", with);
+
+   return strReplace(what, swith, subject);
+}
+
 //***************************************************************************
 // 
 //***************************************************************************
