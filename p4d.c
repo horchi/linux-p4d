@@ -1157,7 +1157,10 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
                  id, type, addr, value, min, max);
 
             // max one alert mail per hour
-            
+
+            tell(eloAlways, "(%ld)/(%ld), %s / %s", lastAlert, time(0)-60*tmeSecondsPerHour,
+                 l2pTime(lastAlert).c_str(), l2pTime(time(0)-60*tmeSecondsPerHour).c_str());
+
             if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerHour)
             {
                alertDone = yes;
