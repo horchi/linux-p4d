@@ -258,5 +258,7 @@ cDbService::FieldDef cTableSensorAlert::fields[] =
    { "msubject",         ffAscii,    100, fiMSubject,      ftData },
    { "mbody",            ffText,    2000, fiMBody,         ftData },
 
+   { "lastalert",        ffInt,       10, fiLastAlert,     ftData },
+
    { 0 }
 };

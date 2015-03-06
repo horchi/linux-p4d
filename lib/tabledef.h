@@ -270,6 +270,8 @@ class cTableSensorAlert : public cDbTable
          fiMSubject,
          fiMBody,
 
+         fiLastAlert,
+
          fiCount
       };
 

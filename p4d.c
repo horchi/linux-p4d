@@ -1010,7 +1010,7 @@ int P4d::update()
          else
             strcat(num, unit);
 
-         sensorAlertCheck(type, addr, v.value/factor, unit);
+         sensorAlertCheck(type, addr, title, v.value/factor, unit);
          addParameter2Mail(title, num);
       }
 
@@ -1123,7 +1123,7 @@ int P4d::update()
 // Sensor Alert Check
 //***************************************************************************
 
-void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, const char* unit)
+void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* title, double value, const char* unit)
 {
    tableSensorAlert->clear();
    tableSensorAlert->setValue(cTableSensorAlert::fiType, type);
@@ -1133,6 +1133,10 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
 
    for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
    {
+      int alertDone = no;
+
+      time_t lastAlert = tableSensorAlert->getIntValue(cTableSensorAlert::fiLastAlert);
+
       int minIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMin)->isNull();
       int maxIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMax)->isNull();
       int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
@@ -1144,8 +1148,6 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
       int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
 
       int id = tableSensorAlert->getIntValue(cTableSensorAlert::fiId);
-      const char* subject = tableSensorAlert->getStrValue(cTableSensorAlert::fiMSubject);
-      const char* to = tableSensorAlert->getStrValue(cTableSensorAlert::fiMAddress);
 
       if (!minIsNull || !maxIsNull)
       {
@@ -1153,9 +1155,14 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
          {
             tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
                  id, type, addr, value, min, max);
-            
-            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
-            // #TODO - create and send the mail
+
+            // max one alert mail per hour
+
+            if (lastAlert && lastAlert < time(0)-60*tmeSecondsPerMinute)
+            {
+               alertDone = yes;
+               sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
+            }
          }
       }
 
@@ -1180,11 +1187,21 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, double value, co
                tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
                     id, type, addr, value, delta, range);
 
-            tell(eloAlways, "Sending mail '%s' to '%s'", subject, to);
-            // #TODO - create and send the mail
+            if (lastAlert && lastAlert < time(0)-60*tmeSecondsPerMinute)
+            {
+               alertDone = yes;
+               sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
+            }
          }
 
          tableSamples->reset();
+      }
+
+      if (alertDone)
+      {
+         tableSensorAlert->find();
+         tableSensorAlert->setValue(cTableSensorAlert::fiLastAlert, time(0));
+         tableSensorAlert->update();
       }
    }
 
@@ -1321,6 +1338,66 @@ int P4d::updateErrors()
       tableErrors->insert();
    }
    
+   return success;
+}
+
+//***************************************************************************
+// Send Mail
+//***************************************************************************
+
+int P4d::sendAlertMail(cDbRow* alertRow, const char* title, 
+                       double value, const char* unit)
+{
+   char* sensor = 0;
+   char* command = 0;
+   string sbody, ssubject;
+   char svalue[100];
+
+   const char* subject = alertRow->getStrValue(cTableSensorAlert::fiMSubject);
+   const char* body = alertRow->getStrValue(cTableSensorAlert::fiMBody);
+   const char* to = alertRow->getStrValue(cTableSensorAlert::fiMAddress);
+   unsigned int addr = alertRow->getIntValue(cTableSensorAlert::fiAddress);
+   const char* type = alertRow->getStrValue(cTableSensorAlert::fiType);
+
+   // check
+
+   if (isEmpty(to) || isEmpty(mailScript) || isEmpty(subject))
+      return done;
+
+   if (isEmpty(body))
+      body = "- undefined -";
+
+   // prepare
+
+   sbody = body;
+   ssubject = subject;
+
+   sprintf(svalue, "%.2f", value);
+   asprintf(&sensor, "%s/0x%x", type, addr);
+
+   // templating
+
+   sbody = strReplace("%sensor%", sensor, sbody);
+   sbody = strReplace("%value%", svalue, sbody);
+   sbody = strReplace("%unit%", unit, sbody);
+   sbody = strReplace("%title%", title, sbody);
+
+   ssubject = strReplace("%sensor%", sensor, ssubject);
+   ssubject = strReplace("%value%", svalue, ssubject);
+   ssubject = strReplace("%unit%", unit, ssubject);
+   ssubject = strReplace("%title%", title, ssubject);
+   
+   // prepare command and perform system call 
+
+   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
+            ssubject.c_str(), sbody.c_str(), "text/plain", to);
+   
+   system(command);
+   free(command);
+   free(sensor);
+
+   tell(eloAlways, "Sending mail '%s' to '%s'", ssubject.c_str(), to);
+
    return success;
 }
 

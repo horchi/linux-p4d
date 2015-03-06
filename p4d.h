@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.17"
+#define VERSION "0.1.18"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -80,9 +80,10 @@ class P4d : public FroelingService
                 unsigned int factor, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);
-      void sensorAlertCheck(const char* type, unsigned int addr, double value, const char* unit);
+      void sensorAlertCheck(const char* type, unsigned int addr, const char* title, double value, const char* unit);
 
       int sendMail();
+      int sendAlertMail(cDbRow* alerRow, const char* title, double value, const char* unit);
 
       int updateSchemaConfTable();
       int updateValueFacts();

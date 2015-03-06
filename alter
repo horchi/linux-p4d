@@ -11,7 +11,7 @@ alter table jobs change address address int(4) unsigned;
 
 
 #----------------------------------------------------------
-# -> updateauf Version 0.1.12
+# -> update auf Version 0.1.12
 #----------------------------------------------------------
 
 alter table samples drop column sensorid;
@@ -20,21 +20,7 @@ alter table samples add column samples integer(3) after text;
 alter table samples drop primary key, add primary key(address, type, aggregate, time);
 
 #----------------------------------------------------------
-# -> im Anschuss manuell aggregieren: 
-#    Beispiel 1 Wert alle 15 Minuten
+# -> update auf Version 0.1.18
+#----------------------------------------------------------
 
-insert into samples select address, type, 'A' as aggregate, 
-      CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900)) + INTERVAL 15 MINUTE time, 
-      unix_timestamp(sysdate()) as inssp, unix_timestamp(sysdate()) as updsp, 
-      round(sum(value)/count(*), 2) as value, text, count(*) samples 
-    from 
-      samples 
-    where 
-      aggregate != 'A' and 
-      time <= '2013-12-31 23:59:59' group by CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV 900) * 900) )+ INTERVAL 15 MINUTE, address, type;
-
-# und die Einzelaufzeichnungen vor dem 1. Januar 2014 löschen:
-
-
-delete from samples where time <= '2013-12-31 23:59:59' and aggregate != 'A';
-OPTIMIZE TABLE samples;
+alter table sensoralert add column lastalert int(10) after mbody;
