@@ -1158,7 +1158,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
 
             // max one alert mail per hour
 
-            if (lastAlert && lastAlert < time(0)-60*tmeSecondsPerMinute)
+            if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
             {
                alertDone = yes;
                sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
@@ -1187,7 +1187,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
                tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
                     id, type, addr, value, delta, range);
 
-            if (lastAlert && lastAlert < time(0)-60*tmeSecondsPerMinute)
+            if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
             {
                alertDone = yes;
                sendAlertMail(tableSensorAlert->getRow(), title, value, unit);

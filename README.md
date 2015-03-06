@@ -102,10 +102,10 @@ Installation p4d Application:
 - install build essentials like make, g++, ...
 - install libssl-dev 
   apt-get install libssl-dev
-- change to directory /tmp (or another folder if download should be persistent stay on the device)
+- change to directory /usr/src/ (or another folder if download should be persistent stay on the device)
 - run command to download current version
 	git clone https://github.com/horchi/linux-p4d/
-- change to directory /tmp/linux-p4d
+- change to directory /usr/src/linux-p4d
 - call "make" in the source directory
 - call "make install" in the source directory (file configs/p4d.conf is copied to /etc if not already present)
 - p4 daemon is installed in folder /usr/local/bin
@@ -132,7 +132,7 @@ Enable automatic p4d startup during boot:
 -----------------------------------------
 
 - if MySQL database is located on the same device as p4d is running you have to do the next steps
-	edit file /tmp/linux-p4d/contrib/p4d
+	edit file /usr/src/linux-p4d/contrib/p4d
 	append the parameter 'mysql' at the end of the next line
 		# Required-Start:    hostname $local_fs $network $syslog
 
@@ -145,7 +145,7 @@ Enable automatic p4d startup during boot:
 Setup and configure WEBIF:
 --------------------------
 
-- copy content of folder /tmp/linux-p4d/htdocs to your webroot (/var/www is used as example in the next steps)
+- copy content of folder /usr/src/linux-p4d/htdocs to your webroot (/var/www is used as example in the next steps)
 - download the tool pChart2.1.x from http://www.pchart.net/download (version 2.1.3 in our example)
 - store the extracted download in the webroot folder (eg. /var/www/pChart2.1.3)
 - create symbolic link
