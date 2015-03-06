@@ -223,6 +223,7 @@ int P4d::initDb()
    selectSensorAlerts->bind(cTableSensorAlert::fiMSubject, cDBS::bndOut, ", ");
    selectSensorAlerts->bind(cTableSensorAlert::fiMBody, cDBS::bndOut, ", ");
    selectSensorAlerts->bind(cTableSensorAlert::fiLastAlert, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiMaxRepeat, cDBS::bndOut, ", ");
    selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
    selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndIn | cDBS::bndSet, " and ");
    selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
@@ -1137,6 +1138,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
       int alertDone = no;
 
       time_t lastAlert = tableSensorAlert->getIntValue(cTableSensorAlert::fiLastAlert);
+      int maxRepeat = tableSensorAlert->getIntValue(cTableSensorAlert::fiMaxRepeat);
 
       int minIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMin)->isNull();
       int maxIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMax)->isNull();
@@ -1157,9 +1159,9 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
             tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
                  id, type, addr, value, min, max);
 
-            // max one alert mail per hour
+            // max one alert mail per maxRepeat [minutes]
 
-            if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
+            if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
             {
                alertDone = yes;
                sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
@@ -1189,9 +1191,9 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
                tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
                     id, type, addr, value, delta, range);
                
-               // max one alert mail per hour
+               // max one alert mail per maxRepeat [minutes]
 
-               if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
+               if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
                {
                   alertDone = yes;
                   sendAlertMail(tableSensorAlert->getRow(), title, value, unit);

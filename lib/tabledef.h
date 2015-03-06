@@ -271,6 +271,7 @@ class cTableSensorAlert : public cDbTable
          fiMBody,
 
          fiLastAlert,
+         fiMaxRepeat,
 
          fiCount
       };

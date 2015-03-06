@@ -24,3 +24,4 @@ alter table samples drop primary key, add primary key(address, type, aggregate, 
 #----------------------------------------------------------
 
 alter table sensoralert add column lastalert int(10) after mbody;
+alter table sensoralert add column maxrepeat int(10) after lastalert;

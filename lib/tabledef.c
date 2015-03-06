@@ -259,6 +259,7 @@ cDbService::FieldDef cTableSensorAlert::fields[] =
    { "mbody",            ffText,    2000, fiMBody,         ftData },
 
    { "lastalert",        ffInt,       10, fiLastAlert,     ftData },
+   { "maxrepeat",        ffInt,      10, fiMaxRepeat,     ftData },
 
    { 0 }
 };
