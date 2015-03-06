@@ -222,6 +222,7 @@ int P4d::initDb()
    selectSensorAlerts->bind(cTableSensorAlert::fiMAddress, cDBS::bndOut, ", ");
    selectSensorAlerts->bind(cTableSensorAlert::fiMSubject, cDBS::bndOut, ", ");
    selectSensorAlerts->bind(cTableSensorAlert::fiMBody, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind(cTableSensorAlert::fiLastAlert, cDBS::bndOut, ", ");
    selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
    selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndIn | cDBS::bndSet, " and ");
    selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
@@ -1158,10 +1159,12 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
 
             // max one alert mail per hour
 
-            tell(eloAlways, "(%ld)/(%ld), %s / %s", lastAlert, time(0)-60*tmeSecondsPerHour,
-                 l2pTime(lastAlert).c_str(), l2pTime(time(0)-60*tmeSecondsPerHour).c_str());
+            // (0)/(1425438906), 01.01.1970 01:00:00 / 04.03.2015 04:15:06
 
-            if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerHour)
+            tell(eloAlways, "(%ld)/(%ld), %s / %s", lastAlert, time(0)-60*tmeSecondsPerHour,
+                 l2pTime(lastAlert).c_str(), l2pTime(time(0)-60*tmeSecondsPerMinute).c_str());
+
+            if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
             {
                alertDone = yes;
                sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
@@ -1193,7 +1196,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
                
                // max one alert mail per hour
 
-               if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerHour)
+               if (!lastAlert || lastAlert < time(0)-60*tmeSecondsPerMinute)
                {
                   alertDone = yes;
                   sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
