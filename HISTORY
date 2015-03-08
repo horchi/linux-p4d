@@ -3,6 +3,12 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-03-05:  version 0.1.18
+   - added:  implementation of sensor alert mails
+
+2015-03-05:  version 0.1.17
+   - added:  Started implementation of sensor alerts
+
 2015-02-27:  version 0.1.16
    - added:  New table for sensor alerts (not implemented yet)
 

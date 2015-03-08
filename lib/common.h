@@ -118,6 +118,9 @@ void removeChars(std::string& str, const char* ignore);
 void removeCharsExcept(std::string& str, const char* except);
 void removeWord(std::string& pattern, std::string word);
 void prepareCompressed(std::string& pattern);
+string strReplace(const string& what, const string& with, const string& subject);
+string strReplace(const string& what, long with, const string& subject);
+string strReplace(const string& what, double with, const string& subject);
 
 const char* plural(int n, const char* s = "s");
 char* rTrim(char* buf);

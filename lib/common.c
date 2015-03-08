@@ -288,10 +288,6 @@ void removeWord(string& pattern, string word)
       pattern.swap(pattern.erase(pos, word.length()));
 }
 
-//***************************************************************************
-// String Manipulation
-//***************************************************************************
-
 void prepareCompressed(std::string& pattern)
 {
    // const char* ignore = " (),.;:-_+*!#?=&%$<>§/'`´@~\"[]{}"; 
@@ -302,6 +298,42 @@ void prepareCompressed(std::string& pattern)
    removeWord(pattern, " FOLGE ");
    removeCharsExcept(pattern, notignore);
 }
+
+string strReplace(const string& what, const string& with, const string& subject)
+{
+   string str = subject;
+   size_t pos = 0;
+   
+   while((pos = str.find(what, pos)) != string::npos) 
+   {
+      str.replace(pos, what.length(), with);
+      pos += with.length();
+   }
+
+   return str;
+}
+
+string strReplace(const string& what, long with, const string& subject)
+{
+   char swith[100];
+
+   sprintf(swith, "%ld", with);
+
+   return strReplace(what, swith, subject);
+}
+
+string strReplace(const string& what, double with, const string& subject)
+{
+   char swith[100];
+
+   sprintf(swith, "%.2f", with);
+
+   return strReplace(what, swith, subject);
+}
+
+//***************************************************************************
+// 
+//***************************************************************************
 
 const char* plural(int n, const char* s)
 { 

@@ -3,7 +3,7 @@
 // File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 07.01.2014  Jörg Wendel
+// Date 04.11.2010 - 05.03.2015  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4D_H_
@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.16"
+#define VERSION "0.1.18"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -80,7 +80,10 @@ class P4d : public FroelingService
                 unsigned int factor, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);
+      void sensorAlertCheck(const char* type, unsigned int addr, const char* title, double value, const char* unit);
+
       int sendMail();
+      int sendAlertMail(cDbRow* alerRow, const char* title, double value, const char* unit);
 
       int updateSchemaConfTable();
       int updateValueFacts();
@@ -111,6 +114,7 @@ class P4d : public FroelingService
       cDbStatement* selectAllValueFacts;
       cDbStatement* selectPendingJobs;
       cDbStatement* selectAllMenuItems;
+      cDbStatement* selectSensorAlerts;
       cDbStatement* cleanupJobs;
 
       time_t nextAt;

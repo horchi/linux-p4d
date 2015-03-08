@@ -258,6 +258,8 @@ class cTableSensorAlert : public cDbTable
          fiAddress,
          fiType,
          
+         fiState,
+
          fiMin,
          fiMax,
 
@@ -267,6 +269,9 @@ class cTableSensorAlert : public cDbTable
          fiMAddress,
          fiMSubject,
          fiMBody,
+
+         fiLastAlert,
+         fiMaxRepeat,
 
          fiCount
       };
