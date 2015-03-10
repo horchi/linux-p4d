@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.18"
+#define VERSION "0.1.19"
 #define confDirDefault "/etc"
 
 extern char dbHost[];
@@ -115,7 +115,10 @@ class P4d : public FroelingService
       cDbStatement* selectPendingJobs;
       cDbStatement* selectAllMenuItems;
       cDbStatement* selectSensorAlerts;
+      cDbStatement* selectSampleInRange;
       cDbStatement* cleanupJobs;
+
+      cDbValue rangeEnd;
 
       time_t nextAt;
       time_t startedAt;

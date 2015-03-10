@@ -38,6 +38,7 @@ P4d::P4d()
    selectPendingJobs = 0;
    selectAllMenuItems = 0;
    selectSensorAlerts = 0;
+   selectSampleInRange = 0;
    cleanupJobs = 0;
 
    nextAt = time(0);
@@ -110,6 +111,8 @@ int P4d::exit()
 //***************************************************************************
 // Init/Exit Database
 //***************************************************************************
+
+cDBS::FieldDef rangeEndDef = { "time", cDBS::ffDateTime,  0, 999, cDBS::ftData };
 
 int P4d::initDb()
 {
@@ -231,6 +234,30 @@ int P4d::initDb()
    status += selectSensorAlerts->prepare();
 
    // ------------------
+   // select * from samples 
+   //    where type = ? and address = ?
+   //     and time <= ?
+   //     and time > ?
+
+   rangeEnd.setField(&rangeEndDef);
+
+   selectSampleInRange = new cDbStatement(tableSamples);
+
+   selectSampleInRange->build("select ");
+   selectSampleInRange->bind(cTableSamples::fiAddress, cDBS::bndOut);
+   selectSampleInRange->bind(cTableSamples::fiType, cDBS::bndOut, ", ");
+   selectSampleInRange->bind(cTableSamples::fiTime, cDBS::bndOut, ", ");
+   selectSampleInRange->bind(cTableSamples::fiValue, cDBS::bndOut, ", ");
+   selectSampleInRange->build(" from %s where ", tableSamples->TableName());
+   selectSampleInRange->bind(cTableSamples::fiAddress, cDBS::bndIn | cDBS::bndSet);
+   selectSampleInRange->bind(cTableSamples::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSampleInRange->bindCmp(0, &rangeEnd, "<=", " and ");
+   selectSampleInRange->bindCmp(0, cTableSamples::fiTime, 0, ">", " and ");
+   selectSampleInRange->build(" order by time");
+
+   status += selectSampleInRange->prepare();
+
+   // ------------------
 
    cleanupJobs = new cDbStatement(tableJobs);
 
@@ -263,6 +290,7 @@ int P4d::exitDb()
    delete selectPendingJobs;       selectPendingJobs = 0;
    delete selectAllMenuItems;      selectAllMenuItems = 0;
    delete selectSensorAlerts;      selectSensorAlerts = 0;
+   delete selectSampleInRange;     selectSampleInRange = 0;
    delete cleanupJobs;             cleanupJobs = 0;
 
    delete connection;              connection = 0;
@@ -1125,7 +1153,8 @@ int P4d::update()
 // Sensor Alert Check
 //***************************************************************************
 
-void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* title, double value, const char* unit)
+void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* title, 
+                           double value, const char* unit)
 {
    tableSensorAlert->clear();
    tableSensorAlert->setValue(cTableSensorAlert::fiType, type);
@@ -1173,16 +1202,17 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
       {
          // select value of this sensor around 'time = (now - range)'
          
+         time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
+         time_t rangeEndAt = rangeStartAt + interval; 
+
          tableSamples->clear();
-         
-         tableSamples->setValue(cTableSamples::fiTime, time(0) - range*tmeSecondsPerMinute);
          tableSamples->setIntValue(cTableSamples::fiAddress, addr);
          tableSamples->setValue(cTableSamples::fiType, type);
          tableSamples->setValue(cTableSamples::fiAggregate, "S");
+         tableSamples->setValue(cTableSamples::fiTime, rangeStartAt);
+         rangeEnd.setValue(rangeEndAt);
          
-         // #TODO ... select nearest sample at given time!
-         
-         if (tableSamples->find())
+         if (selectSampleInRange->find())
          {
             double oldValue = tableSamples->getDoubleValue(cTableSamples::fiValue);
 
@@ -1201,6 +1231,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
             }
          }
 
+         selectSampleInRange->freeResult();
          tableSamples->reset();
       }
 
@@ -1225,7 +1256,8 @@ void P4d::addParameter2Mail(const char* name, const char* value)
 
    mailBody += string(name) + " = " + string(value) + "\n";
 
-   sprintf(buf, "      <tr><td><font face=\"Arial\">%s</font></td><td><font face=\"Arial\">%s</font></td></tr>\n", name, value);
+   sprintf(buf, "      <tr><td><font face=\"Arial\">%s</font></td>"
+           "<td><font face=\"Arial\">%s</font></td></tr>\n", name, value);
 
    mailBodyHtml += buf;
 }
@@ -1386,14 +1418,14 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
 
    sbody = strReplace("%sensorid%", sensor, sbody);
    sbody = strReplace("%value%", value, sbody);
-   sbody = strReplace("%unit%", unit, sbody);
+   sbody = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, sbody);
    sbody = strReplace("%title%", title, sbody);
    sbody = strReplace("%min%", (long)min, sbody);
    sbody = strReplace("%max%", (long)max, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
    ssubject = strReplace("%value%", value, ssubject);
-   ssubject = strReplace("%unit%", unit, ssubject);
+   ssubject = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, ssubject);
    ssubject = strReplace("%title%", title, ssubject);
    ssubject = strReplace("%min%", (long)min, ssubject);
    ssubject = strReplace("%max%", (long)max, ssubject);
