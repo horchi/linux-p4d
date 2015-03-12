@@ -154,11 +154,22 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.inputEdit2
+{
+  text-decoration: none;
+  color: blue;
+  font: 16px Verdana;
+  width: 70px;
+  padding: 3px;
+  border-radius: 7px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .checkbox
 {
   background-color: #FF9900;
   color: white;
-  padding: 5px 25px;
+  padding: 3px 10px;
   text-decoration: none;
   font: 16px Verdana;
   border-radius: 10px;
@@ -210,9 +221,20 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.values
+{
+	background-color: #ccc;
+  color: black;
+  padding: 2px 2px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+  border-radius: 5px;
+  box-shadow: 3px 3px 3px #666;
+}
+
 .table
 {
-  width: 1150px;
+  width: 1075px;
   border: 1;
   background-color: #FFFFCC;
   color: black;
@@ -258,7 +280,7 @@ Body
   border: 1;
   background-color: #FFFFCC;
   color: black;
-  font: 14px Verdana;
+  font: 18px Verdana;
   padding: 20px 20px;
 }
 
@@ -268,7 +290,7 @@ Body
   border: 1;
   background-color: #FFFF66;
   color: black;
-  font: 14px Verdana;
+  font: 18px Verdana;
   padding: 20px 20px;
 }
 
@@ -314,8 +336,8 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 50px; 
-  width: 500px; 
+  left: 30px; 
+  width: 400px; 
   background-color: #FFFFCC; 
   padding: 10px; 
   font: 20px Verdana;
@@ -327,7 +349,7 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 580px; 
+  left: 460px; 
   width: 175px; 
   height: 200px; 
   background-color: #FFFFCC; 
@@ -350,8 +372,8 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 780px; 
-  width: 410px; 
+  left: 660px; 
+  width: 420px; 
   height: 190px; 
   background-color: #FFFFCC;
   padding: 10px;
@@ -389,8 +411,8 @@ Body
 {
   position: absolute; 
   top: 195px; 
-  left: 50px; 
-  width: 500px; 
+  left: 30px; 
+  width: 400px; 
   background-color: #FFFFCC;
   solid: #804000; 
   padding: 10px; 
@@ -404,7 +426,7 @@ Body
   position: absolute;
   top: 50px;
   left: 30px;
-  width: 500px;
+  width: 400px;
   background-color: #FFFFCC;
   padding: 10px;
   font: 16px Verdana;

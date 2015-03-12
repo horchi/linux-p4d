@@ -46,6 +46,7 @@ mysql_query("SET lc_time_names = 'de_DE'");
 
 if ($cfg == "Start") 
 {
+   $_SESSION["num"] = 1;
    $_SESSION["started"] = 1;
    $started = 1;
    syslog(LOG_DEBUG, "p4: starting config");
@@ -72,7 +73,8 @@ echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpeg
 echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\"></input>\n";
 echo "      </div>\n";
 
-if ($started == 1)
+
+if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1)
 {
    echo "      <button class=\"button3\" type=submit name=cfg value=Stop>Stop</button>\n";
    echo "      <button class=\"button3\" type=submit name=cfg value=Skip>Skip</button>\n";
@@ -100,7 +102,7 @@ $schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 echo "\n";
 echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
 echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\"></input>\n";
+echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" style=\" z-index:20;\"></input>\n";
 echo "      </div>\n";
 
 if ($started == 1)
@@ -141,8 +143,8 @@ if ($started == 1)
          
          store("A", $mouseX, $mouseY, "black");
          
-         nextConf(1);
-      }
+			   nextConf(1);
+			}
    }
 }
 
@@ -161,15 +163,24 @@ include("footer.php");
 
 function nextConf($dir)
 {
+//   echo $_SESSION["cur"].":".$_SESSION["num"].":".$started;
    global $selectAllSchemaConf;
+   $_SESSION["cur"]++;
 
    if ($dir == -1)
       $_SESSION["cur"] -= 2;
    
    if ($_SESSION["cur"] < 0)
       $_SESSION["cur"] = 0;
-   
-   syslog(LOG_DEBUG, "p4: select " .  $_SESSION["cur"]);
+
+  syslog(LOG_DEBUG, "p4: select " .  $_SESSION["cur"]);
+			    if ($_SESSION["cur"] >= $_SESSION["num"])
+			   {
+			      syslog(LOG_DEBUG, "p4: config done");
+			      $_SESSION["started"] = 0; 
+			      $started = 0; 
+			      return;
+			   }
    
    // get last time stamp
    
@@ -185,7 +196,7 @@ function nextConf($dir)
    $_SESSION["type"] = mysql_result($result, $_SESSION["cur"], "f.type");
 
    $title = mysql_result($result, $_SESSION["cur"], "f.title");
-
+   // if ($title == "Fühler 1") $title = "Rücklauf HK-1";
    // get coresponding value/text and unit
 
    $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", 
@@ -210,13 +221,7 @@ function nextConf($dir)
    echo "  Text: " . $text;
    echo "</div>\n";
 
-   $_SESSION["cur"]++;
    
-   if ($_SESSION["cur"] >= $_SESSION["num"])
-   {
-      syslog(LOG_DEBUG, "p4: config done");
-      $_SESSION["started"] = 0;
-   }
 }
 
 //***************************************************************************
@@ -233,10 +238,10 @@ function store($state, $xpos, $ypos, $color)
    
    if (htmlspecialchars($_POST["showtext"]) == "Text")
       $showText = 1;
+      syslog(LOG_DEBUG, "p4: store position: " . $xpos . "/" . $ypos . " with unit: " . $showUnit);
 
    if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
    {
-      syslog(LOG_DEBUG, "p4: store position: " . $xpos . "/" . $ypos . " with unit: " . $showUnit);
       
       if ($state == "D")
          mysql_query("update schemaconf set state = '" . $state . "'" .

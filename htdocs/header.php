@@ -23,12 +23,15 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    // ------------------
    // get configuration
    
+   readConfigItem("chartStart", $_SESSION['chartStart']);
+   readConfigItem("chartDiv", $_SESSION['chartDiv']);
+   readConfigItem("chartXLines", $_SESSION['chartXLines']);
    readConfigItem("chart1", $_SESSION['chart1']);
    readConfigItem("chart2", $_SESSION['chart2']);
    
    // HK2
 
-   readConfigItem("HK2", $_SESSION['HK2']);
+   readConfigItem("chart34", $_SESSION['chart34']);
    readConfigItem("chart3", $_SESSION['chart3']);
    readConfigItem("chart4", $_SESSION['chart4']);
 
@@ -45,15 +48,27 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
    readConfigItem("heatingType", $_SESSION['heatingType']);
    readConfigItem("schema", $_SESSION['schema']);
+   readConfigItem("visuLink", $_SESSION['visuLink']);
    
    // ------------------
    // check for defaults
    
+   if ($_SESSION['chartStart'] == "")
+      $_SESSION['chartStart'] = "5";
+
+   if ($_SESSION['chartDiv'] == "")
+      $_SESSION['chartDiv'] = "25";
+
+   if ($_SESSION['chartXLines'] == "")
+      $_SESSION['chartXLines'] = 0;
+   else 
+      $_SESSION['chartXLines'] = 1;
+
    if ($_SESSION['chart1'] == "")
-      $_SESSION['chart1'] = "0,1,113";
+      $_SESSION['chart1'] = "0,1,113,18";
    
    if ($_SESSION['chart2'] == "")
-      $_SESSION['chart2'] = "118,120,21,25,4";
+      $_SESSION['chart2'] = "118,225,21,25,4,8";
    
    if ($_SESSION['HK2'] == "")
       $_SESSION['HK2'] = "0";
@@ -78,21 +93,23 @@ function printHeader($refresh = 0)
 <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"de\" lang=\"de\">
   <head>
     <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n";
-   
+   $stylesheet = (checkMobile() == 1)? "stylesheetMobile.css" : "stylesheet.css";
+      
    if ($refresh)
       echo "    <meta http-equiv=\"refresh\" content=\"$refresh\">\n";
    
    echo "    <meta name=\"author\" content=\"Jörg Wendel\">
     <meta name=\"copyright\" content=\"Jörg Wendel\">
-    <link rel=\"stylesheet\" type=\"text/css\" href=\"stylesheet.css\">
-    <title>Fröhling  " . $_SESSION['heatingType'] . "</title>
+    <LINK REL=\"SHORTCUT ICON\" HREF=\"" . $_SESSION['heatingType'] . ".ico\">
+    <link rel=\"stylesheet\" type=\"text/css\" href=\"$stylesheet\">
+    <title>Fröling  " . $_SESSION['heatingType'] . "</title>
   </head>
   <body>
     <a class=\"button1\" href=\"main.php\">Aktuell</a>
-    <a class=\"button1\" href=\"chart.php\">Charts</a>";
+    <a class=\"button1\" href=\"chart.php\">Charts 1+2</a>";
 
-   if ($_SESSION['HK2'] == "1")
-      echo "<a class=\"button1\" href=\"chart2.php\">Charts HK2</a>";
+   if ($_SESSION['chart34'] == "1")
+      echo "<a class=\"button1\" href=\"chart2.php\">Charts 3+4</a>";
 
    echo "<a class=\"button1\" href=\"schemadsp.php\">Schema</a>
     <a class=\"button1\" href=\"menu.php\">Menü</a>
@@ -106,6 +123,7 @@ function printHeader($refresh = 0)
    else
       echo "    <a class=\"button1\" href=\"login.php\">Login</a>\n";
    
+//   echo $stylesheet;
    echo "    <div class=\"content\">\n";
 }
 

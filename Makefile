@@ -115,10 +115,10 @@ lib/db.o        :  lib/db.c        $(HEADER)
 lib/tabledef.o  :  lib/tabledef.c  $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 
-main.o			 :  main.c         $(HEADER) p4d.h
-p4d.o           :  p4d.c          $(HEADER) p4d.h p4io.h w1.h
-p4io.o          :  p4io.c         $(HEADER) p4io.h 
-webif.o			 :  webif.c        $(HEADER) p4d.h
-w1.o			    :  w1.c           $(HEADER) w1.h
-service.o       :  service.c      $(HEADER) service.h
+main.o			 :  main.c          $(HEADER) p4d.h
+p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h
+p4io.o          :  p4io.c          $(HEADER) p4io.h 
+webif.o			 :  webif.c         $(HEADER) p4d.h
+w1.o			    :  w1.c            $(HEADER) w1.h
+service.o       :  service.c       $(HEADER) service.h
 chart.o         :  chart.c

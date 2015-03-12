@@ -9,7 +9,7 @@ include("config.php");
 include("functions.php");
 
 $fontText = $chart_fontpath . "/Forgotte.ttf";
-$fontScale = $chart_fontpath . "/MankSans.ttf";
+$fontScale = $chart_fontpath . "/Forgotte.ttf";
 // date_default_timezone_set('Europe/Berlin');
 
 // -----------------------------
@@ -21,6 +21,17 @@ mysql_query("set names 'utf8'");
 mysql_query("SET lc_time_names = 'de_DE'");
 
 // parameters
+// echo $Div.":".$_GET['chartDiv']." - ".$XLines.":".$_GET['chartXLines'];
+
+if(isset($_GET['chartDiv']) && is_numeric($_GET['chartDiv']))
+   $Div = htmlspecialchars($_GET['chartDiv']);
+else
+   $Div = 25;
+   
+if (isset($_GET['chartXLines']) && ($_GET['chartXLines'] == true || $_GET['chartXLines'] == 1)) 
+   $XLines = true;
+else
+   $XLines = false;
 
 if (isset($_GET['address']) && is_numeric($_GET['address']))
    $sensorCond = " address = " .  mysql_real_escape_string(htmlspecialchars($_GET['address'])) . " ";
@@ -43,7 +54,6 @@ if (isset($_GET['height']) && is_numeric($_GET['height']))
    $height = htmlspecialchars($_GET['height']);
 else
    $height = 600;
-
 if (isset($_GET['from']) && is_numeric($_GET['from']))
    $from = mysql_real_escape_string(htmlspecialchars($_GET['from']));
 else
@@ -119,6 +129,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
 
       // store the sensor value
  
+      if ($title == "Fühler 1") $title = "Rücklauf HK-1";
       $series[$title][] = $value;
       
       // need only one time scale -> create only for the first sensor
@@ -207,12 +218,12 @@ else
    
    // Draw the background
    
-   $Settings = array("R"=>70, "G"=>83, "B"=>187, "Dash"=>1, "DashR"=>90, "DashG"=>03, "DashB"=>207);
+   $Settings = array("R"=>00, "G"=>250, "B"=>250, "Dash"=>1, "DashR"=>0, "DashG"=>0, "DashB"=>0);
    $picture->drawFilledRectangle(0,0,$width,$height,$Settings);
    
    // Overlay with a gradient 
    
-   $Settings = array("StartR"=>119, "StartG"=>131, "StartB"=>239, "EndR"=>1, "EndG"=>38, "EndB"=>168, "Alpha"=>50);
+   $Settings = array("StartR"=>0, "StartG"=>0, "StartB"=>0, "EndR"=>0, "EndG"=>0, "EndB"=>0, "Alpha"=>100);
    $picture->drawGradientArea(0,0,$width,$height,DIRECTION_VERTICAL,$Settings);
    
    // Add a border to the picture
@@ -228,9 +239,9 @@ else
    // scale 
    
    $picture->setGraphArea(70,30,$width,$height-100);
-   $picture->drawFilledRectangle(70,30,$width,$height-100,array("R"=>255,"G"=>255,"B"=>255,"Surrounding"=>-200,"Alpha"=>10));
+   $picture->drawFilledRectangle(70,30,$width,$height-100,array("R"=>255,"G"=>255,"B"=>255,"Surrounding"=>-200,"Alpha"=>5));
    
-   $picture->drawScale(array("LabelingMethod"=>LABELING_DIFFERENT,"DrawSubTicks"=>false,"MinDivHeight"=>25,"LabelSkip"=>$skipTicks,"DrawXLines"=>false,"LabelRotation"=>45));
+   $picture->drawScale(array("LabelingMethod"=>LABELING_DIFFERENT,"DrawSubTicks"=>false,"MinDivHeight"=>$Div,"LabelSkip"=>$skipTicks,"DrawXLines"=>$XLines,"LabelRotation"=>45,"RemoveSkippedAxis"=>TRUE));
    
    // $picture->setShadow(true, array("X"=>1, "Y"=>1, "R"=>0, "G"=>0, "B"=>0, "Alpha"=>10));
    $picture->setFontProperties(array("FontName" => $fontScale, "FontSize"=>6, "R"=>0, "G"=>0, "B"=>0));
@@ -239,7 +250,7 @@ else
    // $picture->drawLineChart(array("DisplayValues"=>false,"DisplayColor"=>DISPLAY_AUTO));
    
    $picture->setShadow(false);
-   $picture->drawLegend(50, $height-17, array("Style"=>LEGEND_ROUND, "Family"=>LEGEND_FAMILY_CIRCLE, "Mode"=>LEGEND_HORIZONTAL, "FontSize"=>10));
+   $picture->drawLegend(75, $height-$height+45, array("Style"=>LEGEND_ROUND, "Family"=>LEGEND_FAMILY_CIRCLE, "Mode"=>LEGEND_HORIZONTAL, "FontSize"=>11));
  
    $cache->writeToCache($chartHash, $picture);
    $picture->Stroke();

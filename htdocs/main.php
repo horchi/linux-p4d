@@ -9,7 +9,6 @@
 
 include("header.php");
 
-
 printHeader(60);
 
   // -------------------------
@@ -34,10 +33,10 @@ printHeader(60);
   // ----------------
   // init
 
-  $day   = isset($_GET['sday'])   ? $_GET['sday']   : (int)date("d");
-  $month = isset($_GET['smonth']) ? $_GET['smonth'] : (int)date("m");
-  $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
-  $range = isset($_GET['range'])  ? $_GET['range']  : 1;
+  $day   = isset($_GET['sday'])   ? $_GET['sday']   : (int)date("d",time()-86400*$_SESSION['chartStart']);
+  $month = isset($_GET['smonth']) ? $_GET['smonth'] : (int)date("m",time()-86400*$_SESSION['chartStart']);
+  $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
+  $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
 
   // ------------------
   // State of P4 Daemon
@@ -62,7 +61,9 @@ printHeader(60);
   $state = requestAction("s3200-state", 3, 0, "", $response);
 
   if ($state == 0)
-     list($time, $state, $status, $mode) = split("#", $response, 4);
+     list($time, $state, $status, $mode) = split("#", $response, 4); 
+
+  $time = str_replace($wd_value, $wd_disp, $time);   
 
   echo "      <div class=\"stateInfo\">\n";
 
@@ -90,7 +91,7 @@ printHeader(60);
   elseif ($state == 2)
      echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
   elseif ($state == 3)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.png\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.gif\">\n";
   elseif ($state == 4)
      echo "        <img class=\"centerImage\" src=\"img/state/state-firehold.png\">\n";
   elseif ($state == 5)
@@ -114,18 +115,18 @@ printHeader(60);
 
   if ($p4dstate == 0)
   {
-    echo  "        <div id=\"aStateOk\"><center>P4 Daemon ONLINE</center></div>\n";
+    echo  "        <div id=\"aStateOk\"><center>Fröling $heatingType ONLINE</center></div>\n";
     echo  "          <table>\n";
     echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
     echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
     echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
     echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
     echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
-    echo  "            <tr><td>Last:</td><td>$load</td></tr>\n";
+    echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
     echo  "          </table>\n";
   }
   else
-    echo  "        <div id=\"aStateFail\"><center>Warning: P4 Daemon OFFLINE</center></div>\n";
+    echo  "        <div id=\"aStateFail\"><center>ACHTUNG:<br/>$heatingType Daemon OFFLINE</center></div>\n";
 
   echo "      </div>\n";
   echo "      <br/>\n";
@@ -154,6 +155,7 @@ printHeader(60);
   // ------------------
   // table
 
+  echo "  <div>\n";
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
 
@@ -179,7 +181,7 @@ printHeader(60);
   {
      $value = $row['s_value'];
      $text = $row['s_text'];
-     $title = $row['f_title'];
+     $title = $row['f_title'];   
      $unit = $row['f_unit'];
      $address = $row['s_address'];
      $type = $row['s_type'];
@@ -188,16 +190,16 @@ printHeader(60);
      if ($unit == "zst" || $unit == "dig")
         $unit = "";
      else if ($unit == "U")
-        $unit = " u/min";
+        $unit = " U/min";
      else if ($unit == "°")
         $unit = "°C";
      else if ($unit == "T")
      {
         $unit = "";
-        $value = $text;
+        $value = str_replace($wd_value, $wd_disp, $text);
      }
 
-     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . " ','_blank'," 
+     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank'," 
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
      
      if ($i++ % 2)
@@ -207,7 +209,7 @@ printHeader(60);
 
      if ($debug)
      {
-        echo "        <td>" . $txtaddr . "</td>\n";
+        echo "        <td>" . $address . "</td>\n";
         echo "        <td>" . $type . "</td>\n";
      }
 
@@ -217,6 +219,7 @@ printHeader(60);
   }
 
   echo "  </table>\n";
+  echo "  </div>\n";
 
   mysql_close();
 

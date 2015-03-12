@@ -152,11 +152,22 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.inputEdit2
+{
+  text-decoration: none;
+  color: blue;
+  font: 16px Verdana;
+  width: 70px;
+  padding: 5px;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .checkbox
 {
   background-color: #00DDEE;
   color: black;
-  padding: 5px 25px;
+  padding: 3px 10px;
   text-decoration: none;
   font: 16px Verdana;
   border-radius: 10px;
@@ -202,17 +213,28 @@ Body
 
 .schema 
 {
-  font: bold 12px Verdana;
+  font: bold 16px Verdana;
   top: 50px;
   left: 5px;
   box-shadow: 8px 8px 8px #666;
 }
 
-.tableLight
+.values
 {
-  width: 1150px;;
+	background-color: #ccc;
+  color: black;
+  padding: 2px 2px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+  border-radius: 5px;
+  box-shadow: 3px 3px 3px #666;
+}
+
+.table
+{
+  width: 1075px;
   border: 1;
-  background-color: #AAEEFF;
+  background-color: #FFFFCC;
   color: black;
   font: 14px Verdana;
   padding: 20px 20px;
@@ -256,7 +278,7 @@ Body
   border: 1;
   background-color: #AAEEFF;
   color: black;
-  font: 14px Verdana;
+  font: 18px Verdana;
   padding: 20px 20px;
 }
 
@@ -266,7 +288,7 @@ Body
   border: 1;
   background-color: #77FFFF;
   color: black;
-  font: 14px Verdana;
+  font: 18px Verdana;
   padding: 20px 20px;
 }
 
@@ -312,8 +334,8 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 50px; 
-  width: 500px; 
+  left: 30px; 
+  width: 400px; 
   background-color: #AAEEFF;
   padding: 10px; 
   font: 20px Verdana;
@@ -325,7 +347,7 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 580px; 
+  left: 460px; 
   width: 175px; 
   height: 200px; 
   background-color: #AAEEFF;
@@ -348,8 +370,8 @@ Body
 { 
   position: absolute; 
   top: 50px; 
-  left: 780px; 
-  width: 410px; 
+  left: 660px; 
+  width: 420px; 
   height: 190px; 
   background-color: #AAEEFF;
   padding: 10px; 
@@ -387,8 +409,8 @@ Body
 {
   position: absolute; 
   top: 195px; 
-  left: 50px; 
-  width: 500px; 
+  left: 30px; 
+  width: 400px; 
   background-color: #AAEEFF;
   solid: #804000; 
   padding: 10px; 

@@ -23,7 +23,7 @@
   echo "      <div class=\"schemaImage\" style=\"position:absolute;\">\n";
   echo "        <p><img src=\"$schemaImg\"></p>\n";
   echo "      </div>\n";
-
+  
   include("schema.php");
 
   include("footer.php");

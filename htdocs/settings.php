@@ -126,6 +126,7 @@ function showTable($type, $tableTitle)
    echo "            <td> Name </td>\n";
    echo "            <td> Einheit </td>\n";
    echo "            <td> Aufzeichnen </td>\n";
+   echo "            <td> ID / Typ </td>\n";
    echo "          </tr>\n";
 
    $result = mysql_query("select * from valuefacts where type = '$type'")
@@ -165,6 +166,7 @@ function showTable($type, $tableTitle)
          echo "            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>\n";
       else
          echo "            <td>[x]</td>\n";
+      echo "            <td> $address / $type </td>\n";
       echo "          </tr>\n";
 
       $i++;
