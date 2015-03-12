@@ -7,6 +7,7 @@
 
 PREFIX   = /usr/local
 BINDEST  = $(DESTDIR)$(PREFIX)/bin
+WEBDEST  = $(DESTDIR)/var/lib/p4
 CONFDEST = $(DESTDIR)/etc
 
 DEBUG = 1
@@ -75,6 +76,14 @@ install-scripts:
 	   chmod a+rx $(BINDEST); \
 	fi
 	install -D ./scripts/p4d-* $(BINDEST)/
+
+install-web:
+	if ! test -d $(WEBDEST); then \
+		mkdir -p "$(WEBDEST)" \
+	   chmod a+rx $(WEBDEST); \
+	fi
+	cp -r ./htdocs/* $(WEBDEST)/
+	chmod -R a+r $(WEBDEST)
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
