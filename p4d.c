@@ -1397,10 +1397,11 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    unsigned int addr = alertRow->getIntValue(cTableSensorAlert::fiAddress);
    const char* type = alertRow->getStrValue(cTableSensorAlert::fiType);
 
-   int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
-   int max = tableSensorAlert->getIntValue(cTableSensorAlert::fiMax);
-   int range = tableSensorAlert->getIntValue(cTableSensorAlert::fiRangeM);
-   int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
+   int min = alertRow->getIntValue(cTableSensorAlert::fiMin);
+   int max = alertRow->getIntValue(cTableSensorAlert::fiMax);
+   int range = alertRow->getIntValue(cTableSensorAlert::fiRangeM);
+   int delta = alertRow->getIntValue(cTableSensorAlert::fiDelta);
+   int maxRepeat = alertRow->getIntValue(cTableSensorAlert::fiMaxRepeat);
 
    // check
 
@@ -1426,6 +1427,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    sbody = strReplace("%max%", (long)max, sbody);
    sbody = strReplace("%range%", (long)range, sbody);
    sbody = strReplace("%delta%", (long)delta, sbody);
+   sbody = strReplace("%time%", time(0), sbody);
+   sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
    ssubject = strReplace("%value%", value, ssubject);
@@ -1435,6 +1438,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    ssubject = strReplace("%max%", (long)max, ssubject);
    ssubject = strReplace("%range%", (long)range, ssubject);
    ssubject = strReplace("%delta%", (long)delta, ssubject);
+   ssubject = strReplace("%time%", time(0), ssubject);
+   ssubject = strReplace("%repeat%", (long)maxRepeat, ssubject);
    
    // prepare command and perform system call 
 
