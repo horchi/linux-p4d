@@ -4,7 +4,7 @@
 -------------------------------------
 
 2015-03-12:  version 0.1.20
-   - added:  weg config for sensor alerts by 'Abholzer'
+   - added:  web config for sensor alerts by 'Abholzer'
    - added:  %range% and %delta% telpmates for alert mails
 
 2015-03-10:  version 0.1.19
