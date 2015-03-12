@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.19"
+#define VERSION "0.1.20"
 #define confDirDefault "/etc"
 
 extern char dbHost[];

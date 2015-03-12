@@ -1399,6 +1399,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
 
    int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
    int max = tableSensorAlert->getIntValue(cTableSensorAlert::fiMax);
+   int range = tableSensorAlert->getIntValue(cTableSensorAlert::fiRangeM);
+   int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
 
    // check
 
@@ -1422,6 +1424,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    sbody = strReplace("%title%", title, sbody);
    sbody = strReplace("%min%", (long)min, sbody);
    sbody = strReplace("%max%", (long)max, sbody);
+   sbody = strReplace("%range%", (long)range, sbody);
+   sbody = strReplace("%delta%", (long)delta, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
    ssubject = strReplace("%value%", value, ssubject);
@@ -1429,6 +1433,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    ssubject = strReplace("%title%", title, ssubject);
    ssubject = strReplace("%min%", (long)min, ssubject);
    ssubject = strReplace("%max%", (long)max, ssubject);
+   ssubject = strReplace("%range%", (long)range, ssubject);
+   ssubject = strReplace("%delta%", (long)delta, ssubject);
    
    // prepare command and perform system call 
 
