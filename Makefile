@@ -82,7 +82,14 @@ install-web:
 		mkdir -p "$(WEBDEST)" \
 	   chmod a+rx $(WEBDEST); \
 	fi
+	if test -d "$(WEBDEST)/config.php"; then \
+		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.save" \
+	fi
 	cp -r ./htdocs/* $(WEBDEST)/
+	if test -d "$(WEBDEST)/config.php.save"; then \
+		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist" \
+		cp -p "$(WEBDEST)/config.php.save" "$(WEBDEST)/config.php" \
+	fi
 	chmod -R a+r $(WEBDEST)
 
 dist: clean
