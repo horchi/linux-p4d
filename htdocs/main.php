@@ -91,7 +91,7 @@ printHeader(60);
   elseif ($state == 2)
      echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
   elseif ($state == 3)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.gif\">\n";
+     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.png\">\n";
   elseif ($state == 4)
      echo "        <img class=\"centerImage\" src=\"img/state/state-firehold.png\">\n";
   elseif ($state == 5)
