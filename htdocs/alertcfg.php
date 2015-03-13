@@ -70,10 +70,6 @@ if ($action == "store")
     }
   }
 
-   if (isset($_POST["visuLink"])) 
-    $_SESSION['visuLink'] = (substr($_SESSION['visuLink'],0,7) == "http://") ?  htmlspecialchars($_POST["visuLink"]) : htmlspecialchars("http://" . $_POST["visuLink"]); 
-
-   writeConfigItem("visuLink", $_SESSION['visuLink']);
 }
 
 // ------------------
@@ -97,11 +93,6 @@ echo "        <br/></br>\n";
 
 seperator("Benachrichtigung bei bestimmten Sensor-Werten", 0, 1);
 echo "        <div class=\"input\">\n";
-echo "          Adresse deiner Visualisierung:<input class=\"inputEdit2\" style=\"width:400px\" type=\"text\" name=\"visuLink\" value=\"" . $_SESSION['visuLink'] . "\"></input>&nbsp;\n";
-echo "          <span class=\"inputComment\">&nbsp;(taucht dann in der Mail auf)</span>\n";
-echo "        </div><br/>\n";
-seperator("Bedingungen", 0, 2);
-echo "        <div class=\"input\">\n";
 echo "          <span class=\"inputComment\">
                 Hier formulierst du die Bedingungen (Alarmwerte) für die einzelnen Sensoren, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
                 'Aufzeichnung' entnehmen und hier eintragen.<br /><br />
@@ -115,6 +106,7 @@ echo "          <span class=\"inputComment\">
                 mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss
           </span>\n";
 echo "        </div><br/>\n";
+seperator("Bedingungen", 0, 2);
 
 $result = mysql_query("select * from sensoralert") or die("<br/>Error: " . mysql_error());
      
@@ -137,7 +129,7 @@ $result = mysql_query("select * from sensoralert") or die("<br/>Error: " . mysql
     echo "          <br /><br />\n";
     echo "          <span style=\"vertical-align:top\">Inhalt:</span>\n";
     echo "          <textarea        class=\"inputEdit2\"  cols=\"400\" rows=\"7\" style=\"width:805px; position:relative; left:42px;\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea>&nbsp;\n";
-    echo "          <button class=\"button4\" style=\"position:relative; top:-240px; left:-862px;\" type=submit name=action value=delete$ID onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
+    echo "          <button class=\"button4\" style=\"position:absolute;  margin-top:-80px; margin-left:-862px;\" type=submit name=action value=delete$ID onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
     echo "        </div><br />\n";
   }
 mysql_close();

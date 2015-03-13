@@ -113,6 +113,9 @@ if ($action == "store")
    if (isset($_POST["maxTimeLeak"]))
       $_SESSION['maxTimeLeak'] = htmlspecialchars($_POST["maxTimeLeak"]);
 
+   if (isset($_POST["webUrl"])) 
+    $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]); 
+
    // ------------------
    // store settings
 
@@ -137,6 +140,7 @@ if ($action == "store")
    writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
    writeConfigItem("heatingType", $_SESSION['heatingType']);
    writeConfigItem("schema", $_SESSION['schema']);
+   writeConfigItem("webUrl", $_SESSION['webUrl']);
 
    if ($_POST["passwd2"] != "")
    {
@@ -198,7 +202,8 @@ seperator("Mail Benachrichtigungen", 0, 2);
 configBoolItem(1, "Mail Benachrichtigung", "mail", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
 configStrItem(2, "Status Mail Empfänger", "stateMailTo", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500);
 configStrItem(2, "Fehler Mail Empfänger", "errorMailTo", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500);
-configStrItem(2, "Status Mail für folgende Status", "stateMailStates", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400);
+configStrItem(2, "Status Mail für folgende Stati", "stateMailStates", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400);
+configStrItem(2, "URL deiner Visualisierung", "webUrl", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350);
 configStrItem(6, "p4d sendet Mails über das Skript", "mailScript", $_SESSION['mailScript'], "", 400);
 
 seperator("Sonstiges", 0, 2);

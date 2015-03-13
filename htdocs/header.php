@@ -48,7 +48,7 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
    readConfigItem("heatingType", $_SESSION['heatingType']);
    readConfigItem("schema", $_SESSION['schema']);
-   readConfigItem("visuLink", $_SESSION['visuLink']);
+   readConfigItem("webUrl", $_SESSION['webUrl']);
    
    // ------------------
    // check for defaults
