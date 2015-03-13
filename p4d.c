@@ -1387,6 +1387,7 @@ int P4d::updateErrors()
 int P4d::sendAlertMail(cDbRow* alertRow, const char* title, 
                        double value, const char* unit)
 {
+   char* webUrl = 0;
    char* sensor = 0;
    char* command = 0;
    string sbody, ssubject;
@@ -1402,6 +1403,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    int range = alertRow->getIntValue(cTableSensorAlert::fiRangeM);
    int delta = alertRow->getIntValue(cTableSensorAlert::fiDelta);
    int maxRepeat = alertRow->getIntValue(cTableSensorAlert::fiMaxRepeat);
+
+   getConfigItem("webUrl", webUrl, "http://");
 
    // check
 
@@ -1429,6 +1432,7 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    sbody = strReplace("%delta%", (long)delta, sbody);
    sbody = strReplace("%time%", l2pTime(time(0)).c_str(), sbody);
    sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
+   sbody = strReplace("%weburl%", webUrl, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
    ssubject = strReplace("%value%", value, ssubject);
@@ -1440,6 +1444,7 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    ssubject = strReplace("%delta%", (long)delta, ssubject);
    ssubject = strReplace("%time%", l2pTime(time(0)).c_str(), ssubject);
    ssubject = strReplace("%repeat%", (long)maxRepeat, ssubject);
+   ssubject = strReplace("%weburl%", webUrl, ssubject);
    
    // prepare command and perform system call 
 
@@ -1461,6 +1466,7 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
 
 int P4d::sendMail()
 {
+   char* webUrl = 0;
    const char* receiver = 0;
    string subject = "";
    string errorBody = "";
@@ -1469,6 +1475,12 @@ int P4d::sendMail()
 
    if (isEmpty(mailScript) || !mailBody.length())
       return fail;
+
+   // get web url ..
+
+   getConfigItem("webUrl", webUrl, "http://to-be-configured");
+
+   // build mail ..
 
    if (currentState.state == wsError)
    {
@@ -1540,7 +1552,9 @@ int P4d::sendMail()
                "<html>\n"
                " %s"
                " <body>\n"
-               "%s"
+               "  <a href=\"%s\">S3200</a><br>\n"
+               "  <br></br>\n"
+               "  %s\n"
                "  <br></br>\n"
                "  <table>\n"
                "  <caption>S 3200<caption>"
@@ -1557,7 +1571,7 @@ int P4d::sendMail()
                "  <br></br>\n"
                " </body>\n"
                "</html>\n",
-               htmlHead, errorBody.c_str(), mailBodyHtml.c_str());
+               htmlHead, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
 
       // send HTML mail
       
