@@ -1553,7 +1553,7 @@ int P4d::sendMail()
                " %s"
                " <body>\n"
                "  <br>\n"
-               "  WEB Interface: <a href=\"%s\">S3200</a><br>\n"
+               "  WEB Interface: <a href=\"%s\">S 3200</a><br>\n"
                "  %s\n"
                "  <br>\n"
                "  <table>\n"
