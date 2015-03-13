@@ -82,6 +82,22 @@ Body
   background: #00EE88;
 }
 
+.button4 
+{
+  background-color: #DDDDDD;
+  color: black;
+  padding: 2px 3px;
+  text-decoration: none;
+  font: 10px Verdana;
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+.button4:hover 
+{
+  background: #FF5555;
+}
+
 .buttont 
 {
   background-color: rgba(255, 255, 255, 0);

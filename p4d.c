@@ -1427,7 +1427,7 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    sbody = strReplace("%max%", (long)max, sbody);
    sbody = strReplace("%range%", (long)range, sbody);
    sbody = strReplace("%delta%", (long)delta, sbody);
-   sbody = strReplace("%time%", time(0), sbody);
+   sbody = strReplace("%time%", l2pTime(time(0)).c_str(), sbody);
    sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
@@ -1438,7 +1438,7 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    ssubject = strReplace("%max%", (long)max, ssubject);
    ssubject = strReplace("%range%", (long)range, ssubject);
    ssubject = strReplace("%delta%", (long)delta, ssubject);
-   ssubject = strReplace("%time%", time(0), ssubject);
+   ssubject = strReplace("%time%", l2pTime(time(0)).c_str(), ssubject);
    ssubject = strReplace("%repeat%", (long)maxRepeat, ssubject);
    
    // prepare command and perform system call 
