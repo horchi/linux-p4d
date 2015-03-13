@@ -79,15 +79,15 @@ install-scripts:
 
 install-web:
 	if ! test -d $(WEBDEST); then \
-		mkdir -p "$(WEBDEST)" \
-	   chmod a+rx $(WEBDEST); \
+		mkdir -p "$(WEBDEST)"; \
+		chmod a+rx $(WEBDEST); \
 	fi
 	if test -f "$(WEBDEST)/config.php"; then \
 		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.save"; \
 	fi
 	cp -r ./htdocs/* $(WEBDEST)/
 	if test -f "$(WEBDEST)/config.php.save"; then \
-		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist" \
+		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist"; \
 		cp -p "$(WEBDEST)/config.php.save" "$(WEBDEST)/config.php"; \
 	fi
 	chmod -R a+r $(WEBDEST)
