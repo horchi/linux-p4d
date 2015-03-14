@@ -163,7 +163,7 @@ Body
 {
   text-decoration: none;
   color: blue;
-  font: 20px Verdana;
+  font: 16px Verdana;
   width: 70px;
   padding: 5px;
   border-radius: 10px;
@@ -174,7 +174,7 @@ Body
 {
   text-decoration: none;
   color: blue;
-  font: 16px Verdana;
+  font: 14px Verdana;
   width: 70px;
   padding: 3px;
   border-radius: 7px;
@@ -204,6 +204,11 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.help 
+{
+  color: yellow;
+  cursor: pointer;
+}
 
 .infoWarn
 {

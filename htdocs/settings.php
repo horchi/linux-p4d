@@ -7,7 +7,7 @@ printHeader();
 include("setup.php");
 
 // -------------------------
-// chaeck login
+// check login
 
 if (!haveLogin())
 {
@@ -175,5 +175,4 @@ function showTable($type, $tableTitle)
    echo "        </table>\n";
 }
 
-include("jfunctions.php");
 ?>

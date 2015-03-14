@@ -538,6 +538,4 @@ function storeParameter($id, &$value, &$unit, &$res)
    return -1;
 }
 
-include("jfunctions.php");
-
 ?>

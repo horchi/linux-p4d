@@ -102,6 +102,7 @@ function printHeader($refresh = 0)
     <meta name=\"copyright\" content=\"Jörg Wendel\">
     <LINK REL=\"SHORTCUT ICON\" HREF=\"" . $_SESSION['heatingType'] . ".ico\">
     <link rel=\"stylesheet\" type=\"text/css\" href=\"$stylesheet\">
+    <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script> 
     <title>Fröling  " . $_SESSION['heatingType'] . "</title>
   </head>
   <body>
