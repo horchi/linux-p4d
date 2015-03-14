@@ -1404,6 +1404,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    int delta = alertRow->getIntValue(cTableSensorAlert::fiDelta);
    int maxRepeat = alertRow->getIntValue(cTableSensorAlert::fiMaxRepeat);
 
+   int isHtml = strstr(body, "<html>") != 0;
+
    getConfigItem("webUrl", webUrl, "http://");
 
    // check
@@ -1449,8 +1451,9 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    // prepare command and perform system call 
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
-            ssubject.c_str(), sbody.c_str(), "text/plain", to);
-   
+            ssubject.c_str(), sbody.c_str(), 
+            isHtml ? "text/html" : "text/plain", to);
+
    system(command);
    free(command);
    free(sensor);
