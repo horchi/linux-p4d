@@ -1451,9 +1451,11 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
    sbody = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, sbody);
    
-   if (!htmlMail)
+   if (htmlMail)
    {
       char* html = 0;
+
+      sbody = strReplace("\n", "<br>\n", sbody);
 
       const char* htmlHead = 
          "<head>"
