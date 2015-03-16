@@ -34,8 +34,6 @@ extern int  stateCheckInterval;
 extern int aggregateInterval;        // aggregate interval in minutes
 extern int aggregateHistory;         // history in days
 
-extern int htmlMail;
-
 //***************************************************************************
 // Class P4d
 //***************************************************************************
@@ -136,6 +134,7 @@ class P4d : public FroelingService
       // config
 
       int mail;
+      int htmlMail;
       char* mailScript;
       char* stateMailAtStates;
       char* stateMailTo;

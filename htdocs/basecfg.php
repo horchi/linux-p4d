@@ -79,10 +79,15 @@ if ($action == "store")
 
    // ---
 
-   if (isset($_POST["mail"]))
+   if (isset($_POST["mail"])) {
       $_SESSION['mail'] = true;
-   else
+      if (isset($_POST["htmlMail"]))
+         $_SESSION['htmlMail'] = true;
+      else
+         $_SESSION['htmlMail'] = false;
+   } else {
       $_SESSION['mail'] = false;
+   }
    
    if (isset($_POST["stateMailTo"]))
       $_SESSION['stateMailTo'] = htmlspecialchars($_POST["stateMailTo"]);
@@ -132,6 +137,7 @@ if ($action == "store")
    writeConfigItem("chart4", $_SESSION['chart4']);
 
    writeConfigItem("mail", $_SESSION['mail']);
+   writeConfigItem("htmlMail", $_SESSION['htmlMail']);
    writeConfigItem("stateMailTo", $_SESSION['stateMailTo']);
    writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
    writeConfigItem("errorMailTo", $_SESSION['errorMailTo']);
@@ -169,7 +175,9 @@ echo "        <br/></br>\n";
 // setup items ...
 
 seperator("Web Interface", 0, 1);
-colorSchemeItem(3, "Farbschema");
+colorSchemeItem(1, "Farbschema");
+heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
+schemaItem(4, "Schema", $_SESSION['schema']);
 
 seperator("Charting", 0, 4);
 configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
@@ -194,23 +202,25 @@ if ($_SESSION['chart34'] == "1")
 
 seperator("Login", 0, 2);
 configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
-configStrItem(6, "Passwort", "passwd1", "", "", 350, true);
+configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
 
 seperator("Daemon Konfiguration", 0, 1);
 
 seperator("Mail Benachrichtigungen", 0, 2);
-configBoolItem(1, "Mail Benachrichtigung", "mail", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
-configStrItem(2, "Status Mail Empfänger", "stateMailTo", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500);
-configStrItem(2, "Fehler Mail Empfänger", "errorMailTo", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500);
-configStrItem(2, "Status Mail für folgende Stati", "stateMailStates", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400);
-configStrItem(2, "URL deiner Visualisierung", "webUrl", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350);
-configStrItem(6, "p4d sendet Mails über das Skript", "mailScript", $_SESSION['mailScript'], "", 400);
+$a = ($_SESSION['mail']) ? "" : "disabled=true";
+$ro = ($_SESSION['mail']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
+configBoolItem(1, "Mail Benachrichtigung", "mail onClick=\"disableContent('htM',this); readonlyContent('Mail',this)\"", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
+configBoolItem(5, "HTML-Mail?", "htmlMail id='htM'", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
+configStrItem(2, "Status Mail Empfänger", "stateMailTo id=Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(2, "Fehler Mail Empfänger", "errorMailTo id=Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(2, "Status Mail für folgende Stati", "stateMailStates id=Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
+configStrItem(2, "p4d sendet Mails über das Skript", "mailScript id=Mail4", $_SESSION['mailScript'], "", 400, $ro);
+configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 
 seperator("Sonstiges", 0, 2);
-configBoolItem(1, "Tägliche Zeitsynchronisation", "tsync", $_SESSION['tsync'], "Zeit der Heizung täglich um 23:00 synchronisieren?");
-configStrItem(2, "Maximale Abweichung [s]", "maxTimeLeak", $_SESSION['maxTimeLeak'], "Abweichung ab der die tägliche Synchronisation ausgeführt wird");
-heatingTypeItem(2, "Heizung", $_SESSION['heatingType']);
-schemaItem(4, "Schema", $_SESSION['schema']);
+$ro = ($_SESSION['tsync']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
+configBoolItem(1, "Zeitsynchronisation", "tsync onClick=\"readonlyContent('timeLeak',this)\"", $_SESSION['tsync'], "tägl. 23:00Uhr");
+configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak id='timeLeak'", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
 
 echo "      </form>\n";
 
@@ -320,7 +330,7 @@ function schemaItem($new, $title, $schema)
 // Text Config items
 // ---------------------------------------------------------------------------
 
-function configStrItem($new, $title, $name, $value, $comment = "", $width = 200, $ispwd = false)
+function configStrItem($new, $title, $name, $value, $comment = "", $width = 200, $ro = "'", $ispwd = false)
 {
    $end = htmTags($new);
    echo "          $title:\n";
@@ -332,7 +342,7 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
       echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"></input>\n";
    }
    else
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"text\" name=\"$name\" value=\"$value\"></input>\n";
+      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"></input>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -344,11 +354,11 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
 // Checkbox Config items
 // ---------------------------------------------------------------------------
 
-function configBoolItem($new, $title, $name, $value, $comment = "")
+function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <input type=checkbox name=$name" . ($value ? " checked" : "") . "></input>\n";
+   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "></input>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
@@ -361,11 +371,11 @@ function configBoolItem($new, $title, $name, $value, $comment = "")
 // Option Config Item
 // ---------------------------------------------------------------------------
 
-function configOptionItem($new, $title, $name, $value, $options, $comment)
+function configOptionItem($new, $title, $name, $value, $options, $comment = "", $ro = "")
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=checkbox name=$name>\n";
+   echo "          <select class=checkbox name=$name$ro>\n";
 
    foreach (explode(" ", $options) as $option)
    {

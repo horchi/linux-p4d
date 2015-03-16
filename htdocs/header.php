@@ -39,6 +39,7 @@ if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
    readConfigItem("passwd", $_SESSION['passwd']);
    
    readConfigItem("mail", $_SESSION['mail']);
+   readConfigItem("htmlMail", $_SESSION['htmlMail']);
    readConfigItem("stateMailTo", $_SESSION['stateMailTo']);
    readConfigItem("stateMailStates", $_SESSION['stateMailStates']);
    readConfigItem("errorMailTo", $_SESSION['errorMailTo']);

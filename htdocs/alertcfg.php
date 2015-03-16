@@ -114,7 +114,7 @@ $result = mysql_query("select * from sensoralert") or die("<br/>Error: " . mysql
     $ID =  $row['id']; $i++; $a = chr($ID+64);
     $cnt = $cnt . "|" . $row['id']; $s = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
     echo "        <div class=\"input\" >\n";
-    echo "          <input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"disableContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input> aktiv?\n";
+    echo "          <input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input> aktiv?\n";
     echo "          ID:<input        class=\"inputEdit2\" id=\"a$a\" style=\"width:77px$s\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>&nbsp;\n";
     echo "          Typ:<input       class=\"inputEdit2\" id=\"b$a\" style=\"width:28px$s\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input>&nbsp;\n";
     echo "          min:<input       class=\"inputEdit2\" id=\"c$a\" style=\"width:42px$s\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input>&nbsp;\n";

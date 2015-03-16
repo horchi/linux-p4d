@@ -133,7 +133,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
       if (mysql_numrows($result))
       {
          $buffer = mysql_result($result, 0, "result");
-         list($state, $response) = split(":", $buffer, 2);
+         list($state, $response) = explode(":", $buffer, 2);
 
          if ($state == "fail")
             return -2;

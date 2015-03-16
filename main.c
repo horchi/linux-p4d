@@ -30,8 +30,6 @@ int  stateCheckInterval = 10;
 int  aggregateInterval = 15;     // aggregate interval in minutes
 int  aggregateHistory = 0;       // history in days
 
-int htmlMail = yes;
-
 //***************************************************************************
 // Configuration
 //***************************************************************************
@@ -53,8 +51,6 @@ int atConfigItem(const char* Name, const char* Value)
 
    else if (!strcasecmp(Name, "aggregateInterval"))  aggregateInterval = atoi(Value);
    else if (!strcasecmp(Name, "aggregateHistory"))   aggregateHistory = atoi(Value);
-
-   else if (!strcasecmp(Name, "htmlMail"))           htmlMail = atoi(Value);
 
    return success;
 }

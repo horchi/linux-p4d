@@ -48,6 +48,7 @@ P4d::P4d()
    mailBody = "";
    mailBodyHtml = "";
    mail = no;
+   htmlMail = no;
    mailScript = 0;
    stateMailAtStates = 0;
    stateMailTo = 0;
@@ -317,6 +318,7 @@ int P4d::readConfiguration()
    // init configuration
 
    getConfigItem("mail", mail, no);
+   getConfigItem("htmlMail", htmlMail, no);
    getConfigItem("mailScript", mailScript, "/usr/local/bin/p4d-mail.sh");
    getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("stateMailTo", stateMailTo);
@@ -1390,6 +1392,8 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    char* webUrl = 0;
    char* sensor = 0;
    char* command = 0;
+   char* htmlWebUrl = 0;
+
    string sbody, ssubject;
 
    const char* subject = alertRow->getStrValue(cTableSensorAlert::fiMSubject);
@@ -1404,10 +1408,6 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    int delta = alertRow->getIntValue(cTableSensorAlert::fiDelta);
    int maxRepeat = alertRow->getIntValue(cTableSensorAlert::fiMaxRepeat);
 
-   int isHtml = strstr(body, "<html>") != 0;
-
-   getConfigItem("webUrl", webUrl, "http://");
-
    // check
 
    if (isEmpty(to) || isEmpty(mailScript) || isEmpty(subject))
@@ -1416,6 +1416,9 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    if (isEmpty(body))
       body = "- undefined -";
 
+   getConfigItem("webUrl", webUrl, "http://");
+   asprintf(&htmlWebUrl, "<a href=\"%s\">S 3200</a>", webUrl);
+
    // prepare
 
    sbody = body;
@@ -1423,18 +1426,6 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    asprintf(&sensor, "%s/0x%x", type, addr);
 
    // templating
-
-   sbody = strReplace("%sensorid%", sensor, sbody);
-   sbody = strReplace("%value%", value, sbody);
-   sbody = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, sbody);
-   sbody = strReplace("%title%", title, sbody);
-   sbody = strReplace("%min%", (long)min, sbody);
-   sbody = strReplace("%max%", (long)max, sbody);
-   sbody = strReplace("%range%", (long)range, sbody);
-   sbody = strReplace("%delta%", (long)delta, sbody);
-   sbody = strReplace("%time%", l2pTime(time(0)).c_str(), sbody);
-   sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
-   sbody = strReplace("%weburl%", webUrl, sbody);
 
    ssubject = strReplace("%sensorid%", sensor, ssubject);
    ssubject = strReplace("%value%", value, ssubject);
@@ -1447,18 +1438,56 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
    ssubject = strReplace("%time%", l2pTime(time(0)).c_str(), ssubject);
    ssubject = strReplace("%repeat%", (long)maxRepeat, ssubject);
    ssubject = strReplace("%weburl%", webUrl, ssubject);
+
+   sbody = strReplace("%sensorid%", sensor, sbody);
+   sbody = strReplace("%value%", value, sbody);
+   sbody = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, sbody);
+   sbody = strReplace("%title%", title, sbody);
+   sbody = strReplace("%min%", (long)min, sbody);
+   sbody = strReplace("%max%", (long)max, sbody);
+   sbody = strReplace("%range%", (long)range, sbody);
+   sbody = strReplace("%delta%", (long)delta, sbody);
+   sbody = strReplace("%time%", l2pTime(time(0)).c_str(), sbody);
+   sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
+   sbody = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, sbody);
    
+   if (!htmlMail)
+   {
+      char* html = 0;
+
+      const char* htmlHead = 
+         "<head>"
+         "  <style type=\"text/css\">\n"
+         "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
+         "  </style>\n"
+         "</head>\n";
+     
+      asprintf(&html, 
+               "<html>\n"
+               " %s"
+               " <body>\n"
+               "  %s\n"
+               " </body>\n"
+               "</html>\n",
+               htmlHead, sbody.c_str());
+      
+      sbody = html;
+      free(html);
+   }
+
    // prepare command and perform system call 
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
             ssubject.c_str(), sbody.c_str(), 
-            isHtml ? "text/html" : "text/plain", to);
-
-   system(command);
-   free(command);
-   free(sensor);
+            htmlMail ? "text/html" : "text/plain", to);
 
    tell(eloAlways, "Sending mail '%s' to '%s'", ssubject.c_str(), to);
+
+   system(command);
+
+   free(command);
+   free(sensor);
+   free(htmlWebUrl);
 
    return success;
 }
