@@ -8,7 +8,7 @@
 PREFIX   = /usr/local
 BINDEST  = $(DESTDIR)$(PREFIX)/bin
 WEBDEST  = $(DESTDIR)/var/lib/p4
-CONFDEST = $(DESTDIR)/etc
+CONFDEST = $(DESTDIR)/etc/p4d
 
 DEBUG = 1
 
@@ -66,9 +66,14 @@ install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 
 install-config:
+	if ! test -d $(CONFDEST); then \
+	   mkdir -p $(CONFDEST); \
+	   chmod a+rx $(CONFDEST); \
+	fi
 	if ! test -f $(CONFDEST)/p4d.conf; then \
 	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
 	fi
+	install --mode=644 -D ./configs/p4d.dat $(CONFDEST)/;
 
 install-scripts:
 	if ! test -d $(BINDEST); then \

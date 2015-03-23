@@ -1,0 +1,166 @@
+
+// ----------------------------------------------------------------
+// Table Samples
+// ----------------------------------------------------------------
+
+Table samples
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+   AGGREGATE            ""  aggregate            Ascii        1 Primary,
+   TIME                 ""  time                 DateTime     0 Primary,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   VALUE                ""  value                Float      122 Data,
+   TEXT                 ""  text                 Ascii       50 Data,
+   SAMPLES              ""  samples              Int          3 Data,
+}
+
+// ----------------------------------------------------------------
+// Indices for Samples
+// ----------------------------------------------------------------
+
+Index samples
+{
+   time                 ""  TIME,
+   type                 ""  TYPE,
+}
+
+// ----------------------------------------------------------------
+// Table ValueFacts
+// ----------------------------------------------------------------
+
+Table valuefacts
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   STATE                ""  state                Ascii        1 Data,
+   UNIT                 ""  unit                 Ascii        5 Data,
+   FACTOR               ""  factor               Int          4 Data,
+   NAME                 ""  name                 Ascii      100 Data,
+   TITLE                ""  title                Ascii      100 Data,
+   RES1                 ""  res1                 Int          4 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Menu
+// ----------------------------------------------------------------
+
+Table menu
+{
+   ID                   ""  id                   UInt         4 Primary|Autoinc,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   PARENT               ""  parent               UInt         5 Data,
+   CHILD                ""  child                UInt         5 Data,
+   TYPE                 ""  type                 UInt         1 Data,
+   ADDRESS              ""  address              UInt         4 Data,
+   TITLE                ""  title                Ascii      100 Data,
+   STATE                ""  state                Ascii        1 Data,
+   UNIT                 ""  unit                 Ascii        5 Data,
+   VALUE                ""  value                Ascii      100 Data,
+   UNKNOWN1             ""  unknown1             Int          4 Data,
+   UNKNOWN2             ""  unknown2             Int          4 Data,
+}
+
+// ----------------------------------------------------------------
+// Table SchemaConf
+// ----------------------------------------------------------------
+
+Table schemaconf
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   STATE                ""  state                Ascii        1 Data,
+   KIND                 ""  kind                 Ascii       20 Data,
+   COLOR                ""  color                Ascii       10 Data,
+   SHOWUNIT             ""  showunit             Int          1 Data,
+   SHOWTEXT             ""  showtext             Int          1 Data,
+   XPOS                 ""  xpos                 Int          0 Data,
+   YPOS                 ""  ypos                 Int          0 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Config
+// ----------------------------------------------------------------
+
+Table config
+{
+   OWNER                ""  owner                Ascii       40 Primary,
+   NAME                 ""  name                 Ascii       40 Primary,
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+   VALUE                ""  value                Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Errors
+// ----------------------------------------------------------------
+
+Table errors
+{
+   ID                   ""  id                   UInt        11 Primary|Autoinc,
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+   TIME                 ""  time                 DateTime     0 Data,
+   NUMBER               ""  number               Int         10 Data,
+   INFO                 ""  info                 Int         10 Data,
+   STATE                ""  state                Ascii       10 Data,
+   TEXT                 ""  text                 Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Jobs
+// ----------------------------------------------------------------
+
+Table jobs
+{
+   ID                   ""  id                   UInt        11 Primary|Autoinc,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   REQAT                ""  requestat            DateTime     0 Data,
+   DONEAT               ""  doneat               DateTime     0 Data,
+   STATE                ""  state                Ascii        1 Data,
+   COMMAND              ""  command              Ascii      100 Data,
+   ADDRESS              ""  address              UInt         4 Data,
+   RESULT               ""  result               Ascii      100 Data,
+   DATA                 ""  data                 Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Indices for Jobs
+// ----------------------------------------------------------------
+
+Index jobs
+{
+   state                ""  STATE,
+   requestat            ""  REQAT,
+}
+
+// ----------------------------------------------------------------
+// Table SensorAlert
+// ----------------------------------------------------------------
+
+Table sensoralert
+{
+   ID                   ""  id                   UInt        11 Primary|Autoinc,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   ADDRESS              ""  address              UInt         4 Data,
+   TYPE                 ""  type                 Ascii        2 Data,
+   STATE                ""  state                Ascii        1 Data,
+   MIN                  ""  min                  Int         10 Data,
+   MAX                  ""  max                  Int         10 Data,
+   RANGEM               ""  rangem               Int         10 Data,
+   DELTA                ""  delta                Int         10 Data,
+   MADDRESS             ""  maddress             Ascii      100 Data,
+   MSUBJECT             ""  msubject             Ascii      100 Data,
+   MBODY                ""  mbody                Text      2000 Data,
+   LASTALERT            ""  lastalert            Int         10 Data,
+   MAXREPEAT            ""  maxrepeat            Int         10 Data,
+}
+

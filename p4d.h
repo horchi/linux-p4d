@@ -19,8 +19,8 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.20"
-#define confDirDefault "/etc"
+#define VERSION "0.1.21"
+#define confDirDefault "/etc/p4d/"
 
 extern char dbHost[];
 extern int  dbPort;
@@ -29,8 +29,8 @@ extern char dbUser[];
 extern char dbPass[];
 
 extern char ttyDeviceSvc[];
-extern int  interval;
-extern int  stateCheckInterval;
+extern int interval;
+extern int stateCheckInterval;
 extern int aggregateInterval;        // aggregate interval in minutes
 extern int aggregateHistory;         // history in days
 
