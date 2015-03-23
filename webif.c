@@ -122,9 +122,8 @@ int P4d::performWebifRequests()
 
                // special for time min/max/default 
 
-               // #TODO
                if (type == mstParZeit)
-                  ;
+                  ;  // #TODO
 
                asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, type == 0x0a ? "Uhr" : p.unit,
                         p.def, p.min, p.max, p.digits);
