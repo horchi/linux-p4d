@@ -4,11 +4,10 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <string>
 
 #include "common.h"
 #include "db.h"
-#include "tabledef.h"
+#include "dbdict.h"
 
 cDbConnection* connection = 0;
 
@@ -23,10 +22,10 @@ void initConnection()
    cDbConnection::setEncoding("utf8");
    cDbConnection::setHost("localhost");
    // cDbConnection::setPort();
-   cDbConnection::setName("wde1");
-   cDbConnection::setUser("wde1");
-   cDbConnection::setPass("wde1");
-   cDbTable::setConfPath("/etc");
+   cDbConnection::setName("p4");
+   cDbConnection::setUser("p4");
+   cDbConnection::setPass("p4");
+   cDbConnection::setConfPath("/etc/p4d");
 
    connection = new cDbConnection();
 }
@@ -44,13 +43,44 @@ void exitConnection()
 //***************************************************************************
 
 //***************************************************************************
-// 
+// chkStatement1
 //***************************************************************************
 
 void chkStatement1()
 {
-   int status;
+   time_t now = time(0);
+   double value = 12.3;
+   unsigned int factor = 2;
+
+   tell(0, "---------------------------------------------------");
+
+#define __NEW
+
+#ifdef __NEW
+
+   cDbTable* db = new cDbTable(connection, "samples");
    
+   if (db->open() != success)
+   { 
+      tell(0, "Could not access database '%s:%d' (%s)", 
+           cDbConnection::getHost(), cDbConnection::getPort(), db->TableName());
+      
+      return ;
+   }
+
+   db->clear();
+
+   db->setValue("TIME", now);
+   db->setIntValue("ADDRESS", 1234);
+   db->setValue("TYPE", "VA");
+   db->setValue("AGGREGATE", "S");
+
+   db->setValue("VALUE", value / (double)factor);
+   db->setValue("TEXT", "text test 1234546576890");
+   db->setValue("SAMPLES", 1);
+
+#else
+
    cTableSamples* db = new cTableSamples(connection);
    
    if (db->open() != success)
@@ -61,39 +91,23 @@ void chkStatement1()
       return ;
    }
 
-   tell(0, "---------------------------------------------------");
+   db->clear();
 
-    // prepare statement to mark wasted DVB events
-   
-   cDbStatement* s = new cDbStatement(db);
-   
-   db->setValue(cTableSamples::fiAddress, 1);
+   db->setValue(cTableSamples::fiTime, now);
+   db->setIntValue(cTableSamples::fiAddress, 1234);
    db->setValue(cTableSamples::fiType, "VA");
-   db->setValue(cTableSamples::fiTime, time(0));
-   db->setValue(cTableSamples::fiValue, atof("22.3"));
+   db->setValue(cTableSamples::fiAggregate, "S");
+
+   db->setValue(cTableSamples::fiValue, value / (double)factor);
+   db->setValue(cTableSamples::fiText, "text test 1234546576890");
+   db->setValue(cTableSamples::fiSamples, 1);
+
+#endif
 
    db->store();
-
-//    s->build("update %s set ", db->TableName());
-//    s->bind(cEventFields::fiSensorId, cDBS::bndIn | cDBS::bndSet);
-//    s->bind(cEventFields::fiTime, cDBS::bndIn | cDBS::bndSet, ", ");
-//    s->build(" where ");
-//    s->bind(cEventFields::fiChannelId, cDBS::bndIn | cDBS::bndSet);
-//    s->bind(cEventFields::fiSource, cDBS::bndIn | cDBS::bndSet, " and ");
-
-//    s->bindCmp(0, endTime, ">", " and ");
-
-//    s->bindCmp(0, cEventFields::fiStartTime, 0, "<" ,  " and ");
-//    s->bindCmp(0, cEventFields::fiTableId,   0, ">" ,  " and (");
-//    s->bindCmp(0, cEventFields::fiTableId,   0, "=" ,  " or (");
-//    s->bindCmp(0, cEventFields::fiVersion,   0, "<>" , " and ");
-//    s->build("));");
-   
-//    s->prepare();
    
    tell(0, "---------------------------------------------------");
 
-   delete s;
    delete db;
 }
 
@@ -129,9 +143,17 @@ int main(int argc, char** argv)
 
    printf("%s\n", *b);
 
-//  initConnection();
-//  chkStatement2();
-//  exitConnection();
+   // read deictionary
+
+   if (dbDict.in("/etc/p4d/p4d.dat") != success)
+   {
+      tell(0, "Invalid dictionary configuration, aborting!");
+      return 1;
+   }
+
+   initConnection();
+   chkStatement1();
+   exitConnection();
 
    return 0;
 }

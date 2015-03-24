@@ -8,93 +8,28 @@
 #ifndef __DB_H
 #define __DB_H
 
+#include <linux/unistd.h>
+
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-
-#include <sstream>
+#include <errno.h>
 
 #include <mysql/mysql.h>
 
+#include <list>
+#include <sstream>
+
 #include "common.h"
+
+#include "dbdict.h"
 
 class cDbTable;
 class cDbConnection;
 
 using namespace std;
-
-//***************************************************************************
-// cDbService
-//***************************************************************************
-
-class cDbService
-{
-   public:
-
-      enum Misc
-      {
-         maxIndexFields = 20
-      };
-
-      enum FieldFormat
-      {
-         ffInt,
-         ffUInt,
-         ffBigInt,
-         ffUBigInt,
-         ffAscii,      // -> VARCHAR
-         ffText,
-         ffMlob,       // -> MEDIUMBLOB
-         ffFloat,
-         ffDateTime,
-         ffCount
-      };
-
-      enum FieldType
-      {
-         ftData       = 1,
-         ftPrimary    = 2,
-         ftMeta       = 4,
-         ftCalc       = 8,
-         ftAutoinc    = 16,
-         ftDef0       = 32
-      };
-
-      struct FieldDef
-      {
-         const char* name;
-         FieldFormat format;
-         int size;
-         int index;
-         int type;
-      };
-
-      enum BindType
-      {
-         bndIn  = 0x001,
-         bndOut = 0x002,
-         bndSet = 0x004
-      };
-
-      enum ProcType
-      {
-         ptProcedure, 
-         ptFunction
-      };
-
-      struct IndexDef
-      {
-         const char* name;
-         int fields[maxIndexFields+1];
-         int order;                     // not implemented yet
-      };
-
-      static const char* toString(FieldFormat t);
-      static const char* formats[];
-};
-
-typedef cDbService cDBS;
 
 //***************************************************************************
 // cDbValue
@@ -104,11 +39,12 @@ class cDbValue : public cDbService
 {
    public:
 
-      cDbValue(FieldDef* f = 0)
+      cDbValue(cDbFieldDef* f = 0)
       {
          field = 0;
          strValue = 0;
          ownField = 0;
+         changed = 0;
 
          if (f) setField(f);
       }
@@ -116,14 +52,11 @@ class cDbValue : public cDbService
       cDbValue(const char* name, FieldFormat format, int size)
       {
          strValue = 0;
-
-         ownField = new FieldDef;
-         ownField->name = strdup(name);
-         ownField->format = format;
-         ownField->size = size;
-         ownField->type = ftData;
+         changed = 0;
+         ownField = new cDbFieldDef(name, name, format, size, ftData, 0);
 
          field = ownField;
+         strValue = (char*)calloc(field->getSize()+TB, sizeof(char));
 
          clear();
       }
@@ -141,7 +74,6 @@ class cDbValue : public cDbService
 
          if (ownField)
          {
-            ::free((char*)ownField->name);  // böser cast ;)
             delete ownField;
             ownField = 0;
          }
@@ -161,48 +93,57 @@ class cDbValue : public cDbService
          memset(&timeValue, 0, sizeof(timeValue));
 
          nullValue = 1;
-         initialized = no;
+         changed = 0;
       }
 
-      virtual void setField(FieldDef* f)
+      void clearChanged()
+      {
+         changed = 0;
+      }
+
+      virtual void setField(cDbFieldDef* f)
       { 
          free();
          field = f;
 
          if (field)
-            strValue = (char*)calloc(field->size+TB, sizeof(char));
+            strValue = (char*)calloc(field->getSize()+TB, sizeof(char));
       }
 
-      virtual FieldDef* getField()    { return field; }
-      virtual const char* getName()   { return field->name; }
+      virtual cDbFieldDef* getField()      { return field; }
+      virtual const char* getName()        { return field->getName(); }
+      virtual const char* getDbName()      { return field->getDbName(); }
 
       void setValue(const char* value, int size = 0)
       { 
-         clear();
-
-         if (field->format != ffAscii && field->format != ffText && field->format != ffMlob)
+         if (field->getFormat() != ffAscii && field->getFormat() != ffText && 
+             field->getFormat() != ffMText && field->getFormat() != ffMlob)
          {
-            tell(0, "Setting invalid field format for '%s', expected '%s' got string", 
-                 field->name, cDBS::toString(field->format));
+            tell(0, "Setting invalid field format for '%s', expected ASCII, TEXT or MLOB", 
+                 field->getName());
             return;
          }
 
-         if (field->format == ffMlob && !size)
+         if (field->getFormat() == ffMlob && !size)
          {
-            tell(0, "Missing size for MLOB field '%s'", field->name);
+            tell(0, "Missing size for MLOB field '%s'", field->getName());
             return;
          }
 
          if (value && size)
          {
-            if (size > field->size)
+            if (size > field->getSize())
             {
                tell(0, "Warning, size of %d for '%s' exeeded, got %d bytes!",
-                    field->size, field->name, size);
+                    field->getSize(), field->getName(), size);
 
-               size = field->size;
+               size = field->getSize();
             }
 
+            if (memcmp(strValue, value, size) != 0)
+               changed++;
+
+            clear();
             memcpy(strValue, value, size);
             strValue[size] = 0;
             strValueSize = size;
@@ -211,11 +152,15 @@ class cDbValue : public cDbService
 
          else if (value)
          {
-            if (strlen(value) > (size_t)field->size)
-               tell(0, "Warning, size of %d for '%s' exeeded [%s]", 
-                    field->size, field->name, value);
+            if (strlen(value) > (size_t)field->getSize())
+               tell(0, "Warning, size of %d for '%s' exeeded (needed %ld) [%s]", 
+                    field->getSize(), field->getName(), (long)strlen(value), value);
 
-            sprintf(strValue, "%.*s", field->size, value);
+            if (strncmp(strValue, value, strlen(value)) != 0)
+               changed++;
+
+            clear();
+            sprintf(strValue, "%.*s", field->getSize(), value);
             strValueSize = strlen(strValue);
             nullValue = 0;
          }
@@ -226,43 +171,25 @@ class cDbValue : public cDbService
          char tmp[2];
          tmp[0] = value;
          tmp[1] = 0;
-         
          setValue(tmp);
       }
 
-      void setIntValue(long long value)
-      { 
-         if (field->format == ffInt || field->format == ffUInt)
-         {
-            numValue = value;
-            nullValue = 0;
-         }
-         
-         else if (field->format == ffBigInt || field->format == ffUBigInt)
-         {
-            longlongValue = value;
-            nullValue = 0;
-         }
+      void setValue(int value)
+      {
+         setValue((long)value);
       }
 
-      void setValue(double value)
+      void setValue(long value)
       { 
-         if (field->format == ffInt || field->format == ffUInt)
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
          {
+            if (numValue != value)
+               changed++;
+
             numValue = value;
             nullValue = 0;
          }
-         else if (field->format == ffBigInt || field->format == ffUBigInt)
-         {
-            longlongValue = value;
-            nullValue = 0;
-         }
-         else if (field->format == ffFloat)
-         {
-            floatValue = value;
-            nullValue = 0;
-         }
-         else if (field->format == ffDateTime)
+         else if (field->getFormat() == ffDateTime)
          {
             struct tm tm;
             time_t v = value;
@@ -279,41 +206,95 @@ class cDbValue : public cDbService
             timeValue.second = tm.tm_sec;
 
             nullValue = 0;
+
+            changed++; // #TODO
          }
          else
          {
-            tell(0, "Setting invalid field format for '%s'", field->name);
+            tell(0, "Setting invalid field format for '%s'", field->getName());
          }
       }
 
-      int hasValue(double value)
+      void setValue(double value)
+      { 
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
+         {
+            if (numValue != value)
+               changed++;
+
+            numValue = value;
+            nullValue = 0;
+         }
+         else if (field->getFormat() == ffBigInt || field->getFormat()  == ffUBigInt)
+         {
+            if (longlongValue != value)
+               changed++;
+
+            longlongValue = value;
+            nullValue = 0;
+         }
+         else if (field->getFormat() == ffFloat)
+         {
+            if (floatValue != value)
+               changed++;
+
+            floatValue = value;
+            nullValue = 0;
+         }
+         else
+         {
+            tell(0, "Setting invalid field format for '%s'", field->getName());
+         }
+      }
+
+      void setIntValue(long long value)
+      { 
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
+         {
+            if (numValue != value)
+               changed++;
+
+            numValue = value;
+            nullValue = 0;
+         }
+         
+         else if (field->getFormat() == ffBigInt || field->getFormat() == ffUBigInt)
+         {            
+            if (longlongValue != value)
+               changed++;
+
+            longlongValue = value;
+            nullValue = 0;
+         }
+      }
+
+      int hasValue(long value)
       {
-         if (field->format == ffInt || field->format == ffUInt)
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
             return numValue == value;
 
-         if (field->format == ffBigInt || field->format == ffUBigInt)
-            return longlongValue == value;
-
-         if (field->format == ffFloat)
-            return floatValue == value;
-
-         if (field->format == ffDateTime)
+         if (field->getFormat() == ffDateTime)
             return no; // to be implemented!
 
-         tell(0, "Setting invalid field format for '%s'", field->name);
+         tell(0, "Setting invalid field format for '%s'", field->getName());
 
          return no;
       }
 
-      int hasValue(float value)
+      int hasValue(double value)
       {
-         if (field->format != ffFloat)
-         {
-            tell(0, "Checking invalid field format for '%s', expected FLOAT", field->name);
-            return no;
-         }
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
+            return numValue == value;
 
-         return floatValue == value;
+         if (field->getFormat() == ffBigInt || field->getFormat() == ffUBigInt)
+            return longlongValue == value;
+
+         if (field->getFormat() == ffFloat)
+            return floatValue == value;
+
+         tell(0, "Setting invalid field format for '%s'", field->getName());
+
+         return no;
       }
 
       int hasValue(const char* value)
@@ -321,9 +302,11 @@ class cDbValue : public cDbService
          if (!value)
             value = "";
 
-         if (field->format != ffAscii && field->format != ffText)
+         if (field->getFormat() != ffAscii && field->getFormat() != ffText && 
+             field->getFormat() != ffMText && field->getFormat() != ffMlob)
          {
-            tell(0, "Checking invalid field format for '%s', expected ASCII or MLOB", field->name);
+            tell(0, "Checking invalid field format for '%s', expected ASCII or TEXT", 
+                 field->getName());
             return no;
          }
 
@@ -333,10 +316,9 @@ class cDbValue : public cDbService
       time_t getTimeValue()
       {
          struct tm tm;
-         
          memset(&tm, 0, sizeof(tm));
 
-         tm.tm_isdst = -1;                   // force DST auto detect
+         tm.tm_isdst = -1;               // force DST auto detect
          tm.tm_year = timeValue.year - 1900;
          tm.tm_mon  = timeValue.month - 1;
          tm.tm_mday  = timeValue.day;
@@ -351,29 +333,53 @@ class cDbValue : public cDbService
       unsigned long* getStrValueSizeRef()  { return &strValueSize; }
       unsigned long getStrValueSize()      { return strValueSize; }
       const char* getStrValue()            { return !isNull() && strValue ? strValue : ""; }
+
       long long getIntValue()              
       { 
          if (isNull())
             return 0;
 
-         return field->format == ffBigInt || field->format == ffUBigInt ? longlongValue : numValue; 
+         if (field->getFormat() == ffBigInt || field->getFormat() == ffUBigInt)
+            return longlongValue;
+
+         return numValue; 
       }
 
-      float getDoubleValue()               { return !isNull() ? floatValue : 0; }
+      // long getIntValue()                { return !isNull() ? numValue : 0; }
+
+      float getFloatValue()                { return !isNull() ? floatValue : 0; }
       int isNull()                         { return nullValue; }
+      int getChanges()                     { return changed; }
+
+      int isEmpty()                        
+      { 
+         if (isNull())
+            return yes;
+         
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
+            return numValue == 0;
+         else if (field->getFormat() == ffDateTime)
+            return no;
+         else if (field->getFormat() == ffAscii || field->getFormat() == ffText || 
+                  field->getFormat() == ffMText || field->getFormat() == ffMlob)
+            return ::isEmpty(strValue);
+         else if (field->getFormat() == ffFloat)
+            return floatValue == 0;
+         
+         return no;
+      }
 
       char* getStrValueRef()               { return strValue; }
       long* getIntValueRef()               { return &numValue; }
       long long* getBigIntValueRef()       { return &longlongValue; }
-
       MYSQL_TIME* getTimeValueRef()        { return &timeValue; }
       float* getFloatValueRef()            { return &floatValue; }
       my_bool* getNullRef()                { return &nullValue; }
 
    private:
 
-      FieldDef* ownField;
-      FieldDef* field;
+      cDbFieldDef* ownField;
+      cDbFieldDef* field;
       long numValue;
       long long longlongValue;
       float floatValue;
@@ -381,7 +387,7 @@ class cDbValue : public cDbService
       char* strValue;
       unsigned long strValueSize;
       my_bool nullValue;
-      int initialized;
+      int changed;
 };
 
 //***************************************************************************
@@ -393,14 +399,14 @@ class cDbStatement : public cDbService
    public:
 
       cDbStatement(cDbTable* aTable);
-      cDbStatement(cDbConnection* aConnection, const char* stmt = "");
-
-      virtual ~cDbStatement()  { clear(); }
+      cDbStatement(cDbConnection* aConnection, const char* sText = "");
+      virtual ~cDbStatement();
       
       int execute(int noResult = no);
       int find();
       int fetch();
       int freeResult();
+      void clear();
 
       // interface
 
@@ -408,24 +414,39 @@ class cDbStatement : public cDbService
 
       void setBindPrefix(const char* p) { bindPrefix = p; }
       void clrBindPrefix()              { bindPrefix = 0; }
+      int bind(const char* fname, int mode, const char* delim = 0);
       int bind(cDbValue* value, int mode, const char* delim = 0);
-      int bind(int field, int mode, const char* delim = 0);
-
-      int bindCmp(const char* table, cDbValue* value,
+      int bind(cDbTable* aTable, cDbFieldDef* field, int mode, const char* delim);
+      int bind(cDbTable* aTable, const char* fname, int mode, const char* delim);
+      int bind(cDbFieldDef* field, int mode, const char* delim = 0);
+      int bindAllOut(const char* delim = 0);
+      
+      int bindCmp(const char* ctable, cDbValue* value,
                   const char* comp, const char* delim = 0);
-      int bindCmp(const char* table, int field, cDbValue* value, 
+      int bindCmp(const char* ctable, cDbFieldDef* field, cDbValue* value, 
                   const char* comp, const char* delim = 0);
+      int bindCmp(const char* ctable, const char* fname, cDbValue* value, 
+                  const char* comp, const char* delim = 0);
+      
+      int bindInChar(const char* ctable, const char* fname, 
+                     cDbValue* value = 0, const char* delim = 0);
 
       // ..
 
       int prepare();
       int getAffected()    { return affected; }
       int getResultCount();
+      int getLastInsertId();
       const char* asText() { return stmtTxt.c_str(); }
+
+      void showStat();
+
+      // data
+
+      static int explain;          // debug explain
 
    private:
 
-      void clear();
       int appendBinding(cDbValue* value, BindType bt);
 
       string stmtTxt;
@@ -434,64 +455,150 @@ class cDbStatement : public cDbService
       cDbConnection* connection;
       cDbTable* table;
       int inCount;
-      MYSQL_BIND* inBind;   // to db
+      MYSQL_BIND* inBind;         // to db
       int outCount;
-      MYSQL_BIND* outBind;  // from db (result)
+      MYSQL_BIND* outBind;        // from db (result)
       MYSQL_RES* metaResult;
       const char* bindPrefix;
+      int firstExec;               // debug explain
+      int buildErrors;
+
+      unsigned long callsPeriod;
+      unsigned long callsTotal;
+      double duration;
+};
+
+//***************************************************************************
+// cDbStatements
+//***************************************************************************
+
+class cDbStatements
+{
+   public:
+
+      cDbStatements()  { statisticPeriod = time(0); }
+      ~cDbStatements() {};
+      
+      void append(cDbStatement* s)  { statements.push_back(s); }
+      void remove(cDbStatement* s)  { statements.remove(s); }
+
+      void showStat(const char* name)
+      {
+         tell(0, "Statement statistic of last %ld seconds from '%s':", time(0) - statisticPeriod, name);
+
+         for (std::list<cDbStatement*>::iterator it = statements.begin() ; it != statements.end(); ++it)
+         {
+            if (*it)
+               (*it)->showStat();
+         }
+
+         statisticPeriod = time(0);
+      }
+
+   private:
+
+      time_t statisticPeriod;
+      std::list<cDbStatement*> statements;
 };
 
 //***************************************************************************
 // Class Database Row
 //***************************************************************************
 
+#define GET_FIELD(name) \
+   cDbFieldDef* f = tableDef->getField(name);  \
+   if (!f) \
+      tell(0, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
+
+#define GET_FIELD_RES(name, def) \
+   cDbFieldDef* f = tableDef->getField(name);  \
+   if (!f) \
+   { \
+      tell(0, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
+      return def; \
+   } \
+
 class cDbRow : public cDbService
 {
    public:
 
-      cDbRow(FieldDef* f)
+      cDbRow(cDbTableDef* t)
       { 
-         count = 0; 
-         fieldDef = 0;
-         useFields(f);
+         std::map<std::string, cDbFieldDef*>::iterator f;
 
-         dbValues = new cDbValue[count];
+         tableDef = t;
+         dbValues = new cDbValue[tableDef->fieldCount()];
 
-         for (int f = 0; f < count; f++)
-            dbValues[f].setField(getField(f));
+         for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+            dbValues[f->second->getIndex()].setField(f->second);
       }
 
       virtual ~cDbRow() { delete[] dbValues; }
 
       void clear()
       {
-         for (int f = 0; f < count; f++)
+         for (int f = 0; f < tableDef->fieldCount(); f++)
             dbValues[f].clear();
       }
 
-      virtual FieldDef* getField(int f)            { return f < 0 ? 0 : fieldDef+f; }
-      virtual int fieldCount()                     { return count; }
+      void clearChanged()
+      {
+         for (int f = 0; f < tableDef->fieldCount(); f++)
+            dbValues[f].clearChanged();
+      }
 
-      void setValue(int f, const char* value, 
-                    int size = 0)                  { dbValues[f].setValue(value, size); }
-      void setValue(int f, double value)           { dbValues[f].setValue(value); }
-      void setIntValue(int f, long long value)     { dbValues[f].setIntValue(value); }
-      void setCharValue(int f, char value)         { dbValues[f].setCharValue(value); }
-      int hasValue(int f, double value)      const { return dbValues[f].hasValue(value); }
-      int hasValue(int f, const char* value) const { return dbValues[f].hasValue(value); }
-      cDbValue* getValue(int f)                    { return &dbValues[f]; }
+      int getChanges()
+      {
+         int count = 0;
 
-      const char* getStrValue(int f)         const { return dbValues[f].getStrValue(); }
-      long long getIntValue(int f)           const { return dbValues[f].getIntValue(); }
-      float getDoubleValue(int f)            const { return dbValues[f].getDoubleValue(); }
-      int isNull(int f)                      const { return dbValues[f].isNull(); }
+         for (int f = 0; f < tableDef->fieldCount(); f++)
+            count += dbValues[f].getChanges();
+
+         return count;
+      }
+
+      virtual cDbFieldDef* getField(int id)                 { return tableDef->getField(id); }
+      virtual int fieldCount()                              { return tableDef->fieldCount(); }
+
+      void setValue(cDbFieldDef* f, const char* value, 
+                    int size = 0)                           { dbValues[f->getIndex()].setValue(value, size); }
+      void setValue(cDbFieldDef* f, int value)              { dbValues[f->getIndex()].setValue(value); }
+      void setValue(cDbFieldDef* f, long value)             { dbValues[f->getIndex()].setValue(value); }
+      void setValue(cDbFieldDef* f, double value)           { dbValues[f->getIndex()].setValue(value); }
+      void setCharValue(cDbFieldDef* f, char value)         { dbValues[f->getIndex()].setCharValue(value); }
+
+      void setValue(const char* n, const char* value, 
+                    int size = 0)                           { GET_FIELD(n); dbValues[f->getIndex()].setValue(value, size); }
+      void setValue(const char* n, int value)               { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
+      void setValue(const char* n, long value)              { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
+      void setValue(const char* n, double value)            { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
+      void setCharValue(const char* n, char value)          { GET_FIELD(n); dbValues[f->getIndex()].setCharValue(value); }
+      void setIntValue(const char* n, long long value)      { GET_FIELD(n); dbValues[f->getIndex()].setIntValue(value); }
+
+      int hasValue(cDbFieldDef* f, const char* value) const { return dbValues[f->getIndex()].hasValue(value); }
+      int hasValue(cDbFieldDef* f, long value)        const { return dbValues[f->getIndex()].hasValue(value); }
+      int hasValue(cDbFieldDef* f, double value)      const { return dbValues[f->getIndex()].hasValue(value); }
+
+      int hasValue(const char* n, const char* value)  const { GET_FIELD_RES(n, no); return dbValues[f->getIndex()].hasValue(value); }
+      int hasValue(const char* n, long value)         const { GET_FIELD_RES(n, no); return dbValues[f->getIndex()].hasValue(value); }
+      int hasValue(const char* n, double value)       const { GET_FIELD_RES(n, no); return dbValues[f->getIndex()].hasValue(value); }
+
+      cDbValue* getValue(cDbFieldDef* f)                    { return &dbValues[f->getIndex()]; }
+      cDbValue* getValue(const char* n)                     { GET_FIELD_RES(n, 0); return &dbValues[f->getIndex()]; }
+
+      const char* getStrValue(cDbFieldDef* f)         const { return dbValues[f->getIndex()].getStrValue(); }
+      long long getIntValue(cDbFieldDef* f)           const { return dbValues[f->getIndex()].getIntValue(); }
+      float getFloatValue(cDbFieldDef* f)             const { return dbValues[f->getIndex()].getFloatValue(); }
+      int isNull(cDbFieldDef* f)                      const { return dbValues[f->getIndex()].isNull(); }
+
+      const char* getStrValue(const char* n)          const { GET_FIELD_RES(n, "");  return dbValues[f->getIndex()].getStrValue(); }
+      long long getIntValue(const char* n)            const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getIntValue(); }
+      float getFloatValue(const char* n)              const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getFloatValue(); }
+      int isNull(const char* n)                       const { GET_FIELD_RES(n, yes); return dbValues[f->getIndex()].isNull(); }
 
    protected:
 
-      virtual void useFields(FieldDef* f)  { fieldDef = f; for (count = 0; (fieldDef+count)->name; count++); } 
-
-      int count;           // field count
-      FieldDef* fieldDef;
+      cDbTableDef* tableDef;
       cDbValue* dbValues;
 };
 
@@ -513,12 +620,10 @@ class cDbConnection
 
       virtual ~cDbConnection()
       {
-         if (mysql) 
-         {
-            mysql_close(mysql);
-            mysql_thread_end();
-         }
+         close();
       }
+
+      int isConnected() { return getMySql() > 0; }
 
       int attachConnection()
       { 
@@ -528,14 +633,16 @@ class cDbConnection
          {
             connectDropped = yes;
 
+            tell(0, "Calling mysql_init(%ld)", syscall(__NR_gettid));
+
             if (!(mysql = mysql_init(0)))
                return errorSql(this, "attachConnection(init)");
 
             if (!mysql_real_connect(mysql, dbHost, 
                                     dbUser, dbPass, dbName, dbPort, 0, 0)) 
             {
-               mysql_close(mysql);
-               mysql = 0;
+               close();
+
                tell(0, "Error, connecting to database at '%s' on port (%d) failed",
                     dbHost, dbPort);
 
@@ -569,14 +676,21 @@ class cDbConnection
          attached--;
 
          if (!attached)
+            close();
+      }
+
+      void close()
+      {
+         if (mysql)
          {
+            tell(0, "Closing mysql connection and calling mysql_thread_end(%ld)", syscall(__NR_gettid));
+
             mysql_close(mysql);
             mysql_thread_end();
             mysql = 0;
+            attached = 0;
          }
       }
-
-      int isConnected() { return getMySql() > 0; }
 
       int check()
       {
@@ -669,7 +783,7 @@ class cDbConnection
 
          if (!getMySql())
             return fail;
-         
+
          if (!(f = fopen(file, "r")))
          {
             tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
@@ -678,17 +792,11 @@ class cDbConnection
          
          buffer = (char*)malloc(size+1);
    
-         while ((res = fread(buffer+nread, 1, 1000, f)))
+         while (res = fread(buffer+nread, 1, 1000, f))
          {
-            char* b;
-
             nread += res;
             size += 1000;
-
-            if (!(b = (char*)realloc(buffer, size+1)))
-               free(buffer);
-                
-            buffer = b;
+            buffer = srealloc(buffer, size+1);
          }
          
          fclose(f);
@@ -731,18 +839,19 @@ class cDbConnection
 
       MYSQL* getMySql()
       {
-         if (connectDropped && mysql)
-         {
-            mysql_close(mysql);
-            mysql_thread_end();
-            mysql = 0;
-            attached = 0;
-         }
+         if (connectDropped)
+            close();
 
          return mysql; 
       }
 
       int getAttachedCount()                         { return attached; }
+      void showStat(const char* name = "")           { statements.showStat(name); }
+      int errorSql(cDbConnection* mysql, const char* prefix, MYSQL_STMT* stmt = 0, const char* stmtTxt = 0);
+
+      // data
+
+      cDbStatements statements;         // all statements of this connection
 
       // --------------
       // static stuff 
@@ -761,42 +870,81 @@ class cDbConnection
       static int getPort()                           { return dbPort; }
       static void setEncoding(const char* enc)       { free(encoding); encoding = strdup(enc); }
       static const char* getEncoding()               { return encoding; }
+      static void setConfPath(const char* cpath)     { free(confPath); confPath = strdup(cpath); }
+      static const char* getConfPath()               { return confPath; }
 
-      int errorSql(cDbConnection* mysql, const char* prefix, MYSQL_STMT* stmt = 0, const char* stmtTxt = 0);
+      // -----------------------------------------------------------
+      // init() and exit() must exactly called 'once' per process
 
-      static int init()
+      static int init(key_t semKey = 0)
       {
-         if (mysql_library_init(0, 0, 0)) 
+         if (semKey && !sem)
+            sem = new Sem(semKey);
+
+         if (!sem || sem->check() == success)
          {
-            tell(0, "Error: mysql_library_init failed");
-            return fail;  // return errorSql(0, "init(library_init)");
+            // call only once per process
+
+            if (sem)
+               tell(1, "Info: Calling mysql_library_init()");
+
+            if (mysql_library_init(0, 0, 0)) 
+            {
+               tell(0, "Error: mysql_library_init() failed");
+               return fail;
+            }
+         }
+         else if (sem)
+         {
+            tell(1, "Info: Skipping calling mysql_library_init(), it's already done!");
          }
 
+         if (sem)
+            sem->inc();
+         
          return success;
       }
 
       static int exit()
       {
-         mysql_library_end();
+         mysql_thread_end();
+
+         if (sem)
+            sem->dec();
+         
+         if (!sem || sem->check() == success)
+         {
+            tell(1, "Info: Released the last usage of mysql_lib, calling mysql_library_end() now");
+            mysql_library_end();
+         }
+         else if (sem)
+         {
+            tell(1, "Info: The mysql_lib is still in use, skipping mysql_library_end() call");
+         }
+
          free(dbHost);
          free(dbUser);
          free(dbPass);
          free(dbName);
          free(encoding);
+         free(confPath);
 
          return done;
       }
 
-      MYSQL* mysql;
-
    private:
+
+      MYSQL* mysql;
 
       int initialized;
       int attached;
       int inTact;
       int connectDropped;
 
+      static Sem* sem;
+
       static char* encoding;
+      static char* confPath;
 
       // connecting data
 
@@ -815,14 +963,20 @@ class cDbTable : public cDbService
 {
    public:
 
-      cDbTable(cDbConnection* aConnection, const char* aName, FieldDef* f, IndexDef* i = 0);
+      cDbTable(cDbConnection* aConnection, const char* name);
       virtual ~cDbTable();
 
-      virtual const char* TableName() { return tableName; }
+      virtual const char* TableName()           { return tableDef ? tableDef->getName() : "<unknown>"; }
+      virtual int fieldCount()                  { return tableDef->fieldCount(); }
+      cDbFieldDef* getField(int f)              { return tableDef->getField(f); }
+      cDbFieldDef* getField(const char* name)   { return tableDef->getField(name); }
 
-      virtual int open();
+      virtual int open(int allowAlter = no);
       virtual int close();
-
+      virtual int attach();
+      virtual int detach();
+      int isAttached()     { return attached; }
+      
       virtual int find();
       virtual void reset() { reset(stmtSelect); }
 
@@ -834,67 +988,86 @@ class cDbTable : public cDbService
       virtual int update();
       virtual int store();
 
-      virtual int deleteWhere(const char* where, int& count);
+      virtual int __attribute__ ((format(printf, 2, 3))) deleteWhere(const char* where, ...);
       virtual int countWhere(const char* where, int& count, const char* what = 0);
       virtual int truncate();
 
       // interface to cDbRow
 
-      void clear()                                           { row->clear(); }
-      void setValue(int f, const char* value, int size = 0)  { row->setValue(f, value, size); }
-      void setValue(int f, double value)                     { row->setValue(f, value); }
-      void setIntValue(int f, long long value)               { row->setIntValue(f, value); }
-      void setCharValue(int f, char value)                   { row->setCharValue(f, value); }
-      int hasValue(int f, const char* value)                 { return row->hasValue(f, value); }
-      int hasValue(int f, double value)                      { return row->hasValue(f, value); }
-      const char* getStrValue(int f)       const             { return row->getStrValue(f); }
-      long long getIntValue(int f)         const             { return row->getIntValue(f); }
-      float getDoubleValue(int f)          const             { return row->getDoubleValue(f); }
-      int isNull(int f)                    const             { return row->isNull(f); }
+      void clear()                                                    { row->clear(); }
+      void clearChanged()                                             { row->clearChanged(); }
+      int getChanges()                                                { return row->getChanges(); }
 
-      cDbValue* getValue(int f)                              { return row->getValue(f); }
-      FieldDef* getField(int f)                              { return row->getField(f); }
-      int fieldCount()                                       { return row->fieldCount(); }
-      cDbRow* getRow()                                       { return row; }
+      void setValue(cDbFieldDef* f, const char* value, int size = 0)  { row->setValue(f, value, size); }
+      void setValue(cDbFieldDef* f, int value)                        { row->setValue(f, value); }
+      void setValue(cDbFieldDef* f, long value)                       { row->setValue(f, value); }
+      void setValue(cDbFieldDef* f, double value)                     { row->setValue(f, value); }
+      void setCharValue(cDbFieldDef* f, char value)                   { row->setCharValue(f, value); }
 
-      cDbConnection* getConnection()                         { return connection; }
-      MYSQL* getMySql()                                      { return connection->getMySql(); }
-      int isConnected()                                      { return connection && connection->getMySql(); }
+      void setValue(const char* n, const char* value, int size = 0)   { row->setValue(n, value, size); }
+      void setValue(const char* n, int value)                         { row->setValue(n, value); }
+      void setValue(const char* n, long value)                        { row->setValue(n, value); }
+      void setValue(const char* n, double value)                      { row->setValue(n, value); }
+      void setCharValue(const char* n, char value)                    { row->setCharValue(n, value); }
+      void setIntValue(const char* n, long long value)                { row->setIntValue(n, value); }
 
-      virtual IndexDef* getIndex(int i)                      { return indices+i; }
+      int hasValue(cDbFieldDef* f, const char* value)                 { return row->hasValue(f, value); }
+      int hasValue(cDbFieldDef* f, long value)                        { return row->hasValue(f, value); }
+      int hasValue(cDbFieldDef* f, double value)                      { return row->hasValue(f, value); }
+
+      int hasValue(const char* n, const char* value)                  { return row->hasValue(n, value); }
+      int hasValue(const char* n, long value)                         { return row->hasValue(n, value); }
+      int hasValue(const char* n, double value)                       { return row->hasValue(n, value); }
+
+      const char* getStrValue(cDbFieldDef* f)       const             { return row->getStrValue(f); }
+      long long getIntValue(cDbFieldDef* f)         const             { return row->getIntValue(f); }
+      float getFloatValue(cDbFieldDef* f)           const             { return row->getFloatValue(f); }
+      int isNull(cDbFieldDef* f)                    const             { return row->isNull(f); }
+
+      const char* getStrValue(const char* n)        const             { return row->getStrValue(n); }
+      long long getIntValue(const char* n)          const             { return row->getIntValue(n); }
+      float getFloatValue(const char* n)            const             { return row->getFloatValue(n); }
+      int isNull(const char* n)                     const             { return row->isNull(n); }
+
+      cDbValue* getValue(cDbFieldDef* f)                              { return row->getValue(f); }
+      cDbValue* getValue(const char* fname)                           { return row->getValue(fname); }
+      int init(cDbValue*& dbvalue, const char* fname)                 { dbvalue = row->getValue(fname); return dbvalue ? success : fail; }
+      cDbRow* getRow()                                                { return row; }
+
+      cDbTableDef* getTableDef()                                      { return tableDef; }
+      cDbConnection* getConnection()                                  { return connection; }
+      MYSQL* getMySql()                                               { return connection->getMySql(); }
+      int isConnected()                                               { return connection && connection->getMySql(); }
+
+      int getLastInsertId()                                           { return lastInsertId; }
+
       virtual int exist(const char* name = 0);
+      virtual int validateStructure();
       virtual int createTable();
-
-      // static stuff
-
-      static void setConfPath(const char* cpath)             { free(confPath); confPath = strdup(cpath); }
+      virtual int createIndices();
 
    protected:
 
-      virtual int init();
-      virtual int createIndices();
+      virtual int init(int allowAlter = no);
       virtual int checkIndex(const char* idxName, int& fieldCount);
-
-      virtual void copyValues(cDbRow* r);
+      virtual int alterModifyField(cDbFieldDef* def);
+      virtual int alterAddField(cDbFieldDef* def);
 
       // data
 
-      char* tableName;
       cDbRow* row;
       int holdInMemory;        // hold table additionally in memory (not implemented yet)
+      int attached;
+      int lastInsertId;
 
-      IndexDef* indices;
+      cDbConnection* connection;
+      cDbTableDef* tableDef;
 
       // basic statements
 
       cDbStatement* stmtSelect;
       cDbStatement* stmtInsert;
       cDbStatement* stmtUpdate;
-      cDbConnection* connection;
-
-      // statics
-
-      static char* confPath;
 };
 
 //***************************************************************************
@@ -995,7 +1168,7 @@ class cDbProcedure : public cDbService
          return success;
       }
 
-      int exist()
+      int created()
       {
          if (!connection || !connection->getMySql())
             return fail;
@@ -1039,11 +1212,22 @@ class cDbProcedure : public cDbService
 
       int drop()
       {
-         tell(1, "Drop %s '%s'", 
-              type == ptProcedure ? "procedure" : "function", name);
+         tell(1, "Drop %s '%s'", type == ptProcedure ? "procedure" : "function", name);
 
-         return connection->query("drop %s %s", 
-                                  type == ptProcedure ? "procedure" : "function", name);
+         return connection->query("drop %s %s", type == ptProcedure ? "procedure" : "function", name);
+      }
+
+      static int existOnFs(const char* path, const char* name)
+      {
+         int state;
+         char* file = 0;
+         
+         asprintf(&file, "%s/%s.sql", path, name);
+         state = fileExists(file);
+         
+         free(file);
+         
+         return state;
       }
 
    protected:

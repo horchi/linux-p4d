@@ -1,5 +1,5 @@
 //***************************************************************************
-// Group p4d / Linux - Heizungs Manager
+// p4d / Linux - Heizungs Manager
 // File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
@@ -13,14 +13,14 @@
 // Includes
 //***************************************************************************
 
-#include "lib/tabledef.h"
+#include "lib/db.h"
 
 #include "service.h"
 #include "p4io.h"
 #include "w1.h"
 
 #define VERSION "0.1.21"
-#define confDirDefault "/etc/p4d/"
+#define confDirDefault "/etc/p4d"
 
 extern char dbHost[];
 extern int  dbPort;
@@ -33,6 +33,7 @@ extern int interval;
 extern int stateCheckInterval;
 extern int aggregateInterval;        // aggregate interval in minutes
 extern int aggregateHistory;         // history in days
+extern char* confDir;
 
 //***************************************************************************
 // Class P4d
@@ -99,14 +100,14 @@ class P4d : public FroelingService
 
       cDbConnection* connection;
 
-      cTableSamples* tableSamples;
-      cTableValueFacts* tableValueFacts;
-      cTableMenu* tableMenu;
-      cTableErrors* tableErrors;
-      cTableJobs* tableJobs;
-      cTableSensorAlert* tableSensorAlert;
-      cTableSchemaConf* tableSchemaConf;
-      cTableConfig* tableConfig;
+      cDbTable* tableSamples;
+      cDbTable* tableValueFacts;
+      cDbTable* tableMenu;
+      cDbTable* tableErrors;
+      cDbTable* tableJobs;
+      cDbTable* tableSensorAlert;
+      cDbTable* tableSchemaConf;
+      cDbTable* tableConfig;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;

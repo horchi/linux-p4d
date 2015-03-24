@@ -1,5 +1,5 @@
 //***************************************************************************
-// Group p4d / Linux - Heizungs Manager
+// p4d / Linux - Heizungs Manager
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
@@ -91,10 +91,29 @@ P4d::~P4d()
 
 int P4d::init()
 {
+   char* dictPath = 0;
+
+   // initialize the dictionary
+
+   asprintf(&dictPath, "%s/p4d.dat", confDir);
+
+   if (dbDict.in(dictPath) != success)
+   {
+      tell(0, "Fatal: Dictionary not loaded, aborting!");
+      return 1;
+   }
+
+   tell(0, "Dictionary '%s' loaded", dictPath);
+   free(dictPath);
+
+   // initialize the database resources
+
    if (initDb() != success)
       return fail;
 
    readConfiguration();
+
+   // prepare one wire sensors
 
    w1.scan();
 
@@ -113,7 +132,7 @@ int P4d::exit()
 // Init/Exit Database
 //***************************************************************************
 
-cDBS::FieldDef rangeEndDef = { "time", cDBS::ffDateTime,  0, 999, cDBS::ftData };
+cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int P4d::initDb()
 {
@@ -126,28 +145,28 @@ int P4d::initDb()
 
    connection = new cDbConnection();
 
-   tableValueFacts = new cTableValueFacts(connection);
+   tableValueFacts = new cDbTable(connection, "valuefacts");
    if (tableValueFacts->open() != success) return fail;
 
-   tableErrors = new cTableErrors(connection);
+   tableErrors = new cDbTable(connection, "errors");
    if (tableErrors->open() != success) return fail;
 
-   tableMenu = new cTableMenu(connection);
+   tableMenu = new cDbTable(connection, "menu");
    if (tableMenu->open() != success) return fail;
 
-   tableSamples = new cTableSamples(connection);
+   tableSamples = new cDbTable(connection, "samples");
    if (tableSamples->open() != success) return fail;
 
-   tableJobs = new cTableJobs(connection);
+   tableJobs = new cDbTable(connection, "jobs");
    if (tableJobs->open() != success) return fail;
 
-   tableSensorAlert = new cTableSensorAlert(connection);
+   tableSensorAlert = new cDbTable(connection, "sensoralert");
    if (tableSensorAlert->open() != success) return fail;
 
-   tableSchemaConf = new cTableSchemaConf(connection);
+   tableSchemaConf = new cDbTable(connection, "schemaconf");
    if (tableSchemaConf->open() != success) return fail;
 
-   tableConfig = new cTableConfig(connection);
+   tableConfig = new cDbTable(connection, "config");
    if (tableConfig->open() != success) return fail;
 
    // prepare statements
@@ -155,14 +174,14 @@ int P4d::initDb()
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
 
    selectActiveValueFacts->build("select ");
-   selectActiveValueFacts->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
-   selectActiveValueFacts->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind(cTableValueFacts::fiName, cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind("ADDRESS", cDBS::bndOut);
+   selectActiveValueFacts->bind("TYPE", cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind("UNIT", cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind("FACTOR", cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind("TITLE", cDBS::bndOut, ", ");
+   selectActiveValueFacts->bind("NAME", cDBS::bndOut, ", ");
    selectActiveValueFacts->build(" from %s where ", tableValueFacts->TableName());
-   selectActiveValueFacts->bind(cTableValueFacts::fiState, cDBS::bndIn | cDBS::bndSet);
+   selectActiveValueFacts->bind("STATE", cDBS::bndIn | cDBS::bndSet);
 
    status += selectActiveValueFacts->prepare();
 
@@ -171,12 +190,12 @@ int P4d::initDb()
    selectAllValueFacts = new cDbStatement(tableValueFacts);
 
    selectAllValueFacts->build("select ");
-   selectAllValueFacts->bind(cTableValueFacts::fiAddress, cDBS::bndOut);
-   selectAllValueFacts->bind(cTableValueFacts::fiType, cDBS::bndOut, ", ");
-   selectAllValueFacts->bind(cTableValueFacts::fiState, cDBS::bndOut, ", ");
-   selectAllValueFacts->bind(cTableValueFacts::fiUnit, cDBS::bndOut, ", ");
-   selectAllValueFacts->bind(cTableValueFacts::fiFactor, cDBS::bndOut, ", ");
-   selectAllValueFacts->bind(cTableValueFacts::fiTitle, cDBS::bndOut, ", ");
+   selectAllValueFacts->bind("ADDRESS", cDBS::bndOut);
+   selectAllValueFacts->bind("TYPE", cDBS::bndOut, ", ");
+   selectAllValueFacts->bind("STATE", cDBS::bndOut, ", ");
+   selectAllValueFacts->bind("UNIT", cDBS::bndOut, ", ");
+   selectAllValueFacts->bind("FACTOR", cDBS::bndOut, ", ");
+   selectAllValueFacts->bind("TITLE", cDBS::bndOut, ", ");
    selectAllValueFacts->build(" from %s", tableValueFacts->TableName());
 
    status += selectAllValueFacts->prepare();
@@ -186,12 +205,12 @@ int P4d::initDb()
    selectAllMenuItems = new cDbStatement(tableMenu);
 
    selectAllMenuItems->build("select ");
-   selectAllMenuItems->bind(cTableMenu::fiId, cDBS::bndOut);
-   selectAllMenuItems->bind(cTableMenu::fiAddress, cDBS::bndOut, ", ");
-   selectAllMenuItems->bind(cTableMenu::fiType, cDBS::bndOut, ", ");
-   selectAllMenuItems->bind(cTableMenu::fiUnit, cDBS::bndOut, ", ");
-   selectAllMenuItems->bind(cTableMenu::fiValue, cDBS::bndOut, ", ");
-   selectAllMenuItems->bind(cTableMenu::fiTitle, cDBS::bndOut, ", ");
+   selectAllMenuItems->bind("ID", cDBS::bndOut);
+   selectAllMenuItems->bind("ADDRESS", cDBS::bndOut, ", ");
+   selectAllMenuItems->bind("TYPE", cDBS::bndOut, ", ");
+   selectAllMenuItems->bind("UNIT", cDBS::bndOut, ", ");
+   selectAllMenuItems->bind("VALUE", cDBS::bndOut, ", ");
+   selectAllMenuItems->bind("TITLE", cDBS::bndOut, ", ");
    selectAllMenuItems->build(" from %s", tableMenu->TableName());
 
    status += selectAllMenuItems->prepare();
@@ -201,12 +220,12 @@ int P4d::initDb()
    selectPendingJobs = new cDbStatement(tableJobs);
 
    selectPendingJobs->build("select ");
-   selectPendingJobs->bind(cTableJobs::fiId, cDBS::bndOut);
-   selectPendingJobs->bind(cTableJobs::fiReqAt, cDBS::bndOut, ", ");
-   selectPendingJobs->bind(cTableJobs::fiState, cDBS::bndOut, ", ");
-   selectPendingJobs->bind(cTableJobs::fiCommand, cDBS::bndOut, ", ");
-   selectPendingJobs->bind(cTableJobs::fiAddress, cDBS::bndOut, ", ");
-   selectPendingJobs->bind(cTableJobs::fiData, cDBS::bndOut, ", ");
+   selectPendingJobs->bind("ID", cDBS::bndOut);
+   selectPendingJobs->bind("REQAT", cDBS::bndOut, ", ");
+   selectPendingJobs->bind("STATE", cDBS::bndOut, ", ");
+   selectPendingJobs->bind("COMMAND", cDBS::bndOut, ", ");
+   selectPendingJobs->bind("ADDRESS", cDBS::bndOut, ", ");
+   selectPendingJobs->bind("DATA", cDBS::bndOut, ", ");
    selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
 
    status += selectPendingJobs->prepare();
@@ -216,21 +235,21 @@ int P4d::initDb()
    selectSensorAlerts = new cDbStatement(tableSensorAlert);
 
    selectSensorAlerts->build("select ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiId, cDBS::bndOut);
-   selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMin, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMax, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiRangeM, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiDelta, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMAddress, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMSubject, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMBody, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiLastAlert, cDBS::bndOut, ", ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiMaxRepeat, cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("ID", cDBS::bndOut);
+   selectSensorAlerts->bind("ADDRESS", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("TYPE", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MIN", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MAX", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("RANGEM", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("DELTA", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MADDRESS", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MSUBJECT", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MBODY", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("LASTALERT", cDBS::bndOut, ", ");
+   selectSensorAlerts->bind("MAXREPEAT", cDBS::bndOut, ", ");
    selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
-   selectSensorAlerts->bind(cTableSensorAlert::fiAddress, cDBS::bndIn | cDBS::bndSet, " and ");
-   selectSensorAlerts->bind(cTableSensorAlert::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSensorAlerts->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSensorAlerts->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
 
    status += selectSensorAlerts->prepare();
 
@@ -245,15 +264,15 @@ int P4d::initDb()
    selectSampleInRange = new cDbStatement(tableSamples);
 
    selectSampleInRange->build("select ");
-   selectSampleInRange->bind(cTableSamples::fiAddress, cDBS::bndOut);
-   selectSampleInRange->bind(cTableSamples::fiType, cDBS::bndOut, ", ");
-   selectSampleInRange->bind(cTableSamples::fiTime, cDBS::bndOut, ", ");
-   selectSampleInRange->bind(cTableSamples::fiValue, cDBS::bndOut, ", ");
+   selectSampleInRange->bind("ADDRESS", cDBS::bndOut);
+   selectSampleInRange->bind("TYPE", cDBS::bndOut, ", ");
+   selectSampleInRange->bind("TIME", cDBS::bndOut, ", ");
+   selectSampleInRange->bind("VALUE", cDBS::bndOut, ", ");
    selectSampleInRange->build(" from %s where ", tableSamples->TableName());
-   selectSampleInRange->bind(cTableSamples::fiAddress, cDBS::bndIn | cDBS::bndSet);
-   selectSampleInRange->bind(cTableSamples::fiType, cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSampleInRange->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
+   selectSampleInRange->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
    selectSampleInRange->bindCmp(0, &rangeEnd, "<=", " and ");
-   selectSampleInRange->bindCmp(0, cTableSamples::fiTime, 0, ">", " and ");
+   selectSampleInRange->bindCmp(0, "TIME", 0, ">", " and ");
    selectSampleInRange->build(" order by time");
 
    status += selectSampleInRange->prepare();
@@ -263,7 +282,7 @@ int P4d::initDb()
    cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
-   cleanupJobs->bindCmp(0, cTableJobs::fiReqAt, 0, "<");
+   cleanupJobs->bindCmp(0, "REQAT", 0, "<");
 
    status += cleanupJobs->prepare();
    
@@ -385,14 +404,14 @@ int P4d::setup()
    {
       char* res;
       char buf[100+TB]; *buf = 0;
-      char oldState = tableValueFacts->getStrValue(cTableValueFacts::fiState)[0];
+      char oldState = tableValueFacts->getStrValue("STATE")[0];
       char state = oldState;
 
       printf("%s 0x%04llx '%s' (%s)", 
-             tableValueFacts->getStrValue(cTableValueFacts::fiType),
-             tableValueFacts->getIntValue(cTableValueFacts::fiAddress),
-             tableValueFacts->getStrValue(cTableValueFacts::fiUnit),
-             tableValueFacts->getStrValue(cTableValueFacts::fiTitle));
+             tableValueFacts->getStrValue("TYPE"),
+             tableValueFacts->getIntValue("ADDRESS"),
+             tableValueFacts->getStrValue("UNIT"),
+             tableValueFacts->getStrValue("TITLE"));
 
       printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
             
@@ -401,7 +420,7 @@ int P4d::setup()
 
       if (state != oldState && tableValueFacts->find())
       {
-         tableValueFacts->setCharValue(cTableValueFacts::fiState, state);
+         tableValueFacts->setCharValue("STATE", state);
          tableValueFacts->store();
       }
    }
@@ -426,21 +445,21 @@ int P4d::updateSchemaConfTable()
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
-      unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
-      const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
+      unsigned int addr = tableValueFacts->getIntValue("ADDRESS");
+      const char* type = tableValueFacts->getStrValue("TYPE");
       y += step;
 
       tableSchemaConf->clear();
-      tableSchemaConf->setValue(cTableSchemaConf::fiAddress, addr);
-      tableSchemaConf->setValue(cTableSchemaConf::fiType, type);
+      tableSchemaConf->setIntValue("ADDRESS", addr);
+      tableSchemaConf->setValue("TYPE", type);
    
       if (!tableSchemaConf->find())
       {
-         tableSchemaConf->setValue(cTableSchemaConf::fiKind, "value");
-         tableSchemaConf->setValue(cTableSchemaConf::fiState, "A");
-         tableSchemaConf->setValue(cTableSchemaConf::fiColor, "black");
-         tableSchemaConf->setValue(cTableSchemaConf::fiXPos, 12);
-         tableSchemaConf->setValue(cTableSchemaConf::fiYPos, y);
+         tableSchemaConf->setValue("KIND", "value");
+         tableSchemaConf->setValue("STATE", "A");
+         tableSchemaConf->setValue("COLOR", "black");
+         tableSchemaConf->setValue("XPOS", 12);
+         tableSchemaConf->setValue("YPOS", y);
 
          tableSchemaConf->store();
          added++;
@@ -490,17 +509,17 @@ int P4d::updateValueFacts()
       // update table
       
       tableValueFacts->clear();
-      tableValueFacts->setValue(cTableValueFacts::fiAddress, v.address);
-      tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
+      tableValueFacts->setValue("ADDRESS", v.address);
+      tableValueFacts->setValue("TYPE", "VA");
       
       if (!tableValueFacts->find())
       {
-         tableValueFacts->setValue(cTableValueFacts::fiName, v.name);
-         tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-         tableValueFacts->setValue(cTableValueFacts::fiUnit, v.unit);
-         tableValueFacts->setValue(cTableValueFacts::fiFactor, v.factor);
-         tableValueFacts->setValue(cTableValueFacts::fiTitle, v.description);
-         tableValueFacts->setValue(cTableValueFacts::fiRes1, v.unknown);
+         tableValueFacts->setValue("NAME", v.name);
+         tableValueFacts->setValue("STATE", "D");
+         tableValueFacts->setValue("UNIT", v.unit);
+         tableValueFacts->setValue("FACTOR", v.factor);
+         tableValueFacts->setValue("TITLE", v.description);
+         tableValueFacts->setValue("RES1", v.unknown);
          
          tableValueFacts->store();
          added++;
@@ -520,7 +539,7 @@ int P4d::updateValueFacts()
    for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
    {
       const char* type = 0;
-      int structType = tableMenu->getIntValue(cTableMenu::fiType);
+      int structType = tableMenu->getIntValue("TYPE");
 
       count++;
 
@@ -536,19 +555,19 @@ int P4d::updateValueFacts()
          // update table
          
          tableValueFacts->clear();
-         tableValueFacts->setValue(cTableValueFacts::fiAddress, tableMenu->getIntValue(cTableMenu::fiAddress));
-         tableValueFacts->setValue(cTableValueFacts::fiType, type);
+         tableValueFacts->setIntValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
+         tableValueFacts->setValue("TYPE", type);
          
          if (!tableValueFacts->find())
          {
-            string name = tableMenu->getStrValue(cTableMenu::fiTitle);
+            string name = tableMenu->getStrValue("TITLE");
 
             removeCharsExcept(name, nameChars);
-            tableValueFacts->setValue(cTableValueFacts::fiName, name.c_str());
-            tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-            tableValueFacts->setValue(cTableValueFacts::fiUnit, tableMenu->getStrValue(cTableMenu::fiUnit));
-            tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-            tableValueFacts->setValue(cTableValueFacts::fiTitle, tableMenu->getStrValue(cTableMenu::fiTitle));
+            tableValueFacts->setValue("NAME", name.c_str());
+            tableValueFacts->setValue("STATE", "D");
+            tableValueFacts->setValue("UNIT", tableMenu->getStrValue("UNIT"));
+            tableValueFacts->setValue("FACTOR", 1);
+            tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
             
             tableValueFacts->store();
             added++;
@@ -566,48 +585,48 @@ int P4d::updateValueFacts()
    added = 0;
 
    tableValueFacts->clear();
-   tableValueFacts->setValue(cTableValueFacts::fiAddress, udState);      // 1  -> Kessel Status
-   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
+   tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
+   tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
    
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue(cTableValueFacts::fiName, "Status");
-      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
-      tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
-      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Heizungsstatus");
+      tableValueFacts->setValue("NAME", "Status");
+      tableValueFacts->setValue("STATE", "A");
+      tableValueFacts->setValue("UNIT", "zst");
+      tableValueFacts->setValue("FACTOR", 1);
+      tableValueFacts->setValue("TITLE", "Heizungsstatus");
       
       tableValueFacts->store();
       added++;
    }
 
    tableValueFacts->clear();
-   tableValueFacts->setValue(cTableValueFacts::fiAddress, udMode);       // 2  -> Kessel Mode
-   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
+   tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
+   tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
    
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue(cTableValueFacts::fiName, "Betriebsmodus");
-      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
-      tableValueFacts->setValue(cTableValueFacts::fiUnit, "zst");
-      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Betriebsmodus");
+      tableValueFacts->setValue("NAME", "Betriebsmodus");
+      tableValueFacts->setValue("STATE", "A");
+      tableValueFacts->setValue("UNIT", "zst");
+      tableValueFacts->setValue("FACTOR", 1);
+      tableValueFacts->setValue("TITLE", "Betriebsmodus");
       
       tableValueFacts->store();
       added++;
    }
 
    tableValueFacts->clear();
-   tableValueFacts->setValue(cTableValueFacts::fiAddress, udTime);       // 3  -> Kessel Zeit
-   tableValueFacts->setValue(cTableValueFacts::fiType, "UD");            // UD -> User Defined
+   tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
+   tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
    
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue(cTableValueFacts::fiName, "Uhrzeit");
-      tableValueFacts->setValue(cTableValueFacts::fiState, "A");
-      tableValueFacts->setValue(cTableValueFacts::fiUnit, "T");
-      tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-      tableValueFacts->setValue(cTableValueFacts::fiTitle, "Datum Uhrzeit der Heizung");
+      tableValueFacts->setValue("NAME", "Uhrzeit");
+      tableValueFacts->setValue("STATE", "A");
+      tableValueFacts->setValue("UNIT", "T");
+      tableValueFacts->setValue("FACTOR", 1);
+      tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
       
       tableValueFacts->store();
       added++;
@@ -632,16 +651,16 @@ int P4d::updateValueFacts()
          // update table
          
          tableValueFacts->clear();
-         tableValueFacts->setIntValue(cTableValueFacts::fiAddress, W1::toId(it->first.c_str()));
-         tableValueFacts->setValue(cTableValueFacts::fiType, "W1");
+         tableValueFacts->setIntValue("ADDRESS", W1::toId(it->first.c_str()));
+         tableValueFacts->setValue("TYPE", "W1");
          
          if (!tableValueFacts->find())
          {
-            tableValueFacts->setValue(cTableValueFacts::fiName, it->first.c_str());
-            tableValueFacts->setValue(cTableValueFacts::fiState, "D");
-            tableValueFacts->setValue(cTableValueFacts::fiUnit, "°");
-            tableValueFacts->setValue(cTableValueFacts::fiFactor, 1);
-            tableValueFacts->setValue(cTableValueFacts::fiTitle, it->first.c_str());
+            tableValueFacts->setValue("NAME", it->first.c_str());
+            tableValueFacts->setValue("STATE", "D");
+            tableValueFacts->setValue("UNIT", "°");
+            tableValueFacts->setValue("FACTOR", 1);
+            tableValueFacts->setValue("TITLE", it->first.c_str());
             
             tableValueFacts->store();
             added++;
@@ -695,17 +714,17 @@ int P4d::updateMenu()
 
       tableMenu->clear();
 
-      tableMenu->setValue(cTableMenu::fiState, "D");
-      tableMenu->setValue(cTableMenu::fiUnit, m.type == mstAnlOut && isEmpty(m.unit) ? "%" : m.unit);
+      tableMenu->setValue("STATE", "D");
+      tableMenu->setValue("UNIT", m.type == mstAnlOut && isEmpty(m.unit) ? "%" : m.unit);
       
-      tableMenu->setValue(cTableMenu::fiParent, m.parent);
-      tableMenu->setValue(cTableMenu::fiChild, m.child);
-      tableMenu->setValue(cTableMenu::fiAddress, m.address);
-      tableMenu->setValue(cTableMenu::fiTitle, m.description);
+      tableMenu->setValue("PARENT", m.parent);
+      tableMenu->setValue("CHILD", m.child);
+      tableMenu->setValue("ADDRESS", m.address);
+      tableMenu->setValue("TITLE", m.description);
       
-      tableMenu->setValue(cTableMenu::fiType, m.type);
-      tableMenu->setValue(cTableMenu::fiUnknown1, m.unknown1);
-      tableMenu->setValue(cTableMenu::fiUnknown2, m.unknown2);
+      tableMenu->setValue("TYPE", m.type);
+      tableMenu->setValue("UNKNOWN1", m.unknown1);
+      tableMenu->setValue("UNKNOWN2", m.unknown2);
 
       tableMenu->insert();
 
@@ -726,14 +745,14 @@ int P4d::store(time_t now, const char* type, unsigned int address, double value,
 {
    tableSamples->clear();
 
-   tableSamples->setValue(cTableSamples::fiTime, now);
-   tableSamples->setIntValue(cTableSamples::fiAddress, address);
-   tableSamples->setValue(cTableSamples::fiType, type);
-   tableSamples->setValue(cTableSamples::fiAggregate, "S");
+   tableSamples->setValue("TIME", now);
+   tableSamples->setIntValue("ADDRESS", address);
+   tableSamples->setValue("TYPE", type);
+   tableSamples->setValue("AGGREGATE", "S");
 
-   tableSamples->setValue(cTableSamples::fiValue, value / (double)factor);
-   tableSamples->setValue(cTableSamples::fiText, text);
-   tableSamples->setValue(cTableSamples::fiSamples, 1);
+   tableSamples->setValue("VALUE", value / (double)factor);
+   tableSamples->setValue("TEXT", text);
+   tableSamples->setValue("SAMPLES", 1);
 
    tableSamples->store();
    
@@ -1013,18 +1032,18 @@ int P4d::update()
    tell(eloDetail, "Reading values ...");
 
    tableValueFacts->clear();
-   tableValueFacts->setValue(cTableValueFacts::fiState, "A");
+   tableValueFacts->setValue("STATE", "A");
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
-      unsigned int addr = tableValueFacts->getIntValue(cTableValueFacts::fiAddress);
-      double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
-      const char* title = tableValueFacts->getStrValue(cTableValueFacts::fiTitle);
-      const char* type = tableValueFacts->getStrValue(cTableValueFacts::fiType);
-      const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
-      const char* name = tableValueFacts->getStrValue(cTableValueFacts::fiName);
+      unsigned int addr = tableValueFacts->getIntValue("ADDRESS");
+      double factor = tableValueFacts->getIntValue("FACTOR");
+      const char* title = tableValueFacts->getStrValue("TITLE");
+      const char* type = tableValueFacts->getStrValue("TYPE");
+      const char* unit = tableValueFacts->getStrValue("UNIT");
+      const char* name = tableValueFacts->getStrValue("NAME");
 
-      if (tableValueFacts->hasValue(cTableValueFacts::fiType, "VA"))
+      if (tableValueFacts->hasValue("TYPE", "VA"))
       {
          Value v(addr);
 
@@ -1046,7 +1065,7 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
-      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "DO"))
+      else if (tableValueFacts->hasValue("TYPE", "DO"))
       {
          Fs::IoValue v(addr);
 
@@ -1061,7 +1080,7 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
-      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "DI"))
+      else if (tableValueFacts->hasValue("TYPE", "DI"))
       {
          Fs::IoValue v(addr);
 
@@ -1076,7 +1095,7 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
-      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "AO"))
+      else if (tableValueFacts->hasValue("TYPE", "AO"))
       {
          Fs::IoValue v(addr);
 
@@ -1091,7 +1110,7 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
-      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "W1"))
+      else if (tableValueFacts->hasValue("TYPE", "W1"))
       {
          double value = w1.valueOf(name);
             
@@ -1106,9 +1125,9 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
-      else if (tableValueFacts->hasValue(cTableValueFacts::fiType, "UD"))
+      else if (tableValueFacts->hasValue("TYPE", "UD"))
       {
-         switch (tableValueFacts->getIntValue(cTableValueFacts::fiAddress))
+         switch (tableValueFacts->getIntValue("ADDRESS"))
          {
             case udState:
             {
@@ -1159,8 +1178,8 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
                            double value, const char* unit)
 {
    tableSensorAlert->clear();
-   tableSensorAlert->setValue(cTableSensorAlert::fiType, type);
-   tableSensorAlert->setValue(cTableSensorAlert::fiAddress, addr);
+   tableSensorAlert->setValue("TYPE", type);
+   tableSensorAlert->setIntValue("ADDRESS", addr);
 
    // iterate over all alert roules of this sensor ...
 
@@ -1168,20 +1187,20 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
    {
       int alertDone = no;
 
-      time_t lastAlert = tableSensorAlert->getIntValue(cTableSensorAlert::fiLastAlert);
-      int maxRepeat = tableSensorAlert->getIntValue(cTableSensorAlert::fiMaxRepeat);
+      time_t lastAlert = tableSensorAlert->getIntValue("LASTALERT");
+      int maxRepeat = tableSensorAlert->getIntValue("MAXREPEAT");
 
-      int minIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMin)->isNull();
-      int maxIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiMax)->isNull();
-      int min = tableSensorAlert->getIntValue(cTableSensorAlert::fiMin);
-      int max = tableSensorAlert->getIntValue(cTableSensorAlert::fiMax);
+      int minIsNull = tableSensorAlert->getValue("MIN")->isNull();
+      int maxIsNull = tableSensorAlert->getValue("MAX")->isNull();
+      int min = tableSensorAlert->getIntValue("MIN");
+      int max = tableSensorAlert->getIntValue("MAX");
 
-      int rangeIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiRangeM)->isNull();
-      int deltaIsNull = tableSensorAlert->getValue(cTableSensorAlert::fiDelta)->isNull();
-      int range = tableSensorAlert->getIntValue(cTableSensorAlert::fiRangeM);
-      int delta = tableSensorAlert->getIntValue(cTableSensorAlert::fiDelta);
+      int rangeIsNull = tableSensorAlert->getValue("RANGEM")->isNull();
+      int deltaIsNull = tableSensorAlert->getValue("DELTA")->isNull();
+      int range = tableSensorAlert->getIntValue("RANGEM");
+      int delta = tableSensorAlert->getIntValue("DELTA");
 
-      int id = tableSensorAlert->getIntValue(cTableSensorAlert::fiId);
+      int id = tableSensorAlert->getIntValue("ID");
 
       if (!minIsNull || !maxIsNull)
       {
@@ -1208,15 +1227,15 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
          time_t rangeEndAt = rangeStartAt + interval; 
 
          tableSamples->clear();
-         tableSamples->setIntValue(cTableSamples::fiAddress, addr);
-         tableSamples->setValue(cTableSamples::fiType, type);
-         tableSamples->setValue(cTableSamples::fiAggregate, "S");
-         tableSamples->setValue(cTableSamples::fiTime, rangeStartAt);
+         tableSamples->setIntValue("ADDRESS", addr);
+         tableSamples->setValue("TYPE", type);
+         tableSamples->setValue("AGGREGATE", "S");
+         tableSamples->setValue("TIME", rangeStartAt);
          rangeEnd.setValue(rangeEndAt);
          
          if (selectSampleInRange->find())
          {
-            double oldValue = tableSamples->getDoubleValue(cTableSamples::fiValue);
+            double oldValue = tableSamples->getFloatValue("VALUE");
 
             if (labs(value - oldValue) > delta)
             {
@@ -1240,7 +1259,7 @@ void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* titl
       if (alertDone)
       {
          tableSensorAlert->find();
-         tableSensorAlert->setValue(cTableSensorAlert::fiLastAlert, time(0));
+         tableSensorAlert->setValue("LASTALERT", time(0));
          tableSensorAlert->update();
       }
    }
@@ -1370,11 +1389,11 @@ int P4d::updateErrors()
    {
       tableErrors->clear();
 
-      tableErrors->setValue(cTableErrors::fiTime, e.time);
-      tableErrors->setValue(cTableErrors::fiNumber, e.number);
-      tableErrors->setValue(cTableErrors::fiInfo, e.info);
-      tableErrors->setValue(cTableErrors::fiState, Fs::errState2Text(e.state));
-      tableErrors->setValue(cTableErrors::fiText, e.text);
+      tableErrors->setValue("TIME", e.time);
+      tableErrors->setValue("NUMBER", e.number);
+      tableErrors->setValue("INFO", e.info);
+      tableErrors->setValue("STATE", Fs::errState2Text(e.state));
+      tableErrors->setValue("TEXT", e.text);
 
       tableErrors->insert();
    }
@@ -1396,17 +1415,17 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
 
    string sbody, ssubject;
 
-   const char* subject = alertRow->getStrValue(cTableSensorAlert::fiMSubject);
-   const char* body = alertRow->getStrValue(cTableSensorAlert::fiMBody);
-   const char* to = alertRow->getStrValue(cTableSensorAlert::fiMAddress);
-   unsigned int addr = alertRow->getIntValue(cTableSensorAlert::fiAddress);
-   const char* type = alertRow->getStrValue(cTableSensorAlert::fiType);
+   const char* subject = alertRow->getStrValue("MSUBJECT");
+   const char* body = alertRow->getStrValue("MBODY");
+   const char* to = alertRow->getStrValue("MADDRESS");
+   unsigned int addr = alertRow->getIntValue("ADDRESS");
+   const char* type = alertRow->getStrValue("TYPE");
 
-   int min = alertRow->getIntValue(cTableSensorAlert::fiMin);
-   int max = alertRow->getIntValue(cTableSensorAlert::fiMax);
-   int range = alertRow->getIntValue(cTableSensorAlert::fiRangeM);
-   int delta = alertRow->getIntValue(cTableSensorAlert::fiDelta);
-   int maxRepeat = alertRow->getIntValue(cTableSensorAlert::fiMaxRepeat);
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
 
    // check
 
@@ -1664,11 +1683,11 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
    value = 0;
 
    tableConfig->clear();
-   tableConfig->setValue(cTableConfig::fiOwner, "p4d");
-   tableConfig->setValue(cTableConfig::fiName, name);
+   tableConfig->setValue("OWNER", "p4d");
+   tableConfig->setValue("NAME", name);
 
    if (tableConfig->find())
-      value = strdup(tableConfig->getStrValue(cTableConfig::fiValue));
+      value = strdup(tableConfig->getStrValue("VALUE"));
    else
    {
       value = strdup(def);
@@ -1684,9 +1703,9 @@ int P4d::setConfigItem(const char* name, const char* value)
 {
    tell(eloAlways, "Storing '%s' with value '%s'", name, value);
    tableConfig->clear();
-   tableConfig->setValue(cTableConfig::fiOwner, "p4d");
-   tableConfig->setValue(cTableConfig::fiName, name);
-   tableConfig->setValue(cTableConfig::fiValue, value);
+   tableConfig->setValue("OWNER", "p4d");
+   tableConfig->setValue("NAME", name);
+   tableConfig->setValue("VALUE", value);
 
    return tableConfig->store();
 }

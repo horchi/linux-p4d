@@ -1,5 +1,5 @@
 //***************************************************************************
-// Group p4d / Linux - Heizungs Manager
+// p4d / Linux - Heizungs Manager
 // File webif.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
@@ -19,14 +19,14 @@ int P4d::performWebifRequests()
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
    {
       int start = time(0);
-      unsigned int addr = tableJobs->getIntValue(cTableJobs::fiAddress);
-      const char* command = tableJobs->getStrValue(cTableJobs::fiCommand);
-      const char* data = tableJobs->getStrValue(cTableJobs::fiData);
-      int jobId = tableJobs->getIntValue(cTableJobs::fiId);
+      int addr = tableJobs->getIntValue("ADDRESS");
+      const char* command = tableJobs->getStrValue("COMMAND");
+      const char* data = tableJobs->getStrValue("DATA");
+      int jobId = tableJobs->getIntValue("ID");
 
       tableJobs->find();
-      tableJobs->setValue(cTableJobs::fiDoneAt, time(0));
-      tableJobs->setValue(cTableJobs::fiState, "D");
+      tableJobs->setValue("DONEAT", time(0));
+      tableJobs->setValue("STATE", "D");
 
       tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x/%s'", 
            jobId, command, addr, data);
@@ -52,9 +52,9 @@ int P4d::performWebifRequests()
             tell(eloDetail, "%s/%s", pwd, webPass);
 
             if (strcmp(webUser, user) == 0 && strcmp(pwd, webPass) == 0)
-               tableJobs->setValue(cTableJobs::fiResult, "success:login-confirmed");
+               tableJobs->setValue("RESULT", "success:login-confirmed");
             else
-               tableJobs->setValue(cTableJobs::fiResult, "fail:login-denied");
+               tableJobs->setValue("RESULT", "fail:login-denied");
          }
          
          free(webPass);
@@ -65,7 +65,7 @@ int P4d::performWebifRequests()
       else if (strcasecmp(command, "update-schemacfg") == 0)
       {
          updateSchemaConfTable();
-         tableJobs->setValue(cTableJobs::fiResult, "success:done");
+         tableJobs->setValue("RESULT", "success:done");
       }
 
       else if (strcasecmp(command, "write-config") == 0)
@@ -79,7 +79,7 @@ int P4d::performWebifRequests()
 
             setConfigItem(name, value);
 
-            tableJobs->setValue(cTableJobs::fiResult, "success:stored");
+            tableJobs->setValue("RESULT", "success:stored");
          }
 
          free(name);
@@ -97,7 +97,7 @@ int P4d::performWebifRequests()
          getConfigItem(data, value);
 
          asprintf(&buf, "success:%s", value);
-         tableJobs->setValue(cTableJobs::fiResult, buf);
+         tableJobs->setValue("RESULT", buf);
 
          free(buf);
          free(value);
@@ -106,12 +106,12 @@ int P4d::performWebifRequests()
       else if (strcasecmp(command, "getp") == 0)
       {
          tableMenu->clear();
-         tableMenu->setValue(cTableMenu::fiId, addr);
+         tableMenu->setValue("ID", addr);
 
          if (tableMenu->find())
          {
-            int type = tableMenu->getIntValue(cTableMenu::fiType);
-            unsigned int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
+            int type = tableMenu->getIntValue("TYPE");
+            unsigned int paddr = tableMenu->getIntValue("ADDRESS");
 
             ConfigParameter p(paddr);
 
@@ -127,7 +127,7 @@ int P4d::performWebifRequests()
 
                asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, type == 0x0a ? "Uhr" : p.unit,
                         p.def, p.min, p.max, p.digits);
-               tableJobs->setValue(cTableJobs::fiResult, buf);
+               tableJobs->setValue("RESULT", buf);
                
                free(buf);
             }
@@ -139,12 +139,12 @@ int P4d::performWebifRequests()
          int status;
 
          tableMenu->clear();
-         tableMenu->setValue(cTableMenu::fiId, addr);
+         tableMenu->setValue("ID", addr);
 
          if (tableMenu->find())
          {
-            int type = tableMenu->getIntValue(cTableMenu::fiType);
-            int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
+            int type = tableMenu->getIntValue("TYPE");
+            int paddr = tableMenu->getIntValue("ADDRESS");
 
             ConfigParameter p(paddr);
   
@@ -163,13 +163,13 @@ int P4d::performWebifRequests()
                                     
                   asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, p.unit,
                            p.def, p.min, p.max, p.digits);
-                  tableJobs->setValue(cTableJobs::fiResult, buf);
+                  tableJobs->setValue("RESULT", buf);
                   free(buf);
                   
                   // update menu table
                   
-                  tableMenu->setValue(cTableMenu::fiValue, value);
-                  tableMenu->setValue(cTableMenu::fiUnit, p.unit);
+                  tableMenu->setValue("VALUE", value);
+                  tableMenu->setValue("UNIT", p.unit);
                   tableMenu->update();
                }
                else
@@ -177,23 +177,23 @@ int P4d::performWebifRequests()
                   tell(eloAlways, "Set of parameter failed, error %d", status);
                   
                   if (status == P4Request::wrnNonUpdate)
-                     tableJobs->setValue(cTableJobs::fiResult, "fail#no update");
+                     tableJobs->setValue("RESULT", "fail#no update");
                   else if (status == P4Request::wrnOutOfRange)
-                     tableJobs->setValue(cTableJobs::fiResult, "fail#out of range");
+                     tableJobs->setValue("RESULT", "fail#out of range");
                   else
-                     tableJobs->setValue(cTableJobs::fiResult, "fail#communication error");
+                     tableJobs->setValue("RESULT", "fail#communication error");
                }
             }
             else
             {
                tell(eloAlways, "Set of parameter failed, wrong format");
-               tableJobs->setValue(cTableJobs::fiResult, "fail#format error");
+               tableJobs->setValue("RESULT", "fail#format error");
             }
          }
          else
          {
             tell(eloAlways, "Set of parameter failed, id 0x%x not found", addr);
-            tableJobs->setValue(cTableJobs::fiResult, "fail#id not found");
+            tableJobs->setValue("RESULT", "fail#id not found");
          }
       }
 
@@ -202,20 +202,20 @@ int P4d::performWebifRequests()
          Value v(addr);
 
          tableValueFacts->clear();
-         tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
-         tableValueFacts->setValue(cTableValueFacts::fiAddress, addr);
+         tableValueFacts->setValue("TYPE", "VA");
+         tableValueFacts->setValue("ADDRESS", addr);
 
          if (tableValueFacts->find())
          {
-            double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
-            const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
+            double factor = tableValueFacts->getIntValue("FACTOR");
+            const char* unit = tableValueFacts->getStrValue("UNIT");
 
             if (request->getValue(&v) == success)
             {
                char* buf = 0;
                
                asprintf(&buf, "success:%.2f%s", v.value / factor, unit);
-               tableJobs->setValue(cTableJobs::fiResult, buf);
+               tableJobs->setValue("RESULT", buf);
                free(buf);
             }
          }
@@ -224,7 +224,7 @@ int P4d::performWebifRequests()
       else if (strcasecmp(command, "initmenu") == 0)
       {
          updateMenu();
-         tableJobs->setValue(cTableJobs::fiResult, "success:done");
+         tableJobs->setValue("RESULT", "success:done");
       }
 
       else if (strcasecmp(command, "p4d-state") == 0)
@@ -246,7 +246,7 @@ int P4d::performWebifRequests()
          asprintf(&buf, "success:%s#%s#%s#%3.2f %3.2f %3.2f", 
                   dt, VERSION, d, averages[0], averages[1], averages[2]);
 
-         tableJobs->setValue(cTableJobs::fiResult, buf);
+         tableJobs->setValue("RESULT", buf);
          free(buf);
       }
 
@@ -263,14 +263,14 @@ int P4d::performWebifRequests()
                   currentState.state, currentState.stateinfo,
                   currentState.modeinfo);
 
-         tableJobs->setValue(cTableJobs::fiResult, buf);
+         tableJobs->setValue("RESULT", buf);
          free(buf);
       }
 
       else if (strcasecmp(command, "initvaluefacts") == 0)
       {
          updateValueFacts();
-         tableJobs->setValue(cTableJobs::fiResult, "success:done");
+         tableJobs->setValue("RESULT", "success:done");
       }
 
       else if (strcasecmp(command, "updatemenu") == 0)
@@ -279,8 +279,8 @@ int P4d::performWebifRequests()
 
          for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
          {
-            int type = tableMenu->getIntValue(cTableMenu::fiType);
-            int paddr = tableMenu->getIntValue(cTableMenu::fiAddress);
+            int type = tableMenu->getIntValue("TYPE");
+            int paddr = tableMenu->getIntValue("ADDRESS");
 
             if (type == 0x07 || type == 0x08 || type == 0x0a || 
                 type == 0x40 || type == 0x39 || type == 0x32)
@@ -293,8 +293,8 @@ int P4d::performWebifRequests()
 
                   if (tableMenu->find())
                   {
-                     tableMenu->setValue(cTableMenu::fiValue, value);
-                     tableMenu->setValue(cTableMenu::fiUnit, p.unit);
+                     tableMenu->setValue("VALUE", value);
+                     tableMenu->setValue("UNIT", p.unit);
                      tableMenu->update();
                   }
                }
@@ -308,8 +308,8 @@ int P4d::performWebifRequests()
                {
                   if (tableMenu->find())
                   {
-                     tableMenu->setValue(cTableMenu::fiValue, s.version);
-                     tableMenu->setValue(cTableMenu::fiUnit, "");
+                     tableMenu->setValue("VALUE", s.version);
+                     tableMenu->setValue("UNIT", "");
                      tableMenu->update();
                   }
                }
@@ -343,8 +343,8 @@ int P4d::performWebifRequests()
 
                   if (tableMenu->find())
                   {
-                     tableMenu->setValue(cTableMenu::fiValue, buf);
-                     tableMenu->setValue(cTableMenu::fiUnit, "");
+                     tableMenu->setValue("VALUE", buf);
+                     tableMenu->setValue("UNIT", "");
                      tableMenu->update();
                   }
 
@@ -358,13 +358,13 @@ int P4d::performWebifRequests()
                Fs::Value v(paddr);
 
                tableValueFacts->clear();
-               tableValueFacts->setValue(cTableValueFacts::fiType, "VA");
-               tableValueFacts->setValue(cTableValueFacts::fiAddress, paddr);
+               tableValueFacts->setValue("TYPE", "VA");
+               tableValueFacts->setValue("ADDRESS", paddr);
 
                if (tableValueFacts->find())
                {
-                  double factor = tableValueFacts->getIntValue(cTableValueFacts::fiFactor);
-                  const char* unit = tableValueFacts->getStrValue(cTableValueFacts::fiUnit);
+                  double factor = tableValueFacts->getIntValue("FACTOR");
+                  const char* unit = tableValueFacts->getStrValue("UNIT");
 
                   status = request->getValue(&v);
                   
@@ -375,12 +375,12 @@ int P4d::performWebifRequests()
                      
                      if (tableMenu->find())
                      {
-                        tableMenu->setValue(cTableMenu::fiValue, buf);
+                        tableMenu->setValue("VALUE", buf);
 
                         if (strcmp(unit, "°") == 0)
-                           tableMenu->setValue(cTableMenu::fiUnit, "°C");
+                           tableMenu->setValue("UNIT", "°C");
                         else
-                           tableMenu->setValue(cTableMenu::fiUnit, unit);
+                           tableMenu->setValue("UNIT", unit);
 
                         tableMenu->update();
                      }
@@ -392,19 +392,19 @@ int P4d::performWebifRequests()
          }
 
          selectAllMenuItems->freeResult();
-         tableJobs->setValue(cTableJobs::fiResult, "success:done");
+         tableJobs->setValue("RESULT", "success:done");
       }
 
       else
       {
          tell(eloAlways, "Warning: Ignoring unknown job '%s'", command);
-         tableJobs->setValue(cTableJobs::fiResult, "fail:unknown command");
+         tableJobs->setValue("RESULT", "fail:unknown command");
       }
 
       tableJobs->store();
 
       tell(eloAlways, "Processing WEBIF job %d done with '%s' after %ld seconds", 
-           jobId, tableJobs->getStrValue(cTableJobs::fiResult),
+           jobId, tableJobs->getStrValue("RESULT"),
            time(0) - start);
    }
 
@@ -426,7 +426,7 @@ int P4d::cleanupWebifRequests()
    tell(eloAlways, "Cleanup jobs table with history of 2 days");
 
    tableJobs->clear();
-   tableJobs->setValue(cTableJobs::fiReqAt, time(0) - 2*tmeSecondsPerDay);
+   tableJobs->setValue("REQAT", time(0) - 2*tmeSecondsPerDay);
    status = cleanupJobs->execute();
 
    return status;

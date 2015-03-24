@@ -75,6 +75,7 @@ enum Misc
    na      = -1,
    ignore  = -2,
    all     = -3,
+   abrt     = -4,
    yes     = 1,
    on      = 1,
    off     = 0,
@@ -108,10 +109,10 @@ void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* form
 // Tools
 //***************************************************************************
 
+char* srealloc(void* ptr, size_t size);
+double usNow();
 unsigned int getHostId();
-
 byte crc(const byte* data, int size);
-
 int toUTF8(char* out, int outMax, const char* in, const char* from_code = 0);
 
 void removeChars(std::string& str, const char* ignore);
@@ -131,6 +132,7 @@ char* sstrcpy(char* dest, const char* src, int max);
 string num2Str(int num);
 string num2Str(double num);
 string l2pTime(time_t t);
+char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
 
 int fileExists(const char* path);
@@ -228,6 +230,9 @@ class Sem
             v();
       }
 
+      // ----------------------
+      // get lock
+
       int p()
       {
          sembuf sops[2];
@@ -252,6 +257,62 @@ class Sem
 
          return success;
       }
+      
+      int inc()
+      {
+         sembuf sops[1];
+         
+         sops[0].sem_num = 0;
+         sops[0].sem_op = 1;                        // increment 
+         sops[0].sem_flg = SEM_UNDO | IPC_NOWAIT;
+         
+         if (semop(id, sops, 1) == -1)
+         {
+            if (errno != EAGAIN)
+               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'", 
+                    errno, strerror(errno));
+            
+            return fail;
+         }
+         
+         locked = yes;
+
+         return success;
+      }
+
+      // ----------------------
+      // decrement
+
+      int dec()
+      {
+         return v();
+      }
+
+      // ----------------------
+      // check
+
+      int check()
+      {
+         sembuf sops[1];
+         
+         sops[0].sem_num = 0;
+         sops[0].sem_op = 0; 
+         sops[0].sem_flg = SEM_UNDO | IPC_NOWAIT;
+         
+         if (semop(id, sops, 1) == -1)
+         {
+            if (errno != EAGAIN)
+               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'", 
+                    errno, strerror(errno));
+            
+            return fail;
+         }
+         
+         return success;
+      }
+
+      // ----------------------
+      // release lock
 
       int v()
       {

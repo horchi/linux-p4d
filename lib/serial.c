@@ -1,5 +1,5 @@
 //***************************************************************************
-// Group p4d / Linux - Heizungs Manager
+// Serial Interface
 // File serial.c
 // Date 04.11.13 - Jörg Wendel
 // This code is distributed under the terms and conditions of the

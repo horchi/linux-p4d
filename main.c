@@ -1,5 +1,5 @@
 //***************************************************************************
-// Group p4d / Linux - Heizungs Manager
+// p4d / Linux - Heizungs Manager
 // File main.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
@@ -177,6 +177,11 @@ int main(int argc, char** argv)
       }
    }
 
+   if (_stdout != na) 
+      logstdout = _stdout;
+   else
+      logstdout = no;
+
    // read configuration ..
 
    if (readConfig() != success)
@@ -218,11 +223,6 @@ int main(int argc, char** argv)
    ::signal(SIGINT, DEAMON::downF);
    ::signal(SIGTERM, DEAMON::downF);
    // ::signal(SIGHUP, DEAMON::triggerF);
-
-   if (_stdout != na) 
-      logstdout = _stdout;
-   else
-      logstdout = no;
 
    // do work ...
 
