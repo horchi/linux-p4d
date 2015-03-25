@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.21"
+#define VERSION "0.1.22"
 #define confDirDefault "/etc/p4d"
 
 extern char dbHost[];
