@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-03-24:  version 0.1.22
+   - change: Ported to horchi's new DB API ;)
+
 2015-03-23:  version 0.1.21
    - change: moved p4d config from /etc/ to /etc/p4d/
 
