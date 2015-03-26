@@ -82,7 +82,7 @@ class P4d : public FroelingService
 
       void sensorAlertCheck(time_t now);
       int performAlertCheck(cDbRow* alertRow, time_t now, int recurse);
-      int appendToAlertMail(cDbRow* alertRow, const char* title, 
+      int add2AlertMail(cDbRow* alertRow, const char* title, 
                             double value, const char* unit);
       int sendAlertMail(const char* to);
 

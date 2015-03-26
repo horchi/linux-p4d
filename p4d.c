@@ -1251,7 +1251,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
          if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
          {
             alert = 1;
-            appendToAlertMail(alertRow, title, value, unit);
+            add2AlertMail(alertRow, title, value, unit);
          }
       }
    }
@@ -1287,7 +1287,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
             if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
             {
                alert = 1;
-               appendToAlertMail(alertRow, title, value, unit);
+               add2AlertMail(alertRow, title, value, unit);
             }
          }
       }
@@ -1540,7 +1540,7 @@ int P4d::sendAlertMail(const char* to)
 // Send Mail
 //***************************************************************************
 
-int P4d::appendToAlertMail(cDbRow* alertRow, const char* title, 
+int P4d::add2AlertMail(cDbRow* alertRow, const char* title, 
                            double value, const char* unit)
 {
    char* webUrl = 0;
