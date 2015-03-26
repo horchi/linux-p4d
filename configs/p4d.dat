@@ -9,8 +9,10 @@ Table samples
    TYPE                 ""  type                 Ascii        2 Primary,
    AGGREGATE            ""  aggregate            Ascii        1 Primary,
    TIME                 ""  time                 DateTime     0 Primary,
+
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
+
    VALUE                ""  value                Float      122 Data,
    TEXT                 ""  text                 Ascii       50 Data,
    SAMPLES              ""  samples              Int          3 Data,
@@ -34,8 +36,10 @@ Table valuefacts
 {
    ADDRESS              ""  address              UInt         4 Primary,
    TYPE                 ""  type                 Ascii        2 Primary,
+
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
+
    STATE                ""  state                Ascii        1 Data,
    UNIT                 ""  unit                 Ascii        5 Data,
    FACTOR               ""  factor               Int          4 Data,
@@ -51,8 +55,10 @@ Table valuefacts
 Table menu
 {
    ID                   ""  id                   UInt         4 Primary|Autoinc,
+
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
+
    PARENT               ""  parent               UInt         5 Data,
    CHILD                ""  child                UInt         5 Data,
    TYPE                 ""  type                 UInt         1 Data,

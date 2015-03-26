@@ -79,10 +79,14 @@ class P4d : public FroelingService
                 unsigned int factor, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);
-      void sensorAlertCheck(const char* type, unsigned int addr, const char* title, double value, const char* unit);
+
+      void sensorAlertCheck(time_t now);
+      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse);
+      int appendToAlertMail(cDbRow* alertRow, const char* title, 
+                            double value, const char* unit);
+      int sendAlertMail(const char* to);
 
       int sendMail();
-      int sendAlertMail(cDbRow* alerRow, const char* title, double value, const char* unit);
 
       int updateSchemaConfTable();
       int updateValueFacts();
@@ -142,6 +146,9 @@ class P4d : public FroelingService
       char* errorMailTo;
       int tSync;
       int maxTimeLeak;
+
+      string alertMailBody;
+      string alertMailSubject;
 
       time_t nextAggregateAt;
 

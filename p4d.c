@@ -235,21 +235,9 @@ int P4d::initDb()
    selectSensorAlerts = new cDbStatement(tableSensorAlert);
 
    selectSensorAlerts->build("select ");
-   selectSensorAlerts->bind("ID", cDBS::bndOut);
-   selectSensorAlerts->bind("ADDRESS", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("TYPE", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MIN", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MAX", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("RANGEM", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("DELTA", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MADDRESS", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MSUBJECT", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MBODY", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("LASTALERT", cDBS::bndOut, ", ");
-   selectSensorAlerts->bind("MAXREPEAT", cDBS::bndOut, ", ");
+   selectSensorAlerts->bindAllOut();
    selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
-   selectSensorAlerts->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet, " and ");
-   selectSensorAlerts->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSensorAlerts->bind("KIND", cDBS::bndIn | cDBS::bndSet, " and ");
 
    status += selectSensorAlerts->prepare();
 
@@ -1061,7 +1049,6 @@ int P4d::update()
          else
             strcat(num, unit);
 
-         sensorAlertCheck(type, addr, title, v.value/factor, unit);
          addParameter2Mail(title, num);
       }
 
@@ -1165,6 +1152,8 @@ int P4d::update()
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 
+   sensorAlertCheck(now);
+
    updateErrors();
 
    return success;
@@ -1174,97 +1163,157 @@ int P4d::update()
 // Sensor Alert Check
 //***************************************************************************
 
-void P4d::sensorAlertCheck(const char* type, unsigned int addr, const char* title, 
-                           double value, const char* unit)
+void P4d::sensorAlertCheck(time_t now)
 {
    tableSensorAlert->clear();
-   tableSensorAlert->setValue("TYPE", type);
-   tableSensorAlert->setIntValue("ADDRESS", addr);
-
-   // iterate over all alert roules of this sensor ...
+   tableSensorAlert->setValue("KIND", "M");
+   
+   // iterate over all alert roules ..
 
    for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
    {
-      int alertDone = no;
+      alertMailBody = "";
+      alertMailSubject = "";
 
-      time_t lastAlert = tableSensorAlert->getIntValue("LASTALERT");
-      int maxRepeat = tableSensorAlert->getIntValue("MAXREPEAT");
-
-      int minIsNull = tableSensorAlert->getValue("MIN")->isNull();
-      int maxIsNull = tableSensorAlert->getValue("MAX")->isNull();
-      int min = tableSensorAlert->getIntValue("MIN");
-      int max = tableSensorAlert->getIntValue("MAX");
-
-      int rangeIsNull = tableSensorAlert->getValue("RANGEM")->isNull();
-      int deltaIsNull = tableSensorAlert->getValue("DELTA")->isNull();
-      int range = tableSensorAlert->getIntValue("RANGEM");
-      int delta = tableSensorAlert->getIntValue("DELTA");
-
-      int id = tableSensorAlert->getIntValue("ID");
-
-      if (!minIsNull || !maxIsNull)
-      {
-         if ((!minIsNull && value < min) || (!maxIsNull && value > max))
-         {
-            tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
-                 id, type, addr, value, min, max);
-
-            // max one alert mail per maxRepeat [minutes]
-
-            if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
-            {
-               alertDone = yes;
-               sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
-            }
-         }
-      }
-
-      if (!rangeIsNull && !deltaIsNull)
-      {
-         // select value of this sensor around 'time = (now - range)'
-         
-         time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
-         time_t rangeEndAt = rangeStartAt + interval; 
-
-         tableSamples->clear();
-         tableSamples->setIntValue("ADDRESS", addr);
-         tableSamples->setValue("TYPE", type);
-         tableSamples->setValue("AGGREGATE", "S");
-         tableSamples->setValue("TIME", rangeStartAt);
-         rangeEnd.setValue(rangeEndAt);
-         
-         if (selectSampleInRange->find())
-         {
-            double oldValue = tableSamples->getFloatValue("VALUE");
-
-            if (labs(value - oldValue) > delta)
-            {
-               tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
-                    id, type, addr, value, delta, range);
-               
-               // max one alert mail per maxRepeat [minutes]
-
-               if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
-               {
-                  alertDone = yes;
-                  sendAlertMail(tableSensorAlert->getRow(), title, value, unit);
-               }
-            }
-         }
-
-         selectSampleInRange->freeResult();
-         tableSamples->reset();
-      }
-
-      if (alertDone)
-      {
-         tableSensorAlert->find();
-         tableSensorAlert->setValue("LASTALERT", time(0));
-         tableSensorAlert->update();
-      }
+      performAlertCheck(tableSensorAlert->getRow(), now, 0);
    }
 
    selectSensorAlerts->freeResult();
+}
+
+//***************************************************************************
+// Perform Alert Check
+//***************************************************************************
+
+int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
+{
+   unsigned int addr = alertRow->getIntValue("ADDRESS");
+   const char* type = alertRow->getStrValue("TYPE");
+   
+   tableValueFacts->clear();
+   tableValueFacts->setIntValue("ADDRESS", addr);
+   tableValueFacts->setValue("TYPE", type);
+   
+   tableSamples->clear();
+   tableSamples->setIntValue("ADDRESS", addr);
+   tableSamples->setValue("TYPE", type);
+   tableSamples->setValue("AGGREGATE", "S");
+   tableSamples->setValue("TIME", now);
+   
+   if (!tableSamples->find() || !tableValueFacts->find())
+   {
+      tell(eloAlways, "Info: Can't perform sensor check for %s/%d", type, addr);
+      return 0;
+   }
+   
+   int alert = 0;
+   
+   double value = tableSamples->getFloatValue("VALUE");
+   
+   const char* title = tableValueFacts->getStrValue("TITLE");
+   const char* unit = tableValueFacts->getStrValue("UNIT");
+   
+   unsigned int id = alertRow->getIntValue("ID");
+   time_t lastAlert = alertRow->getIntValue("LASTALERT");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
+   
+   int minIsNull = alertRow->getValue("MIN")->isNull();
+   int maxIsNull = alertRow->getValue("MAX")->isNull();
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+      
+   int rangeIsNull = alertRow->getValue("RANGEM")->isNull();
+   int deltaIsNull = alertRow->getValue("DELTA")->isNull();
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+      
+   if (!minIsNull || !maxIsNull)
+   {
+      if ((!minIsNull && value < min) || (!maxIsNull && value > max))
+      {
+         tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
+              id, type, addr, value, min, max);
+            
+         // max one alert mail per maxRepeat [minutes]
+            
+         if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+         {
+            alert++;
+            appendToAlertMail(alertRow, title, value, unit);
+         }
+      }
+   }
+      
+   if (!rangeIsNull && !deltaIsNull)
+   {
+      // select value of this sensor around 'time = (now - range)'
+         
+      time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
+      time_t rangeEndAt = rangeStartAt + interval; 
+         
+      tableSamples->clear();
+      tableSamples->setIntValue("ADDRESS", addr);
+      tableSamples->setValue("TYPE", type);
+      tableSamples->setValue("AGGREGATE", "S");
+      tableSamples->setValue("TIME", rangeStartAt);
+      rangeEnd.setValue(rangeEndAt);
+         
+      if (selectSampleInRange->find())
+      {
+         double oldValue = tableSamples->getFloatValue("VALUE");
+            
+         if (labs(value - oldValue) > delta)
+         {
+            tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
+                 id, type, addr, value, delta, range);
+               
+            // max one alert mail per maxRepeat [minutes]
+               
+            if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+            {
+               alert++;
+               appendToAlertMail(alertRow, title, value, unit);
+            }
+         }
+      }
+         
+      selectSampleInRange->freeResult();
+      tableSamples->reset();
+   }
+      
+   if (alertRow->getIntValue("SUBID") > 0)
+   {
+      if (recurse > 50)
+      {
+         tell(eloAlways, "Info: Aborting recursion after 50 steps, seems to be a config error!");
+      }
+      else
+      {
+         tableSensorAlert->clear();
+         tableSensorAlert->setIntValue("ID", alertRow->getIntValue("SUBID"));
+         
+         if (tableSensorAlert->find())
+            alert += performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
+      }
+   }
+
+   // update master row and send mail
+
+   if (alert && !recurse)
+   {
+      tableSensorAlert->clear();
+      tableSensorAlert->setIntValue("ID", id);
+
+      if (tableSensorAlert->find())
+      {
+         tableSensorAlert->setValue("LASTALERT", time(0));
+         tableSensorAlert->update();
+
+         sendAlertMail(tableSensorAlert->getStrValue("MADDRESS"));
+      }
+   }
+
+   return alert;
 }
 
 //***************************************************************************
@@ -1405,76 +1454,23 @@ int P4d::updateErrors()
 // Send Mail
 //***************************************************************************
 
-int P4d::sendAlertMail(cDbRow* alertRow, const char* title, 
-                       double value, const char* unit)
+int P4d::sendAlertMail(const char* to)
 {
-   char* webUrl = 0;
-   char* sensor = 0;
    char* command = 0;
-   char* htmlWebUrl = 0;
-
-   string sbody, ssubject;
-
-   const char* subject = alertRow->getStrValue("MSUBJECT");
-   const char* body = alertRow->getStrValue("MBODY");
-   const char* to = alertRow->getStrValue("MADDRESS");
-   unsigned int addr = alertRow->getIntValue("ADDRESS");
-   const char* type = alertRow->getStrValue("TYPE");
-
-   int min = alertRow->getIntValue("MIN");
-   int max = alertRow->getIntValue("MAX");
-   int range = alertRow->getIntValue("RANGEM");
-   int delta = alertRow->getIntValue("DELTA");
-   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
 
    // check
 
-   if (isEmpty(to) || isEmpty(mailScript) || isEmpty(subject))
+   if (isEmpty(to) || isEmpty(mailScript))
       return done;
 
-   if (isEmpty(body))
-      body = "- undefined -";
-
-   getConfigItem("webUrl", webUrl, "http://");
-   asprintf(&htmlWebUrl, "<a href=\"%s\">S 3200</a>", webUrl);
-
-   // prepare
-
-   sbody = body;
-   ssubject = subject;
-   asprintf(&sensor, "%s/0x%x", type, addr);
-
-   // templating
-
-   ssubject = strReplace("%sensorid%", sensor, ssubject);
-   ssubject = strReplace("%value%", value, ssubject);
-   ssubject = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, ssubject);
-   ssubject = strReplace("%title%", title, ssubject);
-   ssubject = strReplace("%min%", (long)min, ssubject);
-   ssubject = strReplace("%max%", (long)max, ssubject);
-   ssubject = strReplace("%range%", (long)range, ssubject);
-   ssubject = strReplace("%delta%", (long)delta, ssubject);
-   ssubject = strReplace("%time%", l2pTime(time(0)).c_str(), ssubject);
-   ssubject = strReplace("%repeat%", (long)maxRepeat, ssubject);
-   ssubject = strReplace("%weburl%", webUrl, ssubject);
-
-   sbody = strReplace("%sensorid%", sensor, sbody);
-   sbody = strReplace("%value%", value, sbody);
-   sbody = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, sbody);
-   sbody = strReplace("%title%", title, sbody);
-   sbody = strReplace("%min%", (long)min, sbody);
-   sbody = strReplace("%max%", (long)max, sbody);
-   sbody = strReplace("%range%", (long)range, sbody);
-   sbody = strReplace("%delta%", (long)delta, sbody);
-   sbody = strReplace("%time%", l2pTime(time(0)).c_str(), sbody);
-   sbody = strReplace("%repeat%", (long)maxRepeat, sbody);
-   sbody = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, sbody);
+   if (alertMailBody.empty())
+      alertMailBody = "- undefined -";
    
    if (htmlMail)
    {
       char* html = 0;
 
-      sbody = strReplace("\n", "<br>\n", sbody);
+      alertMailBody = strReplace("\n", "<br>\n", alertMailBody);
 
       const char* htmlHead = 
          "<head>"
@@ -1490,23 +1486,88 @@ int P4d::sendAlertMail(cDbRow* alertRow, const char* title,
                "  %s\n"
                " </body>\n"
                "</html>\n",
-               htmlHead, sbody.c_str());
+               htmlHead, alertMailBody.c_str());
       
-      sbody = html;
+      alertMailBody = html;
       free(html);
    }
 
    // prepare command and perform system call 
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
-            ssubject.c_str(), sbody.c_str(), 
+            alertMailSubject.c_str(), alertMailBody.c_str(), 
             htmlMail ? "text/html" : "text/plain", to);
 
-   tell(eloAlways, "Sending mail '%s' to '%s'", ssubject.c_str(), to);
+   tell(eloAlways, "Sending mail '%s' to '%s'", alertMailSubject.c_str(), to);
 
    system(command);
 
    free(command);
+
+   return success;
+}
+
+//***************************************************************************
+// Send Mail
+//***************************************************************************
+
+int P4d::appendToAlertMail(cDbRow* alertRow, const char* title, 
+                           double value, const char* unit)
+{
+   char* webUrl = 0;
+   char* sensor = 0;
+   char* htmlWebUrl = 0;
+
+   string subject = alertRow->getStrValue("MSUBJECT");
+   string body = alertRow->getStrValue("MBODY");
+   unsigned int addr = alertRow->getIntValue("ADDRESS");
+   const char* type = alertRow->getStrValue("TYPE");
+
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
+
+   if (!body.length())
+      body = "- undefined -";
+
+   getConfigItem("webUrl", webUrl, "http://");
+   asprintf(&htmlWebUrl, "<a href=\"%s\">S 3200</a>", webUrl);
+
+   // prepare
+
+   asprintf(&sensor, "%s/0x%x", type, addr);
+
+   // templating
+
+   subject = strReplace("%sensorid%", sensor, subject);
+   subject = strReplace("%value%", value, subject);
+   subject = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, subject);
+   subject = strReplace("%title%", title, subject);
+   subject = strReplace("%min%", (long)min, subject);
+   subject = strReplace("%max%", (long)max, subject);
+   subject = strReplace("%range%", (long)range, subject);
+   subject = strReplace("%delta%", (long)delta, subject);
+   subject = strReplace("%time%", l2pTime(time(0)).c_str(), subject);
+   subject = strReplace("%repeat%", (long)maxRepeat, subject);
+   subject = strReplace("%weburl%", webUrl, subject);
+
+   body = strReplace("%sensorid%", sensor, body);
+   body = strReplace("%value%", value, body);
+   body = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, body);
+   body = strReplace("%title%", title, body);
+   body = strReplace("%min%", (long)min, body);
+   body = strReplace("%max%", (long)max, body);
+   body = strReplace("%range%", (long)range, body);
+   body = strReplace("%delta%", (long)delta, body);
+   body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
+   body = strReplace("%repeat%", (long)maxRepeat, body);
+   body = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, body);
+   
+   alertMailSubject += string(" ") + subject;
+   alertMailBody += string("\n") + body;
+
    free(sensor);
    free(htmlWebUrl);
 
