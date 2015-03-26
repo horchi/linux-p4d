@@ -146,28 +146,28 @@ int P4d::initDb()
    connection = new cDbConnection();
 
    tableValueFacts = new cDbTable(connection, "valuefacts");
-   if (tableValueFacts->open() != success) return fail;
+   if (tableValueFacts->open(yes) != success) return fail;
 
    tableErrors = new cDbTable(connection, "errors");
-   if (tableErrors->open() != success) return fail;
+   if (tableErrors->open(yes) != success) return fail;
 
    tableMenu = new cDbTable(connection, "menu");
-   if (tableMenu->open() != success) return fail;
+   if (tableMenu->open(yes) != success) return fail;
 
    tableSamples = new cDbTable(connection, "samples");
-   if (tableSamples->open() != success) return fail;
+   if (tableSamples->open(yes) != success) return fail;
 
    tableJobs = new cDbTable(connection, "jobs");
-   if (tableJobs->open() != success) return fail;
+   if (tableJobs->open(yes) != success) return fail;
 
    tableSensorAlert = new cDbTable(connection, "sensoralert");
-   if (tableSensorAlert->open() != success) return fail;
+   if (tableSensorAlert->open(yes) != success) return fail;
 
    tableSchemaConf = new cDbTable(connection, "schemaconf");
-   if (tableSchemaConf->open() != success) return fail;
+   if (tableSchemaConf->open(yes) != success) return fail;
 
    tableConfig = new cDbTable(connection, "config");
-   if (tableConfig->open() != success) return fail;
+   if (tableConfig->open(yes) != success) return fail;
 
    // prepare statements
 
