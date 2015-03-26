@@ -1187,12 +1187,35 @@ void P4d::sensorAlertCheck(time_t now)
 
 int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 {
+   int alert = 0;
+
+   // data from alert row
+
    unsigned int addr = alertRow->getIntValue("ADDRESS");
    const char* type = alertRow->getStrValue("TYPE");
+
+   unsigned int id = alertRow->getIntValue("ID");
+   unsigned int lgop = alertRow->getIntValue("LGOP");
+   time_t lastAlert = alertRow->getIntValue("LASTALERT");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
    
+   int minIsNull = alertRow->getValue("MIN")->isNull();
+   int maxIsNull = alertRow->getValue("MAX")->isNull();
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+      
+   int rangeIsNull = alertRow->getValue("RANGEM")->isNull();
+   int deltaIsNull = alertRow->getValue("DELTA")->isNull();
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+   
+   // lookup value facts
+
    tableValueFacts->clear();
    tableValueFacts->setIntValue("ADDRESS", addr);
    tableValueFacts->setValue("TYPE", type);
+
+   // lookup samples
    
    tableSamples->clear();
    tableSamples->setIntValue("ADDRESS", addr);
@@ -1206,27 +1229,16 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       return 0;
    }
    
-   int alert = 0;
+   // data from samples and value facts
    
    double value = tableSamples->getFloatValue("VALUE");
    
    const char* title = tableValueFacts->getStrValue("TITLE");
    const char* unit = tableValueFacts->getStrValue("UNIT");
-   
-   unsigned int id = alertRow->getIntValue("ID");
-   time_t lastAlert = alertRow->getIntValue("LASTALERT");
-   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
-   
-   int minIsNull = alertRow->getValue("MIN")->isNull();
-   int maxIsNull = alertRow->getValue("MAX")->isNull();
-   int min = alertRow->getIntValue("MIN");
-   int max = alertRow->getIntValue("MAX");
-      
-   int rangeIsNull = alertRow->getValue("RANGEM")->isNull();
-   int deltaIsNull = alertRow->getValue("DELTA")->isNull();
-   int range = alertRow->getIntValue("RANGEM");
-   int delta = alertRow->getIntValue("DELTA");
-      
+
+   // -------------------------------
+   // check min / max threshold
+
    if (!minIsNull || !maxIsNull)
    {
       if ((!minIsNull && value < min) || (!maxIsNull && value > max))
@@ -1238,11 +1250,14 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
             
          if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
          {
-            alert++;
+            alert = 1;
             appendToAlertMail(alertRow, title, value, unit);
          }
       }
    }
+
+   // -------------------------------
+   // check range delta
       
    if (!rangeIsNull && !deltaIsNull)
    {
@@ -1271,7 +1286,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
                
             if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
             {
-               alert++;
+               alert = 1;
                appendToAlertMail(alertRow, title, value, unit);
             }
          }
@@ -1280,7 +1295,10 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       selectSampleInRange->freeResult();
       tableSamples->reset();
    }
-      
+
+   // ---------------------------
+   // Check sub rules recursive
+
    if (alertRow->getIntValue("SUBID") > 0)
    {
       if (recurse > 50)
@@ -1293,10 +1311,21 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
          tableSensorAlert->setIntValue("ID", alertRow->getIntValue("SUBID"));
          
          if (tableSensorAlert->find())
-            alert += performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
+         {
+            int sAlert = performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
+
+            switch (lgop)
+            {
+               case loAnd:    alert = alert &&  sAlert; break;
+               case loOr:     alert = alert ||  sAlert; break;
+               case loAndNot: alert = alert && !sAlert; break;
+               case loOrNot:  alert = alert || !sAlert; break;
+            }
+         }
       }
    }
 
+   // ---------------------------------
    // update master row and send mail
 
    if (alert && !recurse)
@@ -1322,7 +1351,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
 void P4d::addParameter2Mail(const char* name, const char* value)
 {
-   char buf[500];
+   char buf[500+TB];
 
    mailBody += string(name) + " = " + string(value) + "\n";
 

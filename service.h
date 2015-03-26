@@ -23,6 +23,14 @@ class FroelingService
 
       static const char* nameChars;
 
+      enum LogicalOperator
+      {
+         loAnd,
+         loOr,
+         loAndNot,
+         loOrNot
+      };
+
       enum WorkingState
       {
          wsUnknown = na,
