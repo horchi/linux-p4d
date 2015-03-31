@@ -322,6 +322,9 @@ int P4d::readConfiguration()
    getConfigItem("user", webUser, "p4");
    getConfigItem("passwd", webPass, defaultPwd);
 
+   free(webUser);
+   free(webPass);
+
    // init configuration
 
    getConfigItem("mail", mail, no);
