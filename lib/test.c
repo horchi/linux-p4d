@@ -71,7 +71,7 @@ void chkStatement1()
    db->clear();
 
    db->setValue("TIME", now);
-   db->setIntValue("ADDRESS", 1234);
+   db->setValue("ADDRESS", 1234);
    db->setValue("TYPE", "VA");
    db->setValue("AGGREGATE", "S");
 

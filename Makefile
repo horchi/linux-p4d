@@ -11,7 +11,7 @@ TARGET = p4d
 CMDTARGET = p4
 CHARTTARGET = p4chart
 
-LIBS = -lmysqlclient_r -lrt -lcrypto
+LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 VERSION = $(shell grep 'define VERSION ' p4d.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
@@ -25,6 +25,7 @@ OBJS += $(LOBJS) main.o p4io.o service.o w1.o webif.o
 CLOBJS = $(LOBJS) chart.o
 CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
+CFLAGS += $(shell mysql_config --include)
 DEFINES += -DDEAMON=P4d -DUSEMD5
 OBJS += p4d.o
 

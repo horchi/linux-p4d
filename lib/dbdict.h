@@ -252,7 +252,7 @@ class cDbIndexDef
 
       void show()
       {
-         std::string s;
+         std::string s = "";
 
          for (uint i = 0; i < dfields.size(); i++)
             s += dfields[i]->getName() + std::string(" ");

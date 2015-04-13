@@ -398,7 +398,7 @@ int P4d::setup()
       char oldState = tableValueFacts->getStrValue("STATE")[0];
       char state = oldState;
 
-      printf("%s 0x%04llx '%s' (%s)", 
+      printf("%s 0x%04lx '%s' (%s)", 
              tableValueFacts->getStrValue("TYPE"),
              tableValueFacts->getIntValue("ADDRESS"),
              tableValueFacts->getStrValue("UNIT"),
@@ -436,12 +436,12 @@ int P4d::updateSchemaConfTable()
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
-      unsigned int addr = tableValueFacts->getIntValue("ADDRESS");
+      int addr = tableValueFacts->getIntValue("ADDRESS");
       const char* type = tableValueFacts->getStrValue("TYPE");
       y += step;
 
       tableSchemaConf->clear();
-      tableSchemaConf->setIntValue("ADDRESS", addr);
+      tableSchemaConf->setValue("ADDRESS", addr);
       tableSchemaConf->setValue("TYPE", type);
    
       if (!tableSchemaConf->find())
@@ -546,7 +546,7 @@ int P4d::updateValueFacts()
          // update table
          
          tableValueFacts->clear();
-         tableValueFacts->setIntValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
+         tableValueFacts->setValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
          tableValueFacts->setValue("TYPE", type);
          
          if (!tableValueFacts->find())
@@ -642,7 +642,7 @@ int P4d::updateValueFacts()
          // update table
          
          tableValueFacts->clear();
-         tableValueFacts->setIntValue("ADDRESS", W1::toId(it->first.c_str()));
+         tableValueFacts->setValue("ADDRESS", (int)W1::toId(it->first.c_str()));
          tableValueFacts->setValue("TYPE", "W1");
          
          if (!tableValueFacts->find())
@@ -731,13 +731,13 @@ int P4d::updateMenu()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* type, unsigned int address, double value, 
+int P4d::store(time_t now, const char* type, int address, double value, 
                 unsigned int factor, const char* text)
 {
    tableSamples->clear();
 
    tableSamples->setValue("TIME", now);
-   tableSamples->setIntValue("ADDRESS", address);
+   tableSamples->setValue("ADDRESS", address);
    tableSamples->setValue("TYPE", type);
    tableSamples->setValue("AGGREGATE", "S");
 
@@ -1027,7 +1027,7 @@ int P4d::update()
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
-      unsigned int addr = tableValueFacts->getIntValue("ADDRESS");
+      int addr = tableValueFacts->getIntValue("ADDRESS");
       double factor = tableValueFacts->getIntValue("FACTOR");
       const char* title = tableValueFacts->getStrValue("TITLE");
       const char* type = tableValueFacts->getStrValue("TYPE");
@@ -1194,11 +1194,11 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
    // data from alert row
 
-   unsigned int addr = alertRow->getIntValue("ADDRESS");
+   int addr = alertRow->getIntValue("ADDRESS");
    const char* type = alertRow->getStrValue("TYPE");
 
-   unsigned int id = alertRow->getIntValue("ID");
-   unsigned int lgop = alertRow->getIntValue("LGOP");
+   int id = alertRow->getIntValue("ID");
+   int lgop = alertRow->getIntValue("LGOP");
    time_t lastAlert = alertRow->getIntValue("LASTALERT");
    int maxRepeat = alertRow->getIntValue("MAXREPEAT");
    
@@ -1215,13 +1215,13 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    // lookup value facts
 
    tableValueFacts->clear();
-   tableValueFacts->setIntValue("ADDRESS", addr);
+   tableValueFacts->setValue("ADDRESS", addr);
    tableValueFacts->setValue("TYPE", type);
 
    // lookup samples
    
    tableSamples->clear();
-   tableSamples->setIntValue("ADDRESS", addr);
+   tableSamples->setValue("ADDRESS", addr);
    tableSamples->setValue("TYPE", type);
    tableSamples->setValue("AGGREGATE", "S");
    tableSamples->setValue("TIME", now);
@@ -1270,7 +1270,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       time_t rangeEndAt = rangeStartAt + interval; 
          
       tableSamples->clear();
-      tableSamples->setIntValue("ADDRESS", addr);
+      tableSamples->setValue("ADDRESS", addr);
       tableSamples->setValue("TYPE", type);
       tableSamples->setValue("AGGREGATE", "S");
       tableSamples->setValue("TIME", rangeStartAt);
@@ -1311,7 +1311,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       else
       {
          tableSensorAlert->clear();
-         tableSensorAlert->setIntValue("ID", alertRow->getIntValue("SUBID"));
+         tableSensorAlert->setValue("ID", alertRow->getIntValue("SUBID"));
          
          if (tableSensorAlert->find())
          {
@@ -1334,7 +1334,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    if (alert && !recurse)
    {
       tableSensorAlert->clear();
-      tableSensorAlert->setIntValue("ID", id);
+      tableSensorAlert->setValue("ID", id);
 
       if (tableSensorAlert->find())
       {
@@ -1552,7 +1552,7 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
 
    string subject = alertRow->getStrValue("MSUBJECT");
    string body = alertRow->getStrValue("MBODY");
-   unsigned int addr = alertRow->getIntValue("ADDRESS");
+   int addr = alertRow->getIntValue("ADDRESS");
    const char* type = alertRow->getStrValue("TYPE");
 
    int min = alertRow->getIntValue("MIN");

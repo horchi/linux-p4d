@@ -75,7 +75,7 @@ class P4d : public FroelingService
       int performWebifRequests();
       int cleanupWebifRequests();
 
-      int store(time_t now, const char* type, unsigned int address, double value, 
+      int store(time_t now, const char* type, int address, double value, 
                 unsigned int factor, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);

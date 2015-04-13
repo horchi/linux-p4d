@@ -17,7 +17,7 @@ BASELIBS = -lrt -lz -luuid
 BASELIBS += $(shell mysql_config --libs_r)
 
 ifdef USELIBXML
-BASELIBS += $(shell xml2-config --libs) $(shell xslt-config --libs)
+  BASELIBS += $(shell xml2-config --libs) $(shell xslt-config --libs)
 endif
 
 DEBUG = 1
@@ -31,9 +31,11 @@ CFLAGS += -fPIC -Wreturn-type -Wall -Wno-parentheses -Wformat -pedantic -Wunused
           -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 CFLAGS += $(shell mysql_config --include)
+
 ifdef USELIBXML
-CFLAGS += $(shell xml2-config --cflags) $(shell xslt-config --cflags)
+  CFLAGS += $(shell xml2-config --cflags) $(shell xslt-config --cflags)
 endif
+
 DEFINES = $(USES)
 
 all: lib $(TEST)

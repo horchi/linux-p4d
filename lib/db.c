@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include <mysql/errmsg.h>
+#include <errmsg.h>
 
 #include <map>
 
@@ -1175,6 +1175,25 @@ int cDbTable::checkIndex(const char* idxName, int& fieldCount)
 }
 
 //***************************************************************************
+// Copy Values
+//***************************************************************************
+
+void cDbTable::copyValues(cDbRow* r)
+{
+   std::map<std::string, cDbFieldDef*>::iterator f;
+
+   for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+   {
+      cDbFieldDef* fld = f->second;
+
+      if (fld->getFormat() == ffAscii || fld->getFormat() == ffText || fld->getFormat() == ffMText)
+         row->setValue(fld, r->getStrValue(fld));
+      else
+         row->setValue(fld, r->getIntValue(fld));
+   }
+}
+
+//***************************************************************************
 // SQL Error 
 //***************************************************************************
 
@@ -1247,11 +1266,11 @@ int cDbTable::deleteWhere(const char* where, ...)
    char* tmp;
    va_list more;
 
-   va_start(more, where);
-   vasprintf(&tmp, where, more);
-
    if (!connection || !connection->getMySql())
       return fail;
+
+   va_start(more, where);
+   vasprintf(&tmp, where, more);
 
    stmt = "delete from " + string(TableName()) + " where " + string(tmp);
    
