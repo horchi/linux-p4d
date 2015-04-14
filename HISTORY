@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2015-04-14:  version 0.1.23
+   - bugfix: fixed displayed timezone
+
 2015-03-24:  version 0.1.22
    - change: Ported to horchi's new DB API ;)
 

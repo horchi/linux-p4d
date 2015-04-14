@@ -44,6 +44,7 @@ P4d::P4d()
    nextAt = time(0);
    startedAt = time(0);
    nextAggregateAt = 0;
+   nextTimeSyncAt = 0;
 
    mailBody = "";
    mailBodyHtml = "";
@@ -751,6 +752,27 @@ int P4d::store(time_t now, const char* type, int address, double value,
 }
 
 //***************************************************************************
+// Schedule Time Sync In
+//***************************************************************************
+
+void P4d::scheduleTimeSyncIn(int offset)
+{
+   struct tm tm = {0};
+   time_t now;
+
+   now = time(0);
+   localtime_r(&now, &tm);
+   
+   tm.tm_sec = 0;
+   tm.tm_min = 0;
+   tm.tm_hour = 23;
+   tm.tm_isdst = -1;               // force DST auto detect   
+
+   nextTimeSyncAt = mktime(&tm);
+   nextTimeSyncAt += offset;
+}
+
+//***************************************************************************
 // standby
 //***************************************************************************
 
@@ -933,11 +955,9 @@ int P4d::loop()
 
 int P4d::updateState(Status* state)
 {
-   static time_t nextSyncAt = 0;
    static time_t nextReportAt = 0;
 
    int status;
-   struct tm tm = {0};
    time_t now;
 
    // get state
@@ -954,16 +974,8 @@ int P4d::updateState(Status* state)
    // ----------------------
    // check time sync
 
-   if (!nextSyncAt)
-   {
-      localtime_r(&now, &tm);
-
-      tm.tm_sec = 0;
-      tm.tm_min = 0;
-      tm.tm_hour = 23;
-
-      nextSyncAt = mktime(&tm);
-   }
+   if (!nextTimeSyncAt)
+      scheduleTimeSyncIn();
 
    if (tSync && maxTimeLeak && labs(state->time - now) > maxTimeLeak)
    {
@@ -973,16 +985,9 @@ int P4d::updateState(Status* state)
          nextReportAt = now + 2 * tmeSecondsPerMinute;
       }
 
-      if (now > nextSyncAt)
+      if (now > nextTimeSyncAt)
       {
-         localtime_r(&nextSyncAt, &tm);
-         
-         tm.tm_sec = 0;
-         tm.tm_min = 0;
-         tm.tm_hour = 23;
-         
-         nextSyncAt = mktime(&tm);
-         nextSyncAt += tmeSecondsPerDay;
+         scheduleTimeSyncIn(tmeSecondsPerDay);
          
          tell(eloAlways, "Time drift is %ld seconds, syncing now", state->time - now);
          
@@ -1384,6 +1389,7 @@ int P4d::scheduleAggregate()
    tm.tm_sec = 0;
    tm.tm_min = 0;
    tm.tm_hour = 1;
+   tm.tm_isdst = -1;               // force DST auto detect
    
    nextAggregateAt = mktime(&tm);
    

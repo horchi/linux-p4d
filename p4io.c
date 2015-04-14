@@ -521,6 +521,7 @@ int P4Request::readDate(time_t& t)
    tm.tm_mday = d;
    tm.tm_mon = m - 1;
    tm.tm_year = y + 100;
+   tm.tm_isdst = -1;               // force DST auto detect
 
    t = mktime(&tm);
 
@@ -553,6 +554,7 @@ int P4Request::readDateExt(time_t& t)
    tm.tm_mday = d;
    tm.tm_mon = m - 1;
    tm.tm_year = y + 100;
+   tm.tm_isdst = -1;               // force DST auto detect
 
    t = mktime(&tm);
 

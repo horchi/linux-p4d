@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.22"
+#define VERSION "0.1.23"
 #define confDirDefault "/etc/p4d"
 
 extern char dbHost[];
@@ -68,6 +68,7 @@ class P4d : public FroelingService
 
       int update();
       int updateState(Status* state);
+      void scheduleTimeSyncIn(int offset = 0);
       int scheduleAggregate();
       int aggregate();
 
@@ -145,6 +146,7 @@ class P4d : public FroelingService
       char* stateMailTo;
       char* errorMailTo;
       int tSync;
+      time_t nextTimeSyncAt;
       int maxTimeLeak;
 
       string alertMailBody;
