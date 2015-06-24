@@ -116,6 +116,8 @@ class cDbValue : public cDbService
 
       void setValue(const char* value, int size = 0)
       { 
+         int mod = no;
+
          if (field->getFormat() != ffAscii && field->getFormat() != ffText && 
              field->getFormat() != ffMText && field->getFormat() != ffMlob)
          {
@@ -148,6 +150,8 @@ class cDbValue : public cDbService
             strValue[size] = 0;
             strValueSize = size;
             nullValue = 0;
+
+            if (mod) changed++;
          }
 
          else if (value)
@@ -157,12 +161,14 @@ class cDbValue : public cDbService
                     field->getSize(), field->getName(), (long)strlen(value), value);
 
             if (strncmp(strValue, value, strlen(value)) != 0)
-               changed++;
+               mod = yes;
 
             clear();
             sprintf(strValue, "%.*s", field->getSize(), value);
             strValueSize = strlen(strValue);
             nullValue = 0;
+
+            if (mod) changed++;
          }
       }
 
@@ -442,7 +448,7 @@ class cDbStatement : public cDbService
 
       // data
 
-      static int explain;          // debug explain
+      static int explain;         // debug explain
 
    private:
 
@@ -459,7 +465,7 @@ class cDbStatement : public cDbService
       MYSQL_BIND* outBind;        // from db (result)
       MYSQL_RES* metaResult;
       const char* bindPrefix;
-      int firstExec;               // debug explain
+      int firstExec;              // debug explain
       int buildErrors;
 
       unsigned long callsPeriod;

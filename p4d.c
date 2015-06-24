@@ -474,6 +474,7 @@ int P4d::updateValueFacts()
    Fs::ValueSpec v;
    int count;
    int added;
+   int modified;
 
    // check serial communication
 
@@ -488,6 +489,7 @@ int P4d::updateValueFacts()
 
    count = 0;
    added = 0;
+   modified = 0;
 
    for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; 
         status = request->getNextValueSpec(&v))
@@ -527,13 +529,14 @@ int P4d::updateValueFacts()
 
    added = 0;
    count = 0;
+   modified = 0;
 
    for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
    {
+      char* name = 0;
       const char* type = 0;
       int structType = tableMenu->getIntValue("TYPE");
-
-      count++;
+      string sname = tableMenu->getStrValue("TITLE");
 
       switch (structType)
       {
@@ -542,39 +545,50 @@ int P4d::updateValueFacts()
          case mstAnlOut: type = "AO"; break;
       }
 
-      if (type)
-      {
-         // update table
-         
-         tableValueFacts->clear();
-         tableValueFacts->setValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
-         tableValueFacts->setValue("TYPE", type);
-         
-         if (!tableValueFacts->find())
-         {
-            string name = tableMenu->getStrValue("TITLE");
+      if (!type)
+         continue;
+      
+      // update table
+      
+      tableValueFacts->clear();
+      tableValueFacts->setValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
+      tableValueFacts->setValue("TYPE", type);
+      tableValueFacts->clearChanged();
 
-            removeCharsExcept(name, nameChars);
-            tableValueFacts->setValue("NAME", name.c_str());
-            tableValueFacts->setValue("STATE", "D");
-            tableValueFacts->setValue("UNIT", tableMenu->getStrValue("UNIT"));
-            tableValueFacts->setValue("FACTOR", 1);
-            tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
-            
-            tableValueFacts->store();
-            added++;
-         }
+      if (!tableValueFacts->find())
+      {
+         tableValueFacts->setValue("STATE", "D");
+         added++; 
+         modified--;
       }
+      
+      removeCharsExcept(sname, nameChars);
+      asprintf(&name, "%s_0x%x", sname.c_str(), (int)tableMenu->getIntValue("ADDRESS"));
+      
+      tableValueFacts->setValue("NAME", name);
+      tableValueFacts->setValue("UNIT", tableMenu->getStrValue("UNIT"));
+      tableValueFacts->setValue("FACTOR", 1);
+      tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
+      
+      if (tableValueFacts->getChanges())
+      {
+         tableValueFacts->store();
+         modified++;
+      }
+      
+      free(name);
+      count++;
    }
 
    selectAllMenuItems->freeResult();
-   tell(eloAlways, "Checked %d digital lines, added %d", count, added);
+   tell(eloAlways, "Checked %d digital lines, added %d, modified %d", count, added, modified);
 
    // ---------------------------------
    // at least add value definitions for special data
 
    count = 0;
    added = 0;
+   modified = 0;
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
@@ -637,6 +651,7 @@ int P4d::updateValueFacts()
 
       count = 0;
       added = 0;
+      modified = 0;
       
       for (W1::SensorList::iterator it = list->begin(); it != list->end(); ++it)
       {
