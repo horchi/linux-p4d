@@ -1174,12 +1174,32 @@ int P4d::update()
 
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
-
+   afterUpdate();
+   
    sensorAlertCheck(now);
 
    updateErrors();
 
    return success;
+}
+
+//***************************************************************************
+// After Update
+//***************************************************************************
+
+void P4d::afterUpdate()
+{
+   char* path = 0;
+   
+   asprintf(&path, "%s/after-update.sh", confDir);
+   
+   if (!fileExists(path))
+   {
+      tell(0, "Calling '%s'", path);
+      system(path);
+   }
+
+   free(path);
 }
 
 //***************************************************************************
