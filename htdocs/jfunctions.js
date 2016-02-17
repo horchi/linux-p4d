@@ -46,3 +46,13 @@ function disableContent(elm, chk)
 		} 
 	}
 }
+   
+function displayCoords(elm,e)
+{
+	if(!e) e = window.event;
+	var body = (window.document.compatMode && window.document.compatMode == "CSS1Compat") ? window.document.documentElement : window.document.body;
+	xpos = e.pageX ? e.pageX : e.clientX + body.scrollLeft  - body.clientLeft
+	ypos = e.pageY ? e.pageY : e.clientY + body.scrollTop - body.clientTop,
+  txt = "Xpos="+xpos+"; Ypos="+ypos+"  ";
+  document.getElementById(elm).value = txt;
+}

@@ -25,7 +25,7 @@ printHeader(60);
   $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
                         "DATE_FORMAT(max(time),'%H:%i:%S') as maxPrettyShort from samples;")
      or die("Error" . mysql_error());
-  $row = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row = mysql_fetch_assoc($result);
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];
   $maxPrettyShort = $row['maxPrettyShort'];
@@ -85,30 +85,35 @@ printHeader(60);
   $heatingType = $_SESSION['heatingType'];
 
   if ($state == 0 || $p4dstate != 0)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-error.png\">\n";
+     $stateImg = "img/state/state-error.gif";
   elseif ($state == 1)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-fireoff.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif"; 
   elseif ($state == 2)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif"; 
   elseif ($state == 3)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-fire.gif\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif"; 
   elseif ($state == 4)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-firehold.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif"; 
   elseif ($state == 5)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-fireoff.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif"; 
   elseif ($state == 6)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-dooropen.png\">\n";
-  elseif ($state == 7 || $state == 8 || $state == 9)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-heatup.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif"; 
+  elseif ($state == 7)
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif"; 
+  elseif ($state == 8)
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif"; 
+  elseif ($state == 9)
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif"; 
   elseif ($state == 15 || $state == 70 || $state == 69)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-clean.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif"; 
   elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-wait.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif"; 
   elseif ($state == 60 || $state == 61  || $state == 72)
-     echo "        <img class=\"centerImage\" src=\"img/state/state-shfire.png\">\n";
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif"; 
   else
-     echo "        <img class=\"centerImage\" src=\"img/type/heating-$heatingType.png\">\n";
+     $stateImg = "img/type/heating-$heatingType.png";
 
+  echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
   echo "      </div>\n";
 
   echo "      <div class=\"P4dInfo\">\n";
@@ -159,17 +164,12 @@ printHeader(60);
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
 
-  if ($debug)
-  {
-     echo "        <td>Id</td>\n";
-     echo "        <td>Typ</td>\n";
-  }
 
   echo "        <td>Sensor</td>\n";
   echo "        <td>Wert</td>\n";  
   echo "      </tr>\n";
 
-  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.title as f_title, f.unit as f_unit 
+  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit 
               from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
 
   $result = mysql_query($strQuery)
@@ -177,11 +177,11 @@ printHeader(60);
 
   $i = 0;
 
-  while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+  while ($row = mysql_fetch_assoc($result))
   {
      $value = $row['s_value'];
      $text = $row['s_text'];
-     $title = $row['f_title'];   
+     $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];   
      $unit = $row['f_unit'];
      $address = $row['s_address'];
      $type = $row['s_type'];
@@ -206,12 +206,6 @@ printHeader(60);
         echo "     <tr class=\"tableDark\">\n";
      else
         echo "     <tr class=\"tableLight\">\n";
-
-     if ($debug)
-     {
-        echo "        <td>" . $address . "</td>\n";
-        echo "        <td>" . $type . "</td>\n";
-     }
 
      echo "        <td>" . $url . $title . "</a></td>\n";
      echo "        <td>$value$unit</td>\n";

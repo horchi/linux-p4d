@@ -3,6 +3,10 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2016-102-17:  version 0.1.27
+   - added: homematic example script
+   - change: updated webif
+
 2016-102-17:  version 0.1.26
    - bugfix: fixed call of script <confdir>/after-update.sh
 

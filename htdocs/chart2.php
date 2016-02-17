@@ -1,5 +1,5 @@
 <?php
-
+ 
 include("header.php");
 
 include("pChart/class/pData.class.php");
@@ -47,7 +47,7 @@ printHeader();
   $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
-  $type = $type <> "" ? "&type=".$type : "";
+  $type = isset($type) ? "&type=".$type : "";
 
   echo "  <br/><br/><br/>\n";
   echo "  <div class=\"chart\">\n";

@@ -1,5 +1,5 @@
 <?php
-
+   
 include("header.php");
 
 include("pChart/class/pData.class.php");
@@ -47,19 +47,19 @@ printHeader();
   $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
-  $type = $type <> "" ? "&type=".$type : "";
+  $type = isset($type) ? "&type=".$type : "";
   
   echo "  <br/><br/><br/>\n";
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart1'] . ")";
-  echo "    <img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?width=900&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
   echo "  <br/>\n";
 
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart2']. ")";
-  echo "    <img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?width=900&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
 include("footer.php");

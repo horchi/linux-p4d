@@ -198,5 +198,115 @@ function readConfigItem($name, &$value)
 }
 
 }
+// ---------------------------------------------------------------------------
+// Schema Selection
+// ---------------------------------------------------------------------------
+
+function schemaItem($new, $title, $schema)
+{
+   global $schema_path, $schema_pattern;
+   $actual = "schema-$schema.png";
+   
+   $end = htmTags($new);
+   echo "          $title:\n";
+   echo "          <select class=checkbox name=\"schema\">\n";
+
+   $path  = $schema_path . $schema_pattern;
+   
+   foreach (glob($path) as $filename) 
+   {
+      $filename = basename($filename);
+
+      $sel = ($actual == $filename) ? "SELECTED" : "";
+      $tp  = substr(strstr($filename, ".", true), 7);
+      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+   }
+   
+   echo "          </select>\n";
+   echo $end;     
+}
+
+// ---------------------------------------------------------------------------
+// Text Config items
+// ---------------------------------------------------------------------------
+
+function configStrItem($new, $title, $name, $value, $comment = "", $width = 200, $ro = "'", $ispwd = false)
+{
+   $end = htmTags($new);
+   echo "          $title:\n";
+
+   if ($ispwd)
+   {
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"></input>\n";
+      echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"></input>\n";
+   }
+   else
+      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"></input>\n";
+
+   if ($comment != "")
+      echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
+
+   echo $end;     
+}
+
+// ---------------------------------------------------------------------------
+// Checkbox Config items
+// ---------------------------------------------------------------------------
+
+function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
+{
+   $end = htmTags($new);
+   echo "          $title:\n";
+   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "></input>\n";
+
+   if ($comment != "")
+      echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
+
+   echo $end;     
+
+}
+
+// ---------------------------------------------------------------------------
+// Option Config Item
+// ---------------------------------------------------------------------------
+
+function configOptionItem($new, $title, $name, $value, $options, $comment = "", $ro = "")
+{
+   $end = htmTags($new);
+   echo "          $title:\n";
+   echo "          <select class=checkbox name=$name$ro>\n";
+
+   foreach (explode(" ", $options) as $option)
+   {
+      $opt = explode(",", $option);
+      $sel = ($value == $opt[1]) ? "SELECTED" : "";
+      echo "            <option value='$opt[1]' " . $sel . ">$opt[0]</option>\n";
+   }
+   
+   echo "          </select>\n";
+   if ($comment != "")
+      echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
+
+   echo $end;     
+}
+
+// ---------------------------------------------------------------------------
+// Set Start and End Div-Tags
+// ---------------------------------------------------------------------------
+
+function htmTags($new)
+{
+  switch ($new) { 
+   	case 1: echo "        <div class=\"input\">\n"; $end = ""; break;
+   	case 2: echo "        </div><br/>\n        <div class=\"input\">\n"; $end = ""; break;
+   	case 3: echo "        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
+   	case 4: echo "          &nbsp;|&nbsp;\n" ; $end = "        </div><br/>\n"; break;
+   	case 5: echo "          &nbsp;|&nbsp;\n"; $end = ""; break;
+   	case 6: echo "        </div><br/>\n        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
+   	case 7: echo "          <br /><br />\n"; $end = ""; break;
+  }
+  return $end;
+}
 
 ?>

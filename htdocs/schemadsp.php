@@ -20,10 +20,10 @@
 
   $schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 
-  echo "      <div class=\"schemaImage\" style=\"position:absolute;\">\n";
+  echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . ($jpegTop-20) . "px; z-index:2;\">\n";
   echo "        <p><img src=\"$schemaImg\"></p>\n";
   echo "      </div>\n";
-  
+
   include("schema.php");
 
   include("footer.php");

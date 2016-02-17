@@ -42,10 +42,7 @@ if ($action == "store")
    if (isset($_POST["heatingType"]))
       $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
 
-   // Schema
-
-   if (isset($_POST["schema"]))
-      $_SESSION['schema'] = htmlspecialchars($_POST["schema"]);
+   $_SESSION['stateAni'] = ($_POST["stateAni"] != $_SESSION['stateAni']) ? $_POST["stateAni"] : $_SESSION['stateAni'];
 
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
@@ -53,13 +50,10 @@ if ($action == "store")
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
    
+   $_SESSION['chartXLines'] =  isset($_POST["chartXLines"]);
+
    if (isset($_POST["chartDiv"]))
       $_SESSION['chartDiv'] = htmlspecialchars($_POST["chartDiv"]);
-   
-   if (isset($_POST["chartXLines"]))
-      $_SESSION['chartXLines'] = 1;
-   else
-      $_SESSION['chartXLines'] = 0;
    
    if (isset($_POST["chart1"]))
       $_SESSION['chart1'] = htmlspecialchars($_POST["chart1"]);
@@ -145,7 +139,7 @@ if ($action == "store")
    writeConfigItem("tsync", $_SESSION['tsync']);
    writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
    writeConfigItem("heatingType", $_SESSION['heatingType']);
-   writeConfigItem("schema", $_SESSION['schema']);
+   writeConfigItem("stateAni", $_SESSION['stateAni']);
    writeConfigItem("webUrl", $_SESSION['webUrl']);
 
    if ($_POST["passwd2"] != "")
@@ -177,7 +171,7 @@ echo "        <br/></br>\n";
 seperator("Web Interface", 0, 1);
 colorSchemeItem(1, "Farbschema");
 heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
-schemaItem(4, "Schema", $_SESSION['schema']);
+configBoolItem(4, "Status-Ani?", "stateAni", $_SESSION['stateAni'], "");
 
 seperator("Charting", 0, 4);
 configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
@@ -255,7 +249,10 @@ function applyColorScheme($style)
    $target = "stylesheet-$style.css";
 
    if ($target != readlink("stylesheet.css"))
-   {
+   {  
+   	  if (!readlink("stylesheet.css")) 
+   	    symlink($target, "stylesheet.css");
+   	    
       if (!unlink("stylesheet.css") || !symlink($target, "stylesheet.css"))
       {
          $err = error_get_last();
@@ -267,7 +264,7 @@ function applyColorScheme($style)
             echo "      <br/>Fehler: '" . $err['message'] . "'<br/>\n";
       }
       else
-         echo '<script>parent.window.location.reload(true);</script>';
+         echo '<script>parent.window.location.reload();</script>';
    }
 }
 
@@ -297,112 +294,5 @@ function heatingTypeItem($new, $title, $type)
    echo "          </select>\n";
    echo $end;     
 }
-
-// ---------------------------------------------------------------------------
-// Schema Selection
-// ---------------------------------------------------------------------------
-
-function schemaItem($new, $title, $schema)
-{
-   $actual = "schema-$schema.png";
-   
-   $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <select class=checkbox name=\"schema\">\n";
-
-   $path  = "img/schema/";
-   $path .= "schema-*.png";
-   
-   foreach (glob($path) as $filename) 
-   {
-      $filename = basename($filename);
-
-      $sel = ($actual == $filename) ? "SELECTED" : "";
-      $tp  = substr(strstr($filename, ".", true), 7);
-      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
-   }
-   
-   echo "          </select>\n";
-   echo $end;     
-}
-
-// ---------------------------------------------------------------------------
-// Text Config items
-// ---------------------------------------------------------------------------
-
-function configStrItem($new, $title, $name, $value, $comment = "", $width = 200, $ro = "'", $ispwd = false)
-{
-   $end = htmTags($new);
-   echo "          $title:\n";
-
-   if ($ispwd)
-   {
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"></input>\n";
-      echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"></input>\n";
-   }
-   else
-      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"></input>\n";
-
-   if ($comment != "")
-      echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
-
-   echo $end;     
-}
-
-// ---------------------------------------------------------------------------
-// Checkbox Config items
-// ---------------------------------------------------------------------------
-
-function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
-{
-   $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "></input>\n";
-
-   if ($comment != "")
-      echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
-
-   echo $end;     
-
-}
-
-// ---------------------------------------------------------------------------
-// Option Config Item
-// ---------------------------------------------------------------------------
-
-function configOptionItem($new, $title, $name, $value, $options, $comment = "", $ro = "")
-{
-   $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <select class=checkbox name=$name$ro>\n";
-
-   foreach (explode(" ", $options) as $option)
-   {
-      $opt = explode(",", $option);
-      $sel = ($value == $opt[1]) ? "SELECTED" : "";
-      echo "            <option value='$opt[1]' " . $sel . ">$opt[0]</option>\n";
-   }
-   
-   echo "          </select>\n";
-   echo $end;     
-}
-
-// ---------------------------------------------------------------------------
-// Set Start and End Div-Tags
-// ---------------------------------------------------------------------------
-
-function htmTags($new)
-{
-  switch ($new) { 
-   	case 1: echo "        <div class=\"input\">\n"; $end = ""; break;
-   	case 2: echo "        </div><br/>\n        <div class=\"input\">\n"; $end = ""; break;
-   	case 3: echo "        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
-   	case 4: echo "          &nbsp;|&nbsp;\n" ; $end = "        </div><br/>\n"; break;
-   	case 5: echo "          &nbsp;|&nbsp;\n"; $end = ""; break;
-   	case 6: echo "        </div><br/>\n        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
-  }
-  return $end;
-}	
 
 ?>

@@ -40,16 +40,30 @@ if ($action == "init")
 
 else if ($action == "store")
 {
+    foreach ($_POST['usrtitle'] as $key => $value) 
+    {
+       $value = htmlspecialchars($value);
+       $addr = htmlspecialchars($_POST["addr"][$key]);
+       list ($addr, $type) = explode(":", $addr);
+
+       $addr = mysql_real_escape_string($addr);
+       $type = mysql_real_escape_string($type);
+
+       $sql = "UPDATE valuefacts set usrtitle = '$value' where address = '$addr' and type = '$type'";
+       mysql_query($sql) 
+          or die("<br/>Error" . mysql_error());
+    }
+      
    if (isset($_POST["selected"]))
    {
       $sql = "UPDATE valuefacts SET state = 'D'";
       $result = mysql_query($sql) 
          or die("<br/>Error" . mysql_error());
-      
+         
       foreach ($_POST['selected'] as $key => $value) 
       {
          $value = htmlspecialchars($value);
-         list ($addr, $type) = split(":", $value);
+         list ($addr, $type) = explode(":", $value);
 
          $addr = mysql_real_escape_string($addr);
          $type = mysql_real_escape_string($type);
@@ -117,13 +131,9 @@ function showTable($type, $tableTitle)
    echo "        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
           <tr class=\"tableHead1\">\n";
    
-   if ($debug)
-   {
-      echo "            <td> Adresse </td>\n";
-      echo "            <td> Typ </td>\n";
-   }
 
-   echo "            <td> Name </td>\n";
+   echo "            <td width=\"43%\"> Name </td>\n";
+   echo "            <td> Bezeichnung </td>\n";
    echo "            <td> Einheit </td>\n";
    echo "            <td> Aufzeichnen </td>\n";
    echo "            <td> ID / Typ </td>\n";
@@ -141,6 +151,7 @@ function showTable($type, $tableTitle)
       $title   = mysql_result($result, $i, "title");
       $unit    = mysql_result($result, $i, "unit");
       $state   = mysql_result($result, $i, "state");
+      $usrtitle= mysql_result($result, $i, "usrtitle");
       $txtaddr = sprintf("0x%04x", $address);
 
       if ($state == "A") 
@@ -153,20 +164,16 @@ function showTable($type, $tableTitle)
       else
          echo "         <tr class=\"tableDark\">";
 
-      if ($debug)
-      {
-         echo "            <td> $txtaddr </td>\n";
-         echo "            <td> $type </td>\n";
-      }
 
       echo "            <td> $title </td>\n";
+      echo "            <td><input class=\"inputSettings\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"></input></td>\n";
       echo "            <td> $unit </td>\n";
       
       if ($type != "UD")
          echo "            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>\n";
       else
          echo "            <td>[x]</td>\n";
-      echo "            <td> $address / $type </td>\n";
+      echo "            <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"></input> $address / $type </td>\n";
       echo "          </tr>\n";
 
       $i++;

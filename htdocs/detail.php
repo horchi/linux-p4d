@@ -1,5 +1,5 @@
 <?php
-
+ 
 include("pChart/class/pData.class.php");
 include("pChart/class/pDraw.class.php");
 include("pChart/class/pImage.class.php");
@@ -28,7 +28,7 @@ if(isset($_GET['chartDiv']) && is_numeric($_GET['chartDiv']))
 else
    $Div = 25;
    
-if (isset($_GET['chartXLines']) && ($_GET['chartXLines'] == true || $_GET['chartXLines'] == 1)) 
+if (isset($_GET['chartXLines']) && $_GET['chartXLines'] == true) 
    $XLines = true;
 else
    $XLines = false;
@@ -76,7 +76,7 @@ syslog(LOG_DEBUG, "p4: ---------");
 // ------------------------------
 // get data from db
 
-$factsQuery = "select address, type, name, title, unit from valuefacts where" . $sensorCond;
+$factsQuery = "select address, type, name, usrtitle, title, unit from valuefacts where" . $sensorCond;
 syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from) 
        . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
@@ -98,11 +98,11 @@ else
 
 // loop over sensors ..
 
-while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
+while ($fact = mysql_fetch_assoc($factResult))
 {
    $address = $fact['address'];
    $type = $fact['type'];
-   $title = $fact['title'];
+   $title = (preg_replace("/($pumpDir)/i","",$fact['usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$fact['usrtitle']) : $fact['title'];
    $unit = $fact['unit'];
    $name = $fact['name'];
 
@@ -116,20 +116,19 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
    syslog(LOG_DEBUG, "p4: $query");
 
    $result = mysql_query($query)
-      or die("Error" . mysql_error() . "query [" . $query . "]");
+      or die("Error: " . mysql_error() . ", query: [" . $query . "]");
 
    syslog(LOG_DEBUG, "p4: " . mysql_num_rows($result) . " for $title ($address)");
 
    $lastLabel = "";
 
-   while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+   while ($row = mysql_fetch_assoc($result))
    {
       $time = $row['time'];
       $value = $row['value'];
 
       // store the sensor value
  
-      if ($title == "Fühler 1") $title = "Rücklauf HK-1";
       $series[$title][] = $value;
       
       // need only one time scale -> create only for the first sensor
@@ -143,7 +142,7 @@ while ($fact = mysql_fetch_array($factResult, MYSQL_ASSOC))
 
          $utc = $time + date('Z');
 
-         if ($range < 3 && ($utc % (60*60)) < 150)             // max diff 2,5 minutes
+         if ($range < 3 && ($utc % (60*60)) < 2.5*60)         // max diff 2,5 minutes
             $times[] = strftime("%H:%M", $time);
          elseif ($range < 8 && ($utc % (12*60*60)) < 5*60)    // max diff 5 minutes
             $times[] = strftime("%d. %b %H:%M", $time);
@@ -250,7 +249,7 @@ else
    // $picture->drawLineChart(array("DisplayValues"=>false,"DisplayColor"=>DISPLAY_AUTO));
    
    $picture->setShadow(false);
-   $picture->drawLegend(75, $height-$height+45, array("Style"=>LEGEND_ROUND, "Family"=>LEGEND_FAMILY_CIRCLE, "Mode"=>LEGEND_HORIZONTAL, "FontSize"=>11));
+   $picture->drawLegend(75, $height-19, array("Style"=>LEGEND_ROUND, "Family"=>LEGEND_FAMILY_CIRCLE, "Mode"=>LEGEND_HORIZONTAL, "FontSize"=>14));
  
    $cache->writeToCache($chartHash, $picture);
    $picture->Stroke();

@@ -19,7 +19,7 @@ Body
   background-color: #FF6600;
   color: white;
   margin: 4px;
-  padding: 4px 25px;
+  padding: 4px 20px;
   text-decoration: none;
   font: bold 20px Verdana;
   box-shadow: 8px 8px 8px #666;
@@ -35,7 +35,7 @@ Body
   background-color: #FF9900;
   color: white;
   margin: 2px;
-  padding: 5px 25px;
+  padding: 5px 20px;
   text-decoration: none;
   font: bold 20px Verdana;
   border-radius: 10px;
@@ -244,14 +244,27 @@ Body
 
 .values
 {
-	background-color: #ccc;
   color: black;
-  padding: 2px 2px;
+  padding: 1px 1px;
   text-decoration: none;
   font: bold 16px Verdana;
-  border-radius: 5px;
-  box-shadow: 3px 3px 3px #666;
 }
+  
+.values a:link
+{
+  color: black;
+  padding: 1px 1px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+}  
+
+.values a:visited
+{
+  color: black;
+  padding: 1px 1px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+}  
 
 .table
 {

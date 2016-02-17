@@ -19,7 +19,7 @@ Body
   background-color: #1100EE;
   color: white;
   margin: 4px;
-  padding: 4px 25px;
+  padding: 4px 20px;
   text-decoration: none;
   font: bold 20px Verdana;
   box-shadow: 8px 8px 8px #666;
@@ -35,7 +35,7 @@ Body
   background-color: #0066FF;
   color: white;
   margin: 2px;
-  padding: 5px 25px;
+  padding: 5px 20px;
   text-decoration: none;
   font: bold 20px Verdana;
   border-radius: 10px;
@@ -151,6 +151,16 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.inputSettings
+{
+  background-color: #eee;
+  color: black;
+  width: 180px;
+  padding: 2px;
+  text-decoration: none;
+  font: 12px Verdana;
+}
+
 .inputComment
 {
   text-decoration: none;
@@ -174,9 +184,9 @@ Body
   color: blue;
   font: 14px Verdana;
   width: 70px;
-  padding: 3px;
-  border-radius: 7px;
-  box-shadow: 8px 8px 8px #666;
+  padding: 0px;
+  border-radius: 3px;
+  box-shadow: 2px 2px 2px #666;
 }
 
 .checkbox
@@ -234,7 +244,7 @@ Body
 
 .schema 
 {
-  font: bold 16px Verdana;
+  font: bold 12px Verdana;
   top: 50px;
   left: 5px;
   box-shadow: 8px 8px 8px #666;
@@ -242,14 +252,27 @@ Body
 
 .values
 {
-	background-color: #ccc;
   color: black;
-  padding: 2px 2px;
+  padding: 1px 1px;
   text-decoration: none;
   font: bold 16px Verdana;
-  border-radius: 5px;
-  box-shadow: 3px 3px 3px #666;
 }
+
+.values a:link
+{
+  color: black;
+  padding: 1px 1px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+}  
+
+.values a:visited
+{
+  color: black;
+  padding: 1px 1px;
+  text-decoration: none;
+  font: bold 16px Verdana;
+}  
 
 .table
 {
@@ -456,8 +479,8 @@ Body
 .chart
 { 
   background-color: #AAEEFF;
-  padding: 10px;
-  width: 1010px;
+  padding: 8px;
+  width: 910px;
   border-radius: 10px; 
   box-shadow: 8px 8px 8px #666;
 }

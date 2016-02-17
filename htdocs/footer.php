@@ -1,6 +1,3 @@
 <?php
-echo "    </div>
-  </body>
-</html>
-";
+echo "    </div>\n  </body>\n</html>";
 ?>
