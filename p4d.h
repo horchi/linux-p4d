@@ -1,4 +1,4 @@
-//***************************************************************************
+#//***************************************************************************
 // p4d / Linux - Heizungs Manager
 // File p4d.h
 // This code is distributed under the terms and conditions of the
@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.26"
+#define VERSION "0.1.28"
 #define confDirDefault "/etc/p4d"
 
 extern char dbHost[];
