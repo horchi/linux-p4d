@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2016-102-17:  version 0.1.26
+   - bugfix: fixed call of script <confdir>/after-update.sh
+
 2016-102-16:  version 0.1.25
    - added: added script hook called after update cycle is performed
 

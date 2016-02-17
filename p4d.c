@@ -1193,7 +1193,7 @@ void P4d::afterUpdate()
    
    asprintf(&path, "%s/after-update.sh", confDir);
    
-   if (!fileExists(path))
+   if (fileExists(path))
    {
       tell(0, "Calling '%s'", path);
       system(path);
