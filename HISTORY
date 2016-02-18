@@ -3,6 +3,9 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2016-102-18:  version 0.1.29
+   - change: added support of usrtitle to after-update.sh example
+
 2016-102-17:  version 0.1.28
    - bugfix: fixed ddl
 
