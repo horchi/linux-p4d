@@ -26,8 +26,8 @@ for s in $SENSORS; do
 
     TYPE=`echo $s | sed s/".*#"/""/g`
     ADDR=`echo $s | sed s/"#.*"/""/g`
-    
-    PARAMS=`$MYSQL -e "select concat(replace(ifNull(f.usrtitle, f.title), ' ', '%20'), '%22%29.State%28', format(s.value, 0), '%29') from samples s, valuefacts f \
+
+    PARAMS=`$MYSQL -e "select concat(replace(case when f.usrtitle is null or f.usrtitle = '' then f.title else f.usrtitle end, ' ', '%20'), '%22%29.State%28', s.value, '%29') from samples s, valuefacts f \
           where f.address = s.address and f.type = s.type \
           and time = '$MAXTIME' and s.address = '$ADDR' and s.type = '$TYPE';"`
 
