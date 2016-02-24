@@ -1398,8 +1398,7 @@ void P4d::addParameter2Mail(const char* name, const char* value)
 
    mailBody += string(name) + " = " + string(value) + "\n";
 
-   sprintf(buf, "      <tr><td><font face=\"Arial\">%s</font></td>"
-           "<td><font face=\"Arial\">%s</font></td></tr>\n", name, value);
+   sprintf(buf, "        <tr><td>%s</td><td>%s</td></tr>\n", name, value);
 
    mailBodyHtml += buf;
 }
@@ -1724,39 +1723,70 @@ int P4d::sendMail()
       char* command = 0;
       char* html = 0;
       
-      const char* htmlHead = 
-         "<head>"
+      const char* htmlHead =
+         "<head>\n"
          "  <style type=\"text/css\">\n"
-         "    table { font-size: 14px; border-collapse: collapse; table-layout: auto; }\n"
-         "    td, th { border: 1px solid #000; }\n"
-         "    th { background-color: #095BA6; font-family: Arial Narrow; color: #fff; }\n"
-         "    td { font-family: Arial; }\n"
-         "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
-         "  </style>\n"
+         "    table {"
+         "      border: 1px solid #d2d2d2;\n"
+         "      border-collapse: collapse;\n"
+         "    }\n"
+         "    table tr.head {\n"
+         "      background-color: #004d8f;\n"
+         "      color: #fff;\n"
+         "      font-weight: bold;\n"
+         "      font-family: Helvetica, Arial, sans-serif;\n"
+         "      font-size: 12px;\n"
+         "    }\n"
+         "    table tr th,\n"
+         "    table tr td {\n"
+         "      padding: 10px;\n"
+         "      text-align: left;\n"
+         "    }\n"
+         "    table tr:nth-child(1n) td {\n"
+         "      background-color: #fff;\n"
+         "    }\n"
+         "    table tr:nth-child(2n+2) td {\n"
+         "      background-color: #eee;\n"
+         "    }\n"
+         "    td {\n"
+         "      color: #333;\n"
+         "      font-family: Helvetica, Arial, sans-serif;\n"
+         "      font-size: 12px;\n"
+         "      border: 1px solid #D2D2D2;\n"
+         "    }\n"
+         "    </style>\n"
          "</head>\n";
+         
+         // "<head>"
+         // "  <style type=\"text/css\">\n"
+         // "    table { font-size: 14px; border-collapse: collapse; table-layout: auto; }\n"
+         // "    td, th { border: 1px solid #000; }\n"
+         // "    th { background-color: #095BA6; font-family: Arial Narrow; color: #fff; }\n"
+         // "    td { font-family: Arial; }\n"
+         // "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
+         // "  </style>\n"
+         // "</head>\n";
      
       asprintf(&html, 
                "<html>\n"
                " %s"
-               " <body>\n"
-               "  <br>\n"
-               "  WEB Interface: <a href=\"%s\">S 3200</a><br>\n"
-               "  %s\n"
-               "  <br>\n"
-               "  <table>\n"
-               "  <caption>S 3200<caption>"
-               "   <thead>\n"
-               "    <tr>\n"
-               "     <th><font>Parameter</font></th>\n"
-               "     <th><font>Wert</font></th>\n"
-               "    </tr>\n"
-               "   </thead>\n"
-               "   <tbody>\n"
+               "  <body>\n"
+               "   <font face=\"Arial\"><br>WEB Interface: <a href=\"%s\">S 3200</a><br></font>\n"
+               "   %s\n"
+               "   <br>\n"
+               "   <table>\n"
+               "     <thead>\n"
+               "       <tr class=\"head\">\n"
+               "         <th><font>Parameter</font></th>\n"
+               "         <th><font>Wert</font></th>\n"
+               "       </tr>\n"
+               "     </thead>\n"
+               "     <tbody>\n"
                "%s"
-               "   </tbody>\n"
-               "  </table>\n"
-               "  <br></br>\n"
-               " </body>\n"
+               "     </tbody>\n"
+               "   </table>\n"
+               "   <br></br>\n"
+               "  </body>\n"
                "</html>\n",
                htmlHead, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
 

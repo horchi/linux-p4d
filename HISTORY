@@ -3,6 +3,10 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2016-102-24:  version 0.1.30
+   - change: update of after-update.sh example
+   - change: updated html (outfit) of status mails
+
 2016-102-18:  version 0.1.29
    - change: added support of usrtitle to after-update.sh example
 
