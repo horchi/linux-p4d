@@ -3,24 +3,27 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
-2016-102-24:  version 0.1.30
+2016-02-29:  version 0.1.31
+   - change: source environment in update.sh
+   
+2016-02-24:  version 0.1.30
    - change: update of after-update.sh example
    - change: updated html (outfit) of status mails
 
-2016-102-18:  version 0.1.29
+2016-02-18:  version 0.1.29
    - change: added support of usrtitle to after-update.sh example
 
-2016-102-17:  version 0.1.28
+2016-02-17:  version 0.1.28
    - bugfix: fixed ddl
 
-2016-102-17:  version 0.1.27
+2016-02-17:  version 0.1.27
    - added: homematic example script
    - change: updated webif
 
-2016-102-17:  version 0.1.26
+2016-02-17:  version 0.1.26
    - bugfix: fixed call of script <confdir>/after-update.sh
 
-2016-102-16:  version 0.1.25
+2016-02-16:  version 0.1.25
    - added: added script hook called after update cycle is performed
 
 2015-06-24:  version 0.1.24

@@ -1739,7 +1739,7 @@ int P4d::sendMail()
          "    }\n"
          "    table tr th,\n"
          "    table tr td {\n"
-         "      padding: 10px;\n"
+         "      padding: 5px;\n"
          "      text-align: left;\n"
          "    }\n"
          "    table tr:nth-child(1n) td {\n"
@@ -1756,17 +1756,7 @@ int P4d::sendMail()
          "    }\n"
          "    </style>\n"
          "</head>\n";
-         
-         // "<head>"
-         // "  <style type=\"text/css\">\n"
-         // "    table { font-size: 14px; border-collapse: collapse; table-layout: auto; }\n"
-         // "    td, th { border: 1px solid #000; }\n"
-         // "    th { background-color: #095BA6; font-family: Arial Narrow; color: #fff; }\n"
-         // "    td { font-family: Arial; }\n"
-         // "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
-         // "  </style>\n"
-         // "</head>\n";
-     
+
       asprintf(&html, 
                "<html>\n"
                " %s"

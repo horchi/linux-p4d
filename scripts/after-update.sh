@@ -1,11 +1,15 @@
+#!/usr/bin/env bash
+
+source ~/.bashrc
 
 # -----------------------
-# example for HOME Matic
+# example for Home-Matic
 # -----------------------
 
 # ---------------------
 # User settings
 
+LOG="/tmp/hm-push.log"
 HM_IP="192.168.1.4"
 HM_PORT="8181"
 DB_HOST="localhost"
@@ -22,6 +26,15 @@ MYSQL="mysql --batch --silent --host=$DB_HOST -u p4 -pp4 -Dp4 --default-characte
 
 MAXTIME=`$MYSQL -e "select max(time) from samples;"`
 LASTTIME=`$MYSQL -e "select max(time) from samples where time < '$MAXTIME';"`
+
+if [ -n $LOG ] && [ "$1" != "debug" ]; then
+    echo "----------------------------------------" >> $LOG
+    echo `date` >> $LOG
+    echo "updating homematic at ip $HM_IP" >> $LOG
+    echo "actual measure at: $MAXTIME" >> $LOG
+    echo "last measure at: $LASTTIME" >> $LOG
+    echo "----------------------------------------" >> $LOG
+fi
 
 for s in $SENSORS; do
 
@@ -44,9 +57,16 @@ for s in $SENSORS; do
             where f.address = s.address and f.type = s.type \
                 and time = '$MAXTIME' and s.address = '$ADDR' and s.type = '$TYPE';"`
 
+    if [ -n $LOG ] && [ "$1" != "debug" ]; then
+        echo "last data was: $LASTPARAMS" >> $LOG
+        echo "actual data is: $PARAMS" >> $LOG
+    fi
+    
     if [ "$PARAMS" == "$LASTPARAMS" ]; then
         if [ "$1" == "debug" ]; then
             echo "skipping "$PARAMS", not changed"
+        elif [ -n $LOG ]; then
+            echo "skipping "$PARAMS", not changed" >> $LOG
         fi
         
         continue;
@@ -55,8 +75,11 @@ for s in $SENSORS; do
     if [ "$1" == "debug" ]; then
         echo curl "$HM_URL_BASE$PARAMS;"
     else
+        if [ -n $LOG ]; then
+            echo "calling curl $HM_URL_BASE$PARAMS;" >> $LOG
+        fi
+        
         curl "$HM_URL_BASE$PARAMS;" > /dev/null 2>&1
     fi
        
 done
-
