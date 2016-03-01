@@ -72,7 +72,9 @@ class cDbService
          ftPrimary    = 2,
          ftMeta       = 4,
          ftAutoinc    = 8,
-         ftDef0       = 16
+         ftDef0       = 16,
+
+         ftAll = ftData | ftPrimary | ftMeta
       };
 
       enum BindType
@@ -155,6 +157,14 @@ class cDbFieldDef : public cDbService
       int getFilter()                { return filter; }
       int filterMatch(int f)         { return !f || filter & f; }
       int hasType(int types)         { return types & type; }
+      int hasFormat(int f)           { return format == f; }
+
+      int isString()                 { return format == ffAscii || format == ffText || 
+                                              format == ffMText || format == ffMlob; }
+      int isInt()                    { return format == ffInt || format == ffUInt; }
+      int isBigInt()                 { return format == ffBigInt || format == ffUBigInt; }
+      int isFloat()                  { return format == ffFloat; }
+      int isDateTime()               { return format == ffDateTime; }
 
       void setDescription(const char* desc)
       {
@@ -298,14 +308,30 @@ class cDbTableDef : public cDbService
       int fieldCount()                 { return dfields.size(); }
       cDbFieldDef* getField(int id)    { return _dfields[id]; }
 
-      cDbFieldDef* getField(const char* fname)    
+      cDbFieldDef* getField(const char* fname, int silent = no)    
       { 
          std::map<std::string, cDbFieldDef*, _casecmp_>::iterator f;
 
          if ((f = dfields.find(fname)) != dfields.end())
             return f->second;
          
-         tell(0, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, fname);
+         if (!silent)
+            tell(0, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, fname);
+
+         return 0;
+      }
+
+      cDbFieldDef* getFieldByDbName(const char* dbname)
+      { 
+         std::map<std::string, cDbFieldDef*, _casecmp_>::iterator it;
+
+         for (it = dfields.begin(); it != dfields.end(); it++)
+         {
+            if (it->second->hasDbName(dbname))
+               return it->second;
+         }
+         
+         tell(5, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, dbname);
 
          return 0;
       }
@@ -367,8 +393,12 @@ class cDbTableDef : public cDbService
 
       char* name;
       std::vector<cDbIndexDef*> indices;
-      std::vector<cDbFieldDef*> _dfields;                     // FiledDefs stored as list to have access via index
-      std::map<std::string, cDbFieldDef*, _casecmp_> dfields; // same FiledDef references stored as a map to habe access via name
+
+      // FiledDefs stored as list to have access via index
+      std::vector<cDbFieldDef*> _dfields;
+
+      // same FiledDef references stored as a map to have access via name
+      std::map<std::string, cDbFieldDef*, _casecmp_> dfields;
 };
 
 //***************************************************************************
@@ -411,6 +441,7 @@ class cDbDict : public cDbService
       void show();
       int init(cDbFieldDef*& field, const char* tname, const char* fname);
       const char* getPath() { return path ? path : ""; }
+      void forget();
 
       std::map<std::string, cDbTableDef*>::iterator getFirstTableIterator() { return tables.begin(); }
       std::map<std::string, cDbTableDef*>::iterator getTableEndIterator()   { return tables.end(); }

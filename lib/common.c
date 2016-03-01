@@ -955,6 +955,37 @@ cRetBuf& cRetBuf::operator=(const char* buf)
 }
 
 //***************************************************************************
+// cMyMutex
+//***************************************************************************
+
+cMyMutex::cMyMutex (void)
+{
+  locked = 0;
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
+  pthread_mutex_init(&mutex, &attr);
+}
+
+cMyMutex::~cMyMutex()
+{
+  pthread_mutex_destroy(&mutex);
+}
+
+void cMyMutex::Lock(void)
+{
+  pthread_mutex_lock(&mutex);
+  locked++;
+}
+
+void cMyMutex::Unlock(void)
+{
+ if (!--locked)
+    pthread_mutex_unlock(&mutex);
+}
+
+
+//***************************************************************************
 // cTimeMs 
 //***************************************************************************
 

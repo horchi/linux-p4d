@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.1.33"
+#define _VERSION     "0.1.34"
 #define VERSION_DATE "01.03.2016"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2016-03-01:  version 0.1.34
+   - change: ported to new db api
+   - added:  added table smartconfig (by S.Döring)
 
 2016-03-01:  version 0.1.33
    - bugfix: minor fix for html header

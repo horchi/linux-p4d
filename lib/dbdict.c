@@ -103,7 +103,7 @@ cDbService::TypeDef cDbService::types[] =
    { ftAutoinc, "autoinc" },
    { ftDef0,    "def0" },
 
-   { ftUnknown }
+   { ftUnknown, "" }
 };
 
 int cDbService::toType(const char* theTypes)
@@ -205,7 +205,7 @@ int cDbDict::init(cDbFieldDef*& field, const char* tname, const char* fname)
    cDbTableDef* table = getTable(tname);
 
    if (table)
-      if (field = table->getField(fname))
+      if ((field = table->getField(fname)))
          return success;
 
    tell(0, "Fatal: Can't init field %s.%s, not found in dictionary", tname, fname);
@@ -261,6 +261,31 @@ int cDbDict::in(const char* file, int filter)
 
    return success;
 }
+
+//***************************************************************************
+// Forget
+//***************************************************************************
+
+void cDbDict::forget()
+{
+   std::map<std::string, cDbTableDef*>::iterator t;
+
+   while ((t = tables.begin()) != tables.end())
+   {
+      if (t->second)
+         delete t->second;
+
+      tables.erase(t);
+   }
+
+   free(path);
+   
+   curTable = 0;
+   inside = no;
+   path = 0;
+   fieldFilter = 0;   // 0 -> filter off use all fields
+   fltFromNameFct = 0;
+}    
 
 //***************************************************************************
 // Show
@@ -357,7 +382,6 @@ int cDbDict::toFilter(char* token)
          filter |= fltFromNameFct(name);
       else
          filter |= atoi(name);
-      
    }
 
    return filter;

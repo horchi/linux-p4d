@@ -137,8 +137,9 @@ cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int P4d::initDb()
 {
+   static int initial = yes;
    int status = success;
-
+   
    if (connection)
       exitDb();
 
@@ -146,29 +147,80 @@ int P4d::initDb()
 
    connection = new cDbConnection();
 
+   if (initial)
+   {
+      // ------------------------------------------
+      // initially create/alter tables and indices
+      // ------------------------------------------
+
+      tell(0, "Checking database connection ...");
+
+      if (connection->attachConnection() != success)
+      {
+         tell(0, "Fatal: Initial database connect failed, aborting");
+         return abrt;
+      }
+
+      std::map<std::string, cDbTableDef*>::iterator t;
+
+      tell(0, "Checking table structure and indices ...");
+      
+      for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+      {
+         cDbTable* table = new cDbTable(connection, t->first.c_str());
+         
+         tell(1, "Checking table '%s'", t->first.c_str());
+         
+         if (!table->exist())
+         {
+            if ((status += table->createTable()) != success)
+               continue;
+         }
+         else
+         {
+            status += table->validateStructure();
+         }
+         
+         status += table->createIndices();
+         
+         delete table;
+      }
+      
+      connection->detachConnection();
+
+      if (status != success)
+         return abrt;
+      
+      tell(0, "Checking table structure and indices succeeded");
+   }
+
+   // ------------------------
+   // create/open tables 
+   // ------------------------
+
    tableValueFacts = new cDbTable(connection, "valuefacts");
-   if (tableValueFacts->open(yes) != success) return fail;
+   if (tableValueFacts->open() != success) return fail;
 
    tableErrors = new cDbTable(connection, "errors");
-   if (tableErrors->open(yes) != success) return fail;
+   if (tableErrors->open() != success) return fail;
 
    tableMenu = new cDbTable(connection, "menu");
-   if (tableMenu->open(yes) != success) return fail;
+   if (tableMenu->open() != success) return fail;
 
    tableSamples = new cDbTable(connection, "samples");
-   if (tableSamples->open(yes) != success) return fail;
+   if (tableSamples->open() != success) return fail;
 
    tableJobs = new cDbTable(connection, "jobs");
-   if (tableJobs->open(yes) != success) return fail;
+   if (tableJobs->open() != success) return fail;
 
    tableSensorAlert = new cDbTable(connection, "sensoralert");
-   if (tableSensorAlert->open(yes) != success) return fail;
+   if (tableSensorAlert->open() != success) return fail;
 
    tableSchemaConf = new cDbTable(connection, "schemaconf");
-   if (tableSchemaConf->open(yes) != success) return fail;
+   if (tableSchemaConf->open() != success) return fail;
 
    tableConfig = new cDbTable(connection, "config");
-   if (tableConfig->open(yes) != success) return fail;
+   if (tableConfig->open() != success) return fail;
 
    // prepare statements
 
@@ -1467,7 +1519,7 @@ int P4d::aggregate()
   
    tell(eloAlways, "Starting aggregation ...");
 
-   if (connection->query(aggCount, stmt) == success)
+   if (connection->query(aggCount, "%s", stmt) == success)
    {
       int delCount = 0;
 

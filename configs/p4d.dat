@@ -87,8 +87,35 @@ Table schemaconf
    COLOR                ""  color                Ascii       10 Data,
    SHOWUNIT             ""  showunit             Int          1 Data,
    SHOWTEXT             ""  showtext             Int          1 Data,
-   XPOS                 ""  xpos                 Int          0 Data,
-   YPOS                 ""  ypos                 Int          0 Data,
+   BG                   ""  bg                   Int          2 Data,
+   FONTSIZE             ""  fontsize             Int          2 Data,
+   ALEFT                ""  aleft                Int          2 Data,
+   XPOS                 ""  xpos                 Int         11 Data,
+   YPOS                 ""  ypos                 Int         11 Data,
+   LINK                 ""  link                 Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table SmartConfig
+// ----------------------------------------------------------------
+
+Table smartconfig
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+   STATE                ""  state                Ascii        1 Data,
+   KIND                 ""  kind                 Ascii       20 Data,
+   COLOR                ""  color                Ascii       10 Data,
+   SHOWUNIT             ""  showunit             Int          1 Data,
+   SHOWTEXT             ""  showtext             Int          1 Data,
+   BG                   ""  bg                   Int          2 Data,
+   FONTSIZE             ""  fontsize             Int          2 Data,
+   ALEFT                ""  aleft                Int          2 Data,
+   XPOS                 ""  xpos                 Int         11 Data,
+   YPOS                 ""  ypos                 Int         11 Data,
+   LINK                 ""  link                 Ascii      100 Data,
 }
 
 // ----------------------------------------------------------------
@@ -159,7 +186,7 @@ Table sensoralert
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
 
-   KIND                 ""  kind                 Ascii        1 Data,  // 'S' sub rule 'M' or blank master rule
+   KIND                 ""  kind                 Ascii        1 Data,  // 'S' sub rule 'M' or blank master rule ! not used !
    SUBID                ""  subid                UInt        11 Data,  // reference to 'sub' rule
    LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
    

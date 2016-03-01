@@ -165,32 +165,26 @@ struct MemoryStruct
       time_t expireAt;
 };
 
-// struct MemoryStruct 
-// {
-//    MemoryStruct()   { memory = 0; clear(); }
-//    ~MemoryStruct()  { clear(); }
+//***************************************************************************
+// cMyMutex
+//***************************************************************************
 
-//    // data
+class cMyMutex 
+{
+   friend class cCondVar;
 
-//    char* memory;
-//    size_t size;
+   public:
 
-//    // tag attribute
+      cMyMutex(void);
+      ~cMyMutex();
+      void Lock(void);
+      void Unlock(void);
 
-//    int match;
-//    char tag[100];          // the tag to be compared 
-//    char ignoreTag[100];
+   private:
 
-//    void clear() 
-//    {
-//       free(memory);
-//       memory = 0;
-//       size = 0;
-//       match = 0;
-//       *tag = 0;
-//       *ignoreTag = 0;
-//    }
-// };
+      pthread_mutex_t mutex;
+      int locked;
+};
 
 //***************************************************************************
 // Tools
