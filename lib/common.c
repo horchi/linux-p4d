@@ -561,6 +561,16 @@ int isLink(const char* path)
    return false;
 }
 
+const char* suffixOf(const char* path)
+{
+   const char* p;
+
+   if (path && (p = strrchr(path, '.')))
+      return p+1;
+
+   return "";
+}
+
 int fileExists(const char* path)
 {
    return access(path, F_OK) == 0; 
@@ -602,6 +612,64 @@ int removeFile(const char* filename)
    tell(2, "Removed file '%s'", filename);
    
    return 0;
+}
+
+//***************************************************************************
+// Load From File
+//***************************************************************************
+
+int loadFromFile(const char* infile, MemoryStruct* data)
+{
+   FILE* fin;
+   struct stat sb;
+
+   data->clear();
+
+   if (!fileExists(infile))
+   {
+      tell(0, "File '%s' not found'", infile);
+      return fail;
+   }
+
+   if (stat(infile, &sb) < 0)
+   {
+      tell(0, "Can't get info of '%s', error was '%s'", infile, strerror(errno));
+      return fail;
+   }
+
+   if ((fin = fopen(infile, "r")))
+   {
+      const char* sfx = suffixOf(infile);
+
+      data->size = sb.st_size;
+      data->modTime = sb.st_mtime;
+      data->memory = (char*)malloc(data->size);
+      fread(data->memory, sizeof(char), data->size, fin);
+      fclose(fin);
+      sprintf(data->tag, "%ld", (long int)data->size);
+
+      if (strcmp(sfx, "gz") == 0)
+         sprintf(data->contentEncoding, "gzip");
+      
+      if (strcmp(sfx, "js") == 0)
+         sprintf(data->contentType, "application/javascript");
+
+      else if (strcmp(sfx, "png") == 0 || strcmp(sfx, "jpg") == 0 || strcmp(sfx, "gif") == 0)
+         sprintf(data->contentType, "image/%s", sfx);
+
+      else if (strcmp(sfx, "ico") == 0)
+         strcpy(data->contentType, "image/x-icon");
+
+      else
+         sprintf(data->contentType, "text/%s", sfx);
+   }
+   else
+   {
+      tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
+      return fail;
+   }
+
+   return success;
 }
 
 #ifdef WITH_GUNZIP

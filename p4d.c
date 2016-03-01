@@ -1723,39 +1723,7 @@ int P4d::sendMail()
       char* command = 0;
       char* html = 0;
       
-      const char* htmlHead =
-         "<head>\n"
-         "  <style type=\"text/css\">\n"
-         "    table {"
-         "      border: 1px solid #d2d2d2;\n"
-         "      border-collapse: collapse;\n"
-         "    }\n"
-         "    table tr.head {\n"
-         "      background-color: #004d8f;\n"
-         "      color: #fff;\n"
-         "      font-weight: bold;\n"
-         "      font-family: Helvetica, Arial, sans-serif;\n"
-         "      font-size: 12px;\n"
-         "    }\n"
-         "    table tr th,\n"
-         "    table tr td {\n"
-         "      padding: 5px;\n"
-         "      text-align: left;\n"
-         "    }\n"
-         "    table tr:nth-child(1n) td {\n"
-         "      background-color: #fff;\n"
-         "    }\n"
-         "    table tr:nth-child(2n+2) td {\n"
-         "      background-color: #eee;\n"
-         "    }\n"
-         "    td {\n"
-         "      color: #333;\n"
-         "      font-family: Helvetica, Arial, sans-serif;\n"
-         "      font-size: 12px;\n"
-         "      border: 1px solid #D2D2D2;\n"
-         "    }\n"
-         "    </style>\n"
-         "</head>\n";
+      loadHtmlHeader();
 
       asprintf(&html, 
                "<html>\n"
@@ -1778,7 +1746,7 @@ int P4d::sendMail()
                "   <br></br>\n"
                "  </body>\n"
                "</html>\n",
-               htmlHead, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
+               htmlHeader.memory, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
 
       // send HTML mail
       
@@ -1825,6 +1793,67 @@ int P4d::isMailState()
    free(mailStates);
 
    return result;
+}
+
+//***************************************************************************
+// Load Html Header
+//***************************************************************************
+
+int P4d::loadHtmlHeader()
+{
+   char* file;
+
+   // load only once at first call
+   
+   if (!htmlHeader.isEmpty())
+      return done;
+
+   asprintf(&file, "%s/mail-head.html", confDir);
+
+   if (fileExists(file))
+      loadFromFile(file, &htmlHeader);
+
+   free(file);
+
+   if (!htmlHeader.isEmpty())
+      return success;
+
+   htmlHeader.clear();
+   
+   htmlHeader.append("  <head>\n"
+                     "    <style type=\"text/css\">\n"
+                     "      table {"
+                     "        border: 1px solid #d2d2d2;\n"
+                     "        border-collapse: collapse;\n"
+                     "      }\n"
+                     "      table tr.head {\n"
+                     "        background-color: #004d8f;\n"
+                     "        color: #fff;\n"
+                     "        font-weight: bold;\n"
+                     "        font-family: Helvetica, Arial, sans-serif;\n"
+                     "        font-size: 12px;\n"
+                     "      }\n"
+                     "      table tr th,\n"
+                     "      table tr td {\n"
+                     "        padding: 4px;\n"
+                     "        text-align: left;\n"
+                     "      }\n"
+                     "      table tr:nth-child(1n) td {\n"
+                     "        background-color: #fff;\n"
+                     "      }\n"
+                     "      table tr:nth-child(2n+2) td {\n"
+                     "        background-color: #eee;\n"
+                     "      }\n"
+                     "      td {\n"
+                     "        color: #333;\n"
+                     "        font-family: Helvetica, Arial, sans-serif;\n"
+                     "        font-size: 12px;\n"
+                     "        border: 1px solid #D2D2D2;\n"
+                     "      }\n"
+                     "      </style>\n"
+                     "  </head>\n");
+
+   return success;
 }
 
 //***************************************************************************

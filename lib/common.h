@@ -31,37 +31,6 @@ typedef short sword;
 typedef unsigned int dword;
 
 //***************************************************************************
-// MemoryStruct for curl callbacks
-//***************************************************************************
-
-struct MemoryStruct 
-{
-   MemoryStruct()   { memory = 0; clear(); }
-   ~MemoryStruct()  { clear(); }
-
-   // data
-
-   char* memory;
-   size_t size;
-
-   // tag attribute
-
-   int match;
-   char tag[100];          // the tag to be compared 
-   char ignoreTag[100];
-
-   void clear() 
-   {
-      free(memory);
-      memory = 0;
-      size = 0;
-      match = 0;
-      *tag = 0;
-      *ignoreTag = 0;
-   }
-};
-
-//***************************************************************************
 // 
 //***************************************************************************
 
@@ -105,11 +74,128 @@ enum Eloquence
 
 void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* format, ...);
 
+char* srealloc(void* ptr, size_t size);
+
+//***************************************************************************
+// MemoryStruct
+//***************************************************************************
+
+struct MemoryStruct
+{
+   public:
+
+      MemoryStruct()   { expireAt = 0; memory = 0; zmemory = 0; clear(); }
+      MemoryStruct(const MemoryStruct* o)
+      {
+         size = o->size;
+         memory = (char*)malloc(size);
+         memcpy(memory, o->memory, size);
+
+         zsize = o->zsize;
+         zmemory = (char*)malloc(zsize);
+         memcpy(zmemory, o->zmemory, zsize);
+
+         copyAttributes(o);
+      }
+      
+      ~MemoryStruct()  { clear(); }
+
+      int isEmpty()  { return memory == 0; }
+      int isZipped() { return zmemory != 0 && zsize > 0; }
+
+      int append(const char* buf, int len = 0)
+      {
+         if (!len)
+            len = strlen(buf);
+         
+         memory = srealloc(memory, size+len);
+         memcpy(memory+size, buf, len);
+         size += len;
+
+         return success;
+      }
+
+      void copyAttributes(const MemoryStruct* o)
+      {
+         strcpy(tag, o->tag);
+         strcpy(name, o->name);
+         strcpy(contentType, o->contentType);
+         strcpy(contentEncoding, o->contentEncoding);
+         strcpy(mimeType, o->mimeType);
+         headerOnly = o->headerOnly;
+         modTime = o->modTime;
+         expireAt = o->expireAt;
+      }
+     
+      void clear() 
+      {
+         free(memory);
+         memory = 0;
+         size = 0;
+         free(zmemory);
+         zmemory = 0;
+         zsize = 0;
+         *tag = 0;
+         *name = 0;
+         *contentType = 0;
+         *contentEncoding = 0;
+         *mimeType = 0;
+         modTime = time(0);
+         headerOnly = no;
+         // expireAt = time(0); -> don't reset 'expireAt' here !!!!
+      }
+
+      // data
+      
+      char* memory;
+      long unsigned int size;
+
+      char* zmemory;
+      long unsigned int zsize;
+      
+      // tag attribute
+      
+      char tag[100+TB];              // the tag to be compared 
+      char name[100+TB];             // content name (filename)
+      char contentType[100+TB];      // e.g. text/html
+      char mimeType[100+TB];         // 
+      char contentEncoding[100+TB];  // 
+      int headerOnly;
+      time_t modTime;
+      time_t expireAt;
+};
+
+// struct MemoryStruct 
+// {
+//    MemoryStruct()   { memory = 0; clear(); }
+//    ~MemoryStruct()  { clear(); }
+
+//    // data
+
+//    char* memory;
+//    size_t size;
+
+//    // tag attribute
+
+//    int match;
+//    char tag[100];          // the tag to be compared 
+//    char ignoreTag[100];
+
+//    void clear() 
+//    {
+//       free(memory);
+//       memory = 0;
+//       size = 0;
+//       match = 0;
+//       *tag = 0;
+//       *ignoreTag = 0;
+//    }
+// };
+
 //***************************************************************************
 // Tools
 //***************************************************************************
 
-char* srealloc(void* ptr, size_t size);
 double usNow();
 unsigned int getHostId();
 byte crc(const byte* data, int size);
@@ -136,10 +222,12 @@ char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
 
 int fileExists(const char* path);
+const char* suffixOf(const char* path);
 int createLink(const char* link, const char* dest, int force);
 int isLink(const char* path);
 int isEmpty(const char* str);
 int removeFile(const char* filename);
+int loadFromFile(const char* infile, MemoryStruct* data);
 
 const char* getHostName();
 const char* getFirstIp();

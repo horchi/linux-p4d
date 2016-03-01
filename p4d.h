@@ -19,7 +19,7 @@
 #include "p4io.h"
 #include "w1.h"
 
-#define VERSION "0.1.31"
+#define VERSION "0.1.32"
 #define confDirDefault "/etc/p4d"
 
 extern char dbHost[];
@@ -94,7 +94,8 @@ class P4d : public FroelingService
       int updateValueFacts();
       int updateMenu();
       int isMailState();
-
+      int loadHtmlHeader();
+   
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
       int getConfigItem(const char* name, int& value, int def = na);
@@ -149,7 +150,8 @@ class P4d : public FroelingService
       int tSync;
       time_t nextTimeSyncAt;
       int maxTimeLeak;
-
+      MemoryStruct htmlHeader;
+   
       string alertMailBody;
       string alertMailSubject;
 

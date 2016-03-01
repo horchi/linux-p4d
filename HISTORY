@@ -3,9 +3,13 @@
  p4 Daemon / p4d -  Revision History
 -------------------------------------
 
+2016-03-01:  version 0.1.32
+   - change: html header of status mails now configurable in "/etc/p4d/mail-head.html"
+             example can be found in configs
+
 2016-02-29:  version 0.1.31
    - change: source environment in update.sh
-   
+
 2016-02-24:  version 0.1.30
    - change: update of after-update.sh example
    - change: updated html (outfit) of status mails
