@@ -10,13 +10,21 @@ include Make.config
 TARGET = p4d
 CMDTARGET = p4
 CHARTTARGET = p4chart
+HISTFILE  = "HISTORY.h"
 
 LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
-VERSION = $(shell grep 'define VERSION ' p4d.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
+VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
+#VERSION = $(shell grep 'define VERSION ' p4d.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 TMPDIR = /tmp
 ARCHIVE = $(TARGET)-$(VERSION)
+
+LASTHIST    = $(shell grep '^20[0-3][0-9]' $(HISTFILE) | head -1)
+LASTCOMMENT = $(subst |,\n,$(shell sed -n '/$(LASTHIST)/,/^ *$$/p' $(HISTFILE) | tr '\n' '|'))
+LASTTAG     = $(shell git describe --tags --abbrev=0)
+BRANCH      = $(shell git rev-parse --abbrev-ref HEAD)
+GIT_REV     = $(shell git describe --always 2>/dev/null)
 
 # object files 
 
@@ -28,6 +36,10 @@ CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 CFLAGS += $(shell mysql_config --include)
 DEFINES += -DDEAMON=P4d -DUSEMD5
 OBJS += p4d.o
+
+ifdef GIT_REV
+   DEFINES += -DGIT_REV='"$(GIT_REV)"'
+endif
 
 # rules:
 
@@ -114,3 +126,32 @@ webif.o			 :  webif.c         $(HEADER) p4d.h
 w1.o			    :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 chart.o         :  chart.c
+
+# ------------------------------------------------------
+# Git / Versioning / Tagging
+# ------------------------------------------------------
+
+vcheck:
+	git fetch
+	if test "$(LASTTAG)" = "$(VERSION)"; then \
+		echo "Warning: tag/version '$(VERSION)' already exists, update HISTORY first. Aborting!"; \
+		exit 1; \
+	fi
+
+push: vcheck
+	echo "tagging git with $(VERSION)"
+	git tag $(VERSION)
+	git push --tags
+	git push
+
+commit: vcheck
+	git commit -m "$(LASTCOMMENT)" -a
+
+git: commit push
+
+showv:
+	@echo "Git ($(BRANCH)):\\n  Version: $(LASTTAG) (tag)"
+	@echo "Local:"
+	@echo "  Version: $(VERSION)"
+	@echo "  Change:"
+	@echo -n "   $(LASTCOMMENT)"

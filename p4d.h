@@ -3,7 +3,7 @@
 // File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2015  Jörg Wendel
+// Date 04.11.2010 - 01.03.2016  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4D_H_
@@ -18,8 +18,8 @@
 #include "service.h"
 #include "p4io.h"
 #include "w1.h"
+#include "HISTORY.h"
 
-#define VERSION "0.1.32"
 #define confDirDefault "/etc/p4d"
 
 extern char dbHost[];

@@ -1,8 +1,26 @@
+/* 
+ * -----------------------------------
+ * p4 Daemon / p4d -  Revision History
+ * -----------------------------------
+ *
+ */
 
--------------------------------------
- p4 Daemon / p4d -  Revision History
--------------------------------------
+#define _VERSION     "0.1.33"
+#define VERSION_DATE "01.03.2016"
 
+#ifdef GIT_REV
+#  define VERSION _VERSION "-GIT" GIT_REV
+#else
+#  define VERSION _VERSION
+#endif
+
+/*
+ * ------------------------------------
+
+2016-03-01:  version 0.1.33
+   - bugfix: minor fix for html header
+   - added:  git handling to makefile
+   
 2016-03-01:  version 0.1.32
    - change: html header of status mails now configurable in "/etc/p4d/mail-head.html"
              example can be found in configs
@@ -126,3 +144,6 @@
 
 2010-11-04: version 0.0.1
    - start of implementation
+
+ * ------------------------------------
+ */

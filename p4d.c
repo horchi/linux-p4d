@@ -1727,7 +1727,7 @@ int P4d::sendMail()
 
       asprintf(&html, 
                "<html>\n"
-               " %s"
+               " %s\n"
                "  <body>\n"
                "   <font face=\"Arial\"><br>WEB Interface: <a href=\"%s\">S 3200</a><br></font>\n"
                "   %s\n"
@@ -1811,7 +1811,8 @@ int P4d::loadHtmlHeader()
    asprintf(&file, "%s/mail-head.html", confDir);
 
    if (fileExists(file))
-      loadFromFile(file, &htmlHeader);
+      if (loadFromFile(file, &htmlHeader) == success)
+         htmlHeader.append("\0");
 
    free(file);
 
@@ -1851,7 +1852,8 @@ int P4d::loadHtmlHeader()
                      "        border: 1px solid #D2D2D2;\n"
                      "      }\n"
                      "      </style>\n"
-                     "  </head>\n");
+                     "  </head>"
+                     "\0");
 
    return success;
 }
