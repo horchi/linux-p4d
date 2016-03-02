@@ -28,6 +28,7 @@ P4d::P4d()
    tableJobs = 0;
    tableSensorAlert = 0;
    tableSchemaConf = 0;
+   tableSmartConf = 0;
    tableValueFacts = 0;
    tableMenu = 0;
    tableConfig = 0;
@@ -219,6 +220,9 @@ int P4d::initDb()
    tableSchemaConf = new cDbTable(connection, "schemaconf");
    if (tableSchemaConf->open() != success) return fail;
 
+   tableSmartConf = new cDbTable(connection, "smartconfig");
+   if (tableSmartConf->open() != success) return fail;
+
    tableConfig = new cDbTable(connection, "config");
    if (tableConfig->open() != success) return fail;
 
@@ -343,6 +347,7 @@ int P4d::exitDb()
    delete tableJobs;               tableJobs = 0;
    delete tableSensorAlert;        tableSensorAlert = 0;
    delete tableSchemaConf;         tableSchemaConf = 0;
+   delete tableSmartConf;          tableSmartConf = 0;
    delete tableErrors;             tableErrors = 0;
    delete tableConfig;             tableConfig = 0;
 
@@ -410,6 +415,7 @@ int P4d::initialize(int truncate)
       
       tableValueFacts->truncate();
       tableSchemaConf->truncate();
+      tableSmartConf->truncate();
       tableMenu->truncate();
    }
 
@@ -496,7 +502,7 @@ int P4d::updateSchemaConfTable()
       tableSchemaConf->clear();
       tableSchemaConf->setValue("ADDRESS", addr);
       tableSchemaConf->setValue("TYPE", type);
-   
+
       if (!tableSchemaConf->find())
       {
          tableSchemaConf->setValue("KIND", "value");
@@ -507,6 +513,21 @@ int P4d::updateSchemaConfTable()
 
          tableSchemaConf->store();
          added++;
+      }
+
+      tableSmartConf->clear();
+      tableSmartConf->setValue("ADDRESS", addr);
+      tableSmartConf->setValue("TYPE", type);
+
+      if (!tableSmartConf->find())
+      {
+         tableSmartConf->setValue("KIND", "value");
+         tableSmartConf->setValue("STATE", "A");
+         tableSmartConf->setValue("COLOR", "black");
+         tableSmartConf->setValue("XPOS", 12);
+         tableSmartConf->setValue("YPOS", y);
+
+         tableSmartConf->store();
       }
    }
 

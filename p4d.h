@@ -114,6 +114,7 @@ class P4d : public FroelingService
       cDbTable* tableJobs;
       cDbTable* tableSensorAlert;
       cDbTable* tableSchemaConf;
+      cDbTable* tableSmartConf;
       cDbTable* tableConfig;
 
       cDbStatement* selectActiveValueFacts;

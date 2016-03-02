@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.1.34"
-#define VERSION_DATE "01.03.2016"
+#define _VERSION     "0.1.35"
+#define VERSION_DATE "02.03.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2016-03-02:  version 0.1.35
+   - added:  update of table smartconf
 
 2016-03-01:  version 0.1.34
    - change: ported to new db api
