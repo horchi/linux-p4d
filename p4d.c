@@ -1127,6 +1127,9 @@ int P4d::update()
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
 
+      if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
+         title = tableValueFacts->getStrValue("USRTITLE");
+      
       if (tableValueFacts->hasValue("TYPE", "VA"))
       {
          Value v(addr);

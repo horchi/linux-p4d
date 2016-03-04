@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.1.36"
+#define _VERSION     "0.1.37"
 #define VERSION_DATE "04.03.2016"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2016-03-04:  version 0.1.37
+   - bugfix: remove steering chars in unit (delivered by S-3200)
 
 2016-03-04:  version 0.1.36
    - bugfix: fixed mode display in state mails

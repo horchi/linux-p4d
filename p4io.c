@@ -1142,6 +1142,14 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    removeCharsExcept(name, nameChars);
    asprintf(&v->name, "%s_0x%x", name.c_str(), v->address);
 
+   // patch unit
+
+   for (int i = 0; v->unit[i]; i++)
+      if (!isprint(v->unit[i]))
+         v->unit[i] = ' ';
+         
+   allTrim(v->unit);
+   
    return status;   
 }
 
