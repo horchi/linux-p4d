@@ -1222,7 +1222,7 @@ int P4d::update()
             case udMode:
             {
                store(now, type, udMode, currentState.mode, factor, currentState.modeinfo);
-               addParameter2Mail(title, currentState.stateinfo);
+               addParameter2Mail(title, currentState.modeinfo);
                   
                break;
             }
