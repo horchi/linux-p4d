@@ -61,10 +61,10 @@ if ($store == "store")
 
 if ($edit != "")
 {
-   if (haveLogin()) 
+   if (haveLogin())
    {
       $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
-      
+
       if ($res == 0)
       {
          echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
@@ -81,9 +81,9 @@ if ($edit != "")
          echo "      </form>\n";
       }
       else if ($res == -2)
-         echo "      <br/><div class=\"infoWarn\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";   
+         echo "      <br/><div class=\"infoWarn\"><b><center>Parametertyp noch nicht unterstützt</center></b></div><br/>";
       else
-         echo "      <br/><div class=\"infoError\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";   
+         echo "      <br/><div class=\"infoError\"><b><center>Kommunikationsfehler, Details im syslog</center></b></div><br/>";
    }
    else
    {
@@ -147,7 +147,7 @@ function showMenu($current)
       $i++;
    }
 
-   if (haveLogin()) 
+   if (haveLogin())
    {
       echo "          <br/><br/>\n";
       echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
@@ -195,7 +195,7 @@ function showChilds($parnt, $level)
          or die("Error" . mysql_error());
 
    $count = mysql_numrows($result);
-   
+
    // syslog(LOG_DEBUG, "p4: menu width " . $count . " childs of parent " . $parnt . " on level " . $level);
 
    while ($i < $count)
@@ -240,18 +240,18 @@ function showChilds($parnt, $level)
             case 0x40: $txttp = "Par Set2";  break;
             case 0x0a: $txttp = "Par Zeit";  break;
             case 0x11: $txttp = "Dig Out";   break;
-            case 0x12: $txttp = "Anl Out";   break; 
-            case 0x13: $txttp = "Dig In";    break; 
+            case 0x12: $txttp = "Anl Out";   break;
+            case 0x13: $txttp = "Dig In";    break;
             case 0x22: $txttp = "Empty?";    break;
             case 0x23: $txttp = "Reset";     break;
             case 0x26: $txttp = "Zeiten";    break;
             case 0x3a: $txttp = "Anzeigen";  break;
             case 0x16: $txttp = "Firmware";  break;
-               
+
             default:
                $txttp = sprintf("0x%02x", $type);
          }
-         
+
          $txtu1 = sprintf("0x%02x", $u1);
          $txtu2 = sprintf("0x%04x", $u2);
          $txtchild = $child ? sprintf("0x%04x", $child) : "-";
@@ -262,7 +262,7 @@ function showChilds($parnt, $level)
       {
          if ($i > 0)
             endTable();
-         
+
          beginTable($title);
       }
       elseif (!$level && !$child && !$address)  // ignore items without address and child in level 0
@@ -307,12 +307,12 @@ function showChilds($parnt, $level)
             echo "            <td><button class=buttont type=submit name=edit value=$id>$title</button></td>\n";
          else
             echo "            <td>&nbsp;&nbsp;$title</td>\n";
-         
+
          if ($value != "on (A)")
             echo "            <td style=\"color:blue\">$value</td>\n";
          else
             echo "            <td style=\"color:green\">$value</td>\n";
-         
+
          echo "          </tr>\n";
       }
 
@@ -339,15 +339,15 @@ function getValue($address)
 
    $row = mysql_fetch_array($result, MYSQL_ASSOC);
    $max = $row['max'];
-   
+
    $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f
               where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = '%s' and f.type = 'VA'", $max, $address);
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
-   
+
    $result = mysql_query($strQuery)
       or die("Error" . mysql_error());
-   
+
    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
    {
       $value = $row['s_value'];
@@ -399,7 +399,7 @@ function requestValue($address)
          }
       }
    }
-   
+
    syslog(LOG_DEBUG, "p4: timeout on value request ");
 
    return "-";
@@ -410,7 +410,7 @@ function requestValue($address)
 //***************************************************************************
 
 function getParameter($id)
-{   
+{
    $id = mysql_real_escape_string($id);
    $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
@@ -483,7 +483,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
          }
       }
    }
-   
+
    syslog(LOG_DEBUG, "p4: timeout on parameter request ");
 
    return -1;
@@ -525,9 +525,9 @@ function storeParameter($id, &$value, &$unit, &$res)
 
             return -1;
          }
-         
+
          list($state, $value, $unit, $default, $min, $max, $digits) = split("#", $response);
-         
+
          return 0;
       }
    }

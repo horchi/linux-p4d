@@ -49,9 +49,9 @@ for s in $SENSORS; do
                 where f.address = s.address and f.type = s.type \
                     and time = '$LASTTIME' and s.address = '$ADDR' and s.type = '$TYPE';"`
 
-    PARAMS=`$MYSQL -e "select concat(replace(case when f.usrtitle is null or f.usrtitle = '' then f.title else f.usrtitle end, ' ', '%20'), 
-                                     '%22%29.State%28', 
-                                     case when s.text is null then s.value else concat('%22',replace(s.text, ' ', '%20'), '%22') end,  
+    PARAMS=`$MYSQL -e "select concat(replace(case when f.usrtitle is null or f.usrtitle = '' then f.title else f.usrtitle end, ' ', '%20'),
+                                     '%22%29.State%28',
+                                     case when s.text is null then s.value else concat('%22',replace(s.text, ' ', '%20'), '%22') end,
                                      '%29') \
             from samples s, valuefacts f \
             where f.address = s.address and f.type = s.type \
@@ -61,25 +61,25 @@ for s in $SENSORS; do
         echo "last data was: $LASTPARAMS" >> $LOG
         echo "actual data is: $PARAMS" >> $LOG
     fi
-    
+
     if [ "$PARAMS" == "$LASTPARAMS" ]; then
         if [ "$1" == "debug" ]; then
             echo "skipping "$PARAMS", not changed"
         elif [ -n $LOG ]; then
             echo "skipping "$PARAMS", not changed" >> $LOG
         fi
-        
+
         continue;
     fi
-    
+
     if [ "$1" == "debug" ]; then
         echo curl "$HM_URL_BASE$PARAMS;"
     else
         if [ -n $LOG ]; then
             echo "calling curl $HM_URL_BASE$PARAMS;" >> $LOG
         fi
-        
+
         curl "$HM_URL_BASE$PARAMS;" > /dev/null 2>&1
     fi
-       
+
 done

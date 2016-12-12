@@ -231,12 +231,7 @@ int P4d::initDb()
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
 
    selectActiveValueFacts->build("select ");
-   selectActiveValueFacts->bind("ADDRESS", cDBS::bndOut);
-   selectActiveValueFacts->bind("TYPE", cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind("UNIT", cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind("FACTOR", cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind("TITLE", cDBS::bndOut, ", ");
-   selectActiveValueFacts->bind("NAME", cDBS::bndOut, ", ");
+   selectActiveValueFacts->bindAllOut();
    selectActiveValueFacts->build(" from %s where ", tableValueFacts->TableName());
    selectActiveValueFacts->bind("STATE", cDBS::bndIn | cDBS::bndSet);
 
@@ -247,12 +242,7 @@ int P4d::initDb()
    selectAllValueFacts = new cDbStatement(tableValueFacts);
 
    selectAllValueFacts->build("select ");
-   selectAllValueFacts->bind("ADDRESS", cDBS::bndOut);
-   selectAllValueFacts->bind("TYPE", cDBS::bndOut, ", ");
-   selectAllValueFacts->bind("STATE", cDBS::bndOut, ", ");
-   selectAllValueFacts->bind("UNIT", cDBS::bndOut, ", ");
-   selectAllValueFacts->bind("FACTOR", cDBS::bndOut, ", ");
-   selectAllValueFacts->bind("TITLE", cDBS::bndOut, ", ");
+   selectAllValueFacts->bindAllOut();
    selectAllValueFacts->build(" from %s", tableValueFacts->TableName());
 
    status += selectAllValueFacts->prepare();
@@ -262,12 +252,7 @@ int P4d::initDb()
    selectAllMenuItems = new cDbStatement(tableMenu);
 
    selectAllMenuItems->build("select ");
-   selectAllMenuItems->bind("ID", cDBS::bndOut);
-   selectAllMenuItems->bind("ADDRESS", cDBS::bndOut, ", ");
-   selectAllMenuItems->bind("TYPE", cDBS::bndOut, ", ");
-   selectAllMenuItems->bind("UNIT", cDBS::bndOut, ", ");
-   selectAllMenuItems->bind("VALUE", cDBS::bndOut, ", ");
-   selectAllMenuItems->bind("TITLE", cDBS::bndOut, ", ");
+   selectAllMenuItems->bindAllOut();
    selectAllMenuItems->build(" from %s", tableMenu->TableName());
 
    status += selectAllMenuItems->prepare();
