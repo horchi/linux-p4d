@@ -11,60 +11,59 @@ include("functions.php");
  if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
  {
   $_SESSION['initialized'] = true;
-   
+
    // -------------------------
    // establish db connection
-   
-   mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-   mysql_select_db($mysqldb) or die("<br/>DB error");
-   mysql_query("set names 'utf8'");
-   mysql_query("SET lc_time_names = 'de_DE'");
-   
+
+   $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+   $mysqli->query("set names 'utf8'");
+   $mysqli->query("SET lc_time_names = 'de_DE'");
+
    // ------------------
    // get configuration
-   
-   readConfigItem("chartStart", $_SESSION['chartStart']);
-   readConfigItem("chartDiv", $_SESSION['chartDiv']);
-   readConfigItem("chartXLines", $_SESSION['chartXLines']);
-   readConfigItem("chart1", $_SESSION['chart1']);
-   readConfigItem("chart2", $_SESSION['chart2']);
-   
+
+   readConfigItem($mysqli, "chartStart", $_SESSION['chartStart']);
+   readConfigItem($mysqli, "chartDiv", $_SESSION['chartDiv']);
+   readConfigItem($mysqli, "chartXLines", $_SESSION['chartXLines']);
+   readConfigItem($mysqli, "chart1", $_SESSION['chart1']);
+   readConfigItem($mysqli, "chart2", $_SESSION['chart2']);
+
    // Chart 3+4
 
-   readConfigItem("chart34", $_SESSION['chart34']);
-   readConfigItem("chart3", $_SESSION['chart3']);
-   readConfigItem("chart4", $_SESSION['chart4']);
+   readConfigItem($mysqli, "chart34", $_SESSION['chart34']);
+   readConfigItem($mysqli, "chart3", $_SESSION['chart3']);
+   readConfigItem($mysqli, "chart4", $_SESSION['chart4']);
 
-   readConfigItem("user", $_SESSION['user']);
-   readConfigItem("passwd", $_SESSION['passwd']);
-   
-   readConfigItem("mail", $_SESSION['mail']);
-   readConfigItem("htmlMail", $_SESSION['htmlMail']);
-   readConfigItem("stateMailTo", $_SESSION['stateMailTo']);
-   readConfigItem("stateMailStates", $_SESSION['stateMailStates']);
-   readConfigItem("errorMailTo", $_SESSION['errorMailTo']);
-   readConfigItem("mailScript", $_SESSION['mailScript']);
-   
-   readConfigItem("tsync", $_SESSION['tsync']);
-   readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
-   readConfigItem("heatingType", $_SESSION['heatingType']);
-   readConfigItem("stateAni", $_SESSION['stateAni']);
-   readConfigItem("schemaRange", $_SESSION['schemaRange']);
-   readConfigItem("schema", $_SESSION['schema']);
-   readConfigItem("schemaBez", $_SESSION['schemaBez']);
-   readConfigItem("valuesBG", $_SESSION['valuesBG']);
-   readConfigItem("pumpON",  $_SESSION['pumpON']);
-   readConfigItem("pumpOFF", $_SESSION['pumpOFF']);
-   readConfigItem("ventON",  $_SESSION['ventON']);
-   readConfigItem("ventOFF", $_SESSION['ventOFF']);
-   readConfigItem("pumpsVA", $_SESSION['pumpsVA']);
-   readConfigItem("pumpsDO", $_SESSION['pumpsDO']);
-   readConfigItem("pumpsAO", $_SESSION['pumpsAO']);
-   readConfigItem("webUrl",  $_SESSION['webUrl']);
-   
+   readConfigItem($mysqli, "user", $_SESSION['user']);
+   readConfigItem($mysqli, "passwd", $_SESSION['passwd']);
+
+   readConfigItem($mysqli, "mail", $_SESSION['mail']);
+   readConfigItem($mysqli, "htmlMail", $_SESSION['htmlMail']);
+   readConfigItem($mysqli, "stateMailTo", $_SESSION['stateMailTo']);
+   readConfigItem($mysqli, "stateMailStates", $_SESSION['stateMailStates']);
+   readConfigItem($mysqli, "errorMailTo", $_SESSION['errorMailTo']);
+   readConfigItem($mysqli, "mailScript", $_SESSION['mailScript']);
+
+   readConfigItem($mysqli, "tsync", $_SESSION['tsync']);
+   readConfigItem($mysqli, "maxTimeLeak", $_SESSION['maxTimeLeak']);
+   readConfigItem($mysqli, "heatingType", $_SESSION['heatingType']);
+   readConfigItem($mysqli, "stateAni", $_SESSION['stateAni']);
+   readConfigItem($mysqli, "schemaRange", $_SESSION['schemaRange']);
+   readConfigItem($mysqli, "schema", $_SESSION['schema']);
+   readConfigItem($mysqli, "schemaBez", $_SESSION['schemaBez']);
+   readConfigItem($mysqli, "valuesBG", $_SESSION['valuesBG']);
+   readConfigItem($mysqli, "pumpON",  $_SESSION['pumpON']);
+   readConfigItem($mysqli, "pumpOFF", $_SESSION['pumpOFF']);
+   readConfigItem($mysqli, "ventON",  $_SESSION['ventON']);
+   readConfigItem($mysqli, "ventOFF", $_SESSION['ventOFF']);
+   readConfigItem($mysqli, "pumpsVA", $_SESSION['pumpsVA']);
+   readConfigItem($mysqli, "pumpsDO", $_SESSION['pumpsDO']);
+   readConfigItem($mysqli, "pumpsAO", $_SESSION['pumpsAO']);
+   readConfigItem($mysqli, "webUrl",  $_SESSION['webUrl']);
+
    // ------------------
    // check for defaults
-   
+
    if ($_SESSION['chartStart'] == "")
       $_SESSION['chartStart'] = "5";
 
@@ -73,18 +72,18 @@ include("functions.php");
 
    if ($_SESSION['chartXLines'] == "")
       $_SESSION['chartXLines'] = "0";
-   else 
+   else
       $_SESSION['chartXLines'] = "1";
 
    if ($_SESSION['chart1'] == "")
       $_SESSION['chart1'] = "0,1,113,18";
-   
+
    if ($_SESSION['chart2'] == "")
       $_SESSION['chart2'] = "118,225,21,25,4,8";
-   
+
    if ($_SESSION['chart34'] == "")
       $_SESSION['chart34'] = "0";
-	  
+
    if ($_SESSION['heatingType'] == "")
       $_SESSION['heatingType'] = "p4";
 
@@ -112,30 +111,30 @@ include("functions.php");
    if ($_SESSION['pumpsAO'] == "")
       $_SESSION['pumpsAO'] = "3,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22";
 
-   mysql_close();
+   $mysqli->close();
 }
 
 function printHeader($refresh = 0)
 {
    // ----------------
    // HTML Head
-   
+
    //<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
-   
+
    echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">
 <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"de\" lang=\"de\">
   <head>
     <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n";
    $stylesheet = (checkMobile() == 1)? "stylesheet.css" : "stylesheet.css";
-      
+
    if ($refresh)
       echo "    <meta http-equiv=\"refresh\" content=\"$refresh\">\n";
-   
+
    echo "    <meta name=\"author\" content=\"Jörg Wendel\">
     <meta name=\"copyright\" content=\"Jörg Wendel\">
     <LINK REL=\"SHORTCUT ICON\" HREF=\"" . $_SESSION['heatingType'] . ".ico\">
     <link rel=\"stylesheet\" type=\"text/css\" href=\"$stylesheet\">
-    <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script> 
+    <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script>
     <title>Fröling  " . $_SESSION['heatingType'] . "</title>
   </head>
   <body>
@@ -156,7 +155,7 @@ function printHeader($refresh = 0)
    }
    else
       echo "    <a class=\"button1\" href=\"login.php\">Login</a>\n";
-   
+
 //   echo $stylesheet;
    echo "    <div class=\"content\">\n";
 }

@@ -28,15 +28,14 @@ if (isset($_SESSION["menu"]))
 // -------------------------
 // establish db connection
 
-mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb);
-mysql_query("set names 'utf8'");
-mysql_query("SET lc_time_names = 'de_DE'");
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli->query("set names 'utf8'");
+$mysqli->query("SET lc_time_names = 'de_DE'");
 
 // -----------------------
 // Menü
 
-showMenu($menu != "" ? $menu : $lastMenu);
+showMenu($mysqli, $menu != "" ? $menu : $lastMenu);
 
 // -----------------------
 // Store Parameter
@@ -93,14 +92,14 @@ if ($edit != "")
 
 if ($menu == "update")
 {
-   requestAction("updatemenu", 30, 0, "", $resonse);
+   requestAction($mysqli, "updatemenu", 30, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/>";
    $menu = $lastMenu;
 }
 
 elseif ($menu == "init")
 {
-   requestAction("initmenu", 60, 0, "", $resonse);
+   requestAction($mysqli, "initmenu", 60, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
    $menu = $lastMenu;
 }
@@ -110,7 +109,7 @@ if ($menu != "" || $lastMenu != "")
    $lastMenu = $menu != "" ? $menu : $lastMenu;
 
    echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-   showChilds($lastMenu, 0);
+   showChilds($mysqli, $lastMenu, 0);
    echo "      </form>\n";
 
    $_SESSION["menu"] = $lastMenu;
@@ -122,22 +121,22 @@ include("footer.php");
 // Show Menu
 //***************************************************************************
 
-function showMenu($current)
+function showMenu($mysqli, $current)
 {
    $i = 0;
 
-   $result = mysql_query("select * from menu where parent = " . 1)
-         or die("Error" . mysql_error());
+   $result = $mysqli->query("select * from menu where parent = " . 1)
+         or die("Error" . $mysqli->error());
 
-   $count = mysql_numrows($result);
+   $count = $result->num_rows;
 
    echo "      <div>\n";
    echo "        <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
 
    while ($i < $count)
    {
-      $child = mysql_result($result, $i, "child");
-      $title = mysql_result($result, $i, "title");
+      $child = mysqli_result($result, $i, "child");
+      $title = mysqli_result($result, $i, "title");
 
       if ($child == $current)
          echo "          <button class=\"button2sel\" type=submit name=menu value=$child>$title</button>\n";
@@ -184,29 +183,29 @@ function endTable()
 // Show Childs
 //***************************************************************************
 
-function showChilds($parnt, $level)
+function showChilds($mysqli, $parnt, $level)
 {
    global $debug;
 
-   $parnt = mysql_real_escape_string($parnt);
+   $parnt = $mysqli->real_escape_string($parnt);
    $i = 0;
 
-   $result = mysql_query("select * from menu where parent = " . $parnt)
-         or die("Error" . mysql_error());
+   $result = $mysqli->query("select * from menu where parent = " . $parnt)
+         or die("Error" . $mysqli->error());
 
-   $count = mysql_numrows($result);
+   $count = $result->num_rows;
 
    // syslog(LOG_DEBUG, "p4: menu width " . $count . " childs of parent " . $parnt . " on level " . $level);
 
    while ($i < $count)
    {
-      $id      = mysql_result($result, $i, "id");
-      $child   = mysql_result($result, $i, "child");
-      $address = mysql_result($result, $i, "address");
-      $title   = mysql_result($result, $i, "title");
-      $type    = mysql_result($result, $i, "type");
-      $u1      = mysql_result($result, $i, "unknown1");
-      $u2      = mysql_result($result, $i, "unknown2");
+      $id      = mysqli_result($result, $i, "id");
+      $child   = mysqli_result($result, $i, "child");
+      $address = mysqli_result($result, $i, "address");
+      $title   = mysqli_result($result, $i, "title");
+      $type    = mysqli_result($result, $i, "type");
+      $u1      = mysqli_result($result, $i, "unknown1");
+      $u2      = mysqli_result($result, $i, "unknown2");
       $value   = "";
 
       if (rtrim($title) == "" && !$debug)
@@ -222,10 +221,10 @@ function showChilds($parnt, $level)
       }
 
       if ($type == 0x03 || $type == 0x46)
-         $value = getValue($address);
+         $value = getValue($mysqli, $address);
 
       if ($value == "")
-         $value = getParameter($id);
+         $value = getParameter($mysqli, $id);
 
       if ($debug)
       {
@@ -317,7 +316,7 @@ function showChilds($parnt, $level)
       }
 
       if ($child)
-         showChilds($child, $level+1);
+         showChilds($mysqli, $child, $level+1);
 
       $i++;
    }
@@ -330,14 +329,14 @@ function showChilds($parnt, $level)
 // Get Value
 //***************************************************************************
 
-function getValue($address)
+function getValue($mysqli, $address)
 {
-   $address = mysql_real_escape_string($address);
+   $address = $mysqli->real_escape_string($address);
 
-   $result = mysql_query("select max(time) as max from samples")
-      or die("Error" . mysql_error());
+   $result = $mysqli->query("select max(time) as max from samples")
+      or die("Error" . $mysqli->error());
 
-   $row = mysql_fetch_array($result, MYSQL_ASSOC);
+   $row = $result->fetch_array(MYSQLI_ASSOC);
    $max = $row['max'];
 
    $strQuery = sprintf("select s.value as s_value, f.unit as f_unit from samples s, valuefacts f
@@ -345,48 +344,48 @@ function getValue($address)
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
-   $result = mysql_query($strQuery)
-      or die("Error" . mysql_error());
+   $result = $mysqli->query($strQuery)
+      or die("Error" . $mysqli->error());
 
-   if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+   if ($row = $result->fetch_array(MYSQLI_ASSOC))
    {
       $value = $row['s_value'];
       $unit = $row['f_unit'];
       return $value . $unit;
    }
 
-   return ""; // requestValue($address);
+   return ""; // requestValue($mysqli, $address);
 }
 
 //***************************************************************************
 // Request Value
 //***************************************************************************
 
-function requestValue($address)
+function requestValue($mysqli, $address)
 {
-   $address = mysql_real_escape_string($address);
+   $address = $mysqli->real_escape_string($address);
    $timeout = time() + 10;
 
    syslog(LOG_DEBUG, "p4: requesting value " . $address);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'")
-      or die("Error" . mysql_error());
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'")
+      or die("Error" . $mysqli->error());
 
-   $id = mysql_insert_id();
+   $id = $mysqli->insert_id;
 
    while (time() < $timeout)
    {
       usleep(10000);
 
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
-         or die("Error" . mysql_error());
+      $result = $mysqli->query("select * from jobs where id = $id and state = 'D'")
+         or die("Error" . $mysqli->error());
 
-      $count = mysql_numrows($result);
+      $count = $result->num_rows;
 
       if ($count == 1)
       {
-         $response = mysql_result($result, 0, "result");
-         list($state, $value) = split(":", $response);
+         $response = mysqli_result($result, 0, "result");
+         list($state, $value) = explode(":", $response);
 
          if ($state == "fail")
          {
@@ -409,17 +408,17 @@ function requestValue($address)
 // Get Parameter
 //***************************************************************************
 
-function getParameter($id)
+function getParameter($mysqli, $id)
 {
-   $id = mysql_real_escape_string($id);
+   $id = $mysqli->real_escape_string($id);
    $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
-   $result = mysql_query($strQuery)
-      or die("Error" . mysql_error());
+   $result = $mysqli->query($strQuery)
+      or die("Error" . $mysqli->error());
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
-   if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+   if ($row = $result->fetch_array(MYSQLI_ASSOC))
    {
       $value = $row['value'];
       $unit = $row['unit'];
@@ -435,41 +434,41 @@ function getParameter($id)
 
 function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max, &$digits)
 {
-   $id = mysql_real_escape_string($id);
+   $id = $mysqli->real_escape_string($id);
 
    $timeout = time() + 5;
 
    $address = 0;
    $type = "";
 
-   $result = mysql_query("select * from menu where id = " . $id)
-         or die("Error" . mysql_error());
+   $result = $mysqli->query("select * from menu where id = " . $id)
+         or die("Error" . $mysqli->error());
 
-   if (mysql_numrows($result) != 1)
+   if ($result->num_rows != 1)
       return -1;
 
-   $address = mysql_result($result, 0, "address");
-   $title = mysql_result($result, 0, "title");
-   $type = mysql_result($result, 0, "type");
+   $address = mysqli_result($result, 0, "address");
+   $title = mysqli_result($result, 0, "title");
+   $type = mysqli_result($result, 0, "type");
 
    syslog(LOG_DEBUG, "p4: requesting parameter" .$id . " at address " . $address . " type " . $type);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$id'")
-      or die("Error" . mysql_error());
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$id'")
+      or die("Error" . $mysqli->error());
 
-   $jobid = mysql_insert_id();
+   $jobid = $mysqli->insert_id;
 
    while (time() < $timeout)
    {
       usleep(10000);
 
-      $result = mysql_query("select * from jobs where id = $jobid and state = 'D'")
-         or die("Error" . mysql_error());
+      $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
+         or die("Error" . $mysqli->error());
 
-      if (mysql_numrows($result) > 0)
+      if ($result->num_rows > 0)
       {
-         $response = mysql_result($result, 0, "result");
-         list($state, $value, $unit, $default, $min, $max, $digits) = split("#", $response);
+         $response = mysqli_result($result, 0, "result");
+         list($state, $value, $unit, $default, $min, $max, $digits) = explode("#", $response);
 
          if ($state == "fail")
          {
@@ -495,38 +494,38 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
 
 function storeParameter($id, &$value, &$unit, &$res)
 {
-   $id = mysql_real_escape_string($id);
-   $value = mysql_real_escape_string($value);
+   $id = $mysqli->real_escape_string($id);
+   $value = $mysqli->real_escape_string($value);
    $timeout = time() + 5;
    $state = "";
 
    syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value is " . $value);
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = 'setp', "
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'setp', "
                . "address = '$id', data = '$value'")
-      or die("Error" . mysql_error());
+      or die("Error" . $mysqli->error());
 
-   $jobid = mysql_insert_id();
+   $jobid = $mysqli->insert_id;
 
    while (time() < $timeout)
    {
       usleep(10000);
 
-      $result = mysql_query("select * from jobs where id = $jobid and state = 'D'")
-         or die("Error" . mysql_error());
+      $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
+         or die("Error" . $mysqli->error());
 
-      if (mysql_numrows($result) > 0)
+      if ($result->num_rows > 0)
       {
-         $response = mysql_result($result, 0, "result");
+         $response = mysqli_result($result, 0, "result");
 
          if (!strstr($response, "success"))
          {
-            list($state, $res) = split("#", $response);
+            list($state, $res) = explode("#", $response);
 
             return -1;
          }
 
-         list($state, $value, $unit, $default, $min, $max, $digits) = split("#", $response);
+         list($state, $value, $unit, $default, $min, $max, $digits) = explode("#", $response);
 
          return 0;
       }

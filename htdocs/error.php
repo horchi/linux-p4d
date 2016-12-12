@@ -1,5 +1,5 @@
 <?php
-  
+
 include("header.php");
 
 printHeader();
@@ -7,10 +7,9 @@ printHeader();
 // -------------------------
 // establish db connection
 
-mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb);
-mysql_query("set names 'utf8'");
-mysql_query("SET lc_time_names = 'de_DE'");
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli->query("set names 'utf8'");
+$mysqli->query("SET lc_time_names = 'de_DE'");
 
 
 showTable("Fehlerspeicher");
@@ -30,7 +29,7 @@ function showTable($tableTitle)
    echo "        </tr>\n";
    echo "      </table>\n";
    echo "      <br/>\n";
-   
+
    echo "      <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
         <tr class=\"tableHead1\">
           <td> Zeit </td>
@@ -39,17 +38,17 @@ function showTable($tableTitle)
           <td> Fehler </td>
         </tr>\n";
 
-   $result = mysql_query("select * from errors order by time desc")
-      or die("<br/>Error" . mysql_error());
+   $result = $mysqli->query("select * from errors order by time desc")
+      or die("<br/>Error" . $mysqli->error());
 
-   $num = mysql_numrows($result);
-   
-   while ($i < $num) 
+   $num = $result->num_rows;
+
+   while ($i < $num)
    {
-      $time    = mysql_result($result, $i, "time");
-      $nr      = mysql_result($result, $i, "number");
-      $state   = mysql_result($result, $i, "state");
-      $text    = mysql_result($result, $i, "text");
+      $time    = mysqli_result($result, $i, "time");
+      $nr      = mysqli_result($result, $i, "number");
+      $state   = mysqli_result($result, $i, "state");
+      $text    = mysqli_result($result, $i, "text");
 
       if ($i % 2)
          echo "         <tr class=\"tableLight\">";
@@ -62,7 +61,7 @@ function showTable($tableTitle)
            <td> $state </td>
            <td> $text </td>\n";
       echo "        </tr>\n";
-      
+
       $i++;
    }
 

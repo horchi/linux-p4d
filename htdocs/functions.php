@@ -1,6 +1,6 @@
 <?php
 
-if(!function_exists("functions_once")) 
+if(!function_exists("functions_once"))
 {
 
 function functions_once()  {  }
@@ -29,11 +29,11 @@ function haveLogin()
    return false;
 }
 
-function checkLogin($user, $passwd)
+function checkLogin($mysqli, $user, $passwd)
 {
    $md5 = md5($passwd);
 
-   if (requestAction("check-login", 5, 0, "$user:$md5", $resonse) == 0)
+   if (requestAction($mysqli, "check-login", 5, 0, "$user:$md5", $resonse) == 0)
       return true;
 
    return false;
@@ -46,8 +46,8 @@ function checkLogin($user, $passwd)
 function datePicker($title, $name, $year, $day, $month)
 {
    $startyear = date("Y")-10;
-   $endyear=date("Y")+1; 
-   
+   $endyear=date("Y")+1;
+
    $months = array('','Januar','Februar','März','April','Mai',
                    'Juni','Juli','August', 'September','Oktober','November','Dezember');
 
@@ -64,11 +64,11 @@ function datePicker($title, $name, $year, $day, $month)
    }
 
    $html .= "  </select>\n";
-   
+
    // month
 
    $html .= "  <select name=\"" . $name . "month\">\n";
-   
+
    for ($i = 1; $i <= 12; $i++)
    {
       $sel = $i == $month ? "SELECTED" : "";
@@ -80,7 +80,7 @@ function datePicker($title, $name, $year, $day, $month)
    // year
 
    $html .= "  <select name=\"" . $name . "year\">\n";
-   
+
    for ($i = $startyear; $i <= $endyear; $i++)
    {
       $sel = $i == $year  ? "SELECTED" : "";
@@ -97,42 +97,57 @@ function datePicker($title, $name, $year, $day, $month)
 // ---------------------------------------------------------------------------
 
 function chkDir($path, $rights = 0777)
-{ 
+{
    if (!(is_dir($path) OR is_file($path) OR is_link($path)))
       return mkdir($path, $rights);
    else
-      return true; 
+      return true;
 }
 
+function mysqli_result($res, $row=0, $col=0)
+{
+   $numrows = mysqli_num_rows($res);
+
+   if ($numrows && $row <= ($numrows-1) && $row >=0)
+   {
+      mysqli_data_seek($res,$row);
+      $resrow = (is_numeric($col)) ? mysqli_fetch_row($res) : mysqli_fetch_assoc($res);
+
+       if (isset($resrow[$col]))
+         return $resrow[$col];
+   }
+
+   return false;
+}
 // ---------------------------------------------------------------------------
 // Request Action
 // ---------------------------------------------------------------------------
 
-function requestAction($cmd, $timeout, $address, $data, &$response)
+function requestAction($mysqli, $cmd, $timeout, $address, $data, &$response)
 {
    $timeout = time() + $timeout;
    $response = "";
 
-   $address = mysql_real_escape_string($address);
-   $data = mysql_real_escape_string($data);
-   $cmd = mysql_real_escape_string($cmd);
+   $address = mysqli_real_escape_string($mysqli, $address);
+   $data = mysqli_real_escape_string($mysqli, $data);
+   $cmd = mysqli_real_escape_string($mysqli, $cmd);
 
    syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address . ", '" . $data . "'");
 
-   mysql_query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
-      or die("Error" . mysql_error());
-   $id = mysql_insert_id();
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
+      or die("Error" . $mysqli->error());
+   $id = $mysqli->insert_id;
 
    while (time() < $timeout)
    {
       usleep(10000);
 
-      $result = mysql_query("select * from jobs where id = $id and state = 'D'")
-         or die("Error" . mysql_error());
+      $result = $mysqli->query("select * from jobs where id = $id and state = 'D'")
+         or die("Error" . $mysqli->error());
 
-      if (mysql_numrows($result))
+      if ($result->num_rows)
       {
-         $buffer = mysql_result($result, 0, "result");
+         $buffer = mysqli_result($result, 0, "result");
          list($state, $response) = explode(":", $buffer, 2);
 
          if ($state == "fail")
@@ -155,7 +170,7 @@ function seperator($title, $top = 0, $level = 1)
 {
    if ($level == 1)
       $style = "seperatorTitle1";
-   else 
+   else
       $style = "seperatorTitle2";
 
    if ($top)
@@ -171,9 +186,9 @@ function seperator($title, $top = 0, $level = 1)
 // Write Config Item
 // ---------------------------------------------------------------------------
 
-function writeConfigItem($name, $value)
+function writeConfigItem($mysqli, $name, $value)
 {
-   if (requestAction("write-config", 3, 0, "$name:$value", $res) != 0)
+   if (requestAction($mysqli, "write-config", 3, 0, "$name:$value", $res) != 0)
    {
       echo " <br/>failed to write config item $name\n";
       return -1;
@@ -186,9 +201,9 @@ function writeConfigItem($name, $value)
 // Read Config Item
 // ---------------------------------------------------------------------------
 
-function readConfigItem($name, &$value)
+function readConfigItem($mysqli, $name, &$value)
 {
-   if (requestAction("read-config", 3, 0, "$name", $value) != 0)
+   if (requestAction($mysqli, "read-config", 3, 0, "$name", $value) != 0)
    {
       echo " <br/>failed to read config item $name\n";
       return -1;
@@ -206,14 +221,14 @@ function schemaItem($new, $title, $schema)
 {
    global $schema_path, $schema_pattern;
    $actual = "schema-$schema.png";
-   
+
    $end = htmTags($new);
    echo "          $title:\n";
    echo "          <select class=checkbox name=\"schema\">\n";
 
    $path  = $schema_path . $schema_pattern;
-   
-   foreach (glob($path) as $filename) 
+
+   foreach (glob($path) as $filename)
    {
       $filename = basename($filename);
 
@@ -221,9 +236,9 @@ function schemaItem($new, $title, $schema)
       $tp  = substr(strstr($filename, ".", true), 7);
       echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
    }
-   
+
    echo "          </select>\n";
-   echo $end;     
+   echo $end;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,7 +262,7 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
 
-   echo $end;     
+   echo $end;
 }
 
 // ---------------------------------------------------------------------------
@@ -263,7 +278,7 @@ function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
    if ($comment != "")
       echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
 
-   echo $end;     
+   echo $end;
 
 }
 
@@ -283,12 +298,12 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
       $sel = ($value == $opt[1]) ? "SELECTED" : "";
       echo "            <option value='$opt[1]' " . $sel . ">$opt[0]</option>\n";
    }
-   
+
    echo "          </select>\n";
    if ($comment != "")
       echo "          <span class=\"inputComment\"> &nbsp;($comment)</span>\n";
 
-   echo $end;     
+   echo $end;
 }
 
 // ---------------------------------------------------------------------------
@@ -297,7 +312,7 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
 
 function htmTags($new)
 {
-  switch ($new) { 
+  switch ($new) {
    	case 1: echo "        <div class=\"input\">\n"; $end = ""; break;
    	case 2: echo "        </div><br/>\n        <div class=\"input\">\n"; $end = ""; break;
    	case 3: echo "        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;

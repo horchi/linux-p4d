@@ -18,10 +18,9 @@ if (!haveLogin())
 // -------------------------
 // establish db connection
 
-mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb) or die("<br/>DB error");
-mysql_query("set names 'utf8'");
-mysql_query("SET lc_time_names = 'de_DE'");
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli->query("set names 'utf8'");
+$mysqli->query("SET lc_time_names = 'de_DE'");
 
 // ------------------
 // variables
@@ -40,10 +39,10 @@ if ($action == "store")
  // ------------------
  // store settings
 
-  $ID    = explode("|", $_POST["cnt"]); 
+  $ID    = explode("|", $_POST["cnt"]);
 
   for ($i = 1; $i <= intval($_POST["id"]); $i++)
-  { 
+  {
 
     $adr   = "Adr(" . $ID[$i] . ")";
     $type  = "Type(" . $ID[$i] . ")";
@@ -55,18 +54,18 @@ if ($action == "store")
     $madr  = "MAdr(" . $ID[$i] . ")";
     $msub  = "MSub(" . $ID[$i] . ")";
     $mbod  = "MBod(" . $ID[$i] . ")";
-    $act   = ($_POST["Act($ID[$i])"]) ? "A" : "D"; 
-    
+    $act   = ($_POST["Act($ID[$i])"]) ? "A" : "D";
+
     $time = time();
     $data = " address=\"$_POST[$adr]\", type=\"" . mb_strtoupper($_POST[$type]) . "\", min=\"$_POST[$min]\", max=\"$_POST[$max]\", maxrepeat=\"$_POST[$int]\", delta=\"$_POST[$delta]\", rangem=\"$_POST[$range]\", maddress=\"$_POST[$madr]\", msubject=\"$_POST[$msub]\", mbody=\"$_POST[$mbod]\", state=\"$act\" ";
 
-    if ($i == count($ID)-1 && $_POST[$adr] != "") { 
-      $update = "insert into sensoralert set inssp=$time, updsp=$time,"; $where = ""; 
-      $insert = mysql_query($update . $data . $where) or die("<br/>Error: " . mysql_error());
-    } 
+    if ($i == count($ID)-1 && $_POST[$adr] != "") {
+      $update = "insert into sensoralert set inssp=$time, updsp=$time,"; $where = "";
+      $insert = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error());
+    }
     if ($i < count($ID)-1) {
-       $update = "update sensoralert set updsp=$time,"; $where = "where id=" . $ID[$i]; 
-       $update = mysql_query($update . $data . $where) or die("<br/>Error: " . mysql_error());
+       $update = "update sensoralert set updsp=$time,"; $where = "where id=" . $ID[$i];
+       $update = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error());
     }
   }
 
@@ -75,14 +74,14 @@ if ($action == "store")
 // ------------------
 // delete entry
 
-if (substr($action,0,6) == "delete") 
-   $update = mysql_query("delete from sensoralert where id=" . substr($action,6)) or die("<br/>Error: " . mysql_error());
+if (substr($action,0,6) == "delete")
+   $update = $mysqli->query("delete from sensoralert where id=" . substr($action,6)) or die("<br/>Error: " . $mysqli->error());
 
 // ------------------
 // setup form
 
 $i = 0; $cnt = "0";
-echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
+echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
 echo "        <br/>\n";
 echo "        <button class=\"button3\" type=submit name=action value=store>Speichern</button>\n";
 echo "        <br/></br>\n";
@@ -96,20 +95,20 @@ echo "          <span class=\"inputComment\">
                 Hier formulierst du die Bedingungen (Alarmwerte) für die einzelnen Sensoren, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
                 'Aufzeichnung' entnehmen und hier eintragen.<br /><br />
                 <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br />
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp; 
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp;
                 max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br />
                 <b>Zulässige Werte:</b><br /><b>ID:</b> Zahl (auch Hex) | <b>Typ:</b> UD, VA, DI, DO, W1 | <b>min, max, Änderung:</b> Zahl | <b>
                 Intervall, Zeitraum:</b> Zahl (Minuten)<br /><br />
-                für Betreff und Text können folgende Platzhalter verwendet werden:<br /> 
+                für Betreff und Text können folgende Platzhalter verwendet werden:<br />
                 %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br />
                 mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss
           </span>\n";
 echo "        </div><br/>\n";
 seperator("Bedingungen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, 2);
 
-$result = mysql_query("select * from sensoralert") or die("<br/>Error: " . mysql_error());
-     
-  while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+$result = $mysqli->query("select * from sensoralert") or die("<br/>Error: " . $mysqli->error());
+
+  while ($row = $result->fetch_array(MYSQLI_ASSOC))
   {
     $ID =  $row['id']; $i++; $a = chr($ID+64);
     $cnt = $cnt . "|" . $row['id']; $s = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
@@ -131,9 +130,9 @@ $result = mysql_query("select * from sensoralert") or die("<br/>Error: " . mysql
     echo "          <button class=\"button4\" style=\"position:absolute;  margin-top:-76px; margin-left:-866px\" type=submit name=action value=delete$ID onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
     echo "        </div><br />\n";
   }
-mysql_close();
+$mysqli->close();
 $ID++;
-    $cnt = $cnt . "|" . $ID; 
+    $cnt = $cnt . "|" . $ID;
     echo "        <div class=\"input\">\n";
     echo "          <input type=checkbox name=Act(" . $ID . ")" . (($row['state'] == "A") ? " checked" : "") . "></input> aktiv?\n";
     echo "          ID:<input        class=\"inputEdit2\"  style=\"width:33px\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>&nbsp;\n";

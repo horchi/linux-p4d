@@ -14,18 +14,17 @@ printHeader(60);
   // -------------------------
   // establish db connection
 
-  mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-  mysql_select_db($mysqldb);
-  mysql_query("set names 'utf8'");
-  mysql_query("SET lc_time_names = 'de_DE'");
+  $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+  $mysqli->query("set names 'utf8'");
+  $mysqli->query("SET lc_time_names = 'de_DE'");
 
   // -------------------------
   // get last time stamp
 
-  $result = mysql_query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
+  $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
                         "DATE_FORMAT(max(time),'%H:%i:%S') as maxPrettyShort from samples;")
-     or die("Error" . mysql_error());
-  $row = mysql_fetch_assoc($result);
+     or die("Error" . $mysqli->error());
+  $row = $result->fetch_assoc();
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];
   $maxPrettyShort = $row['maxPrettyShort'];
@@ -41,15 +40,15 @@ printHeader(60);
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+  $p4dstate = requestAction($mysqli, "p4d-state", 3, 0, "", $response);
   $load = "";
 
   if ($p4dstate == 0)
-     list($p4dNext, $p4dVersion, $p4dSince, $load) = split("#", $response, 4);
+     list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
 
-  $result = mysql_query("select * from samples where time >= CURDATE()")
-     or die("Error" . mysql_error());
-  $p4dCountDay = mysql_numrows($result);
+  $result = $mysqli->query("select * from samples where time >= CURDATE()")
+     or die("Error" . $mysqli->error());
+  $p4dCountDay = $result->num_rows;
 
   // ------------------
   // State of S 3200
@@ -58,12 +57,12 @@ printHeader(60);
   $mode = "";
   $time = "";
 
-  $state = requestAction("s3200-state", 3, 0, "", $response);
+  $state = requestAction($mysqli, "s3200-state", 3, 0, "", $response);
 
   if ($state == 0)
-     list($time, $state, $status, $mode) = split("#", $response, 4); 
+     list($time, $state, $status, $mode) = explode("#", $response, 4);
 
-  $time = str_replace($wd_value, $wd_disp, $time);   
+  $time = str_replace($wd_value, $wd_disp, $time);
 
   echo "      <div class=\"stateInfo\">\n";
 
@@ -87,29 +86,29 @@ printHeader(60);
   if ($state == 0 || $p4dstate != 0)
      $stateImg = "img/state/state-error.gif";
   elseif ($state == 1)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
   elseif ($state == 2)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
   elseif ($state == 3)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
   elseif ($state == 4)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
   elseif ($state == 5)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
   elseif ($state == 6)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
   elseif ($state == 7)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
   elseif ($state == 8)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
   elseif ($state == 9)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
   elseif ($state == 15 || $state == 70 || $state == 69)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
   elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
   elseif ($state == 60 || $state == 61  || $state == 72)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif"; 
+     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
   else
      $stateImg = "img/type/heating-$heatingType.png";
 
@@ -137,7 +136,7 @@ printHeader(60);
   echo "      <br/>\n";
 
   // ----------------
-  // 
+  //
 
   echo "      <div id=\"aSelect\">\n";
   echo "        <form name='navigation' method='get'>\n";
@@ -166,22 +165,22 @@ printHeader(60);
 
 
   echo "        <td>Sensor</td>\n";
-  echo "        <td>Wert</td>\n";  
+  echo "        <td>Wert</td>\n";
   echo "      </tr>\n";
 
-  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit 
+  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
               from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
 
-  $result = mysql_query($strQuery)
-     or die("Error" . mysql_error());
+  $result = $mysqli->query($strQuery)
+     or die("Error" . $mysqli->error());
 
   $i = 0;
 
-  while ($row = mysql_fetch_assoc($result))
+  while ($row = $result->fetch_assoc())
   {
      $value = $row['s_value'];
      $text = $row['s_text'];
-     $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];   
+     $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
      $unit = $row['f_unit'];
      $address = $row['s_address'];
      $type = $row['s_type'];
@@ -199,9 +198,9 @@ printHeader(60);
         $value = str_replace($wd_value, $wd_disp, $text);
      }
 
-     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank'," 
+     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
-     
+
      if ($i++ % 2)
         echo "     <tr class=\"tableDark\">\n";
      else
@@ -215,7 +214,7 @@ printHeader(60);
   echo "  </table>\n";
   echo "  </div>\n";
 
-  mysql_close();
+  $mysqli->close();
 
 include("footer.php");
 ?>

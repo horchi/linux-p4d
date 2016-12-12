@@ -18,10 +18,9 @@ if (!haveLogin())
 // -------------------------
 // establish db connection
 
-mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-mysql_select_db($mysqldb) or die("<br/>DB error");
-mysql_query("set names 'utf8'");
-mysql_query("SET lc_time_names = 'de_DE'");
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli->query("set names 'utf8'");
+$mysqli->query("SET lc_time_names = 'de_DE'");
 
 // ------------------
 // variables
@@ -49,25 +48,25 @@ if ($action == "store")
 
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
-   
+
    $_SESSION['chartXLines'] =  isset($_POST["chartXLines"]);
 
    if (isset($_POST["chartDiv"]))
       $_SESSION['chartDiv'] = htmlspecialchars($_POST["chartDiv"]);
-   
+
    if (isset($_POST["chart1"]))
       $_SESSION['chart1'] = htmlspecialchars($_POST["chart1"]);
-   
+
    if (isset($_POST["chart2"]))
       $_SESSION['chart2'] = htmlspecialchars($_POST["chart2"]);
-   
+
    // optional charts for HK2
 
    $_SESSION['chart34'] = isset($_POST["chart34"]);
-	  
+
    if (isset($_POST["chart3"]))
       $_SESSION['chart3'] = htmlspecialchars($_POST["chart3"]);
-   
+
    if (isset($_POST["chart4"]))
       $_SESSION['chart4'] = htmlspecialchars($_POST["chart4"]);
 
@@ -82,13 +81,13 @@ if ($action == "store")
    } else {
       $_SESSION['mail'] = false;
    }
-   
+
    if (isset($_POST["stateMailTo"]))
       $_SESSION['stateMailTo'] = htmlspecialchars($_POST["stateMailTo"]);
-   
+
    if (isset($_POST["stateMailStates"]))
       $_SESSION['stateMailStates'] = htmlspecialchars($_POST["stateMailStates"]);
-   
+
    if (isset($_POST["errorMailTo"]))
       $_SESSION['errorMailTo'] = htmlspecialchars($_POST["errorMailTo"]);
 
@@ -100,7 +99,7 @@ if ($action == "store")
 
    if (isset($_POST["passwd1"]) && $_POST["passwd1"] != "")
       $_SESSION['passwd1'] = md5(htmlspecialchars($_POST["passwd1"]));
-   
+
    if (isset($_POST["passwd2"]) && $_POST["passwd2"] != "")
       $_SESSION['passwd2'] = md5(htmlspecialchars($_POST["passwd2"]));
 
@@ -112,42 +111,42 @@ if ($action == "store")
    if (isset($_POST["maxTimeLeak"]))
       $_SESSION['maxTimeLeak'] = htmlspecialchars($_POST["maxTimeLeak"]);
 
-   if (isset($_POST["webUrl"])) 
-    $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]); 
+   if (isset($_POST["webUrl"]))
+    $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]);
 
    // ------------------
    // store settings
 
    applyColorScheme($style);
 
-   writeConfigItem("chartStart", $_SESSION['chartStart']);
-   writeConfigItem("chartDiv", $_SESSION['chartDiv']);
-   writeConfigItem("chartXLines", $_SESSION['chartXLines']);
-   writeConfigItem("chart1", $_SESSION['chart1']);
-   writeConfigItem("chart2", $_SESSION['chart2']);
+   writeConfigItem($mysqli, "chartStart", $_SESSION['chartStart']);
+   writeConfigItem($mysqli, "chartDiv", $_SESSION['chartDiv']);
+   writeConfigItem($mysqli, "chartXLines", $_SESSION['chartXLines']);
+   writeConfigItem($mysqli, "chart1", $_SESSION['chart1']);
+   writeConfigItem($mysqli, "chart2", $_SESSION['chart2']);
 
-   writeConfigItem("chart34", $_SESSION['chart34']);              // HK2
-   writeConfigItem("chart3", $_SESSION['chart3']);
-   writeConfigItem("chart4", $_SESSION['chart4']);
+   writeConfigItem($mysqli, "chart34", $_SESSION['chart34']);              // HK2
+   writeConfigItem($mysqli, "chart3", $_SESSION['chart3']);
+   writeConfigItem($mysqli, "chart4", $_SESSION['chart4']);
 
-   writeConfigItem("mail", $_SESSION['mail']);
-   writeConfigItem("htmlMail", $_SESSION['htmlMail']);
-   writeConfigItem("stateMailTo", $_SESSION['stateMailTo']);
-   writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
-   writeConfigItem("errorMailTo", $_SESSION['errorMailTo']);
-   writeConfigItem("mailScript", $_SESSION['mailScript']);
-   writeConfigItem("tsync", $_SESSION['tsync']);
-   writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
-   writeConfigItem("heatingType", $_SESSION['heatingType']);
-   writeConfigItem("stateAni", $_SESSION['stateAni']);
-   writeConfigItem("webUrl", $_SESSION['webUrl']);
+   writeConfigItem($mysqli, "mail", $_SESSION['mail']);
+   writeConfigItem($mysqli, "htmlMail", $_SESSION['htmlMail']);
+   writeConfigItem($mysqli, "stateMailTo", $_SESSION['stateMailTo']);
+   writeConfigItem($mysqli, "stateMailStates", $_SESSION['stateMailStates']);
+   writeConfigItem($mysqli, "errorMailTo", $_SESSION['errorMailTo']);
+   writeConfigItem($mysqli, "mailScript", $_SESSION['mailScript']);
+   writeConfigItem($mysqli, "tsync", $_SESSION['tsync']);
+   writeConfigItem($mysqli, "maxTimeLeak", $_SESSION['maxTimeLeak']);
+   writeConfigItem($mysqli, "heatingType", $_SESSION['heatingType']);
+   writeConfigItem($mysqli, "stateAni", $_SESSION['stateAni']);
+   writeConfigItem($mysqli, "webUrl", $_SESSION['webUrl']);
 
    if ($_POST["passwd2"] != "")
    {
       if (htmlspecialchars($_POST["passwd1"]) ==  htmlspecialchars(($_POST["passwd2"])))
       {
-         writeConfigItem("user", $_SESSION['user']);
-         writeConfigItem("passwd", $_SESSION['passwd1']);
+         writeConfigItem($mysqli, "user", $_SESSION['user']);
+         writeConfigItem($mysqli, "passwd", $_SESSION['passwd1']);
          echo "      <br/><div class=\"info\"><b><center>Passwort gespeichert</center></div><br/>\n";
       }
       else
@@ -160,7 +159,7 @@ if ($action == "store")
 // ------------------
 // setup form
 
-echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n"; 
+echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
 echo "        <br/>\n";
 echo "        <button class=\"button3\" type=submit name=action value=store>Speichern</button>\n";
 echo "        <br/></br>\n";
@@ -227,20 +226,20 @@ include("footer.php");
 function colorSchemeItem($new, $title)
 {
    $actual = readlink("stylesheet.css");
-   
+
    $end = htmTags($new);
    echo "          $title:\n";
    echo "          <select class=checkbox name=\"style\">\n";
-   
-   foreach (glob("stylesheet-*.css") as $filename) 
+
+   foreach (glob("stylesheet-*.css") as $filename)
    {
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 11);
       echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
    }
-   
+
    echo "          </select>\n";
-   echo $end;     
+   echo $end;
 }
 
 
@@ -249,15 +248,15 @@ function applyColorScheme($style)
    $target = "stylesheet-$style.css";
 
    if ($target != readlink("stylesheet.css"))
-   {  
-   	  if (!readlink("stylesheet.css")) 
+   {
+   	  if (!readlink("stylesheet.css"))
    	    symlink($target, "stylesheet.css");
-   	    
+
       if (!unlink("stylesheet.css") || !symlink($target, "stylesheet.css"))
       {
          $err = error_get_last();
          echo "      <br/><br/>Fehler beim Löschen/Anlegen des Links 'stylesheet.css'<br\>\n";
-         
+
          if (strstr($err['message'], "Permission denied"))
             echo "      <br/>Rechte der Datei prüfen!<br/><br\>\n";
          else
@@ -275,24 +274,24 @@ function applyColorScheme($style)
 function heatingTypeItem($new, $title, $type)
 {
    $actual = "heating-$type.png";
-   
+
    $end = htmTags($new);
    echo "          $title:\n";
    echo "          <select class=checkbox name=\"heatingType\">\n";
 
    $path = "img/type/";
 
-   foreach (glob($path . "heating-*.png") as $filename) 
-   { 
+   foreach (glob($path . "heating-*.png") as $filename)
+   {
       $filename = basename($filename);
 
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 8);
       echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
    }
-   
+
    echo "          </select>\n";
-   echo $end;     
+   echo $end;
 }
 
 ?>

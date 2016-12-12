@@ -1,12 +1,12 @@
-/* 
+/*
  * -----------------------------------
  * p4 Daemon / p4d -  Revision History
  * -----------------------------------
  *
  */
 
-#define _VERSION     "0.1.38"
-#define VERSION_DATE "10.03.2016"
+#define _VERSION     "0.1.39"
+#define VERSION_DATE "12.12.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2016-12-12:  version 0.1.39
+   - change: start of PHP7 porting
 
 2016-03-10:  version 0.1.38
    - bugfix: fixed display of 'usrtitle' in status mails
@@ -36,7 +39,7 @@
 2016-03-01:  version 0.1.33
    - bugfix: minor fix for html header
    - added:  git handling to makefile
-   
+
 2016-03-01:  version 0.1.32
    - change: html header of status mails now configurable in "/etc/p4d/mail-head.html"
              example can be found in configs
@@ -65,7 +68,7 @@
    - added: added script hook called after update cycle is performed
 
 2015-06-24:  version 0.1.24
-   - change: don't touche value facts during init for 'none' updates 
+   - change: don't touche value facts during init for 'none' updates
 
 2015-04-14:  version 0.1.23
    - bugfix: fixed displayed timezone
@@ -113,7 +116,7 @@
    - change: minor changes and fixes
 
 2014-02-07:  version 0.1.10
-   - change: supporting WEBIF communication event if 
+   - change: supporting WEBIF communication event if
              serial line is disturbed
 
 2014-02-05:  version 0.1.9

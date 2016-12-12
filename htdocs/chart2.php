@@ -1,5 +1,5 @@
 <?php
- 
+
 include("header.php");
 
 include("pChart/class/pData.class.php");
@@ -11,10 +11,9 @@ printHeader();
   // -------------------------
   // establish db connection
 
-  mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-  mysql_select_db($mysqldb);
-  mysql_query("set names 'utf8'");
-  mysql_query("SET lc_time_names = 'de_DE'");
+  $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+  $mysqli->query("set names 'utf8'");
+  $mysqli->query("SET lc_time_names = 'de_DE'");
 
   // ----------------
   // init
@@ -39,8 +38,8 @@ printHeader();
   echo "      <input type=submit value=\"Go\">\n";
 
   echo "    </form>\n";
-  echo "  </div>\n";   
-  
+  echo "  </div>\n";
+
   $day   = isset($_GET['sday'])   ? $_GET['sday']   : (int)date("d",time()-86400*$_SESSION['chartStart']);
   $month = isset($_GET['smonth']) ? $_GET['smonth'] : (int)date("m",time()-86400*$_SESSION['chartStart']);
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);

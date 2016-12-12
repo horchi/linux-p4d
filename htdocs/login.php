@@ -4,40 +4,39 @@ include("header.php");
 
 printHeader();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') 
+if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
    // -------------------------
    // establish db connection
-   
-   mysql_connect($mysqlhost, $mysqluser, $mysqlpass);
-   mysql_select_db($mysqldb);
-   mysql_query("set names 'utf8'");
-   mysql_query("SET lc_time_names = 'de_DE'");
+
+   $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+   $mysqli->query("set names 'utf8'");
+   $mysqli->query("SET lc_time_names = 'de_DE'");
 
    // --------------------------
 
    $user = htmlspecialchars($_POST['username']);
    $passwd = htmlspecialchars($_POST['passwort']);
-   
+
    $hostname = $_SERVER['HTTP_HOST'];
    $path = dirname($_SERVER['PHP_SELF']);
-   
+
    // Benutzername und Passwort werden überprüft
-   
-   if (checkLogin($user, $passwd))
+
+   if (checkLogin($mysqli, $user, $passwd))
    {
       $_SESSION['angemeldet'] = true;
-      
+
       // Weiterleitung zur geschützten Startseite
-      
-      if ($_SERVER['SERVER_PROTOCOL'] == 'HTTP/1.1') 
+
+      if ($_SERVER['SERVER_PROTOCOL'] == 'HTTP/1.1')
       {
-         if (php_sapi_name() == 'cgi') 
+         if (php_sapi_name() == 'cgi')
             header('Status: 303 See Other');
-         else 
+         else
             header('HTTP/1.1 303 See Other');
       }
-      
+
       header('Location: http://'.$hostname.($path == '/' ? '' : $path).'/index.php');
       exit;
    }
