@@ -20,6 +20,8 @@ showTable("Fehlerspeicher");
 
 function showTable($tableTitle)
 {
+   global $mysqli;
+
    $i = 0;
 
    echo "      <br/>\n";

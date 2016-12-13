@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.1.39"
-#define VERSION_DATE "12.12.2016"
+#define _VERSION     "0.1.40"
+#define VERSION_DATE "13.12.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,8 +17,11 @@
 /*
  * ------------------------------------
 
+2016-12-13:  version 0.1.40
+   - change: finished RC1 of PHP7 porting (php7 branch)
+
 2016-12-12:  version 0.1.39
-   - change: start of PHP7 porting
+   - change: start of PHP7 porting in (php7 branch)
 
 2016-03-10:  version 0.1.38
    - bugfix: fixed display of 'usrtitle' in status mails

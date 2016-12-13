@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
    // Benutzername und Passwort werden überprüft
 
-   if (checkLogin($mysqli, $user, $passwd))
+   if (checkLogin($user, $passwd))
    {
       $_SESSION['angemeldet'] = true;
 

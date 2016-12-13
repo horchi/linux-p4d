@@ -10,7 +10,7 @@ $mysqldb         = "p4";
 
 $cache_dir       = "pChart/cache";
 $chart_fontpath  = "pChart/fonts";
-$debug           = 1;
+$debug           = 0;
 
 $schema_path     = "img/schema/";
 $schema_pattern  = "schema-*.png";
@@ -19,15 +19,15 @@ $wd_value        = array("Monday", "Tuesday",  "Wednesday", "Thursday",   "Frida
 $wd_disp         = array("Montag", "Dienstag", "Mittwoch",  "Donnerstag", "Freitag", "Samstag",  "Sonntag");
 
 // ------------------------------
-// visual configs  
+// visual configs
 
-$aligned         = "left";                     // Werte rechtsb�ndig/linksb�ndig ausrichten (not good working yet)
+$aligned         = "left";                     // Werte rechtsbündig/linksbündig ausrichten (not good working yet)
 $pumpDir         = "-right|-left|-up|-down";
 
 // -----------------------------
 // don't touch below ;-)
-  
-if (function_exists('opcache_reset')) 
+
+if (function_exists('opcache_reset'))
    opcache_reset();
 
 ?>

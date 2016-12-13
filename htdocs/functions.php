@@ -29,11 +29,13 @@ function haveLogin()
    return false;
 }
 
-function checkLogin($mysqli, $user, $passwd)
+function checkLogin($user, $passwd)
 {
+   global $mysqli;
+
    $md5 = md5($passwd);
 
-   if (requestAction($mysqli, "check-login", 5, 0, "$user:$md5", $resonse) == 0)
+   if (requestAction("check-login", 5, 0, "$user:$md5", $resonse) == 0)
       return true;
 
    return false;
@@ -123,8 +125,10 @@ function mysqli_result($res, $row=0, $col=0)
 // Request Action
 // ---------------------------------------------------------------------------
 
-function requestAction($mysqli, $cmd, $timeout, $address, $data, &$response)
+function requestAction($cmd, $timeout, $address, $data, &$response)
 {
+   global $mysqli;
+
    $timeout = time() + $timeout;
    $response = "";
 
@@ -186,9 +190,11 @@ function seperator($title, $top = 0, $level = 1)
 // Write Config Item
 // ---------------------------------------------------------------------------
 
-function writeConfigItem($mysqli, $name, $value)
+function writeConfigItem($name, $value)
 {
-   if (requestAction($mysqli, "write-config", 3, 0, "$name:$value", $res) != 0)
+   global $mysqli;
+
+   if (requestAction("write-config", 3, 0, "$name:$value", $res) != 0)
    {
       echo " <br/>failed to write config item $name\n";
       return -1;
@@ -201,9 +207,9 @@ function writeConfigItem($mysqli, $name, $value)
 // Read Config Item
 // ---------------------------------------------------------------------------
 
-function readConfigItem($mysqli, $name, &$value)
+function readConfigItem($name, &$value)
 {
-   if (requestAction($mysqli, "read-config", 3, 0, "$name", $value) != 0)
+   if (requestAction("read-config", 3, 0, "$name", $value) != 0)
    {
       echo " <br/>failed to read config item $name\n";
       return -1;

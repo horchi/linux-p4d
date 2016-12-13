@@ -33,7 +33,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 
 if ($action == "init")
 {
-   requestAction($mysqli, "initvaluefacts", 20, 0, "", $resonse);
+   requestAction("initvaluefacts", 20, 0, "", $resonse);
    echo "<br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
 }
 
@@ -76,7 +76,7 @@ else if ($action == "store")
             or die("<br/>Error" . $mysqli->error());
       }
 
-      requestAction($mysqli, "update-schemacfg", 2, 0, "", $resonse);
+      requestAction("update-schemacfg", 2, 0, "", $resonse);
 
       echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
    }
@@ -115,7 +115,7 @@ function showButtons()
 
 function showTable($type, $tableTitle)
 {
-   global $debug;
+   global $debug, $mysqli;
 
    $i = 0;
 

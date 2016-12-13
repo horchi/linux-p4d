@@ -83,17 +83,17 @@ if (isset($_POST["pumpsAO"]))
 // ------------------
 // store settings
 
-   writeConfigItem($mysqli, "schema",    $_SESSION['schema']);
-   writeConfigItem($mysqli, "schemaBez", $_SESSION['schemaBez']);
-   writeConfigItem($mysqli, "schemaRange", $_SESSION['schemaRange']);
-   writeConfigItem($mysqli, "valuesBG",  $_SESSION['valuesBG']);
-   writeConfigItem($mysqli, "pumpON",    $_SESSION['pumpON']);
-   writeConfigItem($mysqli, "pumpOFF",   $_SESSION['pumpOFF']);
-   writeConfigItem($mysqli, "ventON",    $_SESSION['ventON']);
-   writeConfigItem($mysqli, "ventOFF",   $_SESSION['ventOFF']);
-   writeConfigItem($mysqli, "pumpsVA",   $_SESSION['pumpsVA']);
-   writeConfigItem($mysqli, "pumpsDO",   $_SESSION['pumpsDO']);
-   writeConfigItem($mysqli, "pumpsAO",   $_SESSION['pumpsAO']);
+   writeConfigItem("schema",    $_SESSION['schema']);
+   writeConfigItem("schemaBez", $_SESSION['schemaBez']);
+   writeConfigItem("schemaRange", $_SESSION['schemaRange']);
+   writeConfigItem("valuesBG",  $_SESSION['valuesBG']);
+   writeConfigItem("pumpON",    $_SESSION['pumpON']);
+   writeConfigItem("pumpOFF",   $_SESSION['pumpOFF']);
+   writeConfigItem("ventON",    $_SESSION['ventON']);
+   writeConfigItem("ventOFF",   $_SESSION['ventOFF']);
+   writeConfigItem("pumpsVA",   $_SESSION['pumpsVA']);
+   writeConfigItem("pumpsDO",   $_SESSION['pumpsDO']);
+   writeConfigItem("pumpsAO",   $_SESSION['pumpsAO']);
 }
 
 // -------------------------

@@ -40,7 +40,7 @@ printHeader(60);
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction($mysqli, "p4d-state", 3, 0, "", $response);
+  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
   $load = "";
 
   if ($p4dstate == 0)
@@ -57,7 +57,7 @@ printHeader(60);
   $mode = "";
   $time = "";
 
-  $state = requestAction($mysqli, "s3200-state", 3, 0, "", $response);
+  $state = requestAction("s3200-state", 3, 0, "", $response);
 
   if ($state == 0)
      list($time, $state, $status, $mode) = explode("#", $response, 4);

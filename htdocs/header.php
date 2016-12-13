@@ -22,44 +22,44 @@ include("functions.php");
    // ------------------
    // get configuration
 
-   readConfigItem($mysqli, "chartStart", $_SESSION['chartStart']);
-   readConfigItem($mysqli, "chartDiv", $_SESSION['chartDiv']);
-   readConfigItem($mysqli, "chartXLines", $_SESSION['chartXLines']);
-   readConfigItem($mysqli, "chart1", $_SESSION['chart1']);
-   readConfigItem($mysqli, "chart2", $_SESSION['chart2']);
+   readConfigItem("chartStart", $_SESSION['chartStart']);
+   readConfigItem("chartDiv", $_SESSION['chartDiv']);
+   readConfigItem("chartXLines", $_SESSION['chartXLines']);
+   readConfigItem("chart1", $_SESSION['chart1']);
+   readConfigItem("chart2", $_SESSION['chart2']);
 
    // Chart 3+4
 
-   readConfigItem($mysqli, "chart34", $_SESSION['chart34']);
-   readConfigItem($mysqli, "chart3", $_SESSION['chart3']);
-   readConfigItem($mysqli, "chart4", $_SESSION['chart4']);
+   readConfigItem("chart34", $_SESSION['chart34']);
+   readConfigItem("chart3", $_SESSION['chart3']);
+   readConfigItem("chart4", $_SESSION['chart4']);
 
-   readConfigItem($mysqli, "user", $_SESSION['user']);
-   readConfigItem($mysqli, "passwd", $_SESSION['passwd']);
+   readConfigItem("user", $_SESSION['user']);
+   readConfigItem("passwd", $_SESSION['passwd']);
 
-   readConfigItem($mysqli, "mail", $_SESSION['mail']);
-   readConfigItem($mysqli, "htmlMail", $_SESSION['htmlMail']);
-   readConfigItem($mysqli, "stateMailTo", $_SESSION['stateMailTo']);
-   readConfigItem($mysqli, "stateMailStates", $_SESSION['stateMailStates']);
-   readConfigItem($mysqli, "errorMailTo", $_SESSION['errorMailTo']);
-   readConfigItem($mysqli, "mailScript", $_SESSION['mailScript']);
+   readConfigItem("mail", $_SESSION['mail']);
+   readConfigItem("htmlMail", $_SESSION['htmlMail']);
+   readConfigItem("stateMailTo", $_SESSION['stateMailTo']);
+   readConfigItem("stateMailStates", $_SESSION['stateMailStates']);
+   readConfigItem("errorMailTo", $_SESSION['errorMailTo']);
+   readConfigItem("mailScript", $_SESSION['mailScript']);
 
-   readConfigItem($mysqli, "tsync", $_SESSION['tsync']);
-   readConfigItem($mysqli, "maxTimeLeak", $_SESSION['maxTimeLeak']);
-   readConfigItem($mysqli, "heatingType", $_SESSION['heatingType']);
-   readConfigItem($mysqli, "stateAni", $_SESSION['stateAni']);
-   readConfigItem($mysqli, "schemaRange", $_SESSION['schemaRange']);
-   readConfigItem($mysqli, "schema", $_SESSION['schema']);
-   readConfigItem($mysqli, "schemaBez", $_SESSION['schemaBez']);
-   readConfigItem($mysqli, "valuesBG", $_SESSION['valuesBG']);
-   readConfigItem($mysqli, "pumpON",  $_SESSION['pumpON']);
-   readConfigItem($mysqli, "pumpOFF", $_SESSION['pumpOFF']);
-   readConfigItem($mysqli, "ventON",  $_SESSION['ventON']);
-   readConfigItem($mysqli, "ventOFF", $_SESSION['ventOFF']);
-   readConfigItem($mysqli, "pumpsVA", $_SESSION['pumpsVA']);
-   readConfigItem($mysqli, "pumpsDO", $_SESSION['pumpsDO']);
-   readConfigItem($mysqli, "pumpsAO", $_SESSION['pumpsAO']);
-   readConfigItem($mysqli, "webUrl",  $_SESSION['webUrl']);
+   readConfigItem("tsync", $_SESSION['tsync']);
+   readConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
+   readConfigItem("heatingType", $_SESSION['heatingType']);
+   readConfigItem("stateAni", $_SESSION['stateAni']);
+   readConfigItem("schemaRange", $_SESSION['schemaRange']);
+   readConfigItem("schema", $_SESSION['schema']);
+   readConfigItem("schemaBez", $_SESSION['schemaBez']);
+   readConfigItem("valuesBG", $_SESSION['valuesBG']);
+   readConfigItem("pumpON",  $_SESSION['pumpON']);
+   readConfigItem("pumpOFF", $_SESSION['pumpOFF']);
+   readConfigItem("ventON",  $_SESSION['ventON']);
+   readConfigItem("ventOFF", $_SESSION['ventOFF']);
+   readConfigItem("pumpsVA", $_SESSION['pumpsVA']);
+   readConfigItem("pumpsDO", $_SESSION['pumpsDO']);
+   readConfigItem("pumpsAO", $_SESSION['pumpsAO']);
+   readConfigItem("webUrl",  $_SESSION['webUrl']);
 
    // ------------------
    // check for defaults

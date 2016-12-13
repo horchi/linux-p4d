@@ -119,34 +119,34 @@ if ($action == "store")
 
    applyColorScheme($style);
 
-   writeConfigItem($mysqli, "chartStart", $_SESSION['chartStart']);
-   writeConfigItem($mysqli, "chartDiv", $_SESSION['chartDiv']);
-   writeConfigItem($mysqli, "chartXLines", $_SESSION['chartXLines']);
-   writeConfigItem($mysqli, "chart1", $_SESSION['chart1']);
-   writeConfigItem($mysqli, "chart2", $_SESSION['chart2']);
+   writeConfigItem("chartStart", $_SESSION['chartStart']);
+   writeConfigItem("chartDiv", $_SESSION['chartDiv']);
+   writeConfigItem("chartXLines", $_SESSION['chartXLines']);
+   writeConfigItem("chart1", $_SESSION['chart1']);
+   writeConfigItem("chart2", $_SESSION['chart2']);
 
-   writeConfigItem($mysqli, "chart34", $_SESSION['chart34']);              // HK2
-   writeConfigItem($mysqli, "chart3", $_SESSION['chart3']);
-   writeConfigItem($mysqli, "chart4", $_SESSION['chart4']);
+   writeConfigItem("chart34", $_SESSION['chart34']);              // HK2
+   writeConfigItem("chart3", $_SESSION['chart3']);
+   writeConfigItem("chart4", $_SESSION['chart4']);
 
-   writeConfigItem($mysqli, "mail", $_SESSION['mail']);
-   writeConfigItem($mysqli, "htmlMail", $_SESSION['htmlMail']);
-   writeConfigItem($mysqli, "stateMailTo", $_SESSION['stateMailTo']);
-   writeConfigItem($mysqli, "stateMailStates", $_SESSION['stateMailStates']);
-   writeConfigItem($mysqli, "errorMailTo", $_SESSION['errorMailTo']);
-   writeConfigItem($mysqli, "mailScript", $_SESSION['mailScript']);
-   writeConfigItem($mysqli, "tsync", $_SESSION['tsync']);
-   writeConfigItem($mysqli, "maxTimeLeak", $_SESSION['maxTimeLeak']);
-   writeConfigItem($mysqli, "heatingType", $_SESSION['heatingType']);
-   writeConfigItem($mysqli, "stateAni", $_SESSION['stateAni']);
-   writeConfigItem($mysqli, "webUrl", $_SESSION['webUrl']);
+   writeConfigItem("mail", $_SESSION['mail']);
+   writeConfigItem("htmlMail", $_SESSION['htmlMail']);
+   writeConfigItem("stateMailTo", $_SESSION['stateMailTo']);
+   writeConfigItem("stateMailStates", $_SESSION['stateMailStates']);
+   writeConfigItem("errorMailTo", $_SESSION['errorMailTo']);
+   writeConfigItem("mailScript", $_SESSION['mailScript']);
+   writeConfigItem("tsync", $_SESSION['tsync']);
+   writeConfigItem("maxTimeLeak", $_SESSION['maxTimeLeak']);
+   writeConfigItem("heatingType", $_SESSION['heatingType']);
+   writeConfigItem("stateAni", $_SESSION['stateAni']);
+   writeConfigItem("webUrl", $_SESSION['webUrl']);
 
    if ($_POST["passwd2"] != "")
    {
       if (htmlspecialchars($_POST["passwd1"]) ==  htmlspecialchars(($_POST["passwd2"])))
       {
-         writeConfigItem($mysqli, "user", $_SESSION['user']);
-         writeConfigItem($mysqli, "passwd", $_SESSION['passwd1']);
+         writeConfigItem("user", $_SESSION['user']);
+         writeConfigItem("passwd", $_SESSION['passwd1']);
          echo "      <br/><div class=\"info\"><b><center>Passwort gespeichert</center></div><br/>\n";
       }
       else

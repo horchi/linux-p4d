@@ -35,7 +35,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 // -----------------------
 // Menü
 
-showMenu($mysqli, $menu != "" ? $menu : $lastMenu);
+showMenu($menu != "" ? $menu : $lastMenu);
 
 // -----------------------
 // Store Parameter
@@ -92,14 +92,14 @@ if ($edit != "")
 
 if ($menu == "update")
 {
-   requestAction($mysqli, "updatemenu", 30, 0, "", $resonse);
+   requestAction("updatemenu", 30, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Aktualisierung abgeschlossen</center></b></div><br/>";
    $menu = $lastMenu;
 }
 
 elseif ($menu == "init")
 {
-   requestAction($mysqli, "initmenu", 60, 0, "", $resonse);
+   requestAction("initmenu", 60, 0, "", $resonse);
    echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
    $menu = $lastMenu;
 }
@@ -109,7 +109,7 @@ if ($menu != "" || $lastMenu != "")
    $lastMenu = $menu != "" ? $menu : $lastMenu;
 
    echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-   showChilds($mysqli, $lastMenu, 0);
+   showChilds($lastMenu, 0);
    echo "      </form>\n";
 
    $_SESSION["menu"] = $lastMenu;
@@ -121,8 +121,9 @@ include("footer.php");
 // Show Menu
 //***************************************************************************
 
-function showMenu($mysqli, $current)
+function showMenu($current)
 {
+   global $mysqli;
    $i = 0;
 
    $result = $mysqli->query("select * from menu where parent = " . 1)
@@ -183,9 +184,9 @@ function endTable()
 // Show Childs
 //***************************************************************************
 
-function showChilds($mysqli, $parnt, $level)
+function showChilds($parnt, $level)
 {
-   global $debug;
+   global $debug, $mysqli;
 
    $parnt = $mysqli->real_escape_string($parnt);
    $i = 0;
@@ -221,10 +222,10 @@ function showChilds($mysqli, $parnt, $level)
       }
 
       if ($type == 0x03 || $type == 0x46)
-         $value = getValue($mysqli, $address);
+         $value = getValue($address);
 
       if ($value == "")
-         $value = getParameter($mysqli, $id);
+         $value = getParameter($id);
 
       if ($debug)
       {
@@ -316,7 +317,7 @@ function showChilds($mysqli, $parnt, $level)
       }
 
       if ($child)
-         showChilds($mysqli, $child, $level+1);
+         showChilds($child, $level+1);
 
       $i++;
    }
@@ -329,8 +330,10 @@ function showChilds($mysqli, $parnt, $level)
 // Get Value
 //***************************************************************************
 
-function getValue($mysqli, $address)
+function getValue($address)
 {
+   global $mysqli;
+
    $address = $mysqli->real_escape_string($address);
 
    $result = $mysqli->query("select max(time) as max from samples")
@@ -354,15 +357,17 @@ function getValue($mysqli, $address)
       return $value . $unit;
    }
 
-   return ""; // requestValue($mysqli, $address);
+   return ""; // requestValue($address);
 }
 
 //***************************************************************************
 // Request Value
 //***************************************************************************
 
-function requestValue($mysqli, $address)
+function requestValue($address)
 {
+   global $mysqli;
+
    $address = $mysqli->real_escape_string($address);
    $timeout = time() + 10;
 
@@ -408,8 +413,10 @@ function requestValue($mysqli, $address)
 // Get Parameter
 //***************************************************************************
 
-function getParameter($mysqli, $id)
+function getParameter($id)
 {
+   global $mysqli;
+
    $id = $mysqli->real_escape_string($id);
    $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
