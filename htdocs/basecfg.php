@@ -46,6 +46,12 @@ if ($action == "store")
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
 
+   if (isset($_POST["addrsMain"]))
+      $_SESSION['addrsMain'] = htmlspecialchars($_POST["addrsMain"]);
+
+   if (isset($_POST["addrsMainMobile"]))
+      $_SESSION['addrsMainMobile'] = htmlspecialchars($_POST["addrsMainMobile"]);
+
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
 
@@ -119,12 +125,14 @@ if ($action == "store")
 
    applyColorScheme($style);
 
+   writeConfigItem("addrsMain", $_SESSION['addrsMain']);
+   writeConfigItem("addrsMainMobile", $_SESSION['addrsMainMobile']);
+
    writeConfigItem("chartStart", $_SESSION['chartStart']);
    writeConfigItem("chartDiv", $_SESSION['chartDiv']);
    writeConfigItem("chartXLines", $_SESSION['chartXLines']);
    writeConfigItem("chart1", $_SESSION['chart1']);
    writeConfigItem("chart2", $_SESSION['chart2']);
-
    writeConfigItem("chart34", $_SESSION['chart34']);              // HK2
    writeConfigItem("chart3", $_SESSION['chart3']);
    writeConfigItem("chart4", $_SESSION['chart4']);
@@ -172,17 +180,21 @@ colorSchemeItem(1, "Farbschema");
 heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
 configBoolItem(4, "Status-Ani?", "stateAni", $_SESSION['stateAni'], "");
 
-seperator("Charting", 0, 4);
+seperator("Ansicht 'Aktuell'", 0, 2);
+configStrItem(1, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
+configStrItem(4, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
+
+seperator("Charting", 0, 2);
 configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
 configBoolItem(2, "senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
 configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein,15 mittel,25 groß,45", "");
 configBoolItem(5, "Chart 3+4", "chart34", $_SESSION['chart34'], "aktivieren?");
 /*
-configOptionItem(2, "Farbe 1", "col1", $_SESSION['col1'], "grün,gelb,weiss,blau", "");
-configOptionItem(5, "Farbe 2", "col2", $_SESSION['col2'], "grün,gelb,weiss,blau", "");
-configOptionItem(5, "Farbe 3", "col3", $_SESSION['col3'], "grün,gelb,weiss,blau", "");
-configOptionItem(5, "Farbe 4", "col4", $_SESSION['col4'], "grün,gelb,weiss,blau", "");
-configOptionItem(5, "Dicke", "thk1", $_SESSION['thk1'], "1,2,3", "");
+  configOptionItem(2, "Farbe 1", "col1", $_SESSION['col1'], "grün,gelb,weiss,blau", "");
+  configOptionItem(5, "Farbe 2", "col2", $_SESSION['col2'], "grün,gelb,weiss,blau", "");
+  configOptionItem(5, "Farbe 3", "col3", $_SESSION['col3'], "grün,gelb,weiss,blau", "");
+  configOptionItem(5, "Farbe 4", "col4", $_SESSION['col4'], "grün,gelb,weiss,blau", "");
+  configOptionItem(5, "Dicke", "thk1", $_SESSION['thk1'], "1,2,3", "");
 */
 configStrItem(2, "Chart 1", "chart1", $_SESSION['chart1'], "", 250);
 configStrItem(4, "Chart 2", "chart2", $_SESSION['chart2'], "Werte-ID, siehe 'Aufzeichnung'", 250);

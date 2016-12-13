@@ -166,15 +166,19 @@ printHeader(60);
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
   echo "        <td>Sensor</td>\n";
-  echo "        <td>Wert</td>\n";
+  if (!isMobile) echo "        <td>Wert</td>\n";
   echo "      </tr>\n";
 
-  if (!isMobile())
+  $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
+
+  if ($addresses == "")
     $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
                 from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
   else
     $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and address in (%s) and s.time = '%s';", $_SESSION['chart1'], $max);
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and s.type = 'VA' and s.time = '%s';", $addresses, $max);
+
+  // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
   $result = $mysqli->query($strQuery)
      or die("Error" . $mysqli->error);
@@ -206,14 +210,26 @@ printHeader(60);
      $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
-     if ($i++ % 2)
-        echo "     <tr class=\"tableDark\">\n";
+     if ($i % 2)
+       echo "     <tr class=\"tableDark\">\n";
      else
-        echo "     <tr class=\"tableLight\">\n";
+       echo "     <tr class=\"tableLight\">\n";
 
      echo "        <td>" . $url . $title . "</a></td>\n";
+
+     if (isMobile())
+     {
+       echo "     </tr>\n";
+       if ($i % 2)
+         echo "     <tr class=\"tableDark\">\n";
+       else
+         echo "     <tr class=\"tableLight\">\n";
+     }
+
      echo "        <td>$value$unit</td>\n";
      echo "     </tr>\n";
+
+     $i++;
   }
 
   echo "  </table>\n";

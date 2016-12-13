@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.1.40"
+#define _VERSION     "0.1.41"
 #define VERSION_DATE "13.12.2016"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2016-12-13:  version 0.1.41
+   - added:  different mobile view for actual tab
+   - added:  configurable sensors list for action tab
 
 2016-12-13:  version 0.1.40
    - change: finished RC1 of PHP7 porting (php7 branch)

@@ -22,6 +22,9 @@ include("functions.php");
    // ------------------
    // get configuration
 
+   readConfigItem("addrsMain", $_SESSION['addrsMain']);
+   readConfigItem("addrsMainMobile", $_SESSION['addrsMainMobile']);
+
    readConfigItem("chartStart", $_SESSION['chartStart']);
    readConfigItem("chartDiv", $_SESSION['chartDiv']);
    readConfigItem("chartXLines", $_SESSION['chartXLines']);

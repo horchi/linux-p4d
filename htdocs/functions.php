@@ -318,15 +318,31 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
 
 function htmTags($new)
 {
-  switch ($new) {
-   	case 1: echo "        <div class=\"input\">\n"; $end = ""; break;
-   	case 2: echo "        </div><br/>\n        <div class=\"input\">\n"; $end = ""; break;
-   	case 3: echo "        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
-   	case 4: echo "          &nbsp;|&nbsp;\n" ; $end = "        </div><br/>\n"; break;
-   	case 5: echo "          &nbsp;|&nbsp;\n"; $end = ""; break;
-   	case 6: echo "        </div><br/>\n        <div class=\"input\">\n" ; $end = "        </div><br/>\n"; break;
-   	case 7: echo "          <br /><br />\n"; $end = ""; break;
+  switch ($new)
+  {
+   	case 1: echo   "        <div class=\"input\">\n";
+              $end = "";
+              break;
+   	case 2: echo   "        </div><br/>\n        <div class=\"input\">\n";
+              $end = "";
+              break;
+   	case 3: echo   "        <div class=\"input\">\n" ;
+              $end = "        </div><br/>\n";
+              break;
+   	case 4: echo   "          &nbsp;|&nbsp;\n" ;
+              $end = "        </div><br/>\n";
+              break;
+   	case 5: echo   "          &nbsp;|&nbsp;\n";
+              $end = "";
+              break;
+   	case 6: echo   "        </div><br/>\n        <div class=\"input\">\n" ;
+              $end = "        </div><br/>\n";
+              break;
+   	case 7: echo   "          <br/><br/>\n";
+              $end = "";
+              break;
   }
+
   return $end;
 }
 
