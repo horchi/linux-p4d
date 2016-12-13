@@ -165,14 +165,16 @@ printHeader(60);
   echo "  <div>\n";
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
-
-
   echo "        <td>Sensor</td>\n";
   echo "        <td>Wert</td>\n";
   echo "      </tr>\n";
 
-  $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-              from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
+  if (!isMobile())
+    $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
+  else
+    $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and address in (%s) and s.time = '%s';", $_SESSION['chart1'], $max);
 
   $result = $mysqli->query($strQuery)
      or die("Error" . $mysqli->error());
