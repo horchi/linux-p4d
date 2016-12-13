@@ -166,7 +166,7 @@ printHeader(60);
   echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
   echo "      <tr class=\"tableHead1\">\n";
   echo "        <td>Sensor</td>\n";
-  if (!isMobile) echo "        <td>Wert</td>\n";
+  if (!isMobile()) echo "        <td>Wert</td>\n";
   echo "      </tr>\n";
 
   $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
