@@ -4,7 +4,7 @@
   // get last time stamp
 
 $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
-   or die("Error" . $mysqli->error());
+   or die("Error" . $mysqli->error);
 
 $row = $result->fetch_assoc();
 $max = $row['max(time)'];
@@ -41,7 +41,7 @@ $pumpsAO = "|," . $_SESSION['pumpsAO'] . ",";
 // show values
 
 $resultConf = $mysqli->query("select address, type, kind, color, showunit, showtext, xpos, ypos from schemaconf where state = 'A'")
-   or die("Error" . $mysqli->error());
+   or die("Error" . $mysqli->error);
 
 while ($rowConf = $resultConf->fetch_assoc())
 {
@@ -55,7 +55,7 @@ while ($rowConf = $resultConf->fetch_assoc())
 
    $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.title as f_title, f.usrtitle as f_usrtitle, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
    $result = $mysqli->query($strQuery)
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    if ($row = $result->fetch_assoc())
    {

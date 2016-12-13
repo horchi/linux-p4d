@@ -289,7 +289,7 @@ function nextConf($dir)
                        $max, $_SESSION["addr"], $_SESSION["type"]);
 
    $result = $mysqli->query($strQuery)
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    if ($row = $result->fetch_array(MYSQLI_ASSOC))
    {

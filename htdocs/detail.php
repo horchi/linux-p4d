@@ -80,7 +80,7 @@ syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $fro
        . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
 $factResult = $mysqli->query($factsQuery)
-   or die("Error" . $mysqli->error() . "query [" . $factsQuery . "]");
+   or die("Error" . $mysqli->error . "query [" . $factsQuery . "]");
 
 
 $skipTicks = 0;
@@ -115,7 +115,7 @@ while ($fact = $factResult->fetch_assoc())
    syslog(LOG_DEBUG, "p4: $query");
 
    $result = $mysqli->query($query)
-      or die("Error: " . $mysqli->error() . ", query: [" . $query . "]");
+      or die("Error: " . $mysqli->error . ", query: [" . $query . "]");
 
    syslog(LOG_DEBUG, "p4: " . $result->num_rows . " for $title ($address)");
 

@@ -127,7 +127,7 @@ function showMenu($current)
    $i = 0;
 
    $result = $mysqli->query("select * from menu where parent = " . 1)
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
    $count = $result->num_rows;
 
@@ -192,7 +192,7 @@ function showChilds($parnt, $level)
    $i = 0;
 
    $result = $mysqli->query("select * from menu where parent = " . $parnt)
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
    $count = $result->num_rows;
 
@@ -337,7 +337,7 @@ function getValue($address)
    $address = $mysqli->real_escape_string($address);
 
    $result = $mysqli->query("select max(time) as max from samples")
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    $row = $result->fetch_array(MYSQLI_ASSOC);
    $max = $row['max'];
@@ -348,7 +348,7 @@ function getValue($address)
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
    $result = $mysqli->query($strQuery)
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    if ($row = $result->fetch_array(MYSQLI_ASSOC))
    {
@@ -374,7 +374,7 @@ function requestValue($address)
    syslog(LOG_DEBUG, "p4: requesting value " . $address);
 
    $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'getv', address = '$address'")
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    $id = $mysqli->insert_id;
 
@@ -383,7 +383,7 @@ function requestValue($address)
       usleep(10000);
 
       $result = $mysqli->query("select * from jobs where id = $id and state = 'D'")
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
       $count = $result->num_rows;
 
@@ -421,7 +421,7 @@ function getParameter($id)
    $strQuery = sprintf("select value, unit from menu where id = '$id'");
 
    $result = $mysqli->query($strQuery)
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    // syslog(LOG_DEBUG, "p4: " . $strQuery);
 
@@ -449,7 +449,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
    $type = "";
 
    $result = $mysqli->query("select * from menu where id = " . $id)
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
    if ($result->num_rows != 1)
       return -1;
@@ -461,7 +461,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
    syslog(LOG_DEBUG, "p4: requesting parameter" .$id . " at address " . $address . " type " . $type);
 
    $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'getp', address = '$id'")
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    $jobid = $mysqli->insert_id;
 
@@ -470,7 +470,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
       usleep(10000);
 
       $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
       if ($result->num_rows > 0)
       {
@@ -510,7 +510,7 @@ function storeParameter($id, &$value, &$unit, &$res)
 
    $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'setp', "
                . "address = '$id', data = '$value'")
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
 
    $jobid = $mysqli->insert_id;
 
@@ -519,7 +519,7 @@ function storeParameter($id, &$value, &$unit, &$res)
       usleep(10000);
 
       $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
       if ($result->num_rows > 0)
       {

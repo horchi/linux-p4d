@@ -41,7 +41,7 @@ function showTable($tableTitle)
         </tr>\n";
 
    $result = $mysqli->query("select * from errors order by time desc")
-      or die("<br/>Error" . $mysqli->error());
+      or die("<br/>Error" . $mysqli->error);
 
    $num = $result->num_rows;
 

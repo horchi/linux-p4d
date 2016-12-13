@@ -50,14 +50,14 @@ else if ($action == "store")
 
        $sql = "UPDATE valuefacts set usrtitle = '$value' where address = '$addr' and type = '$type'";
        $mysqli->query($sql)
-          or die("<br/>Error" . $mysqli->error());
+          or die("<br/>Error" . $mysqli->error);
     }
 
    if (isset($_POST["selected"]))
    {
       $sql = "UPDATE valuefacts SET state = 'D'";
       $result = $mysqli->query($sql)
-         or die("<br/>Error" . $mysqli->error());
+         or die("<br/>Error" . $mysqli->error);
 
       foreach ($_POST['selected'] as $key => $value)
       {
@@ -70,10 +70,10 @@ else if ($action == "store")
          $sql = "UPDATE valuefacts set state = 'A' where address = '$addr' and type = '$type'";
 
          $mysqli->query($sql)
-            or die("<br/>Error" . $mysqli->error());
+            or die("<br/>Error" . $mysqli->error);
 
          $mysqli->query("update valuefacts set state = 'A' where type = 'UD'")
-            or die("<br/>Error" . $mysqli->error());
+            or die("<br/>Error" . $mysqli->error);
       }
 
       requestAction("update-schemacfg", 2, 0, "", $resonse);
@@ -139,7 +139,7 @@ function showTable($type, $tableTitle)
    echo "          </tr>\n";
 
    $result = $mysqli->query("select * from valuefacts where type = '$type'")
-      or die("<br/>Error" . $mysqli->error());
+      or die("<br/>Error" . $mysqli->error);
 
    $num = $result->num_rows;
 

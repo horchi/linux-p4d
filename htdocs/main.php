@@ -23,7 +23,7 @@ printHeader(60);
 
   $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
                         "DATE_FORMAT(max(time),'%H:%i:%S') as maxPrettyShort from samples;")
-     or die("Error" . $mysqli->error());
+     or die("Error" . $mysqli->error);
   $row = $result->fetch_assoc();
   $max = $row['max(time)'];
   $maxPretty = $row['maxPretty'];
@@ -47,7 +47,7 @@ printHeader(60);
     list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
 
   $result = $mysqli->query("select * from samples where time >= CURDATE()")
-     or die("Error" . $mysqli->error());
+     or die("Error" . $mysqli->error);
   $p4dCountDay = $result->num_rows;
 
   // ------------------
@@ -177,7 +177,7 @@ printHeader(60);
                 from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and address in (%s) and s.time = '%s';", $_SESSION['chart1'], $max);
 
   $result = $mysqli->query($strQuery)
-     or die("Error" . $mysqli->error());
+     or die("Error" . $mysqli->error);
 
   $i = 0;
 

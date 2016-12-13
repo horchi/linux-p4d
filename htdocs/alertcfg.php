@@ -61,11 +61,11 @@ if ($action == "store")
 
     if ($i == count($ID)-1 && $_POST[$adr] != "") {
       $update = "insert into sensoralert set inssp=$time, updsp=$time,"; $where = "";
-      $insert = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error());
+      $insert = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error);
     }
     if ($i < count($ID)-1) {
        $update = "update sensoralert set updsp=$time,"; $where = "where id=" . $ID[$i];
-       $update = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error());
+       $update = $mysqli->query($update . $data . $where) or die("<br/>Error: " . $mysqli->error);
     }
   }
 
@@ -75,7 +75,7 @@ if ($action == "store")
 // delete entry
 
 if (substr($action,0,6) == "delete")
-   $update = $mysqli->query("delete from sensoralert where id=" . substr($action,6)) or die("<br/>Error: " . $mysqli->error());
+   $update = $mysqli->query("delete from sensoralert where id=" . substr($action,6)) or die("<br/>Error: " . $mysqli->error);
 
 // ------------------
 // setup form
@@ -106,7 +106,7 @@ echo "          <span class=\"inputComment\">
 echo "        </div><br/>\n";
 seperator("Bedingungen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, 2);
 
-$result = $mysqli->query("select * from sensoralert") or die("<br/>Error: " . $mysqli->error());
+$result = $mysqli->query("select * from sensoralert") or die("<br/>Error: " . $mysqli->error);
 
   while ($row = $result->fetch_array(MYSQLI_ASSOC))
   {

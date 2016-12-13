@@ -139,7 +139,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
    syslog(LOG_DEBUG, "p4: requesting ". $cmd . " with " . $address . ", '" . $data . "'");
 
    $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = '$cmd', address = '$address', data = '$data'")
-      or die("Error" . $mysqli->error());
+      or die("Error" . $mysqli->error);
    $id = $mysqli->insert_id;
 
    while (time() < $timeout)
@@ -147,7 +147,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
       usleep(10000);
 
       $result = $mysqli->query("select * from jobs where id = $id and state = 'D'")
-         or die("Error" . $mysqli->error());
+         or die("Error" . $mysqli->error);
 
       if ($result->num_rows)
       {
