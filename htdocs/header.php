@@ -125,7 +125,7 @@ function printHeader($refresh = 0)
 <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"de\" lang=\"de\">
   <head>
     <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n";
-   $stylesheet = (checkMobile() == 1)? "stylesheet.css" : "stylesheet.css";
+   $stylesheet = isMobile() ? "stylesheet.css" : "stylesheet.css";
 
    if ($refresh)
       echo "    <meta http-equiv=\"refresh\" content=\"$refresh\">\n";

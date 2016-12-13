@@ -37,18 +37,21 @@ printHeader(60);
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
   $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
 
-  // ------------------
-  // State of P4 Daemon
+  if (isMobile())
+  {
+    // ------------------
+    // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
-  $load = "";
+    $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+    $load = "";
 
-  if ($p4dstate == 0)
-     list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
+    if ($p4dstate == 0)
+       list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
 
-  $result = $mysqli->query("select * from samples where time >= CURDATE()")
-     or die("Error" . $mysqli->error());
-  $p4dCountDay = $result->num_rows;
+    $result = $mysqli->query("select * from samples where time >= CURDATE()")
+       or die("Error" . $mysqli->error());
+    $p4dCountDay = $result->num_rows;
+  }
 
   // ------------------
   // State of S 3200
@@ -117,20 +120,23 @@ printHeader(60);
 
   echo "      <div class=\"P4dInfo\">\n";
 
-  if ($p4dstate == 0)
+  if (isMobile())
   {
-    echo  "        <div id=\"aStateOk\"><center>Fröling $heatingType ONLINE</center></div>\n";
-    echo  "          <table>\n";
-    echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
-    echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
-    echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
-    echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
-    echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
-    echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
-    echo  "          </table>\n";
+    if ($p4dstate == 0)
+    {
+      echo  "        <div id=\"aStateOk\"><center>Fröling $heatingType ONLINE</center></div>\n";
+      echo  "          <table>\n";
+      echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
+      echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
+      echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
+      echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
+      echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
+      echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
+      echo  "          </table>\n";
+    }
+    else
+      echo  "        <div id=\"aStateFail\"><center>ACHTUNG:<br/>$heatingType Daemon OFFLINE</center></div>\n";
   }
-  else
-    echo  "        <div id=\"aStateFail\"><center>ACHTUNG:<br/>$heatingType Daemon OFFLINE</center></div>\n";
 
   echo "      </div>\n";
   echo "      <br/>\n";
