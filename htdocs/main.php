@@ -37,21 +37,18 @@ printHeader(60);
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
   $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
 
-  if (isMobile())
-  {
-    // ------------------
-    // State of P4 Daemon
+  // ------------------
+  // State of P4 Daemon
 
-    $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
-    $load = "";
+  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+  $load = "";
 
-    if ($p4dstate == 0)
-       list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
+  if ($p4dstate == 0)
+    list($p4dNext, $p4dVersion, $p4dSince, $load) = explode("#", $response, 4);
 
-    $result = $mysqli->query("select * from samples where time >= CURDATE()")
-       or die("Error" . $mysqli->error());
-    $p4dCountDay = $result->num_rows;
-  }
+  $result = $mysqli->query("select * from samples where time >= CURDATE()")
+     or die("Error" . $mysqli->error());
+  $p4dCountDay = $result->num_rows;
 
   // ------------------
   // State of S 3200
@@ -118,10 +115,10 @@ printHeader(60);
   echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
   echo "      </div>\n";
 
-  echo "      <div class=\"P4dInfo\">\n";
-
-  if (isMobile())
+  if (!isMobile())
   {
+    echo "      <div class=\"P4dInfo\">\n";
+
     if ($p4dstate == 0)
     {
       echo  "        <div id=\"aStateOk\"><center>Fröling $heatingType ONLINE</center></div>\n";
@@ -136,10 +133,10 @@ printHeader(60);
     }
     else
       echo  "        <div id=\"aStateFail\"><center>ACHTUNG:<br/>$heatingType Daemon OFFLINE</center></div>\n";
-  }
 
-  echo "      </div>\n";
-  echo "      <br/>\n";
+    echo "      </div>\n";
+    echo "      <br/>\n";
+  }
 
   // ----------------
   //
