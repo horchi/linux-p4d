@@ -164,11 +164,9 @@ printHeader(60);
 
   echo "  <div>\n";
   echo "    <table class=\"" . (!isMobile() ? "table" : "tableMobile") . "\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
-  if (!isMobile())
-     echo "       <tr class=\"tableHead1\">\n";
-  else
-     echo "       <tr class=\"tableHead1Mobile\">\n";
+  echo "       <tr class=\"". (!isMobile() ? "tableHead1" : "tableHead1Mobile") . "\">\n";
   echo "         <td>Sensor</td>\n";
+
   if (!isMobile()) echo "         <td>Wert</td>\n";
   echo "       </tr>\n";
 

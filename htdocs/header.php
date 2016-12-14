@@ -10,7 +10,7 @@ include("functions.php");
 
  if (!isset($_SESSION['initialized']) || !$_SESSION['initialized'])
  {
-  $_SESSION['initialized'] = true;
+   $_SESSION['initialized'] = true;
 
    // -------------------------
    // establish db connection

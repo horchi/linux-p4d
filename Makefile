@@ -16,7 +16,6 @@ LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
-#VERSION = $(shell grep 'define VERSION ' p4d.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 TMPDIR = /tmp
 ARCHIVE = $(TARGET)-$(VERSION)
 

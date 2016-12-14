@@ -11,7 +11,7 @@ function functions_once()  {  }
 
 function isMobile()
 {
-   # return 1;  // #DEBUG - remove!!
+   // return 1;  // #DEBUG - remove!!
 
 	$useragent = $_SERVER['HTTP_USER_AGENT'];
 
@@ -209,9 +209,11 @@ function writeConfigItem($name, $value)
 
 function readConfigItem($name, &$value, $default = "")
 {
+   global $mysqli;
+   
    // new version - read direct from config table
 
-   $result = $mysqli->query("select value from config where owner = 'p4d' and name = $name")
+   $result = $mysqli->query("select value from config where owner = 'p4d' and name = '$name'")
          or die("Error" . $mysqli->error);
 
    if ($result->num_rows > 0)

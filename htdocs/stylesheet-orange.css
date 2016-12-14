@@ -292,7 +292,7 @@ Body
 .tableMobile
 {
   width: 620px;
-  border: 1;
+  border: 0;
   background-color: #FFFFCC;
   color: black;
   text-align: center;
@@ -334,7 +334,7 @@ Body
 
 .tableHead1Mobile
 {
-  border: 1;
+  border: 0;
   background-color: #FF9900;
   color: white;
   font: bold 22px Verdana;
