@@ -105,11 +105,14 @@ while ($fact = $factResult->fetch_assoc())
    $unit = $fact['unit'];
    $name = $fact['name'];
 
-   $query = "select unix_timestamp(time) as time, avg(value) as value"
+   $query = "select"
+      . "   unix_timestamp(min(time)) as time,"
+      . "   avg(value) as value"
       . " from samples where address = " . $address
-      . " and type = '" . $type . "'"
-      . " and time > from_unixtime(" . $from . ") and time < from_unixtime(" . $to . ")"
-      . " group by date(time), ((60/" . $groupMinutes . ") * hour(time) + floor(minute(time)/" . $groupMinutes . "))"
+      . "   and type = '" . $type . "'"
+      . "   and time > from_unixtime(" . $from . ") and time < from_unixtime(" . $to . ")"
+      . " group by"
+      . "   date(time), ((60/" . $groupMinutes . ") * hour(time) + floor(minute(time)/" . $groupMinutes . "))"
       . " order by time";
 
    syslog(LOG_DEBUG, "p4: $query");

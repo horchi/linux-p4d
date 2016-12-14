@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.1.41"
-#define VERSION_DATE "13.12.2016"
+#define _VERSION     "0.1.42"
+#define VERSION_DATE "14.12.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2016-12-14:  version 0.1.42
+   - change:  fixed problem with SQL syntax since MySQL >= 5.7
 
 2016-12-13:  version 0.1.41
    - added:  different mobile view for actual tab
