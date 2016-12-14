@@ -28,7 +28,7 @@ int P4d::performWebifRequests()
       tableJobs->setValue("DONEAT", time(0));
       tableJobs->setValue("STATE", "D");
 
-      tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x/%s'", 
+      tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x/%s'",
            jobId, command, addr, data);
 
       if (strcasecmp(command, "check-login") == 0)
@@ -44,11 +44,11 @@ int P4d::performWebifRequests()
 
          char* user = strdup(data);
          char* pwd = 0;
- 
+
          if ((pwd = strchr(user, ':')))
          {
             *pwd = 0; pwd++;
-            
+
             tell(eloDetail, "%s/%s", pwd, webPass);
 
             if (strcmp(webUser, user) == 0 && strcmp(pwd, webPass) == 0)
@@ -56,7 +56,7 @@ int P4d::performWebifRequests()
             else
                tableJobs->setValue("RESULT", "fail:login-denied");
          }
-         
+
          free(webPass);
          free(webUser);
          free(user);
@@ -91,14 +91,23 @@ int P4d::performWebifRequests()
 
       else if (strcasecmp(command, "read-config") == 0)
       {
+         char* name = strdup(data);
          char* buf = 0;
          char* value = 0;
+         char* def = 0;
 
-         getConfigItem(data, value);
+         if ((def = strchr(name, ':')))
+         {
+            *def = 0;
+            def++;
+         }
+
+         getConfigItem(name, value, def ? def : "");
 
          asprintf(&buf, "success:%s", value);
          tableJobs->setValue("RESULT", buf);
 
+         free(name);
          free(buf);
          free(value);
       }
@@ -120,7 +129,7 @@ int P4d::performWebifRequests()
                char* buf = 0;
                cRetBuf value = ConfigParameter::toNice(p.value, type);
 
-               // special for time min/max/default 
+               // special for time min/max/default
 
                if (type == mstParZeit)
                   ;  // #TODO
@@ -128,7 +137,7 @@ int P4d::performWebifRequests()
                asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, type == 0x0a ? "Uhr" : p.unit,
                         p.def, p.min, p.max, p.digits);
                tableJobs->setValue("RESULT", buf);
-               
+
                free(buf);
             }
          }
@@ -147,9 +156,9 @@ int P4d::performWebifRequests()
             int paddr = tableMenu->getIntValue("ADDRESS");
 
             ConfigParameter p(paddr);
-  
-            // Set Value 
-            
+
+            // Set Value
+
             if (ConfigParameter::toValue(data, type, p.value) == success)
             {
                tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", data, p.value, paddr);
@@ -160,14 +169,14 @@ int P4d::performWebifRequests()
                   cRetBuf value = ConfigParameter::toNice(p.value, type);
 
                   // store job result
-                                    
+
                   asprintf(&buf, "success#%s#%s#%d#%d#%d#%d", *value, p.unit,
                            p.def, p.min, p.max, p.digits);
                   tableJobs->setValue("RESULT", buf);
                   free(buf);
-                  
+
                   // update menu table
-                  
+
                   tableMenu->setValue("VALUE", value);
                   tableMenu->setValue("UNIT", p.unit);
                   tableMenu->update();
@@ -175,7 +184,7 @@ int P4d::performWebifRequests()
                else
                {
                   tell(eloAlways, "Set of parameter failed, error %d", status);
-                  
+
                   if (status == P4Request::wrnNonUpdate)
                      tableJobs->setValue("RESULT", "fail#no update");
                   else if (status == P4Request::wrnOutOfRange)
@@ -213,7 +222,7 @@ int P4d::performWebifRequests()
             if (request->getValue(&v) == success)
             {
                char* buf = 0;
-               
+
                asprintf(&buf, "success:%.2f%s", v.value / factor, unit);
                tableJobs->setValue("RESULT", buf);
                free(buf);
@@ -243,7 +252,7 @@ int P4d::performWebifRequests()
 
          getloadavg(averages, 3);
 
-         asprintf(&buf, "success:%s#%s#%s#%3.2f %3.2f %3.2f", 
+         asprintf(&buf, "success:%s#%s#%s#%3.2f %3.2f %3.2f",
                   dt, VERSION, d, averages[0], averages[1], averages[2]);
 
          tableJobs->setValue("RESULT", buf);
@@ -259,7 +268,7 @@ int P4d::performWebifRequests()
          localtime_r(&currentState.time, &tim);
          strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
 
-         asprintf(&buf, "success:%s#%d#%s#%s", date, 
+         asprintf(&buf, "success:%s#%d#%s#%s", date,
                   currentState.state, currentState.stateinfo,
                   currentState.modeinfo);
 
@@ -282,11 +291,11 @@ int P4d::performWebifRequests()
             int type = tableMenu->getIntValue("TYPE");
             int paddr = tableMenu->getIntValue("ADDRESS");
 
-            if (type == 0x07 || type == 0x08 || type == 0x0a || 
+            if (type == 0x07 || type == 0x08 || type == 0x0a ||
                 type == 0x40 || type == 0x39 || type == 0x32)
             {
                Fs::ConfigParameter p(paddr);
-               
+
                if (request->getParameter(&p) == success)
                {
                   cRetBuf value = ConfigParameter::toNice(p.value, type);
@@ -303,7 +312,7 @@ int P4d::performWebifRequests()
             else if (type == mstFirmware)
             {
                Fs::Status s;
-               
+
                if (request->getStatus(&s) == success)
                {
                   if (tableMenu->find())
@@ -367,12 +376,12 @@ int P4d::performWebifRequests()
                   const char* unit = tableValueFacts->getStrValue("UNIT");
 
                   status = request->getValue(&v);
-                  
+
                   if (status == success)
                   {
                      char* buf = 0;
                      asprintf(&buf, "%.2f", v.value / factor);
-                     
+
                      if (tableMenu->find())
                      {
                         tableMenu->setValue("VALUE", buf);
@@ -384,7 +393,7 @@ int P4d::performWebifRequests()
 
                         tableMenu->update();
                      }
-                     
+
                      free(buf);
                   }
                }
@@ -403,7 +412,7 @@ int P4d::performWebifRequests()
 
       tableJobs->store();
 
-      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %ld seconds", 
+      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %ld seconds",
            jobId, tableJobs->getStrValue("RESULT"),
            time(0) - start);
    }
@@ -420,7 +429,7 @@ int P4d::performWebifRequests()
 int P4d::cleanupWebifRequests()
 {
    int status;
-   
+
    // delete jobs older than 2 days
 
    tell(eloAlways, "Cleanup jobs table with history of 2 days");

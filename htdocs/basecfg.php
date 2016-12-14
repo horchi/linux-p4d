@@ -175,16 +175,16 @@ echo "        <br/></br>\n";
 // ------------------------
 // setup items ...
 
-seperator("Web Interface", 0, 1);
+seperator("Web Interface", 0);
 colorSchemeItem(1, "Farbschema");
 heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
 configBoolItem(4, "Status-Ani?", "stateAni", $_SESSION['stateAni'], "");
 
-seperator("Ansicht 'Aktuell'", 0, 2);
+seperator("Ansicht 'Aktuell'", 0, "seperatorTitle2");
 configStrItem(1, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
 configStrItem(4, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
 
-seperator("Charting", 0, 2);
+seperator("Charting", 0, "seperatorTitle2");
 configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
 configBoolItem(2, "senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
 configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein,15 mittel,25 groß,45", "");
@@ -205,13 +205,13 @@ if ($_SESSION['chart34'] == "1")
    configStrItem(4, "Chart 4", "chart4", $_SESSION['chart4'], "Werte-ID siehe 'Aufzeichnung'", 250);
 }
 
-seperator("Login", 0, 2);
+seperator("Login", 0, "seperatorTitle2");
 configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
 configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
 
-seperator("Daemon Konfiguration", 0, 1);
+seperator("Daemon Konfiguration", 0);
 
-seperator("Mail Benachrichtigungen", 0, 2);
+seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
 $a = ($_SESSION['mail']) ? "" : "disabled=true";
 $ro = ($_SESSION['mail']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
 configBoolItem(1, "Mail Benachrichtigung", "mail onClick=\"disableContent('htM',this); readonlyContent('Mail',this)\"", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
@@ -222,7 +222,7 @@ configStrItem(2, "Status Mail für folgende Stati", "stateMailStates id=Mail3", 
 configStrItem(2, "p4d sendet Mails über das Skript", "mailScript id=Mail4", $_SESSION['mailScript'], "", 400, $ro);
 configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 
-seperator("Sonstiges", 0, 2);
+seperator("Sonstiges", 0, "seperatorTitle2");
 $ro = ($_SESSION['tsync']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
 configBoolItem(1, "Zeitsynchronisation", "tsync onClick=\"readonlyContent('timeLeak',this)\"", $_SESSION['tsync'], "tägl. 23:00Uhr");
 configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak id='timeLeak'", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);

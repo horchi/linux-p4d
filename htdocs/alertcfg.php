@@ -89,7 +89,7 @@ echo "        <br/></br>\n";
 // ------------------------
 // setup items ...
 
-seperator("Benachrichtigung bei bestimmten Sensor-Werten", 0, 1);
+seperator("Benachrichtigung bei bestimmten Sensor-Werten", 0);
 echo "        <div class=\"input\" id=\"hlp\" style=\"display:none;\" onClick=\"showContent('hlp')\">\n";
 echo "          <span class=\"inputComment\">
                 Hier formulierst du die Bedingungen (Alarmwerte) für die einzelnen Sensoren, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
@@ -104,7 +104,7 @@ echo "          <span class=\"inputComment\">
                 mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss
           </span>\n";
 echo "        </div><br/>\n";
-seperator("Bedingungen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, 2);
+seperator("Bedingungen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, "seperatorTitle2");
 
 $result = $mysqli->query("select * from sensoralert") or die("<br/>Error: " . $mysqli->error);
 

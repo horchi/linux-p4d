@@ -40,7 +40,7 @@ printHeader(60);
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
+  $p4dstate = requestAction("p4d-state", 1, 0, "", $response);
   $load = "";
 
   if ($p4dstate == 0)
@@ -57,7 +57,7 @@ printHeader(60);
   $mode = "";
   $time = "";
 
-  $state = requestAction("s3200-state", 3, 0, "", $response);
+  $state = requestAction("s3200-state", 1, 0, "", $response);
 
   if ($state == 0)
      list($time, $state, $status, $mode) = explode("#", $response, 4);
@@ -157,17 +157,20 @@ printHeader(60);
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
-  seperator("Messwerte vom " . $maxPretty, 290);
+  seperator("Messwerte vom " . $maxPretty, 290, !isMobile() ? "seperatorTitle1" : "seperatorTitle1Mobile");
 
   // ------------------
   // table
 
   echo "  <div>\n";
-  echo "  <table class=\"table\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
-  echo "      <tr class=\"tableHead1\">\n";
-  echo "        <td>Sensor</td>\n";
-  if (!isMobile()) echo "        <td>Wert</td>\n";
-  echo "      </tr>\n";
+  echo "    <table class=\"" . (!isMobile() ? "table" : "tableMobile") . "\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
+  if (!isMobile())
+     echo "       <tr class=\"tableHead1\">\n";
+  else
+     echo "       <tr class=\"tableHead1Mobile\">\n";
+  echo "         <td>Sensor</td>\n";
+  if (!isMobile()) echo "         <td>Wert</td>\n";
+  echo "       </tr>\n";
 
   $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
 
@@ -210,29 +213,27 @@ printHeader(60);
      $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
-     if ($i % 2)
-       echo "     <tr class=\"tableDark\">\n";
+     if (!isMobile())
+        $class = $i % 2 ? "tableDark" : "tableLight";
      else
-       echo "     <tr class=\"tableLight\">\n";
+        $class = $i % 2 ? "tableDarkMobile" : "tableLightMobile";
 
-     echo "        <td>" . $url . $title . "</a></td>\n";
+     echo "       <tr class=\"" . $class . "\">\n";
+     echo "         <td>" . $url . $title . "</a></td>\n";
 
      if (isMobile())
      {
-       echo "     </tr>\n";
-       if ($i % 2)
-         echo "     <tr class=\"tableDark\">\n";
-       else
-         echo "     <tr class=\"tableLight\">\n";
+        echo "       </tr>\n";
+        echo "       <tr class=\"" . $class . "\">\n";
      }
 
-     echo "        <td>$value$unit</td>\n";
-     echo "     </tr>\n";
+     echo "         <td>$value$unit</td>\n";
+     echo "       </tr>\n";
 
      $i++;
   }
 
-  echo "  </table>\n";
+  echo "    </table>\n";
   echo "  </div>\n";
 
   $mysqli->close();

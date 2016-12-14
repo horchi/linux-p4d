@@ -1,15 +1,15 @@
 
-Body 
+Body
 {
-  background-color: #EEEEEE; 
+  background-color: #EEEEEE;
   font: 12px Verdana;
   color: #111111;
 }
 
-.content 
+.content
 {
   padding: 20px;
-  background-color: #EEEEEE; 
+  background-color: #EEEEEE;
   font: 18px Verdana;
   color: #111111;
 }
@@ -25,7 +25,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.button1:hover 
+.button1:hover
 {
   background: #FF3300;
 }
@@ -42,7 +42,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.button2:hover 
+.button2:hover
 {
   background: #FF3300;
   border-radius: 10px;
@@ -60,13 +60,13 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.button2sel:hover 
+.button2sel:hover
 {
   background: #FF3300;
   border-radius: 10px;
 }
 
-.button3 
+.button3
 {
   background-color: #FF9900;
   color: white;
@@ -79,12 +79,12 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.button3:hover 
+.button3:hover
 {
   background: #FF3300;
 }
 
-.button4 
+.button4
 {
   background-color: #DDDDDD;
   color: black;
@@ -95,12 +95,12 @@ Body
   box-shadow: none;
 }
 
-.button4:hover 
+.button4:hover
 {
   background: #FF5555;
 }
 
-.buttont 
+.buttont
 {
   background-color: rgba(255, 255, 255, 0);
   color: black;
@@ -110,7 +110,7 @@ Body
   border-radius: 5px;
 }
 
-.buttont:hover 
+.buttont:hover
 {
   background: #FF6600;
   color: white;
@@ -129,6 +129,18 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.seperatorTitle1Mobile
+{
+  background-color: #CC0033;
+  color: white;
+  width: 590px;
+  padding: 2px 15px;
+  text-decoration: none;
+  font: bold 24px Verdana;
+  border-radius: 10px;
+  box-shadow: 8px 8px 8px #666;
+}
+
 .seperatorTitle2
 {
   background-color: #FF9900;
@@ -143,7 +155,7 @@ Body
 
 .input
 {
-  background-color: #FFFFCC; 
+  background-color: #FFFFCC;
   color: black;
   width: 1000px;
   padding: 15px;
@@ -192,7 +204,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.info 
+.info
 {
   background-color: green;
   color: white;
@@ -204,7 +216,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.help 
+.help
 {
   color: yellow;
   cursor: pointer;
@@ -234,7 +246,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.schema 
+.schema
 {
   font: bold 12px Verdana;
   top: 50px;
@@ -249,14 +261,14 @@ Body
   text-decoration: none;
   font: bold 16px Verdana;
 }
-  
+
 .values a:link
 {
   color: black;
   padding: 1px 1px;
   text-decoration: none;
   font: bold 16px Verdana;
-}  
+}
 
 .values a:visited
 {
@@ -264,7 +276,7 @@ Body
   padding: 1px 1px;
   text-decoration: none;
   font: bold 16px Verdana;
-}  
+}
 
 .table
 {
@@ -273,6 +285,18 @@ Body
   background-color: #FFFFCC;
   color: black;
   font: 14px Verdana;
+  padding: 20px 20px;
+  box-shadow: 8px 8px 8px #666;
+}
+
+.tableMobile
+{
+  width: 620px;
+  border: 1;
+  background-color: #FFFFCC;
+  color: black;
+  text-align: center;
+  font: 22px Verdana;
   padding: 20px 20px;
   box-shadow: 8px 8px 8px #666;
 }
@@ -288,7 +312,7 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.tableHead 
+.tableHead
 {
   width: 1150px;
   border: 1;
@@ -305,6 +329,15 @@ Body
   background-color: #FF9900;
   color: white;
   font: bold 16px Verdana;
+  padding: 20px;
+}
+
+.tableHead1Mobile
+{
+  border: 1;
+  background-color: #FF9900;
+  color: white;
+  font: bold 22px Verdana;
   padding: 20px;
 }
 
@@ -328,135 +361,155 @@ Body
   padding: 20px 20px;
 }
 
+.tableLightMobile
+{
+  width: 550px;
+  border: 0;
+  background-color: #FFFFCC;
+  color: black;
+  font: 22px Verdana;
+  padding: 20px 20px;
+}
+
+.tableDarkMobile
+{
+  width: 550px;
+  border: 0;
+  background-color: #FFFF66;
+  color: black;
+  font: 22px Verdana;
+  padding: 20px 20px;
+}
+
 .schemaImage
-{ 
-  background-color: #FFFFCC; 
+{
+  background-color: #FFFFCC;
   box-shadow: 8px 8px 8px #666;
-  border-radius: 10px; 
+  border-radius: 10px;
   font: 20px Verdana;
 }
 
 .cellL0
 {
   background-color: #FFFFCC;
-  color: black;  
+  color: black;
 }
 
 .cellL1
-{ 
+{
   background-color: #FF6600;
   color: black;
 }
 
 .cellL2
-{ 
+{
   background-color: #FFF660;
   color: black;
 }
 
 .cellL3
-{ 
+{
   background-color: #FFAA66;
   color: black;
 }
 
 .cellL4
-{ 
+{
   background-color: white;
   color: black;
 }
 
 .stateInfo
-{ 
-  position: absolute; 
-  top: 50px; 
-  left: 30px; 
-  width: 400px; 
-  background-color: #FFFFCC; 
-  padding: 10px; 
+{
+  position: absolute;
+  top: 50px;
+  left: 30px;
+  width: 400px;
+  background-color: #FFFFCC;
+  padding: 10px;
   font: 20px Verdana;
-  border-radius: 10px; 
+  border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }
 
 .stateImgContainer
-{ 
-  position: absolute; 
-  top: 50px; 
-  left: 460px; 
-  width: 175px; 
-  height: 200px; 
-  background-color: #FFFFCC; 
-  padding: 5px; 
-  border-radius: 10px; 
+{
+  position: absolute;
+  top: 50px;
+  left: 460px;
+  width: 175px;
+  height: 200px;
+  background-color: #FFFFCC;
+  padding: 5px;
+  border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }
 
 .centerImage
 {
   position: absolute;
-  top: 0; 
-  bottom:0; 
-  left: 0; 
+  top: 0;
+  bottom:0;
+  left: 0;
   right:0;
   margin: auto;
 }
 
 .P4dInfo
-{ 
-  position: absolute; 
-  top: 50px; 
-  left: 660px; 
-  width: 420px; 
-  height: 190px; 
+{
+  position: absolute;
+  top: 50px;
+  left: 660px;
+  width: 420px;
+  height: 190px;
   background-color: #FFFFCC;
   padding: 10px;
   font: 19px Verdana;
-  border-radius: 10px; 
+  border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }
 
 #aStateOk
-{ 
+{
   color: green;
   font: bold 24px Verdana;
 }
 
 #aStateFail
-{ 
+{
   color: red;
   text-decoration: blink;
   font: bold 24px Verdana;
 }
 
 #aStateHeating
-{ 
+{
   color: red;
   font: bold 24px Verdana;
 }
 
 #aStateOther
-{ 
+{
   color: blue;
   font: bold 24px Verdana;
 }
 
-#aSelect 
+#aSelect
 {
-  position: absolute; 
-  top: 195px; 
-  left: 30px; 
-  width: 400px; 
+  position: absolute;
+  top: 195px;
+  left: 30px;
+  width: 400px;
   background-color: #FFFFCC;
-  solid: #804000; 
-  padding: 10px; 
+  solid: #804000;
+  padding: 10px;
   font: 18px Verdana;
-  border-radius: 10px; 
+  border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }
 
-#aSelectChart 
-{ 
+#aSelectChart
+{
   position: absolute;
   top: 50px;
   left: 30px;
@@ -469,10 +522,10 @@ Body
 }
 
 .chart
-{ 
+{
   background-color: #FFFFCC;
   padding: 10px;
   width: 1010px;
-  border-radius: 10px; 
+  border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
 }

@@ -212,7 +212,7 @@ echo "        <br/></br>\n";
 // ------------------------
 // setup items ...
 
-seperator("Grund-Einstellungen", 0, 1);
+seperator("Grund-Einstellungen", 0);
 schemaItem(1, "Schema", $_SESSION['schema']);
 configBoolItem(5, "Sensor-Bezeichnungen", "schemaBez", $_SESSION['schemaBez']);
 configBoolItem(5, "Hintergrund?", "valuesBG", $_SESSION['valuesBG'], "anzeigen?");
@@ -236,7 +236,7 @@ echo "          <span class=\"inputComment\">
                 <b>das bedeutet:</b> 140,141,143 sind Pumpen - (15) ist der Saugzug-Ventilator <br />
           </span>\n";
 echo "        </div><br/>\n";
-seperator("Piktogramme&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, 4);
+seperator("Piktogramme&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"help\" onClick=\"showContent('hlp')\">(Hilfe)</span>", 0, "seperatorTitle2");
 configStrItem(1, "Pumpe an", "pumpON", $_SESSION['pumpON'], "", 217);
 configStrItem(5, "Pumpe aus", "pumpOFF", $_SESSION['pumpOFF'], "jeweils Text oder Pfad/zum/Bild.gif", 217);
 configStrItem(7, "Lüfter &nbsp;an", "ventON", $_SESSION['ventON'], "", 217);

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.1.42"
+#define _VERSION     "0.1.43"
 #define VERSION_DATE "14.12.2016"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2016-12-14:  version 0.1.43
+   - change: further modifications of WEBIF for mobile devices
 
 2016-12-14:  version 0.1.42
    - change:  fixed problem with SQL syntax since MySQL >= 5.7

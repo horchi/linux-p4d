@@ -140,7 +140,7 @@ int P4d::initDb()
 {
    static int initial = yes;
    int status = success;
-   
+
    if (connection)
       exitDb();
 
@@ -165,13 +165,13 @@ int P4d::initDb()
       std::map<std::string, cDbTableDef*>::iterator t;
 
       tell(0, "Checking table structure and indices ...");
-      
+
       for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
       {
          cDbTable* table = new cDbTable(connection, t->first.c_str());
-         
+
          tell(1, "Checking table '%s'", t->first.c_str());
-         
+
          if (!table->exist())
          {
             if ((status += table->createTable()) != success)
@@ -181,22 +181,22 @@ int P4d::initDb()
          {
             status += table->validateStructure();
          }
-         
+
          status += table->createIndices();
-         
+
          delete table;
       }
-      
+
       connection->detachConnection();
 
       if (status != success)
          return abrt;
-      
+
       tell(0, "Checking table structure and indices succeeded");
    }
 
    // ------------------------
-   // create/open tables 
+   // create/open tables
    // ------------------------
 
    tableValueFacts = new cDbTable(connection, "valuefacts");
@@ -284,7 +284,7 @@ int P4d::initDb()
    status += selectSensorAlerts->prepare();
 
    // ------------------
-   // select * from samples 
+   // select * from samples
    //    where type = ? and address = ?
    //     and time <= ?
    //     and time > ?
@@ -315,11 +315,11 @@ int P4d::initDb()
    cleanupJobs->bindCmp(0, "REQAT", 0, "<");
 
    status += cleanupJobs->prepare();
-   
+
    // ------------------
 
    if (status == success)
-      tell(eloAlways, "Connection to database established");  
+      tell(eloAlways, "Connection to database established");
 
    return status;
 }
@@ -358,7 +358,7 @@ int P4d::readConfiguration()
    char* webUser = 0;
    char* webPass = 0;
    md5Buf defaultPwd;
-   
+
    // init default user and password
 
    createMd5("p4-3200", defaultPwd);
@@ -397,7 +397,7 @@ int P4d::initialize(int truncate)
    if (truncate)
    {
       tell(eloAlways, "Truncate configuration tables!");
-      
+
       tableValueFacts->truncate();
       tableSchemaConf->truncate();
       tableSmartConf->truncate();
@@ -442,14 +442,14 @@ int P4d::setup()
       char oldState = tableValueFacts->getStrValue("STATE")[0];
       char state = oldState;
 
-      printf("%s 0x%04lx '%s' (%s)", 
+      printf("%s 0x%04lx '%s' (%s)",
              tableValueFacts->getStrValue("TYPE"),
              tableValueFacts->getIntValue("ADDRESS"),
              tableValueFacts->getStrValue("UNIT"),
              tableValueFacts->getStrValue("TITLE"));
 
       printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
-            
+
       if ((res = fgets(buf, 100, stdin)) && strlen(res) > 1)
          state = toupper(res[0]) == 'Y' ? 'A' : 'D';
 
@@ -549,7 +549,7 @@ int P4d::updateValueFacts()
    added = 0;
    modified = 0;
 
-   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; 
+   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast;
         status = request->getNextValueSpec(&v))
    {
       if (status != success)
@@ -557,13 +557,13 @@ int P4d::updateValueFacts()
 
       tell(eloDebug, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
            count, v.address, v.factor, v.unit, v.unknown, v.description);
-      
+
       // update table
-      
+
       tableValueFacts->clear();
       tableValueFacts->setValue("ADDRESS", v.address);
       tableValueFacts->setValue("TYPE", "VA");
-      
+
       if (!tableValueFacts->find())
       {
          tableValueFacts->setValue("NAME", v.name);
@@ -572,7 +572,7 @@ int P4d::updateValueFacts()
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
-         
+
          tableValueFacts->store();
          added++;
       }
@@ -605,9 +605,9 @@ int P4d::updateValueFacts()
 
       if (!type)
          continue;
-      
+
       // update table
-      
+
       tableValueFacts->clear();
       tableValueFacts->setValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
       tableValueFacts->setValue("TYPE", type);
@@ -616,24 +616,24 @@ int P4d::updateValueFacts()
       if (!tableValueFacts->find())
       {
          tableValueFacts->setValue("STATE", "D");
-         added++; 
+         added++;
          modified--;
       }
-      
+
       removeCharsExcept(sname, nameChars);
       asprintf(&name, "%s_0x%x", sname.c_str(), (int)tableMenu->getIntValue("ADDRESS"));
-      
+
       tableValueFacts->setValue("NAME", name);
       tableValueFacts->setValue("UNIT", tableMenu->getStrValue("UNIT"));
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
-      
+
       if (tableValueFacts->getChanges())
       {
          tableValueFacts->store();
          modified++;
       }
-      
+
       free(name);
       count++;
    }
@@ -651,7 +651,7 @@ int P4d::updateValueFacts()
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-   
+
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("NAME", "Status");
@@ -659,7 +659,7 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Heizungsstatus");
-      
+
       tableValueFacts->store();
       added++;
    }
@@ -667,7 +667,7 @@ int P4d::updateValueFacts()
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-   
+
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("NAME", "Betriebsmodus");
@@ -675,7 +675,7 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Betriebsmodus");
-      
+
       tableValueFacts->store();
       added++;
    }
@@ -683,7 +683,7 @@ int P4d::updateValueFacts()
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-   
+
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("NAME", "Uhrzeit");
@@ -691,7 +691,7 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "T");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
-      
+
       tableValueFacts->store();
       added++;
    }
@@ -710,15 +710,15 @@ int P4d::updateValueFacts()
       count = 0;
       added = 0;
       modified = 0;
-      
+
       for (W1::SensorList::iterator it = list->begin(); it != list->end(); ++it)
       {
          // update table
-         
+
          tableValueFacts->clear();
          tableValueFacts->setValue("ADDRESS", (int)W1::toId(it->first.c_str()));
          tableValueFacts->setValue("TYPE", "W1");
-         
+
          if (!tableValueFacts->find())
          {
             tableValueFacts->setValue("NAME", it->first.c_str());
@@ -726,17 +726,17 @@ int P4d::updateValueFacts()
             tableValueFacts->setValue("UNIT", "°");
             tableValueFacts->setValue("FACTOR", 1);
             tableValueFacts->setValue("TITLE", it->first.c_str());
-            
+
             tableValueFacts->store();
             added++;
          }
-         
+
          count++;
       }
-      
+
       tell(eloAlways, "Found %d one wire sensors, added %d", count, added);
    }
-      
+
    return success;
 }
 
@@ -772,21 +772,21 @@ int P4d::updateMenu()
       if (status != success)
          break;
 
-      tell(eloDebug, "%3d) Address: 0x%4x, parent: 0x%4x, child: 0x%4x; '%s'", 
+      tell(eloDebug, "%3d) Address: 0x%4x, parent: 0x%4x, child: 0x%4x; '%s'",
            count++, m.parent, m.address, m.child, m.description);
 
-      // update table    
+      // update table
 
       tableMenu->clear();
 
       tableMenu->setValue("STATE", "D");
       tableMenu->setValue("UNIT", m.type == mstAnlOut && isEmpty(m.unit) ? "%" : m.unit);
-      
+
       tableMenu->setValue("PARENT", m.parent);
       tableMenu->setValue("CHILD", m.child);
       tableMenu->setValue("ADDRESS", m.address);
       tableMenu->setValue("TITLE", m.description);
-      
+
       tableMenu->setValue("TYPE", m.type);
       tableMenu->setValue("UNKNOWN1", m.unknown1);
       tableMenu->setValue("UNKNOWN2", m.unknown2);
@@ -797,7 +797,7 @@ int P4d::updateMenu()
    }
 
    tell(eloAlways, "Read %d menu items", count);
-   
+
    return success;
 }
 
@@ -805,7 +805,7 @@ int P4d::updateMenu()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* type, int address, double value, 
+int P4d::store(time_t now, const char* type, int address, double value,
                 unsigned int factor, const char* text)
 {
    tableSamples->clear();
@@ -820,7 +820,7 @@ int P4d::store(time_t now, const char* type, int address, double value,
    tableSamples->setValue("SAMPLES", 1);
 
    tableSamples->store();
-   
+
    return success;
 }
 
@@ -835,11 +835,11 @@ void P4d::scheduleTimeSyncIn(int offset)
 
    now = time(0);
    localtime_r(&now, &tm);
-   
+
    tm.tm_sec = 0;
    tm.tm_min = 0;
    tm.tm_hour = 23;
-   tm.tm_isdst = -1;               // force DST auto detect   
+   tm.tm_isdst = -1;               // force DST auto detect
 
    nextTimeSyncAt = mktime(&tm);
    nextTimeSyncAt += offset;
@@ -883,7 +883,7 @@ int P4d::meanwhile()
 
    if (!connection || !connection->isConnected())
       return fail;
-   
+
    performWebifRequests();
 
    if (lastCleanup < time(0) - 6*tmeSecondsPerHour)
@@ -948,7 +948,7 @@ int P4d::loop()
          aggregate();
 
       // update/check state
-      
+
       status = updateState(&currentState);
 
       if (status != success)
@@ -963,20 +963,20 @@ int P4d::loop()
          {
             tell(eloAlways, "Retrying in 10 seconds");
             standby(10);
-         }            
+         }
          continue;
       }
 
       stateChanged = lastState != currentState.state;
-      
+
       if (stateChanged)
       {
          lastState = currentState.state;
          nextAt = time(0);              // force on state change
-         
+
          tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
       }
-      
+
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
 
       // work expected?
@@ -999,7 +999,7 @@ int P4d::loop()
          continue;
       }
 
-      // perform update 
+      // perform update
 
       nextAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
@@ -1009,14 +1009,14 @@ int P4d::loop()
       sem->p();
       update();
 
-      // mail 
+      // mail
 
       if (mail && stateChanged)
          sendMail();
 
       sem->v();
    }
-   
+
    serial->close();
 
    return success;
@@ -1061,23 +1061,23 @@ int P4d::updateState(Status* state)
       if (now > nextTimeSyncAt)
       {
          scheduleTimeSyncIn(tmeSecondsPerDay);
-         
+
          tell(eloAlways, "Time drift is %ld seconds, syncing now", state->time - now);
-         
+
          sem->p();
-         
+
          if (request->syncTime() == success)
             tell(eloAlways, "Time sync succeeded");
          else
             tell(eloAlways, "Time sync failed");
-         
+
          sleep(2);   // S-3200 need some seconds to store time :o
 
          status = request->getStatus(state);
          now = time(0);
-         
+
          sem->v();
-         
+
          tell(eloAlways, "Time drift now %ld seconds", state->time - now);
       }
    }
@@ -1114,7 +1114,7 @@ int P4d::update()
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
-      
+
       if (tableValueFacts->hasValue("TYPE", "VA"))
       {
          Value v(addr);
@@ -1124,7 +1124,7 @@ int P4d::update()
             tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
             continue;
          }
-            
+
          store(now, type, v.address, v.value, factor);
          sprintf(num, "%.2f", v.value / factor);
 
@@ -1184,7 +1184,7 @@ int P4d::update()
       else if (tableValueFacts->hasValue("TYPE", "W1"))
       {
          double value = w1.valueOf(name);
-            
+
          store(now, type, addr, value, factor);
          sprintf(num, "%.2f", value / factor);
 
@@ -1192,7 +1192,7 @@ int P4d::update()
             strcat(num, "°C");
          else
             strcat(num, unit);
-         
+
          addParameter2Mail(title, num);
       }
 
@@ -1204,27 +1204,27 @@ int P4d::update()
             {
                store(now, type, udState, currentState.state, factor, currentState.stateinfo);
                addParameter2Mail(title, currentState.stateinfo);
-                  
+
                break;
             }
             case udMode:
             {
                store(now, type, udMode, currentState.mode, factor, currentState.modeinfo);
                addParameter2Mail(title, currentState.modeinfo);
-                  
+
                break;
             }
             case udTime:
             {
                struct tm tim = {0};
                char date[100];
-               
+
                localtime_r(&currentState.time, &tim);
                strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
-               
+
                store(now, type, udTime, currentState.time, factor, date);
                addParameter2Mail(title, date);
-                  
+
                break;
             }
          }
@@ -1236,7 +1236,7 @@ int P4d::update()
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
    afterUpdate();
-   
+
    sensorAlertCheck(now);
 
    updateErrors();
@@ -1251,9 +1251,9 @@ int P4d::update()
 void P4d::afterUpdate()
 {
    char* path = 0;
-   
+
    asprintf(&path, "%s/after-update.sh", confDir);
-   
+
    if (fileExists(path))
    {
       tell(0, "Calling '%s'", path);
@@ -1271,7 +1271,7 @@ void P4d::sensorAlertCheck(time_t now)
 {
    tableSensorAlert->clear();
    tableSensorAlert->setValue("KIND", "M");
-   
+
    // iterate over all alert roules ..
 
    for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
@@ -1302,17 +1302,17 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    int lgop = alertRow->getIntValue("LGOP");
    time_t lastAlert = alertRow->getIntValue("LASTALERT");
    int maxRepeat = alertRow->getIntValue("MAXREPEAT");
-   
+
    int minIsNull = alertRow->getValue("MIN")->isNull();
    int maxIsNull = alertRow->getValue("MAX")->isNull();
    int min = alertRow->getIntValue("MIN");
    int max = alertRow->getIntValue("MAX");
-      
+
    int rangeIsNull = alertRow->getValue("RANGEM")->isNull();
    int deltaIsNull = alertRow->getValue("DELTA")->isNull();
    int range = alertRow->getIntValue("RANGEM");
    int delta = alertRow->getIntValue("DELTA");
-   
+
    // lookup value facts
 
    tableValueFacts->clear();
@@ -1320,23 +1320,23 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    tableValueFacts->setValue("TYPE", type);
 
    // lookup samples
-   
+
    tableSamples->clear();
    tableSamples->setValue("ADDRESS", addr);
    tableSamples->setValue("TYPE", type);
    tableSamples->setValue("AGGREGATE", "S");
    tableSamples->setValue("TIME", now);
-   
+
    if (!tableSamples->find() || !tableValueFacts->find())
    {
       tell(eloAlways, "Info: Can't perform sensor check for %s/%d", type, addr);
       return 0;
    }
-   
+
    // data from samples and value facts
-   
+
    double value = tableSamples->getFloatValue("VALUE");
-   
+
    const char* title = tableValueFacts->getStrValue("TITLE");
    const char* unit = tableValueFacts->getStrValue("UNIT");
 
@@ -1349,9 +1349,9 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       {
          tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
               id, type, addr, value, min, max);
-            
+
          // max one alert mail per maxRepeat [minutes]
-            
+
          if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
          {
             alert = 1;
@@ -1362,32 +1362,32 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
    // -------------------------------
    // check range delta
-      
+
    if (!rangeIsNull && !deltaIsNull)
    {
       // select value of this sensor around 'time = (now - range)'
-         
+
       time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
-      time_t rangeEndAt = rangeStartAt + interval; 
-         
+      time_t rangeEndAt = rangeStartAt + interval;
+
       tableSamples->clear();
       tableSamples->setValue("ADDRESS", addr);
       tableSamples->setValue("TYPE", type);
       tableSamples->setValue("AGGREGATE", "S");
       tableSamples->setValue("TIME", rangeStartAt);
       rangeEnd.setValue(rangeEndAt);
-         
+
       if (selectSampleInRange->find())
       {
          double oldValue = tableSamples->getFloatValue("VALUE");
-            
+
          if (labs(value - oldValue) > delta)
          {
-            tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes", 
+            tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes",
                  id, type, addr, value, delta, range);
-               
+
             // max one alert mail per maxRepeat [minutes]
-               
+
             if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
             {
                alert = 1;
@@ -1395,7 +1395,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
             }
          }
       }
-         
+
       selectSampleInRange->freeResult();
       tableSamples->reset();
    }
@@ -1413,7 +1413,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       {
          tableSensorAlert->clear();
          tableSensorAlert->setValue("ID", alertRow->getIntValue("SUBID"));
-         
+
          if (tableSensorAlert->find())
          {
             int sAlert = performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
@@ -1480,20 +1480,20 @@ int P4d::scheduleAggregate()
 
    now = time(0);
    localtime_r(&now, &tm);
-   
+
    tm.tm_sec = 0;
    tm.tm_min = 0;
    tm.tm_hour = 1;
    tm.tm_isdst = -1;               // force DST auto detect
-   
+
    nextAggregateAt = mktime(&tm);
-   
+
    // if in the past ... skip to next day ...
 
    if (nextAggregateAt <= time(0))
       nextAggregateAt += tmeSecondsPerDay;
 
-   tell(eloAlways, "Scheduled aggregation for '%s' with interval of %d minutes", 
+   tell(eloAlways, "Scheduled aggregation for '%s' with interval of %d minutes",
         l2pTime(nextAggregateAt).c_str(), aggregateInterval);
 
    return success;
@@ -1509,7 +1509,7 @@ int P4d::aggregate()
    time_t history = time(0) - (aggregateHistory * tmeSecondsPerDay);
    int aggCount = 0;
 
-   asprintf(&stmt, 
+   asprintf(&stmt,
             "replace into samples "
             "  select address, type, 'A' as aggregate, "
             "    CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV %d) * %d)) + INTERVAL %d MINUTE time, "
@@ -1525,7 +1525,7 @@ int P4d::aggregate()
             aggregateInterval * tmeSecondsPerMinute, aggregateInterval * tmeSecondsPerMinute, aggregateInterval,
             history,
             aggregateInterval * tmeSecondsPerMinute, aggregateInterval * tmeSecondsPerMinute, aggregateInterval);
-  
+
    tell(eloAlways, "Starting aggregation ...");
 
    if (connection->query(aggCount, "%s", stmt) == success)
@@ -1538,11 +1538,11 @@ int P4d::aggregate()
       // Einzelmesspunkte löschen ...
 
       asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%ld)", history);
-      
+
       if (tableSamples->deleteWhere(stmt, delCount) == success)
       {
          tell(eloAlways, "Aggregation with interval of %d minutes done; "
-              "Created %d aggregation rows, deleted %d sample rows", 
+              "Created %d aggregation rows, deleted %d sample rows",
               aggregateInterval, aggCount, delCount);
       }
    }
@@ -1579,7 +1579,7 @@ int P4d::updateErrors()
 
       tableErrors->insert();
    }
-   
+
    return success;
 }
 
@@ -1598,21 +1598,21 @@ int P4d::sendAlertMail(const char* to)
 
    if (alertMailBody.empty())
       alertMailBody = "- undefined -";
-   
+
    if (htmlMail)
    {
       char* html = 0;
 
       alertMailBody = strReplace("\n", "<br>\n", alertMailBody);
 
-      const char* htmlHead = 
+      const char* htmlHead =
          "<head>"
          "  <style type=\"text/css\">\n"
          "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
          "  </style>\n"
          "</head>\n";
-     
-      asprintf(&html, 
+
+      asprintf(&html,
                "<html>\n"
                " %s"
                " <body>\n"
@@ -1620,15 +1620,15 @@ int P4d::sendAlertMail(const char* to)
                " </body>\n"
                "</html>\n",
                htmlHead, alertMailBody.c_str());
-      
+
       alertMailBody = html;
       free(html);
    }
 
-   // prepare command and perform system call 
+   // prepare command and perform system call
 
-   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
-            alertMailSubject.c_str(), alertMailBody.c_str(), 
+   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
+            alertMailSubject.c_str(), alertMailBody.c_str(),
             htmlMail ? "text/html" : "text/plain", to);
 
    tell(eloAlways, "Sending mail '%s' to '%s'", alertMailSubject.c_str(), to);
@@ -1644,7 +1644,7 @@ int P4d::sendAlertMail(const char* to)
 // Send Mail
 //***************************************************************************
 
-int P4d::add2AlertMail(cDbRow* alertRow, const char* title, 
+int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
                            double value, const char* unit)
 {
    char* webUrl = 0;
@@ -1697,7 +1697,7 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
    body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
    body = strReplace("%repeat%", (long)maxRepeat, body);
    body = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, body);
-   
+
    alertMailSubject += string(" ") + subject;
    alertMailBody += string("\n") + body;
 
@@ -1738,13 +1738,13 @@ int P4d::sendMail()
 
       for (int status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
       {
-         // nur Fehler der letzten 2 Tage 
+         // nur Fehler der letzten 2 Tage
 
          if (e.time > time(0) - 2*tmeSecondsPerDay)
-         {  
+         {
             char* ct = strdup(ctime(&e.time));
             char* line;
-            
+
             ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
 
             asprintf(&line, "%s:  %03d/%03d  %s (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
@@ -1763,19 +1763,19 @@ int P4d::sendMail()
       subject = "Heizung - Status: " + string(currentState.stateinfo);
       receiver = stateMailTo;
    }
-   
+
    if (isEmpty(receiver))
       return done;
-   
+
    // send mail ...
 
    if (!htmlMail)
    {
       char* command = 0;
 
-      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
+      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
                subject.c_str(), mailBody.c_str(), "text/plain", receiver);
-      
+
       system(command);
       free(command);
    }
@@ -1783,10 +1783,10 @@ int P4d::sendMail()
    {
       char* command = 0;
       char* html = 0;
-      
+
       loadHtmlHeader();
 
-      asprintf(&html, 
+      asprintf(&html,
                "<html>\n"
                " %s\n"
                "  <body>\n"
@@ -1810,19 +1810,19 @@ int P4d::sendMail()
                htmlHeader.memory, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
 
       // send HTML mail
-      
-      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, 
+
+      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
                subject.c_str(), html, "text/html", receiver);
-      
+
       system(command);
-      
+
       free(command);
       free(html);
    }
 
-   // 
+   //
 
-   tell(eloAlways, "Send mail '%s' with [%s] to '%s'", 
+   tell(eloAlways, "Send mail '%s' with [%s] to '%s'",
         subject.c_str(), mailBody.c_str(), receiver);
 
    return success;
@@ -1865,7 +1865,7 @@ int P4d::loadHtmlHeader()
    char* file;
 
    // load only once at first call
-   
+
    if (!htmlHeader.isEmpty())
       return done;
 
@@ -1881,7 +1881,7 @@ int P4d::loadHtmlHeader()
       return success;
 
    htmlHeader.clear();
-   
+
    htmlHeader.append("  <head>\n"
                      "    <style type=\"text/css\">\n"
                      "      table {"
@@ -1939,7 +1939,7 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
       value = strdup(def);
       setConfigItem(name, value);  // store the default
    }
-      
+
    tableConfig->reset();
 
    return success;
@@ -1959,7 +1959,7 @@ int P4d::setConfigItem(const char* name, const char* value)
 int P4d::getConfigItem(const char* name, int& value, int def)
 {
    char* txt = 0;
-   
+
    getConfigItem(name, txt);
 
    if (!isEmpty(txt))
