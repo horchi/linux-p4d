@@ -9,7 +9,7 @@ Body
 .content
 {
   padding: 5px;
-  margin: 5px;
+  margin: 2px;
   background-color: #EEEEEE;
   font: 18px Verdana;
   color: #111111;
@@ -305,7 +305,6 @@ Body
     background-color: #FFFFCC;
     display: flex;
     flex-wrap: wrap;
-/*    min-height: 150px;*/
     padding: 10px;
     font: 20px Verdana;
     border-radius: 10px;
@@ -315,19 +314,26 @@ Body
 .centerImage
 {
     float: right;
-    margin: 0px 20px 0px 20px;
+    margin: 0px 0px 0px 0px;
 }
 
 .heatingState
 {
-    float: left;
+    font-size: 18px;
+    width: 36%;
+}
+
+.heatingState > div > span
+{
+    display: block;
 }
 
 .P4dInfo
 {
-    font: 19px Verdana;
+    font: 17px Verdana;
     float: right;
     margin-right: 60px;
+    margin-left: 40px
 }
 
 .P4dInfo > div > span
@@ -348,9 +354,9 @@ Body
     .content                   { padding: 0px; }
     #divP4dState               { display: none; }
     .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
-    .P4dInfo                   { font-size: 15px; }
+    .P4dInfo                   { font-size: 15px; margin-left: 0px; }
     .P4dInfo > div > span      { min-width: 110px; }
-    .heatingState              { font-size: 15px; }
+    .heatingState              { font-size: 18px; width: 56%; }
     .centerImage               { margin: 0px 0px 0px 0px; }
 }
 

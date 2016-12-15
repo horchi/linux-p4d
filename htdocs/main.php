@@ -63,6 +63,7 @@ printHeader(60);
      list($time, $state, $status, $mode) = explode("#", $response, 4);
 
   $time = str_replace($wd_value, $wd_disp, $time);
+  list($day, $time) = explode(",", $time, 2);
   $heatingType = $_SESSION['heatingType'];
   $stateImg = getStateImage($state, $p4dstate);
 
@@ -85,8 +86,8 @@ printHeader(60);
   {
      echo "        <div class=\"heatingState\">\n";
      echo "          <div><span id=\"" . $stateStyle . "\">$status</span></div>\n";
-     echo "          <div><span>" . $time . "</span></div>\n";
-     echo "          <div><span>Betriebsmodus:  " . $mode ."</span></div>\n";
+     echo "          <div><span>" . $day . "</span><span>" . $time . "</span></div>\n";
+     echo "          <div><span>Betriebsmodus:</span><span>" . $mode ."</span></div>\n";
 
      echo "        </div>\n";
   }
