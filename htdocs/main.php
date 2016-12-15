@@ -99,29 +99,26 @@ printHeader(60);
 
   echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
 
-//  if (!isMobile())
+  echo "      <div class=\"P4dInfo\">\n";
+
+  if ($p4dstate == 0)
   {
-    echo "      <div class=\"P4dInfo\">\n";
-
-    if ($p4dstate == 0)
-    {
-      echo  "        <div id=\"aStateOk\">Fröling $heatingType ONLINE</div>\n";
-      echo  "          <table>\n";
-      echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
-      echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
-      echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
-      echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
-      echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
-      echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
-      echo  "          </table>\n";
-    }
-    else
-    {
-      echo  "        <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
-    }
-
-    echo "      </div>\n";
+     echo  "        <div id=\"aStateOk\">Fröling $heatingType ONLINE</div>\n";
+     echo  "          <table>\n";
+     echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
+     echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
+     echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
+     echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
+     echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
+     echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
+     echo  "          </table>\n";
   }
+  else
+  {
+     echo  "        <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
+  }
+
+  echo "      </div>\n";
 
   if ($state == 19)
      echo  "        <div id=\"aStateOk\">$status</div>\n";
@@ -198,7 +195,7 @@ printHeader(60);
   echo "      <div id=\"aSelect\">\n";
   echo "        <form name='navigation' method='get'>\n";
   echo "          Zeitraum der Charts<br/>\n";
-  echo datePicker("Start", "s", $year, $day, $month);
+  echo datePicker("", "s", $year, $day, $month);
 
   echo "          <select name=\"range\">\n";
   echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";

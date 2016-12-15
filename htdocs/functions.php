@@ -55,7 +55,8 @@ function datePicker($title, $name, $year, $day, $month)
    $months = array('','Januar','Februar','März','April','Mai',
                    'Juni','Juli','August', 'September','Oktober','November','Dezember');
 
-   $html = $title . ": ";
+   if ($title != "")
+      $html = $title . ": ";
 
    // day
 
@@ -208,7 +209,7 @@ function writeConfigItem($name, $value)
 function readConfigItem($name, &$value, $default = "")
 {
    global $mysqli;
-   
+
    // new version - read direct from config table
 
    $result = $mysqli->query("select value from config where owner = 'p4d' and name = '$name'")
