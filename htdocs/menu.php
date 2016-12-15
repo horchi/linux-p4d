@@ -10,7 +10,6 @@ printHeader();
 $lastMenu = "";
 $menu = "";
 $edit = "";
-$table = "";
 $store = "";
 
 if (isset($_POST["menu"]))

@@ -66,21 +66,6 @@ printHeader(60);
 
   echo "      <div class=\"stateInfo\">\n";
 
-  if ($state == 19)
-     echo  "        <div id=\"aStateOk\"><center>$status</center></div>\n";
-  elseif ($state == 0)
-     echo  "        <div id=\"aStateFail\"><center>$status</center></div>\n";
-  elseif ($state == 3)
-     echo  "        <div id=\"aStateHeating\"><center>$status</center></div>\n";
-  else
-     echo  "        <div id=\"aStateOther\"><center>$status</center></div>\n";
-
-  echo "        <br/>" . $time . "<br/>";
-  echo "Betriebsmodus:  " . $mode ."<br/>\n";
-  echo "      </div>\n";
-
-  echo "      <div class=\"stateImgContainer\">\n";
-
   $heatingType = $_SESSION['heatingType'];
 
   if ($state == 0 || $p4dstate != 0)
@@ -113,7 +98,6 @@ printHeader(60);
      $stateImg = "img/type/heating-$heatingType.png";
 
   echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
-  echo "      </div>\n";
 
   if (!isMobile())
   {
@@ -121,7 +105,7 @@ printHeader(60);
 
     if ($p4dstate == 0)
     {
-      echo  "        <div id=\"aStateOk\"><center>Fröling $heatingType ONLINE</center></div>\n";
+      echo  "        <div id=\"aStateOk\">Fröling $heatingType ONLINE</div>\n";
       echo  "          <table>\n";
       echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
       echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
@@ -132,43 +116,30 @@ printHeader(60);
       echo  "          </table>\n";
     }
     else
-      echo  "        <div id=\"aStateFail\"><center>ACHTUNG:<br/>$heatingType Daemon OFFLINE</center></div>\n";
+      echo  "        <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
 
     echo "      </div>\n";
-    echo "      <br/>\n";
   }
 
-  // ----------------
-  //
+  if ($state == 19)
+     echo  "        <div id=\"aStateOk\">$status</div>\n";
+  elseif ($state == 0)
+     echo  "        <div id=\"aStateFail\">$status</div>\n";
+  elseif ($state == 3)
+     echo  "        <div id=\"aStateHeating\">$status</div>\n";
+  else
+     echo  "        <div id=\"aStateOther\">$status</div>\n";
 
-  echo "      <div id=\"aSelect\">\n";
-  echo "        <form name='navigation' method='get'>\n";
-  echo "          <center>Zeitraum der Charts<br/></center>\n";
-  echo datePicker("Start", "s", $year, $day, $month);
+  echo "        <br/>" . $time . "<br/>";
+  echo "Betriebsmodus:  " . $mode ."<br/>\n";
 
-  echo "          <select name=\"range\">\n";
-  echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
-  echo "            <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
-  echo "            <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
-  echo "          </select>\n";
-  echo "          <input type=submit value=\"Go\">";
-  echo "        </form>\n";
   echo "      </div>\n";
-
-  $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
-
-  seperator("Messwerte vom " . $maxPretty, 290, !isMobile() ? "seperatorTitle1" : "seperatorTitle1Mobile");
 
   // ------------------
   // table
 
-  echo "  <div>\n";
-  echo "    <table class=\"" . (!isMobile() ? "table" : "tableMobile") . "\" cellspacing=0 rules=rows style=\"position:absolute; top:330px;\">\n";
-  echo "       <tr class=\"". (!isMobile() ? "tableHead1" : "tableHead1Mobile") . "\">\n";
-  echo "         <td>Sensor</td>\n";
-
-  if (!isMobile()) echo "         <td>Wert</td>\n";
-  echo "       </tr>\n";
+  echo "  <div class=\"tableMainMM\">\n";
+  echo "    <center>Messwerte vom $maxPretty</center>\n";
 
   $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
 
@@ -211,28 +182,32 @@ printHeader(60);
      $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
         . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
-     if (!isMobile())
-        $class = $i % 2 ? "tableDark" : "tableLight";
-     else
-        $class = $i % 2 ? "tableDarkMobile" : "tableLightMobile";
-
-     echo "       <tr class=\"" . $class . "\">\n";
-     echo "         <td>" . $url . $title . "</a></td>\n";
-
-     if (isMobile())
-     {
-        echo "       </tr>\n";
-        echo "       <tr class=\"" . $class . "\">\n";
-     }
-
-     echo "         <td>$value$unit</td>\n";
-     echo "       </tr>\n";
-
-     $i++;
+     echo "     <div>\n";
+     echo "       <span>$url $title</a></span>\n";
+     echo "       <span>$value$unit</span>\n";
+     echo "     </div>\n";
   }
 
-  echo "    </table>\n";
   echo "  </div>\n";
+
+  // ----------------
+  //
+
+  echo "      <div id=\"aSelect\">\n";
+  echo "        <form name='navigation' method='get'>\n";
+  echo "          Zeitraum der Charts<br/>\n";
+  echo datePicker("Start", "s", $year, $day, $month);
+
+  echo "          <select name=\"range\">\n";
+  echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
+  echo "            <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
+  echo "            <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
+  echo "          </select>\n";
+  echo "          <input type=submit value=\"Go\">";
+  echo "        </form>\n";
+  echo "      </div>\n";
+
+  $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   $mysqli->close();
 

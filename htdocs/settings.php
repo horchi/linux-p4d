@@ -128,7 +128,7 @@ function showTable($type, $tableTitle)
    echo "        <br/>\n";
 
    echo "        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
-          <tr class=\"tableHead1\">\n";
+          <tr class=\"tableHead\">\n";
 
 
    echo "            <td width=\"43%\"> Name </td>\n";

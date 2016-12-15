@@ -309,6 +309,11 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
+.tableMobile td
+{
+  border: solid black 0;
+}
+
 .tableTitle
 {
   width: 1150px;;
@@ -342,7 +347,7 @@ Body
 
 .tableHead1Mobile
 {
-  border: 1;
+  border: none;
   background-color: #0066FF;
   color: white;
   font: bold 22px Verdana;
@@ -351,7 +356,7 @@ Body
 
 .tableLight
 {
-  width: 1150px;;
+  width: 1150px;
   border: 1;
   background-color: #AAEEFF;
   color: black;
@@ -361,7 +366,7 @@ Body
 
 .tableDark
 {
-  width: 1150px;;
+  width: 1150px;
   border: 1;
   background-color: #77FFFF;
   color: black;
@@ -372,7 +377,7 @@ Body
 .tableLightMobile
 {
   width: 550px;
-  border: 0;
+  border: none;
   background-color: #AAEEFF;
   color: black;
   font: 22px Verdana;
@@ -382,7 +387,7 @@ Body
 .tableDarkMobile
 {
   width: 550px;
-  border: 0;
+  border: none;
   background-color: #77FFFF;
   color: black;
   font: 22px Verdana;

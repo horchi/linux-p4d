@@ -33,7 +33,7 @@ function showTable($tableTitle)
    echo "      <br/>\n";
 
    echo "      <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
-        <tr class=\"tableHead1\">
+        <tr class=\"tableHead\">
           <td> Zeit </td>
           <td> Nr </td>
           <td> Status </td>

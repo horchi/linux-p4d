@@ -82,17 +82,18 @@ function printHeader($refresh = 0)
 
    //<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
 
-   echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">
+   echo "<!DOCTYPE HTML>
 <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"de\" lang=\"de\">
   <head>
     <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n";
    $stylesheet = isMobile() ? "stylesheet.css" : "stylesheet.css";
 
-   if ($refresh)
-      echo "    <meta http-equiv=\"refresh\" content=\"$refresh\">\n";
+// #TODO  if ($refresh)
+//      echo "    <meta http-equiv=\"refresh\" content=\"$refresh\">\n";
 
    echo "    <meta name=\"author\" content=\"Jörg Wendel\">
     <meta name=\"copyright\" content=\"Jörg Wendel\">
+    <meta name=\"viewport\" content=\"initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1\">
     <LINK REL=\"SHORTCUT ICON\" HREF=\"" . $_SESSION['heatingType'] . ".ico\">
     <link rel=\"stylesheet\" type=\"text/css\" href=\"$stylesheet\">
     <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script>
@@ -117,7 +118,6 @@ function printHeader($refresh = 0)
    else
       echo "    <a class=\"button1\" href=\"login.php\">Login</a>\n";
 
-//   echo $stylesheet;
    echo "    <div class=\"content\">\n";
 }
 
