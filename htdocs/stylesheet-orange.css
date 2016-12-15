@@ -351,7 +351,7 @@ Body
     .P4dInfo                   { font-size: 15px; }
     .P4dInfo > div > span      { min-width: 110px; }
     .heatingState              { font-size: 15px; }
-    .centerImage               { margin: 0px 0px 0px 5px; }
+    .centerImage               { margin: 0px 0px 0px 0px; }
 }
 
 @media only screen and (min-width: 768px) and (max-width:1139px)
