@@ -131,18 +131,6 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.seperatorTitle1Mobile
-{
-  background-color: #CC0033;
-  color: white;
-  width: 590px;
-  padding: 2px 15px;
-  text-decoration: none;
-  font: bold 24px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
-}
-
 .seperatorTitle2
 {
   background-color: #FF9900;
@@ -304,26 +292,6 @@ Body
     text-align: left;
 }
 
-.tableTitle
-{
-    width: 1150px;
-    border: 1;
-    background-color: #CC0033;
-    color: white;
-    font: bold 20px Verdana;
-    padding: 20px;
-    box-shadow: 8px 8px 8px #666;
-}
-
-.tableHead
-{
-    width: 1150px;
-    background-color: #FF9900;
-    color: white;
-    font: bold 16px Verdana;
-    padding: 20px;
-}
-
 .schemaImage
 {
     background-color: #FFFFCC;
@@ -332,40 +300,12 @@ Body
     font: 20px Verdana;
 }
 
-.cellL0
-{
-    background-color: #FFFFCC;
-    color: black;
-}
-
-.cellL1
-{
-    background-color: #FF6600;
-    color: black;
-}
-
-.cellL2
-{
-    background-color: #FFF660;
-    color: black;
-}
-
-.cellL3
-{
-    background-color: #FFAA66;
-    color: black;
-}
-
-.cellL4
-{
-    background-color: white;
-    color: black;
-}
-
 .stateInfo
 {
     background-color: #FFFFCC;
-    min-height: 180px;
+    display: flex;
+    flex-wrap: wrap;
+/*    min-height: 150px;*/
     padding: 10px;
     font: 20px Verdana;
     border-radius: 10px;
@@ -377,6 +317,11 @@ Body
     float: right;
 }
 
+.heatingState
+{
+    float: left;
+}
+
 .P4dInfo
 {
     font: 19px Verdana;
@@ -384,27 +329,39 @@ Body
     margin-right: 60px;
 }
 
+.P4dInfo > div > span
+{
+    width: 10%;
+    min-width: 215px;
+    display: table-cell;
+    text-align: left;
+}
+
+#divP4dState
+{
+    display: block;
+}
+
 @media only screen and (max-width: 420px)
 {
-    .content   { padding: 0px; }
-    .stateInfo { min-height: 140px; }
-    .P4dInfo   { visibility: hidden; height: 0px; width: 0px; }
-    .tableMainMM > div > span { padding: 3px 10px 3px 10px; }
+    .content                   { padding: 0px; }
+/*    .stateInfo                 { min-height: 346px; }  346px  / 137px */
+    #divP4dState               { display: none; }
+    .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
+/*    .P4dInfo                   { margin-top: 32px; margin-bottom: 16px; }*/
+    .P4dInfo > div > span      { min-width: 110px; }
 }
 
 @media only screen and (min-width: 768px) and (max-width:1139px)
 {
-
 }
 
 @media only screen and (min-width: 900px)
 {
-
 }
 
 @media only screen and (min-width: 1140px)
 {
-
 }
 
 #aStateOk
@@ -452,6 +409,26 @@ Body
     box-shadow: 8px 8px 8px #666;
 }
 
+.tableTitle
+{
+    width: 1150px;
+    border: 1;
+    background-color: #CC0033;
+    color: white;
+    font: bold 20px Verdana;
+    padding: 20px;
+    box-shadow: 8px 8px 8px #666;
+}
+
+.tableHead
+{
+    width: 1150px;
+    background-color: #FF9900;
+    color: white;
+    font: bold 16px Verdana;
+    padding: 20px;
+}
+
 .chart
 {
     background-color: #FFFFCC;
@@ -459,4 +436,34 @@ Body
     width: 1010px;
     border-radius: 10px;
     box-shadow: 8px 8px 8px #666;
+}
+
+.cellL0
+{
+    background-color: #FFFFCC;
+    color: black;
+}
+
+.cellL1
+{
+    background-color: #FF6600;
+    color: black;
+}
+
+.cellL2
+{
+    background-color: #FFF660;
+    color: black;
+}
+
+.cellL3
+{
+    background-color: #FFAA66;
+    color: black;
+}
+
+.cellL4
+{
+    background-color: white;
+    color: black;
 }

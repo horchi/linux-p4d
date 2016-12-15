@@ -49,8 +49,9 @@ function checkLogin($user, $passwd)
 
 function datePicker($title, $name, $year, $day, $month)
 {
+   $html = "";
    $startyear = date("Y")-10;
-   $endyear=date("Y")+1;
+   $endyear = date("Y")+1;
 
    $months = array('','Januar','Februar','März','April','Mai',
                    'Juni','Juli','August', 'September','Oktober','November','Dezember');
@@ -358,6 +359,64 @@ function htmTags($new)
   }
 
   return $end;
+}
+
+// ---------------------------------------------------------------------------
+// Get State Image
+// ---------------------------------------------------------------------------
+
+function getStateImage($state, $p4dstate)
+{
+  if ($state == 0 || $p4dstate != 0)
+     $img = "img/state/state-error.gif";
+  elseif ($state == 1)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+  elseif ($state == 2)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+  elseif ($state == 3)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
+  elseif ($state == 4)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
+  elseif ($state == 5)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+  elseif ($state == 6)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
+  elseif ($state == 7)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
+  elseif ($state == 8)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
+  elseif ($state == 9)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+  elseif ($state == 15 || $state == 70 || $state == 69)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
+  elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
+  elseif ($state == 60 || $state == 61  || $state == 72)
+     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
+  else
+     $img = "img/type/heating-" . $_SESSION['heatingType'] . ".png";
+
+  return $img;
+}
+
+// ---------------------------------------------------------------------------
+// Pretty Unit
+// ---------------------------------------------------------------------------
+
+function prettyUnit($u)
+{
+   $unit = "";
+
+   if ($u == "zst" || $u == "dig")
+      $unit = "";
+   else if ($u == "U")
+      $unit = " U/min";
+   else if ($u == "°")
+      $unit = "°C";
+   else if ($u == "T")
+      $unit = "";
+
+   return $unit;
 }
 
 }  // "functions_once"

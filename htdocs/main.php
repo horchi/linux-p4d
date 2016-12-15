@@ -40,7 +40,7 @@ printHeader(60);
   // ------------------
   // State of P4 Daemon
 
-  $p4dstate = requestAction("p4d-state", 1, 0, "", $response);
+  $p4dstate = requestAction("p4d-state", 3, 0, "", $response);
   $load = "";
 
   if ($p4dstate == 0)
@@ -57,154 +57,137 @@ printHeader(60);
   $mode = "";
   $time = "";
 
-  $state = requestAction("s3200-state", 1, 0, "", $response);
+  $state = requestAction("s3200-state", 3, 0, "", $response);
 
   if ($state == 0)
      list($time, $state, $status, $mode) = explode("#", $response, 4);
 
   $time = str_replace($wd_value, $wd_disp, $time);
+  $heatingType = $_SESSION['heatingType'];
+  $stateImg = getStateImage($state, $p4dstate);
+
+   if ($state == 19)
+      $stateStyle = "aStateOk";
+   elseif ($state == 0)
+      $stateStyle = "aStateFail";
+   elseif ($state == 3)
+      $stateStyle = "aStateHeating";
+   else
+      $stateStyle = "aStateOther";
+
+  // -----------------
+  // State 'flex' Box
 
   echo "      <div class=\"stateInfo\">\n";
 
-  $heatingType = $_SESSION['heatingType'];
-
-  if ($state == 0 || $p4dstate != 0)
-     $stateImg = "img/state/state-error.gif";
-  elseif ($state == 1)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
-  elseif ($state == 2)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
-  elseif ($state == 3)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
-  elseif ($state == 4)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
-  elseif ($state == 5)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
-  elseif ($state == 6)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
-  elseif ($state == 7)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
-  elseif ($state == 8)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
-  elseif ($state == 9)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
-  elseif ($state == 15 || $state == 70 || $state == 69)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
-  elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
-  elseif ($state == 60 || $state == 61  || $state == 72)
-     $stateImg = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
-  else
-     $stateImg = "img/type/heating-$heatingType.png";
-
-  echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
-
-  echo "      <div class=\"P4dInfo\">\n";
-
-  if ($p4dstate == 0)
+  // -----------------
+  // Heating State
   {
-     echo  "        <div id=\"aStateOk\">Fröling $heatingType ONLINE</div>\n";
-     echo  "          <table>\n";
-     echo  "            <tr><td>Läuft seit:</td><td>$p4dSince</td></tr>\n";
-     echo  "            <tr><td>Messungen heute:</td><td>$p4dCountDay</td></tr>\n";
-     echo  "            <tr><td>Letzte Messung:</td><td>$maxPrettyShort</td></tr>\n";
-     echo  "            <tr><td>Nächste Messung:</td><td>$p4dNext</td></tr>\n";
-     echo  "            <tr><td>Version:</td><td>$p4dVersion</td></tr>\n";
-     echo  "            <tr><td>CPU-Last:</td><td>$load</td></tr>\n";
-     echo  "          </table>\n";
-  }
-  else
-  {
-     echo  "        <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
-  }
+     echo "        <div class=\"heatingState\">\n";
+     echo "          <div><span id=\"" . $stateStyle . "\">$status</span></div>\n";
+     echo "          <div><span>" . $time . "</span></div>\n";
+     echo "          <div><span>Betriebsmodus:  " . $mode ."</span></div>\n";
 
-  echo "      </div>\n";
-
-  if ($state == 19)
-     echo  "        <div id=\"aStateOk\">$status</div>\n";
-  elseif ($state == 0)
-     echo  "        <div id=\"aStateFail\">$status</div>\n";
-  elseif ($state == 3)
-     echo  "        <div id=\"aStateHeating\">$status</div>\n";
-  else
-     echo  "        <div id=\"aStateOther\">$status</div>\n";
-
-  echo "        <br/>" . $time . "<br/>";
-  echo "Betriebsmodus:  " . $mode ."<br/>\n";
-
-  echo "      </div>\n";
-
-  // ------------------
-  // table
-
-  echo "  <div class=\"tableMainMM\">\n";
-  echo "    <center>Messwerte vom $maxPretty</center>\n";
-
-  $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
-
-  if ($addresses == "")
-    $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
-  else
-    $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and s.type = 'VA' and s.time = '%s';", $addresses, $max);
-
-  // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
-
-  $result = $mysqli->query($strQuery)
-     or die("Error" . $mysqli->error);
-
-  $i = 0;
-
-  while ($row = $result->fetch_assoc())
-  {
-     $value = $row['s_value'];
-     $text = $row['s_text'];
-     $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
-     $unit = $row['f_unit'];
-     $address = $row['s_address'];
-     $type = $row['s_type'];
-     $txtaddr = sprintf("0x%x", $address);
-
-     if ($unit == "zst" || $unit == "dig")
-        $unit = "";
-     else if ($unit == "U")
-        $unit = " U/min";
-     else if ($unit == "°")
-        $unit = "°C";
-     else if ($unit == "T")
+     // -----------------
+     // State Image
      {
-        $unit = "";
-        $value = str_replace($wd_value, $wd_disp, $text);
+        echo "        <a href=\"\" onclick=\"javascript:showHide('divP4dState'); return false\">\n";
+        echo "          <img class=\"centerImage\" src=\"$stateImg\">\n";
+        echo "        </a>\n";
      }
 
-     $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from=" . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
-        . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
-
-     echo "     <div>\n";
-     echo "       <span>$url $title</a></span>\n";
-     echo "       <span>$value$unit</span>\n";
-     echo "     </div>\n";
+     echo "        </div>\n";
   }
 
-  echo "  </div>\n";
+  // -----------------
+  // p4d State
+  {
+     echo "        <div class=\"P4dInfo\" id=\"divP4dState\">\n";
+
+     if ($p4dstate == 0)
+     {
+        echo  "              <div id=\"aStateOk\"><span>Fröling $heatingType ONLINE</span><span></span></div>\n";
+        echo  "              <div><span>Läuft seit:</span>      <span>$p4dSince</span>       </div>\n";
+        echo  "              <div><span>Messungen heute:</span> <span>$p4dCountDay</span>    </div>\n";
+        echo  "              <div><span>Letzte Messung:</span>  <span>$maxPrettyShort</span> </div>\n";
+        echo  "              <div><span>Nächste Messung:</span> <span>$p4dNext</span>        </div>\n";
+        echo  "              <div><span>Version:</span>         <span>$p4dVersion</span>     </div>\n";
+        echo  "              <div><span>CPU-Last:</span>        <span>$load</span>           </div>\n";
+     }
+     else
+     {
+        echo  "          <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
+     }
+
+     echo "        </div>\n"; // P4dInfo
+  }
+
+  echo "      </div>\n";   // stateInfo
+
+  // ------------------
+  // Sensor List
+  {
+     $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
+
+     if ($addresses == "")
+        $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
+     else
+        $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and s.type = 'VA' and s.time = '%s';", $addresses, $max);
+
+     // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
+
+     $result = $mysqli->query($strQuery)
+        or die("Error" . $mysqli->error);
+
+     echo "      <div class=\"tableMainMM\">\n";
+     echo "        <center>Messwerte vom $maxPretty</center>\n";
+
+     while ($row = $result->fetch_assoc())
+     {
+        $value = $row['s_value'];
+        $text = $row['s_text'];
+        $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
+        $unit = prettyUnit($row['f_unit']);
+        $address = $row['s_address'];
+        $type = $row['s_type'];
+        $txtaddr = sprintf("0x%x", $address);
+
+        if ($row['f_unit'] == 'T')
+           $value = str_replace($wd_value, $wd_disp, $text);
+
+        $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
+           . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
+           . $_SESSION['chartDiv'] . " ','_blank',"
+           . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
+
+        echo "         <div>\n";
+        echo "           <span>$url $title</a></span>\n";
+        echo "           <span>$value$unit</span>\n";
+        echo "         </div>\n";
+     }
+
+     echo "      </div>\n";  // tableMainMM
+  }
 
   // ----------------
-  //
+  // Date Picker
+  {
+     echo "      <div id=\"aSelect\">\n";
+     echo "        <form name='navigation' method='get'>\n";
+     echo "          Zeitraum der Charts<br/>\n";
+     echo datePicker("", "s", $year, $day, $month);
 
-  echo "      <div id=\"aSelect\">\n";
-  echo "        <form name='navigation' method='get'>\n";
-  echo "          Zeitraum der Charts<br/>\n";
-  echo datePicker("", "s", $year, $day, $month);
-
-  echo "          <select name=\"range\">\n";
-  echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
-  echo "            <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
-  echo "            <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
-  echo "          </select>\n";
-  echo "          <input type=submit value=\"Go\">";
-  echo "        </form>\n";
-  echo "      </div>\n";
+     echo "          <select name=\"range\">\n";
+     echo "            <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
+     echo "            <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
+     echo "            <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
+     echo "          </select>\n";
+     echo "          <input type=submit value=\"Go\">";
+     echo "        </form>\n";
+     echo "      </div>\n";
+  }
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
