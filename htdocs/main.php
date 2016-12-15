@@ -99,7 +99,7 @@ printHeader(60);
 
   echo "        <img class=\"centerImage\" src=\"$stateImg\">\n";
 
-  if (!isMobile())
+//  if (!isMobile())
   {
     echo "      <div class=\"P4dInfo\">\n";
 
@@ -116,7 +116,9 @@ printHeader(60);
       echo  "          </table>\n";
     }
     else
+    {
       echo  "        <div id=\"aStateFail\">ACHTUNG:<br/>$heatingType Daemon OFFLINE</div>\n";
+    }
 
     echo "      </div>\n";
   }
