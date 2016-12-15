@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.1.43"
-#define VERSION_DATE "14.12.2016"
+#define _VERSION     "0.1.44"
+#define VERSION_DATE "15.12.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,21 +17,24 @@
 /*
  * ------------------------------------
 
+2016-12-15:  version 0.1.44
+   - change: WEBIF: finished redesign of 'Aktuell' tab
+
 2016-12-14:  version 0.1.43
-   - change: further modifications of WEBIF for mobile devices
+   - change: WEBIF: further modifications for mobile devices
 
 2016-12-14:  version 0.1.42
-   - change:  fixed problem with SQL syntax since MySQL >= 5.7
+   - change: WEBIF:  fixed problem with SQL syntax since MySQL >= 5.7
 
 2016-12-13:  version 0.1.41
-   - added:  different mobile view for actual tab
-   - added:  configurable sensors list for action tab
+   - added:  WEBIF: different mobile view for actual tab
+   - added:  WEBIF: configurable sensors list for action tab
 
 2016-12-13:  version 0.1.40
-   - change: finished RC1 of PHP7 porting (php7 branch)
+   - change: WEBIF: finished RC1 of PHP7 porting (php7 branch)
 
 2016-12-12:  version 0.1.39
-   - change: start of PHP7 porting in (php7 branch)
+   - change: WEBIF: start of PHP7 porting in (php7 branch)
 
 2016-03-10:  version 0.1.38
    - bugfix: fixed display of 'usrtitle' in status mails
