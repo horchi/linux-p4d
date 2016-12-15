@@ -88,15 +88,15 @@ printHeader(60);
      echo "          <div><span>" . $time . "</span></div>\n";
      echo "          <div><span>Betriebsmodus:  " . $mode ."</span></div>\n";
 
-     // -----------------
-     // State Image
-     {
-        echo "        <a href=\"\" onclick=\"javascript:showHide('divP4dState'); return false\">\n";
-        echo "          <img class=\"centerImage\" src=\"$stateImg\">\n";
-        echo "        </a>\n";
-     }
-
      echo "        </div>\n";
+  }
+
+  // -----------------
+  // State Image
+  {
+     echo "        <a href=\"\" onclick=\"javascript:showHide('divP4dState'); return false\">\n";
+     echo "          <img class=\"centerImage\" src=\"$stateImg\">\n";
+     echo "        </a>\n";
   }
 
   // -----------------
