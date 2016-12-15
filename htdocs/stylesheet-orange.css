@@ -1,215 +1,216 @@
 
 Body
 {
-  background-color: #EEEEEE;
-  font: 12px Verdana;
-  color: #111111;
+    background-color: #EEEEEE;
+    font: 12px Verdana;
+    color: #111111;
 }
 
 .content
 {
-  padding: 5px;
-  margin: 2px;
-  background-color: #EEEEEE;
-  font: 18px Verdana;
-  color: #111111;
+    padding: 5px;
+    margin: 2px;
+    background-color: #EEEEEE;
+    font: 18px Verdana;
+    color: #111111;
 }
 
 .button1
 {
-  background-color: #FF6600;
-  color: white;
-  margin: 4px 10px 10px 4px;
-  display: inline-block;
-  padding: 4px 10px;
-  text-decoration: none;
-  font: bold 20px Verdana;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF6600;
+    color: white;
+    margin: 4px 10px 10px 4px;
+    display: inline-block;
+    padding: 4px 10px;
+    text-decoration: none;
+    font: bold 20px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .button1:hover
 {
-  background: #FF3300;
+    background: #FF3300;
 }
 
 .button2
 {
-  background-color: #FF9900;
-  color: white;
-  margin: 2px;
-  padding: 5px 10px;
-  text-decoration: none;
-  font: bold 20px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF9900;
+    color: white;
+    margin: 2px;
+    padding: 5px 10px;
+    text-decoration: none;
+    font: bold 20px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .button2:hover
 {
-  background: #FF3300;
-  border-radius: 10px;
+    background: #FF3300;
+    border-radius: 10px;
 }
 
 .button2sel
 {
-  background-color: #FF6600;
-  color: white;
-  margin: 2px;
-  padding: 5px 15px;
-  text-decoration: none;
-  font: bold 20px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF6600;
+    color: white;
+    margin: 2px;
+    padding: 5px 15px;
+    text-decoration: none;
+    font: bold 20px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .button2sel:hover
 {
-  background: #FF3300;
-  border-radius: 10px;
+    background: #FF3300;
+    border-radius: 10px;
 }
 
 .button3
 {
-  background-color: #FF9900;
-  color: white;
-  padding: 5px 15px;
-  margin: 2px;
-  padding: 5px 25px;
-  text-decoration: none;
-  font: 16px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF9900;
+    color: white;
+    padding: 5px 15px;
+    margin: 2px;
+    padding: 5px 25px;
+    text-decoration: none;
+    font: 16px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .button3:hover
 {
-  background: #FF3300;
+    background: #FF3300;
 }
 
 .button4
 {
-  background-color: #DDDDDD;
-  color: black;
-  padding: 2px 3px;
-  text-decoration: none;
-  font: 10px Verdana;
-  border-radius: 0px;
-  box-shadow: none;
+    background-color: #DDDDDD;
+    color: black;
+    padding: 2px 3px;
+    text-decoration: none;
+    font: 10px Verdana;
+    border-radius: 0px;
+    box-shadow: none;
 }
 
 .button4:hover
 {
-  background: #FF5555;
+    background: #FF5555;
 }
 
 .buttont
 {
-  background-color: rgba(255, 255, 255, 0);
-  color: black;
-  border: 0;
-  text-decoration: none;
-  font: 16px Verdana;
-  border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0);
+    color: black;
+    border: 0;
+    text-decoration: none;
+    font: 16px Verdana;
+    border-radius: 5px;
 }
 
 .buttont:hover
 {
-  background: #FF6600;
-  color: white;
-  border: 0;
+    background: #FF6600;
+    color: white;
+    border: 0;
 }
 
 .seperatorTitle1
 {
-  background-color: #CC0033;
-  color: white;
-  width: 1000px;
-  padding: 2px 15px;
-  text-decoration: none;
-  font: bold 18px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #CC0033;
+    color: white;
+    width: 1000px;
+    padding: 2px 15px;
+    text-decoration: none;
+    font: bold 18px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .seperatorTitle2
 {
-  background-color: #FF9900;
-  color: white;
-  width: 1000px;
-  padding: 2px 15px;
-  text-decoration: none;
-  font: 18px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF9900;
+    color: white;
+    width: 1000px;
+    padding: 2px 15px;
+    text-decoration: none;
+    font: 18px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .input
 {
-  background-color: #FFFFCC;
-  color: black;
-  width: 1000px;
-  padding: 15px;
-  text-decoration: none;
-  font: 18px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FFFFCC;
+    color: black;
+    width: 1000px;
+    padding: 15px;
+    text-decoration: none;
+    font: 18px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .inputComment
 {
-  text-decoration: none;
-  font: 14px Verdana;
+    text-decoration: none;
+    font: 14px Verdana;
 }
 
 .inputEdit
 {
-  text-decoration: none;
-  color: blue;
-  font: 16px Verdana;
-  width: 70px;
-  padding: 5px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    text-decoration: none;
+    color: blue;
+    font: 16px Verdana;
+    width: 70px;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .inputEdit2
 {
-  text-decoration: none;
-  color: blue;
-  font: 14px Verdana;
-  width: 70px;
-  padding: 3px;
-  border-radius: 7px;
-  box-shadow: 8px 8px 8px #666;
+    text-decoration: none;
+    color: blue;
+    font: 14px Verdana;
+    width: 70px;
+    padding: 3px;
+    border-radius: 7px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .checkbox
 {
-  background-color: #FF9900;
-  color: white;
-  padding: 3px 10px;
-  text-decoration: none;
-  font: 16px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FF9900;
+    color: white;
+    padding: 3px 10px;
+    text-decoration: none;
+    font: 16px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .info
 {
-  background-color: green;
-  color: white;
-  text-decoration: none;
-  font: 22px Verdana;
-  width: 1000px;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: green;
+    color: white;
+    text-decoration: none;
+    font: 22px Verdana;
+    width: 1000px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .help
 {
-  color: yellow;
-  cursor: pointer;
+    color: yellow;
+    cursor: pointer;
 }
 
 .infoWarn
