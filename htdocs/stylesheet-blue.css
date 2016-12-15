@@ -8,7 +8,8 @@ Body
 
 .content
 {
-  padding: 20px;
+  padding: 5px;
+  margin: 2px;
   background-color: #EEEEEE;
   font: 18px Verdana;
   color: #111111;
@@ -18,8 +19,9 @@ Body
 {
   background-color: #1100EE;
   color: white;
-  margin: 4px;
-  padding: 4px 20px;
+  margin: 4px 10px 10px 4px;
+  display: inline-block;
+  padding: 4px 10px;
   text-decoration: none;
   font: bold 20px Verdana;
   box-shadow: 8px 8px 8px #666;
@@ -35,7 +37,7 @@ Body
   background-color: #0066FF;
   color: white;
   margin: 2px;
-  padding: 5px 20px;
+  padding: 5px 10px;
   text-decoration: none;
   font: bold 20px Verdana;
   border-radius: 10px;
@@ -51,9 +53,9 @@ Body
 .button2sel
 {
   background-color: #FF9900;
-  color: blue;
+  color: white;
   margin: 2px;
-  padding: 5px 25px;
+  padding: 5px 15px;
   text-decoration: none;
   font: bold 20px Verdana;
   border-radius: 10px;
@@ -69,7 +71,9 @@ Body
 .button3
 {
   background-color: #00DDEE;
-  color: black;
+  color: white;
+  padding: 5px 15px;
+  margin: 2px;
   padding: 5px 25px;
   text-decoration: none;
   font: 16px Verdana;
@@ -127,18 +131,6 @@ Body
   box-shadow: 8px 8px 8px #666;
 }
 
-.seperatorTitle1Mobile
-{
-  background-color: blue;
-  color: white;
-  width: 590px;
-  padding: 2px 15px;
-  text-decoration: none;
-  font: bold 24px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
-}
-
 .seperatorTitle2
 {
   background-color: #0066FF;
@@ -161,16 +153,6 @@ Body
   font: 18px Verdana;
   border-radius: 10px;
   box-shadow: 8px 8px 8px #666;
-}
-
-.inputSettings
-{
-  background-color: #eee;
-  color: black;
-  width: 180px;
-  padding: 2px;
-  text-decoration: none;
-  font: 12px Verdana;
 }
 
 .inputComment
@@ -196,9 +178,9 @@ Body
   color: blue;
   font: 14px Verdana;
   width: 70px;
-  padding: 0px;
-  border-radius: 3px;
-  box-shadow: 2px 2px 2px #666;
+  padding: 3px;
+  border-radius: 7px;
+  box-shadow: 8px 8px 8px #666;
 }
 
 .checkbox
@@ -232,313 +214,264 @@ Body
 
 .infoWarn
 {
-  background-color: orange;
-  color: white;
-  text-decoration: none;
-  font: 22px Verdana;
-  width: 1000px;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: orange;
+    color: white;
+    text-decoration: none;
+    font: 22px Verdana;
+    width: 1000px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .infoError
 {
-  background-color: red;
-  color: white;
-  text-decoration: none;
-  font: 22px Verdana;
-  width: 1000px;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: red;
+    color: white;
+    text-decoration: none;
+    font: 22px Verdana;
+    width: 1000px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .schema
 {
-  font: bold 12px Verdana;
-  top: 50px;
-  left: 5px;
-  box-shadow: 8px 8px 8px #666;
+    font: bold 12px Verdana;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .values
 {
-  color: black;
-  padding: 1px 1px;
-  text-decoration: none;
-  font: bold 16px Verdana;
+    color: black;
+    padding: 1px 1px;
+    text-decoration: none;
+    font: bold 16px Verdana;
 }
 
 .values a:link
 {
-  color: black;
-  padding: 1px 1px;
-  text-decoration: none;
-  font: bold 16px Verdana;
+    color: black;
+    padding: 1px 1px;
+    text-decoration: none;
+    font: bold 16px Verdana;
 }
 
 .values a:visited
 {
-  color: black;
-  padding: 1px 1px;
-  text-decoration: none;
-  font: bold 16px Verdana;
+    color: black;
+    padding: 1px 1px;
+    text-decoration: none;
+    font: bold 16px Verdana;
 }
 
-.table
+.tableMainMM
 {
-  width: 1075px;
-  border: 1;
-  background-color: #FFFFCC;
-  color: black;
-  font: 14px Verdana;
-  padding: 20px 20px;
-  box-shadow: 8px 8px 8px #666;
+    width: 100%;
+    background-color: #FFFFCC;
+    color: black;
+    font: 22px Verdana;
+    margin-top: 10px;
+    padding: 0;
+    box-shadow: 8px 8px 8px #666;
+    border-radius: 10px;
 }
 
-.tableMobile
+.tableMainMM > div:nth-child(even)
 {
-  width: 620px;
-  border: 1;
-  background-color: #FFFFCC;
-  color: black;
-  text-align: center;
-  font: 22px Verdana;
-  padding: 20px 20px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #AAEEFF;
 }
 
-.tableMobile td
+.tableMainMM > div > span
 {
-  border: solid black 0;
-}
-
-.tableTitle
-{
-  width: 1150px;;
-  border: 1;
-  background-color: blue;
-  color: white;
-  font: bold 20px Verdana;
-  padding: 20px;
-  box-shadow: 8px 8px 8px #666;
-}
-
-.tableHead
-{
-  width: 1150px;;
-  border: 1;
-  background-color: #0066FF;
-  color: white;
-  font: bold 20px Verdana;
-  padding: 20px;
-}
-
-.tableHead1
-{
-  width: 1150px;
-  border: 1;
-  background-color: #0066FF;
-  color: white;
-  font: bold 16px Verdana;
-  padding: 20px;
-}
-
-.tableHead1Mobile
-{
-  border: none;
-  background-color: #0066FF;
-  color: white;
-  font: bold 22px Verdana;
-  padding: 20px;
-}
-
-.tableLight
-{
-  width: 1150px;
-  border: 1;
-  background-color: #AAEEFF;
-  color: black;
-  font: 18px Verdana;
-  padding: 20px 20px;
-}
-
-.tableDark
-{
-  width: 1150px;
-  border: 1;
-  background-color: #77FFFF;
-  color: black;
-  font: 18px Verdana;
-  padding: 20px 20px;
-}
-
-.tableLightMobile
-{
-  width: 550px;
-  border: none;
-  background-color: #AAEEFF;
-  color: black;
-  font: 22px Verdana;
-  padding: 20px 20px;
-}
-
-.tableDarkMobile
-{
-  width: 550px;
-  border: none;
-  background-color: #77FFFF;
-  color: black;
-  font: 22px Verdana;
-  padding: 20px 20px;
-}
-
-.cellL0
-{
-  background-color: #FFFFCC;
-  color: black;
-}
-
-.cellL1
-{
-  background-color: #0066FF;
-  color: black;
-}
-
-.cellL2
-{
-  background-color: #00DDEE;
-  color: black;
-}
-
-.cellL3
-{
-  background-color: #FFAA66;
-  color: black;
-}
-
-.cellL4
-{
-  background-color: white;
-  color: black;
+    width: 35%;
+    min-width: 280px;
+    padding: 8px 10px 8px 10px;
+    display: inline-block;
+    text-align: left;
 }
 
 .schemaImage
 {
-  background-color: #AAEEFF;
-  font: 20px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #AAEEFF;
+    box-shadow: 8px 8px 8px #666;
+    border-radius: 10px;
+    font: 20px Verdana;
 }
 
 .stateInfo
 {
-  position: absolute;
-  top: 50px;
-  left: 30px;
-  width: 400px;
-  background-color: #AAEEFF;
-  padding: 10px;
-  font: 20px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
-}
-
-.stateImgContainer
-{
-  position: absolute;
-  top: 50px;
-  left: 460px;
-  width: 175px;
-  height: 200px;
-  background-color: #AAEEFF;
-  padding: 5px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #AAEEFF;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    font: 20px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 .centerImage
 {
-  position: absolute;
-  top: 0;
-  bottom:0;
-  left: 0;
-  right:0;
-  margin: auto;
+    float: right;
+    margin: 0px 0px 0px 0px;
+}
+
+.heatingState
+{
+    font-size: 18px;
+    width: 36%;
+}
+
+.heatingState > div > span
+{
+    display: block;
 }
 
 .P4dInfo
 {
-  position: absolute;
-  top: 50px;
-  left: 660px;
-  width: 420px;
-  height: 190px;
-  background-color: #AAEEFF;
-  padding: 10px;
-  font: 19px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    font: 17px Verdana;
+    float: right;
+    margin-right: 60px;
+    margin-left: 40px
+}
+
+.P4dInfo > div > span
+{
+    width: 10%;
+    min-width: 215px;
+    display: table-cell;
+    text-align: left;
+}
+
+#divP4dState
+{
+    display: block;
+}
+
+@media only screen and (max-width: 420px)
+{
+    .content                   { padding: 0px; }
+    #divP4dState               { display: none; }
+    .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
+    .P4dInfo                   { font-size: 15px; margin-left: 0px; }
+    .P4dInfo > div > span      { min-width: 110px; }
+    .heatingState              { font-size: 18px; width: 56%; }
+    .centerImage               { margin: 0px 0px 0px 0px; }
+}
+
+@media only screen and (min-width: 768px) and (max-width:1139px)
+{
+}
+
+@media only screen and (min-width: 900px)
+{
+}
+
+@media only screen and (min-width: 1140px)
+{
 }
 
 #aStateOk
 {
-  color: green;
-  font: bold 24px Verdana;
+    color: green;
+    font: bold 24px Verdana;
 }
 
 #aStateFail
 {
-  color: red;
-  text-decoration: blink;
-  font: bold 24px Verdana;
+    color: red;
+    text-decoration: blink;
+    font: bold 24px Verdana;
 }
 
 #aStateHeating
 {
-  color: red;
-  font: bold 24px Verdana;
+    color: red;
+    font: bold 24px Verdana;
 }
 
 #aStateOther
 {
-  color: blue;
-  font: bold 24px Verdana;
+    color: blue;
+    font: bold 24px Verdana;
 }
 
 #aSelect
 {
-  position: absolute;
-  top: 195px;
-  left: 30px;
-  width: 400px;
-  background-color: #AAEEFF;
-  solid: #804000;
-  padding: 10px;
-  font: 18px Verdana;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #AAEEFF;
+    margin-top: 10px;
+    padding: 10px;
+    font: 18px Verdana;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
 }
 
 #aSelectChart
 {
-  position: absolute;
-  top: 50px;
-  left: 30px;
-  width: 500px;
-  background-color: #AAEEFF;
-  padding: 10px;
-  font: 16px Verdana;
-  border-radius:10px;
-  box-shadow: 8px 8px 8px #666;
+    width: 400px;
+    background-color: #AAEEFF;
+    padding: 10px;
+    font: 16px Verdana;
+    border-radius:10px;
+    box-shadow: 8px 8px 8px #666;
+}
+
+.tableTitle
+{
+    width: 1150px;
+    border: 1;
+    background-color: blue;
+    color: white;
+    font: bold 20px Verdana;
+    padding: 20px;
+    box-shadow: 8px 8px 8px #666;
+}
+
+.tableHead
+{
+    width: 1150px;
+    background-color: #0066FF;
+    color: white;
+    font: bold 16px Verdana;
+    padding: 20px;
 }
 
 .chart
 {
-  background-color: #AAEEFF;
-  padding: 8px;
-  width: 910px;
-  border-radius: 10px;
-  box-shadow: 8px 8px 8px #666;
+    background-color: #FFFFCC;
+    padding: 10px;
+    width: 1010px;
+    border-radius: 10px;
+    box-shadow: 8px 8px 8px #666;
+}
+
+.cellL0
+{
+    background-color: #FFFFCC;
+    color: black;
+}
+
+.cellL1
+{
+    background-color: #0066FF;
+    color: black;
+}
+
+.cellL2
+{
+    background-color: #00DDEE;
+    color: black;
+}
+
+.cellL3
+{
+    background-color: #FFAA66;
+    color: black;
+}
+
+.cellL4
+{
+    background-color: white;
+    color: black;
 }
