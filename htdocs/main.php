@@ -106,7 +106,7 @@ printHeader(60);
 
      if ($p4dstate == 0)
      {
-        echo  "              <div id=\"aStateOk\"><span>Fröling $heatingType ONLINE</span><span></span></div>\n";
+        echo  "              <div id=\"aStateOk\"><span>Fröling $heatingType ONLINE</span>   </div>\n";
         echo  "              <div><span>Läuft seit:</span>      <span>$p4dSince</span>       </div>\n";
         echo  "              <div><span>Messungen heute:</span> <span>$p4dCountDay</span>    </div>\n";
         echo  "              <div><span>Letzte Messung:</span>  <span>$maxPrettyShort</span> </div>\n";

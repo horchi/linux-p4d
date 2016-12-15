@@ -315,6 +315,7 @@ Body
 .centerImage
 {
     float: right;
+    margin: 0px 20px 0px 20px;
 }
 
 .heatingState
@@ -345,11 +346,12 @@ Body
 @media only screen and (max-width: 420px)
 {
     .content                   { padding: 0px; }
-/*    .stateInfo                 { min-height: 346px; }  346px  / 137px */
     #divP4dState               { display: none; }
     .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
-/*    .P4dInfo                   { margin-top: 32px; margin-bottom: 16px; }*/
+    .P4dInfo                   { font-size: 15px; }
     .P4dInfo > div > span      { min-width: 110px; }
+    .heatingState              { font-size: 15px; }
+    .centerImage               { margin: 0px 0px 0px 5px; }
 }
 
 @media only screen and (min-width: 768px) and (max-width:1139px)
