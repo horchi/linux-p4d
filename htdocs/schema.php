@@ -1,6 +1,7 @@
 <?php
 
 global $max;
+global $forConfig;
 
 $jpegTopMarging = 10;   // must match css style
 $jpegLeftMarging = 0;   // must match css style
@@ -38,6 +39,9 @@ while ($rowConf = $resultConf->fetch_assoc())
 
    if ($row = $result->fetch_assoc())
    {
+      $urlStart = "          <a class=\"boxedValue\">";
+      $urlEnd   = "</a>\n";
+
       $value = $row['s_value'];
       $text = $row['s_text'];
       $unit = $row['f_unit'];
@@ -47,37 +51,33 @@ while ($rowConf = $resultConf->fetch_assoc())
       $pmpDir = (isset($pmpDummy[0])) ? $pmpDummy[0] : "";          // aus eigener Sensor-Bezeichnung holen
       setTxt();
 
-     if (!isset($imgSize))                                                 // Chart nur bei SCHEMA, nicht bei CONFIG anzeigen
-     {
-        $url = "          <a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from=" . $from . "&range=" . ($schemaRange / 24) . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
-           . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
-        $url2 ="</a>\n";
-     }
-     else
-     {
-        $url = $url2 = "";
-     }
+      if (!isset($forConfig))
+         $urlStart = "          <a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from="
+                . $from . "&range=" . ($schemaRange / 24) . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
+                . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
-     if (!preg_match("/img/", $value))
-     {
-        echo "        <div title=\"" . $title . "\" style=\"position:absolute; top:" . ($top+$jpegTopMarging) . "px; $aligned:" . ($left+$jpegLeftMarging) . "px; z-index:11;" . "\">\n";
-     }
-     else                               // Bilder ohne Stylesheet-Klasse anzeigen
-     {
-        echo "        <div title=\"" . $title . ": " . $row['s_value'] . $unit . "\" style=\"position:absolute; top:" . ($top + $jpegTopMarging) . "px; $aligned:" . ($left + $jpegLeftMarging) . "px" . "; z-index:11;" . "\">\n";
-        $bez = "";                       // keine Bezeichnung bei Bildern anzeigen
-     }
+      $styleFixPosition = "style=\"position:absolute; top: " . ($top+$jpegTopMarging) . "px; $aligned: " . ($left+$jpegLeftMarging) . "px; z-index: 11;" . "\"";
 
-     $value = (preg_match("/[a-zA-Z ]/", $value)) ? $value : number_format(round($value, 1),1);   // Nachkommastelle immer anzeigen
+      if (!preg_match("/img/", $value))
+      {
+         echo "        <div title=\"" . $title . "\"" . $styleFixPosition . ">\n";
+      }
+      else                               // Bilder ohne Stylesheet-Klasse anzeigen
+      {
+         echo "        <div title=\"" . $title . ": " . $row['s_value'] . $unit . "\"" . $styleFixPosition . ">\n";
+         $bez = "";                       // keine Bezeichnung bei Bildern anzeigen
+      }
 
-     if ($showText)
-        echo $url . $text . $url2;
-     else if ($showUnit && !preg_match("/[a-zA-Z]/", $value)) // Unit nur anzeigen, wenn Wert eine Zahl ist
-        echo $url . $bez . $value . ($unit == "°" ? "°C" : $unit) . $url2;
-     else
-        echo $url . $bez . $value . $url2;
+      $value = (preg_match("/[a-zA-Z ]/", $value)) ? $value : number_format(round($value, 1),1);   // Nachkommastelle immer anzeigen
 
-     echo "        </div>\n";
+      if ($showText)
+         echo $urlStart . $text . $urlEnd;
+      else if ($showUnit && !preg_match("/[a-zA-Z]/", $value)) // Unit nur anzeigen, wenn Wert eine Zahl ist
+         echo $urlStart . $bez . $value . ($unit == "°" ? "°C" : $unit) . $urlEnd;
+      else
+         echo $urlStart . $bez . $value . $urlEnd;
+
+      echo "        </div>\n";
    }
 }
 

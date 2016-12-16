@@ -89,7 +89,7 @@ if (substr($action,0,6) == "delete")
 $i = 0; $cnt = "0";
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-echo "        <button class=\"button3\" type=submit name=action value=store>Speichern</button>\n";
+echo "        <button class=\"button3\" type=\"submit\" name=\"action\" value=\"store\">Speichern</button>\n";
 
 // ------------------------
 // setup items ...
@@ -120,6 +120,7 @@ $result = $mysqli->query("select * from sensoralert")
     $ID =  $row['id']; $i++; $a = chr($ID+64);
     $cnt = $cnt . "|" . $row['id']; $s = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
     echo "        <div class=\"input\" >\n";
+    echo "          <button class=\"button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
     echo "          <input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input> aktiv?\n";
     echo "          ID:<input        class=\"inputEdit2\" id=\"a$a\" style=\"width:77px$s\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>\n";
     echo "          Typ:<input       class=\"inputEdit2\" id=\"b$a\" style=\"width:28px$s\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input>\n";
@@ -134,7 +135,6 @@ $result = $mysqli->query("select * from sensoralert")
     echo "          <br /><br />\n";
     echo "          <span style=\"vertical-align:top\">Inhalt:</span>\n";
     echo "          <textarea        class=\"inputEdit2\"  cols=\"400\" rows=\"7\" id=\"j$a\" style=\"width:805px; position:relative; left:42px$s\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea>\n";
-    echo "          <button class=\"button2\" style=\"position:absolute;  margin-top:-76px; margin-left:-866px\" type=submit name=action value=delete$ID onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
     echo "        </div>\n";
   }
 $mysqli->close();
