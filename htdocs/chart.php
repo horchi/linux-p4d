@@ -23,11 +23,10 @@ printHeader();
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
-  echo "  <br/>\n";
-  echo "  <div id=\"aSelectChart\">\n";
+  echo "  <div id=\"aSelect\">\n";
   echo "    <form name='navigation' method='get'>\n";
-  echo "      <center>Zeitraum der Charts 1+2</center>\n";
-  echo datePicker("Start", "s", $year, $day, $month);
+  echo "      Zeitraum der Charts<br/>\n";
+  echo datePicker("", "s", $year, $day, $month);
 
   echo "      <select name=\"range\">\n";
   echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
@@ -48,17 +47,14 @@ printHeader();
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
   $type = isset($type) ? "&type=".$type : "";
 
-  echo "  <br/><br/><br/>\n";
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart1'] . ")";
-  echo "    <img src='detail.php?width=900&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
-
-  echo "  <br/>\n";
 
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart2']. ")";
-  echo "    <img src='detail.php?width=900&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
 include("footer.php");

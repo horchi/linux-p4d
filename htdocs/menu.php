@@ -148,10 +148,11 @@ function showMenu($current)
 
    if (haveLogin())
    {
-      echo "          <br/><br/>\n";
+      echo "        <div>\n";
       echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
       echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
-   }
+      echo "        </div>\n";
+}
 
    echo "        </form>\n";
    echo "      </div>\n";
@@ -171,7 +172,7 @@ function beginTable($title)
    echo "        </table>\n";
    echo "        <br/>\n";
 
-   echo "        <table class=\"tableLight\" cellspacing=0 rules=rows>\n";
+   echo "        <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
 }
 
 function endTable()
@@ -440,6 +441,8 @@ function getParameter($id)
 
 function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max, &$digits)
 {
+   global $mysqli;
+
    $id = $mysqli->real_escape_string($id);
 
    $timeout = time() + 5;

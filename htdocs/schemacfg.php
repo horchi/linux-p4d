@@ -57,8 +57,6 @@ if (isset($_POST["schemaRange"]))
 
 $_SESSION['schemaBez'] = ($_POST["schemaBez"] != $_SESSION['schemaBez']) ? $_POST["schemaBez"] : $_SESSION['schemaBez'];
 
-$_SESSION['valuesBG'] = ($_POST["valuesBG"] != $_SESSION['valuesBG']) ? $_POST["valuesBG"] : $_SESSION['valuesBG'];
-
 if (isset($_POST["pumpON"]))
   $_SESSION['pumpON'] = htmlspecialchars($_POST["pumpON"]);
 
@@ -86,7 +84,6 @@ if (isset($_POST["pumpsAO"]))
    writeConfigItem("schema",    $_SESSION['schema']);
    writeConfigItem("schemaBez", $_SESSION['schemaBez']);
    writeConfigItem("schemaRange", $_SESSION['schemaRange']);
-   writeConfigItem("valuesBG",  $_SESSION['valuesBG']);
    writeConfigItem("pumpON",    $_SESSION['pumpON']);
    writeConfigItem("pumpOFF",   $_SESSION['pumpOFF']);
    writeConfigItem("ventON",    $_SESSION['ventON']);
@@ -129,7 +126,7 @@ $schemaImg = $schema_path . substr($schema_pattern, 0, -5) . $_SESSION["schema"]
 $imgSize = GetImageSize ($schemaImg);
 echo "    <br/>\n";
 echo "    <form action='" . htmlspecialchars($_SERVER["PHP_SELF"]) . "' method='post'>\n";
-echo "      <div class=\"schemaImage\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
+echo "      <div class=\"rounded-border box\" style=\"position:absolute; left:" . $jpegLeft . "px; top:" . $jpegTop . "px; z-index:2;\">\n";
 echo "        <input type=\"image\" id=\"schemaJPG\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\"  onmousemove=\"displayCoords('coords',event);\"></input>\n";
 echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\"18\" style=\"position:absolute; left:" . ($jpegLeft-30) . "px; top:" . ($jpegTop-318) . "px;\" readonly>";
 echo "      </div>\n";
@@ -195,6 +192,26 @@ if ($started == 1)
    }
 }
 
+  // -------------------------
+  // get last time stamp
+
+  $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
+     or die("Error" . $mysqli->error);
+
+  $row = $result->fetch_assoc();
+  $max = $row['max(time)'];
+  $maxPretty = $row['maxPretty'];
+  $schemaRange = $_SESSION['schemaRange'] or $schemaRange = 60;    // Bereich und Anfang
+  $from = time() - ($schemaRange * 60 *60);                        // der Charts beim Klick auf Werte im Schema
+
+  // -------------------------
+  // show Date
+
+  echo "      <div class=\"rounded-border box\">\n";
+  echo "        <div>$maxPretty</div>\n";
+  echo "        <div>Chart-Zeitraum: $schemaRange Stunden</div>\n";
+  echo "      </div>\n";
+
 // -------------------------
 // show schema and values
 
@@ -215,7 +232,6 @@ echo "        <br/></br>\n";
 seperator("Grund-Einstellungen", 0);
 schemaItem(1, "Schema", $_SESSION['schema']);
 configBoolItem(5, "Sensor-Bezeichnungen", "schemaBez", $_SESSION['schemaBez']);
-configBoolItem(5, "Hintergrund?", "valuesBG", $_SESSION['valuesBG'], "anzeigen?");
 configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24,24 48,48 60,60 72,72", "Stunden");
 echo "          <button class=\"button3\" style=\"position:absolute; right:20px;\" type=submit name=action value=store>Einstellungen Speichern</button>\n";
 echo"        </div><br/>\n";

@@ -1,0 +1,424 @@
+
+@import url("normalize.css");
+
+Body
+{
+    background-color: #EEEEEE;
+    font-family: Helvetica,Arial,sans-serif;
+    font-size: 1.0em;
+}
+
+.content
+{
+    margin: 5px;
+}
+
+.rounded-border
+{
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.button1
+{
+    background-color: #fdfddf;
+    color: black;
+    margin: 1px;
+    display: inline-block;
+    padding: 6px 6px;
+    text-decoration: none;
+}
+
+.button1:hover
+{
+    background: #ffaa66;
+}
+
+.button2
+{
+    background-color: #ffaa66;
+    border: none;
+    margin-top: 10px;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.button2:hover
+{
+    background-color: #fdfddf;
+}
+
+.button2sel
+{
+    background-color: #FF6600;
+    border: none;
+    color: black;
+    margin: 2px;
+    padding: 5px 15px;
+    border-radius: 5px;
+}
+
+.button2sel:hover
+{
+    background-color: #fdfddf;
+}
+
+.button3
+{
+    background-color: #FF9900;
+    padding: 5px 10px;
+    border: none;
+    color: black;
+    margin-top: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.button3:hover
+{
+    background: #ffaa66;
+}
+
+.buttont
+{
+    background-color: rgba(255, 255, 255, 0);
+    color: black;
+    border: 0;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.buttont:hover
+{
+    background: #FF6600;
+    color: white;
+    border: 0;
+}
+
+.seperatorTitle1
+{
+    background-color: #ffaa66;
+    margin-top: 15px;
+    padding: 5px 15px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.seperatorTitle2
+{
+    background-color: #ffffae;
+    margin-top: 5px;
+    padding: 5px 15px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.input
+{
+    background-color: #fdfddf;
+    margin-top: 5px;
+    color: black;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.inputComment
+{
+    text-decoration: none;
+}
+
+.inputEdit
+{
+    text-decoration: none;
+    color: blue;
+    width: 70px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.inputEdit2
+{
+    text-decoration: none;
+    color: blue;
+    width: 70px;
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.checkbox
+{
+    background-color: #FF9900;
+    color: white;
+    padding: 3px 10px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.info
+{
+    background-color: green;
+    color: white;
+    text-decoration: none;
+    font-size: 22px
+    width: 1000px;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.help
+{
+    cursor: pointer;
+    margin-left: 50px;
+}
+
+.infoWarn
+{
+    background-color: orange;
+    color: white;
+    text-decoration: none;
+    font-size: 22px
+    width: 1000px;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.infoError
+{
+    background-color: red;
+    color: white;
+    text-decoration: none;
+    font-size: 22px
+    width: 1000px;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.box
+{
+    background-color: #fdfddf;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.imageBox
+{
+    background-color: #fdfddf;
+    padding: 10px;
+    margin-top: 10px;
+    position: relative;
+}
+
+.boxedValue
+{
+    color: black;
+    padding: 3px;
+    text-decoration: none;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.tableMainMM
+{
+    width: 100%;
+    background-color: #fdfddf;
+    color: black;
+    margin-top: 10px;
+    padding: 0;
+    font-size: 20px;
+}
+
+.tableMainMM > div:nth-child(even)
+{
+    background-color: #ffff9d;
+}
+
+.tableMainMM > div > span
+{
+    width: 35%;
+    min-width: 280px;
+    padding: 8px 10px 8px 10px;
+    display: inline-block;
+    text-align: left;
+}
+
+.stateInfo
+{
+    background-color: #fdfddf;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+}
+
+.centerImage
+{
+    float: right;
+    margin: 0px 0px 0px 0px;
+}
+
+.heatingState
+{
+    width: 36%;
+}
+
+.heatingState > div > span
+{
+    display: block;
+}
+
+.P4dInfo
+{
+    float: right;
+    margin-left: 40px;
+    width: 30%;
+}
+
+.P4dInfo > div > span
+{
+    width: 10%;
+    min-width: 215px;
+    display: table-cell;
+    text-align: left;
+}
+
+#divP4dState
+{
+    display: block;
+}
+
+@media only screen and (max-width: 420px)
+{
+    .content                   { padding: 0px; }
+    #divP4dState               { display: none; }
+    .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
+    .P4dInfo                   { font-size: 15px; margin-left: 0px; min-width: 95%; }
+    .P4dInfo > div > span      { min-width: 110px; }
+    .heatingState              { width: 56%; }
+    .centerImage               { margin: 0px 0px 0px 0px; }
+}
+
+@media only screen and (min-width: 768px) and (max-width:1139px)
+{
+}
+
+@media only screen and (min-width: 900px)
+{
+}
+
+@media only screen and (min-width: 1140px)
+{
+}
+
+#aStateOk
+{
+    color: green;
+    font-size: 24px;
+}
+
+#aStateFail
+{
+    color: red;
+    text-decoration: blink;
+    font-size: 24px;
+}
+
+#aStateHeating
+{
+    color: red;
+    font-size: 24px;
+}
+
+#aStateOther
+{
+    color: blue;
+    font-size: 24px;
+}
+
+#aSelect
+{
+    background-color: #fdfddf;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+#aSelectChart
+{
+    background-color: #fdfddf;
+    padding: 10px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.tableTitle
+{
+    width: 100%;
+    background-color: #CC0033;
+    color: white;
+    font-size: 20px;
+    padding: 20px;
+}
+
+.tableHead
+{
+    width: 100%;
+    background-color: #FF9900;
+    color: white;
+    font-size: 16px
+    padding: 20px;
+}
+
+.chart
+{
+    background-color: #fdfddf;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #f1caa4;
+}
+
+.cellL0
+{
+    background-color: #fdfddf;
+    color: black;
+}
+
+.cellL1
+{
+    background-color: #FF6600;
+    color: black;
+}
+
+.cellL2
+{
+    background-color: #FFF660;
+    color: black;
+}
+
+.cellL3
+{
+    background-color: #FFAA66;
+    color: black;
+}
+
+.cellL4
+{
+    background-color: white;
+    color: black;
+}

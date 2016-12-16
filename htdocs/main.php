@@ -79,7 +79,7 @@ printHeader(60);
   // -----------------
   // State 'flex' Box
 
-  echo "      <div class=\"stateInfo\">\n";
+  echo "      <div class=\"rounded-border stateInfo\">\n";
 
   // -----------------
   // Heating State
@@ -142,7 +142,7 @@ printHeader(60);
      $result = $mysqli->query($strQuery)
         or die("Error" . $mysqli->error);
 
-     echo "      <div class=\"tableMainMM\">\n";
+     echo "      <div class=\"rounded-border tableMainMM\">\n";
      echo "        <center>Messwerte vom $maxPretty</center>\n";
 
      while ($row = $result->fetch_assoc())
@@ -158,7 +158,7 @@ printHeader(60);
         if ($row['f_unit'] == 'T')
            $value = str_replace($wd_value, $wd_disp, $text);
 
-        $url = "<a href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
+        $url = "<a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
            . $from . "&range=" . $range . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
            . $_SESSION['chartDiv'] . " ','_blank',"
            . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";

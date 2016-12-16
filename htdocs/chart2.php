@@ -23,20 +23,17 @@ printHeader();
   $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
   $range = isset($_GET['range'])  ? $_GET['range']  : 1;
 
-  echo "  <br/>\n";
-  echo "  <div id=\"aSelectChart\">\n";
+  echo "  <div id=\"aSelect\">\n";
   echo "    <form name='navigation' method='get'>\n";
-  echo "      <center>Zeitraum der Charts 3+4</center>\n";
-  echo datePicker("Start", "s", $year, $day, $month);
+  echo "      Zeitraum der Charts<br/>\n";
+  echo datePicker("", "s", $year, $day, $month);
 
   echo "      <select name=\"range\">\n";
   echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
   echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
   echo "        <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
   echo "      </select>\n";
-
   echo "      <input type=submit value=\"Go\">\n";
-
   echo "    </form>\n";
   echo "  </div>\n";
 
@@ -48,17 +45,14 @@ printHeader();
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
   $type = isset($type) ? "&type=".$type : "";
 
-  echo "  <br/><br/><br/>\n";
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart3'] . ")";
-  echo "    <img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
-
-  echo "  <br/>\n";
 
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart4']. ")";
-  echo "    <img src='detail.php?width=1000&height=500&from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
 include("footer.php");

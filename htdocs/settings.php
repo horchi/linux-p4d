@@ -103,7 +103,6 @@ include("footer.php");
 function showButtons()
 {
    echo "        <div>\n";
-   echo "          <br/>\n";
    echo "          <button class=\"button3\" type=submit name=action value=init onclick=\"return confirmSubmit('Stammdaten der Messwerte initialisieren')\">Init</button>\n";
    echo "          <button class=\"button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
    echo "        </div>\n";
@@ -127,7 +126,7 @@ function showTable($type, $tableTitle)
    echo "        </table>\n";
    echo "        <br/>\n";
 
-   echo "        <table  class=\"tableLight\" border=1 cellspacing=0 rules=rows>
+   echo "        <table class=\"tableLight\" border=1 cellspacing=0 rules=rows>
           <tr class=\"tableHead\">\n";
 
 

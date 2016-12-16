@@ -1,30 +1,9 @@
 <?php
 
-  // -------------------------
-  // get last time stamp
+global $max;
 
-$result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;")
-   or die("Error" . $mysqli->error);
-
-$row = $result->fetch_assoc();
-$max = $row['max(time)'];
-$maxPretty = $row['maxPretty'];
-$schemaRange = $_SESSION['schemaRange'] or $schemaRange = 60;    // Bereich und Anfang
-$from = time() - ($schemaRange * 60 *60);                        // der Charts beim Klick auf Werte im Schema
-
-// -------------------------
-// check for valuesBG
-
-   if (isset($_SESSION["valuesBG"]))        // Hintergrund-Box bei Schema-Werten
-      $valuesBG = " background-color:#ccc; border-radius:2px; box-shadow:2px,2px,2px,#666;";
-
-// -------------------------
-// show Date
-
-echo "      <div class=\"schema\">\n";
-echo "        <div style=\"position:absolute; font-size:22px; left:" . ($jpegLeft +20) . "px; top:" .($jpegTop - 5) . "px; z-index:2;\">$maxPretty</div>\n";
-echo "        <div style=\"position:absolute; font-size:14px; left:" . ($jpegLeft +20) . "px; top:" .($jpegTop + 20) . "px; z-index:2;\">Chart-Zeitraum: $schemaRange Stunden</div>\n";
-
+$jpegTopMarging = 10;   // must match css style
+$jpegLeftMarging = 0;   // must match css style
 
 // -------------------------
 // check for images
@@ -68,37 +47,42 @@ while ($rowConf = $resultConf->fetch_assoc())
       $pmpDir = (isset($pmpDummy[0])) ? $pmpDummy[0] : "";          // aus eigener Sensor-Bezeichnung holen
       setTxt();
 
-   if (!isset($imgSize))                                                 // Chart nur bei SCHEMA, nicht bei CONFIG anzeigen
-   {
-     $url = "<a class=\"a\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from=" . $from . "&range=" . ($schemaRange / 24) . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
-        . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
-     $url2 ="</a>";
-   }
-   else
-     $url = $url2 = "";
+     if (!isset($imgSize))                                                 // Chart nur bei SCHEMA, nicht bei CONFIG anzeigen
+     {
+        $url = "          <a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from=" . $from . "&range=" . ($schemaRange / 24) . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
+           . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
+        $url2 ="</a>\n";
+     }
+     else
+     {
+        $url = $url2 = "";
+     }
 
-      if (!preg_match("/img/", $value))
-        echo "        <div class=\"values\" title=\"" . $title . "\" style=\"$valuesBG position:absolute; top:" . ($top + $jpegTop) . "px; $aligned:" . ($left + $jpegLeft) . "px" . "; color:" . $color . "; z-index:11" . "\">";
-      else                               // Bilder ohne Stylesheet-Klasse anzeigen
-      {
-        echo "        <div title=\"" . $title . ": " . $row['s_value'] . $unit . "\" style=\" position:absolute; top:" . ($top + $jpegTop) . "px; $aligned:" . ($left + $jpegLeft) . "px" . "; z-index:11" . "\">";
+     if (!preg_match("/img/", $value))
+     {
+        echo "        <div title=\"" . $title . "\" style=\"position:absolute; top:" . ($top+$jpegTopMarging) . "px; $aligned:" . ($left+$jpegLeftMarging) . "px; z-index:11;" . "\">\n";
+     }
+     else                               // Bilder ohne Stylesheet-Klasse anzeigen
+     {
+        echo "        <div title=\"" . $title . ": " . $row['s_value'] . $unit . "\" style=\"position:absolute; top:" . ($top + $jpegTopMarging) . "px; $aligned:" . ($left + $jpegLeftMarging) . "px" . "; z-index:11;" . "\">\n";
         $bez = "";                       // keine Bezeichnung bei Bildern anzeigen
-      }
+     }
 
-      $value = (preg_match("/[a-zA-Z ]/", $value)) ? $value : number_format(round($value, 1),1);   // Nachkommastelle immer anzeigen
-      if ($showText)
-         echo $url . $text . $url2;
-      else if ($showUnit && !preg_match("/[a-zA-Z]/", $value)) // Unit nur anzeigen, wenn Wert eine Zahl ist
-         echo $url . $bez . $value . ($unit == "°" ? "°C" : $unit) . $url2;
-      else
-         echo $url . $bez . $value . $url2;
+     $value = (preg_match("/[a-zA-Z ]/", $value)) ? $value : number_format(round($value, 1),1);   // Nachkommastelle immer anzeigen
 
-      echo "</div>\n";
+     if ($showText)
+        echo $url . $text . $url2;
+     else if ($showUnit && !preg_match("/[a-zA-Z]/", $value)) // Unit nur anzeigen, wenn Wert eine Zahl ist
+        echo $url . $bez . $value . ($unit == "°" ? "°C" : $unit) . $url2;
+     else
+        echo $url . $bez . $value . $url2;
+
+     echo "        </div>\n";
    }
 }
-echo "      </div>\n";
 
-function setTxt ()
+
+function setTxt()
 {
 	global $addr,$type,$unit,$value,$bez,$title,$pumpON,$pumpOFF,$ventON,$ventOFF,$description,$rightbound,$pumpsVA,$pumpsDO,$pumpsAO,$pmpDir;
 
@@ -110,12 +94,13 @@ function setTxt ()
     (strpos($pumpsVA, ",($addr),") != false) ? ($value == 0) ? $value = $ventOFF : $value = (!preg_match("/img/", $ventON)) ? $value : $ventON : $addr;                                    //Lüfter
     // wenn Sensor-Adresse in der Pumpenliste enthalten ist, dann (bei Value=0 --> $pumpOFF), wenn kein Bild --> Wert anzeigen, sonst Bild
     $all = "|,23,27,31,35,39,43,47,51,55,59,63,67,71,75,79,83,87,91,258,260,";     // IDs für Party-Schalter
+
     if (strpos($all, (",".$addr.",")) != false)
     {
      	switch ($value)
      	{
-     		case 2:	$value = "Nacht"; break;
-     		case 1:	$value = "Party"; break;
+     		case 2: $value = "Nacht"; break;
+     		case 1: $value = "Party"; break;
      		case 0: $value = "Auto";  break;
      	}
     }

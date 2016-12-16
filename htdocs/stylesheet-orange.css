@@ -1,4 +1,6 @@
 
+@import url("normalize.css");
+
 Body
 {
     background-color: #EEEEEE;
@@ -333,8 +335,8 @@ Body
 {
     font: 17px Verdana;
     float: right;
-    margin-right: 60px;
-    margin-left: 40px
+    margin-left: 40px;
+    width: 30%;
 }
 
 .P4dInfo > div > span
@@ -355,7 +357,7 @@ Body
     .content                   { padding: 0px; }
     #divP4dState               { display: none; }
     .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
-    .P4dInfo                   { font-size: 15px; margin-left: 0px; }
+    .P4dInfo                   { font-size: 15px; margin-left: 0px; min-width: 95%; }
     .P4dInfo > div > span      { min-width: 110px; }
     .heatingState              { font-size: 18px; width: 56%; }
     .centerImage               { margin: 0px 0px 0px 0px; }

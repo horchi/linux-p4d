@@ -54,7 +54,6 @@ include("functions.php");
    readConfigItem("schemaRange", $_SESSION['schemaRange']);
    readConfigItem("schema", $_SESSION['schema'], "p4-2hk-puffer");
    readConfigItem("schemaBez", $_SESSION['schemaBez']);
-   readConfigItem("valuesBG", $_SESSION['valuesBG']);
    readConfigItem("pumpON",  $_SESSION['pumpON'], "img/icon/pump-on.gif");
    readConfigItem("pumpOFF", $_SESSION['pumpOFF'], "img/icon/pump-off.gif");
    readConfigItem("ventON",  $_SESSION['ventON'], "img/icon/vent-on.gif");
@@ -100,23 +99,23 @@ function printHeader($refresh = 0)
     <title>Fröling  " . $_SESSION['heatingType'] . "</title>
   </head>
   <body>
-    <a class=\"button1\" href=\"main.php\">Aktuell</a>
-    <a class=\"button1\" href=\"chart.php\">Charts 1+2</a>";
+    <a class=\"rounded-border button1\" href=\"main.php\">Aktuell</a>
+    <a class=\"rounded-border button1\" href=\"chart.php\">Charts</a>\n";
 
    if ($_SESSION['chart34'] == "1")
-      echo "<a class=\"button1\" href=\"chart2.php\">Charts 3+4</a>";
+      echo "<a class=\"rounded-border button1\" href=\"chart2.php\">Charts...</a>\n";
 
-   echo "<a class=\"button1\" href=\"schemadsp.php\">Schema</a>
-    <a class=\"button1\" href=\"menu.php\">Menü</a>
-    <a class=\"button1\" href=\"error.php\">Fehler</a>\n";
+   echo "    <a class=\"rounded-border button1\" href=\"schemadsp.php\">Schema</a>
+    <a class=\"rounded-border button1\" href=\"menu.php\">Menü</a>
+    <a class=\"rounded-border button1\" href=\"error.php\">Fehler</a>\n";
 
    if (haveLogin())
    {
-      echo "    <a class=\"button1\" href=\"basecfg.php\">Setup</a>\n";
-      echo "    <a class=\"button1\" href=\"logout.php\">Logout</a>\n";
+      echo "    <a class=\"rounded-border button1\" href=\"basecfg.php\">Setup</a>\n";
+      echo "    <a class=\"rounded-border button1\" href=\"logout.php\">Logout</a>\n";
    }
    else
-      echo "    <a class=\"button1\" href=\"login.php\">Login</a>\n";
+      echo "    <a class=\"rounded-border button1\" href=\"login.php\">Login</a>\n";
 
    echo "    <div class=\"content\">\n";
 }

@@ -175,15 +175,9 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
 // Seperator
 // ---------------------------------------------------------------------------
 
-function seperator($title, $top = 0, $style = "seperatorTitle1")
+function seperator($title, $top = 0, $class = "seperatorTitle1")
 {
-   if ($top)
-      echo "        <div class=\"" . $style . "\" style=\"position:absolute; top:"."$top"."px;\">\n";
-   else
-      echo "        <div class=\"" . $style . "\">\n";
-
-   echo "          <center>$title</center>\n";
-   echo "        </div><br/>\n";
+   echo "        <div class=\"" . $class . "\">$title</div>\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -338,22 +332,22 @@ function htmTags($new)
    	case 1: echo   "        <div class=\"input\">\n";
               $end = "";
               break;
-   	case 2: echo   "        </div><br/>\n        <div class=\"input\">\n";
+   	case 2: echo   "        </div>\n        <div class=\"input\">\n";
               $end = "";
               break;
    	case 3: echo   "        <div class=\"input\">\n" ;
-              $end = "        </div><br/>\n";
+              $end = "        </div>\n";
               break;
    	case 4: echo   "          &nbsp;|&nbsp;\n" ;
-              $end = "        </div><br/>\n";
+              $end = "        </div>\n";
               break;
    	case 5: echo   "          &nbsp;|&nbsp;\n";
               $end = "";
               break;
-   	case 6: echo   "        </div><br/>\n        <div class=\"input\">\n" ;
-              $end = "        </div><br/>\n";
+   	case 6: echo   "        </div>\n        <div class=\"input\">\n" ;
+              $end = "        </div>\n";
               break;
-   	case 7: echo   "          <br/><br/>\n";
+   	case 7: echo   "        \n";
               $end = "";
               break;
   }
