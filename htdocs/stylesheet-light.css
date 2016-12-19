@@ -39,7 +39,6 @@ Body
 .button2
 {
     background-color: #ffaa66;
-    border: none;
     margin-top: 10px;
     color: black;
     padding: 5px 10px;
@@ -54,11 +53,9 @@ Body
 .button2sel
 {
     background-color: #FF6600;
-    border: none;
     color: black;
     margin: 2px;
     padding: 5px 15px;
-    border-radius: 5px;
 }
 
 .button2sel:hover
@@ -70,10 +67,8 @@ Body
 {
     background-color: #818382;
     padding: 5px 10px;
-    border: none;
     color: black;
     margin-top: 10px;
-    border-radius: 5px;
     text-decoration: none;
 }
 
