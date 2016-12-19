@@ -245,6 +245,8 @@ Body
 
 .table2Col > div > span
 {
+    width: 35%;
+    min-width: 280px;
     padding: 8px 10px 8px 10px;
     display: inline-block;
     text-align: left;
@@ -267,8 +269,6 @@ Body
 
 .tableMultiCol > div > span
 {
-    width: 35%;
-    min-width: 280px;
     padding: 8px 10px 8px 10px;
     display: inline-block;
     text-align: left;
