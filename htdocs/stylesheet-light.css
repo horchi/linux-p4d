@@ -269,6 +269,7 @@ Body
 
 .tableMultiCol > div > span
 {
+    width: 21%;
     padding: 8px 10px 8px 10px;
     display: inline-block;
     text-align: left;
