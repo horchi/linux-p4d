@@ -27,7 +27,7 @@ if (isset($_SESSION["menu"]))
 // -------------------------
 // establish db connection
 
-$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb, $mysqlport);
 $mysqli->query("set names 'utf8'");
 $mysqli->query("SET lc_time_names = 'de_DE'");
 
@@ -139,9 +139,9 @@ function showMenu($current)
       $title = mysqli_result($result, $i, "title");
 
       if ($child == $current)
-         echo "          <button class=\"button2sel\" type=submit name=menu value=$child>$title</button>\n";
+         echo "          <button class=\"rounded-border button2sel\" type=submit name=menu value=$child>$title</button>\n";
       else
-         echo "          <button class=\"button2\" type=submit name=menu value=$child>$title</button>\n";
+         echo "          <button class=\"rounded-border button2\" type=submit name=menu value=$child>$title</button>\n";
 
       $i++;
    }

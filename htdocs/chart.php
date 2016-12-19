@@ -11,22 +11,24 @@ printHeader();
   // -------------------------
   // establish db connection
 
-  $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+  $mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb, $mysqlport);
   $mysqli->query("set names 'utf8'");
   $mysqli->query("SET lc_time_names = 'de_DE'");
 
   // ----------------
   // init
-  // $type = "(VA VA VA DO)";
-  $day   = isset($_GET['sday'])   ? $_GET['sday']   : (int)date("d");
-  $month = isset($_GET['smonth']) ? $_GET['smonth'] : (int)date("m");
-  $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y");
-  $range = isset($_GET['range'])  ? $_GET['range']  : 1;
+
+  $day   = isset($_GET['csday'])   ? $_GET['csday']   : (int)date("d",time()-86400*$_SESSION['chartStart']);
+  $month = isset($_GET['csmonth']) ? $_GET['csmonth'] : (int)date("m",time()-86400*$_SESSION['chartStart']);
+  $year  = isset($_GET['csyear'])  ? $_GET['csyear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
+  $range = isset($_GET['crange'])  ? $_GET['crange']  : $_SESSION['chartStart'] > 7 ? 31 : $_SESSION['chartStart'] > 1 ? 7 : 1;
+
+  $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   echo "  <div id=\"aSelect\">\n";
   echo "    <form name='navigation' method='get'>\n";
   echo "      Zeitraum der Charts<br/>\n";
-  echo datePicker("", "s", $year, $day, $month);
+  echo datePicker("", "cs", $year, $day, $month);
 
   echo "      <select name=\"range\">\n";
   echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
@@ -38,14 +40,6 @@ printHeader();
 
   echo "    </form>\n";
   echo "  </div>\n";
-
-  $day   = isset($_GET['sday'])   ? $_GET['sday']   : (int)date("d",time()-86400*$_SESSION['chartStart']);
-  $month = isset($_GET['smonth']) ? $_GET['smonth'] : (int)date("m",time()-86400*$_SESSION['chartStart']);
-  $year  = isset($_GET['syear'])  ? $_GET['syear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
-  $range = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart']+1;
-
-  $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
-  $type = isset($type) ? "&type=".$type : "";
 
   echo "  <div class=\"chart\">\n";
   $condition = "address in (" . $_SESSION['chart1'] . ")";

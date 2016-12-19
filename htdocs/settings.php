@@ -4,6 +4,8 @@ include("header.php");
 
 printHeader();
 
+global $mysqli;
+
 include("setup.php");
 
 // -------------------------
@@ -20,13 +22,6 @@ $action = "";
 
 if (isset($_POST["action"]))
    $action = htmlspecialchars($_POST["action"]);
-
-// -------------------------
-// establish db connection
-
-$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
-$mysqli->query("set names 'utf8'");
-$mysqli->query("SET lc_time_names = 'de_DE'");
 
 // -----------------------
 //

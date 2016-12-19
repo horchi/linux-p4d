@@ -18,7 +18,7 @@ if (!haveLogin())
 // -------------------------
 // establish db connection
 
-$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb, $mysqlport);
 $mysqli->query("set names 'utf8'");
 $mysqli->query("SET lc_time_names = 'de_DE'");
 
@@ -187,13 +187,6 @@ configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'],
 configBoolItem(2, "senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
 configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein,15 mittel,25 groß,45", "");
 configBoolItem(5, "Chart 3+4", "chart34", $_SESSION['chart34'], "aktivieren?");
-/*
-  configOptionItem(2, "Farbe 1", "col1", $_SESSION['col1'], "grün,gelb,weiss,blau", "");
-  configOptionItem(5, "Farbe 2", "col2", $_SESSION['col2'], "grün,gelb,weiss,blau", "");
-  configOptionItem(5, "Farbe 3", "col3", $_SESSION['col3'], "grün,gelb,weiss,blau", "");
-  configOptionItem(5, "Farbe 4", "col4", $_SESSION['col4'], "grün,gelb,weiss,blau", "");
-  configOptionItem(5, "Dicke", "thk1", $_SESSION['thk1'], "1,2,3", "");
-*/
 configStrItem(2, "Chart 1", "chart1", $_SESSION['chart1'], "", 250);
 configStrItem(4, "Chart 2", "chart2", $_SESSION['chart2'], "Werte-ID, siehe 'Aufzeichnung'", 250);
 
@@ -207,7 +200,7 @@ seperator("Login", 0, "seperatorTitle2");
 configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
 configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
 
-seperator("Daemon Konfiguration", 0);
+seperator("p4d Konfiguration", 0);
 
 seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
 $a = ($_SESSION['mail']) ? "" : "disabled=true";

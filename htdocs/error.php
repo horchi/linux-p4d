@@ -7,7 +7,7 @@ printHeader();
 // -------------------------
 // establish db connection
 
-$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb);
+$mysqli = new mysqli($mysqlhost, $mysqluser, $mysqlpass, $mysqldb, $mysqlport);
 $mysqli->query("set names 'utf8'");
 $mysqli->query("SET lc_time_names = 'de_DE'");
 
