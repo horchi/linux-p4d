@@ -3,8 +3,8 @@
 global $max;
 global $forConfig;
 
-$jpegTopMarging = 10;   // must match css style
-$jpegLeftMarging = 0;   // must match css style
+$jpegTopMarging = 10;    // must match padding of stlye 'imageBox'
+$jpegLeftMarging = 10;   // must match padding of stlye 'imageBox'
 
 // -------------------------
 // check for images

@@ -122,8 +122,8 @@ $schemaImg = $schema_path . substr($schema_pattern, 0, -5) . $_SESSION["schema"]
 $forConfig = true;
 
 echo "    <form action='" . htmlspecialchars($_SERVER["PHP_SELF"]) . "' method='post'>\n";
-echo "      <div class=\"imageBox\" style=\"z-index:2;\">\n";
-echo "        <input type=\"image\" id=\"chsemaJPG\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\" onmousemove=\"displayCoords('coords',event);\"></input>\n";
+echo "      <div id=\"image\" class=\"imageBox\" style=\"z-index:2;\">\n";
+echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\" onmousemove=\"displayCoords(event, 'image', 'coords');\"></input>\n";
 echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\"18\" readonly>";
 
 // -------------------------
@@ -344,6 +344,5 @@ function store($state, $xpos, $ypos, $color)
                      $_SESSION["type"] . "'");
    }
 }
-
 
 ?>

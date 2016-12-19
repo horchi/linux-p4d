@@ -37,7 +37,7 @@
   $schemaImg = "img/schema/schema-" . $_SESSION["schema"] . ".png";
 
   echo "      <div class=\"imageBox\">\n";
-  echo "        <img id=\"image\" src=\"$schemaImg\">\n";
+  echo "        <img src=\"$schemaImg\">\n";
 
   include("schema.php");
 

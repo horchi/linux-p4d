@@ -67,15 +67,23 @@ function disableContent(elm, chk)
 	 }
 }
 
-function displayCoords(elm,e)
+function displayCoords(e, id, elm)
 {
 	 if (!e)
         e = window.event;
 
-	 var body = (window.document.compatMode && window.document.compatMode == "CSS1Compat") ? window.document.documentElement : window.document.body;
-	 xpos = e.pageX ? e.pageX : e.clientX + body.scrollLeft  - body.clientLeft
-	 ypos = e.pageY ? e.pageY : e.clientY + body.scrollTop - body.clientTop,
+    var mydiv = document.getElementById(id);
+/*	 var body = (window.document.compatMode && window.document.compatMode == "CSS1Compat")
+          ? window.document.documentElement : window.document.body; */
+
+	 // xpos = e.pageX ? e.pageX : e.clientX + mydiv.scrollLeft  - mydiv.clientLeft
+	 // ypos = e.pageY ? e.pageY : e.clientY + mydiv.scrollTop - mydiv.clientTop,
+
+    xpos = mydiv.clientLeft
+    ypos = mydiv.clientTop,
+
     txt = "Xpos="+xpos+"; Ypos="+ypos+"  ";
+
     document.getElementById(elm).value = txt;
 }
 
