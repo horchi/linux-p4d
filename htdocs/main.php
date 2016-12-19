@@ -151,7 +151,7 @@ printHeader(60);
      $result = $mysqli->query($strQuery)
         or die("Error" . $mysqli->error);
 
-     echo "      <div class=\"rounded-border tableMainMM\">\n";
+     echo "      <div class=\"rounded-border table2Col\">\n";
      echo "        <center>Messwerte vom $maxPretty</center>\n";
 
      while ($row = $result->fetch_assoc())
@@ -178,7 +178,7 @@ printHeader(60);
         echo "         </div>\n";
      }
 
-     echo "      </div>\n";  // tableMainMM
+     echo "      </div>\n";  // table2Col
   }
 
   // ----------------

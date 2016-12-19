@@ -25,8 +25,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 
    $num = $result->num_rows;
 
-   echo "      <div class=\"rounded-border tableMainMM\">\n";
-   echo "        <center>Messwerte vom $maxPretty</center>\n";
+   echo "      <div class=\"rounded-border tableMultiCol\">\n";
 
    while ($i < $num)
    {
@@ -45,7 +44,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
       $i++;
    }
 
-   echo "      </div>\n";  // tableMainMM
+   echo "      </div>\n";  // tableMultiCol
 
 
 include("footer.php");

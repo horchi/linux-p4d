@@ -228,7 +228,7 @@ Body
     border-color: #f1caa4;
 }
 
-.tableMainMM
+.table2Col
 {
     width: 100%;
     background-color: #fdfddf;
@@ -238,12 +238,34 @@ Body
     font-size: 20px;
 }
 
-.tableMainMM > div:nth-child(even)
+.table2Col > div:nth-child(even)
 {
     background-color: #ffff9d;
 }
 
-.tableMainMM > div > span
+.table2Col > div > span
+{
+    padding: 8px 10px 8px 10px;
+    display: inline-block;
+    text-align: left;
+}
+
+.tableMultiCol
+{
+    width: 100%;
+    background-color: #fdfddf;
+    color: black;
+    margin-top: 10px;
+    padding: 0;
+    font-size: 20px;
+}
+
+.tableMultiCol > div:nth-child(even)
+{
+    background-color: #ffff9d;
+}
+
+.tableMultiCol > div > span
 {
     width: 35%;
     min-width: 280px;
@@ -300,7 +322,7 @@ Body
 {
     .content                   { padding: 0px; }
     #divP4dState               { display: none; }
-    .tableMainMM > div > span  { padding: 3px 10px 3px 10px; }
+    .table2Col > div > span    { padding: 3px 10px 3px 10px; }
     .P4dInfo                   { font-size: 15px; margin-left: 0px; min-width: 95%; }
     .P4dInfo > div > span      { min-width: 110px; }
     .heatingState              { width: 56%; }
