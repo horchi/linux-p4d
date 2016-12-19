@@ -131,10 +131,10 @@ echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\
 
 if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzten Wert... echo $started . $_SESSION['cur'] . $_SESSION['num'];
 {
-   echo "      <button class=\"button3\" type=submit name=cfg value=Stop>Stop</button>\n";
-   echo "      <button class=\"button3\" type=submit name=cfg value=Skip>Skip</button>\n";
-   echo "      <button class=\"button3\" type=submit name=cfg value=Hide>Hide</button>\n";
-   echo "      <button class=\"button3\" type=submit name=cfg value=Back>Back</button>\n";
+   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Stop>Stop</button>\n";
+   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Skip>Skip</button>\n";
+   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Hide>Hide</button>\n";
+   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Back>Back</button>\n";
    echo "      <span class=\"checkbox\">\n";
    echo "        <input type=checkbox name=unit value=unit checked />Einheit\n";
    echo "        <input type=radio name=showtext value=Value checked />Wert\n";
@@ -143,7 +143,7 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "      <div class=\"seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br /> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
 }
 else
-   echo "      <button class=\"button3\" type=submit name=cfg value=Start>Start der Werte-Positionierung</button>\n";
+   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Start>Start der Werte-Positionierung</button>\n";
 
 if ($started == 1)
 {
@@ -219,7 +219,7 @@ schemaItem(1, "Schema", $_SESSION['schema']);
 configBoolItem(5, "Sensor-Bezeichnungen", "schemaBez", $_SESSION['schemaBez']);
 configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24,24 48,48 60,60 72,72", "Stunden");
 
-echo "        <button class=\"button3\" type=submit name=action value=store>Einstellungen Speichern</button>\n";
+echo "        <button class=\"rounded-border button3\" type=submit name=action value=store>Einstellungen Speichern</button>\n";
 
 seperator("Piktogramme<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");
 

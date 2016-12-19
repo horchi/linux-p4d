@@ -89,7 +89,7 @@ if (substr($action,0,6) == "delete")
 $i = 0; $cnt = "0";
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-echo "        <button class=\"button3\" type=\"submit\" name=\"action\" value=\"store\">Speichern</button>\n";
+echo "        <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"store\">Speichern</button>\n";
 
 // ------------------------
 // setup items ...

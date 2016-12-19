@@ -51,7 +51,7 @@ echo "            <tr><td>&nbsp;</td><td>&nbsp;</td></tr>\n";
 echo "            <tr><td>Passwort:&nbsp;&nbsp;</td><td><input class=\"inputEdit\" style=\"width:200px\" type=\"password\" name=\"passwort\"></input></td></tr>\n";
 echo "          </table>\n";
 echo "          <br/>\n";
-echo "          <button class=\"button3\" type=submit name=store value=login>Anmelden</button>\n";
+echo "          <button class=\"rounded-border button3\" type=submit name=store value=login>Anmelden</button>\n";
 echo "        </div>\n";
 echo "      </form>\n";
 

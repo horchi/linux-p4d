@@ -73,7 +73,7 @@ if ($edit != "")
          echo "          <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
          echo "          <span style=\"color:blue\">" . $unit . "</span>\n";
          echo "          (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")\n";
-         echo "          <button class=\"button3\" type=submit name=store value=store>Speichern</button>\n";
+         echo "          <button class=\"rounded-border button3\" type=submit name=store value=store>Speichern</button>\n";
          echo "          <br/><br/>\n";
          echo "        </div>\n";
          echo "      </form>\n";
@@ -149,8 +149,8 @@ function showMenu($current)
    if (haveLogin())
    {
       echo "        <div>\n";
-      echo "          <button class=\"button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
-      echo "          <button class=\"button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
+      echo "          <button class=\"rounded-border button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
+      echo "          <button class=\"rounded-border button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
       echo "        </div>\n";
 }
 
