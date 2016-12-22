@@ -45,21 +45,23 @@ if ($store == "store")
    {
       $state = -1;
       $newValue = htmlspecialchars($_POST["new_value"]);
-      $newValueTo = htmlspecialchars($_POST["new_value_to"]);
+      $newValueTo = isset($_POST["new_value_to"]) ? htmlspecialchars($_POST["new_value_to"]) : "";
       $storeId = htmlspecialchars($_POST["store_id"]);
       $isTimeRange = (strncmp($storeId, "tr#", 3) == 0);
 
       if ($isTimeRange)
-         // $state = storeRangeParameter($storeId, $newValue, $newValueTo, $state);
-         echo "      <br/><div class=\"infoWarn\"><b><center>storage of range time parameters not supported yet!</center></b></div><br/>\n";
+         $state = storeRangeParameter($storeId, $newValue, $newValueTo, $unit, $res);
       else
-         $state = storeParameter($storeId, $newValue, $unit, $state);
+         $state = storeParameter($storeId, $newValue, $unit, $res);
 
       if ($state == 0)
          echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
+      else if ($state == -99)
+         echo "      <br/><div class=\"infoWarn\"><b><center>Warnung, speichern von '$newValue' "
+            . "für Parameter '$storeId' ignoriert<br/>>> $res <<</center></b></div><br/>\n";
       else
          echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von '$newValue' "
-            . "für Parameter $storeId<br/>>> $state <<</center></b></div><br/>\n";
+            . "für Parameter '$storeId'<br/>>> $res <<</center></b></div><br/>\n";
    }
 }
 
@@ -603,6 +605,9 @@ function storeParameter($id, &$value, &$unit, &$res)
          {
             list($state, $res) = explode("#", $response);
 
+            if ($res == "no update")
+               return -99;
+
             return -1;
          }
 
@@ -630,10 +635,10 @@ function requestRangeParameter($id, &$title, &$valueFrom, &$valueTo, &$unit)
    $timeout = time() + 5;
    $title = "Zeitbereich $range für $wd_disp[$range]";
 
-
    syslog(LOG_DEBUG, "p4: requesting time range parameter at address $addr for range $range ");
 
-   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'gettrp', address = '$addr', data = '$range'")
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'gettrp', "
+                  . "address = '$addr', data = '$range'")
       or die("Error" . $mysqli->error);
 
    $jobid = $mysqli->insert_id;
@@ -672,19 +677,21 @@ function requestRangeParameter($id, &$title, &$valueFrom, &$valueTo, &$unit)
 // Store Time Range Parameter
 //***************************************************************************
 
-function storeRangeParameter($id, $newValue, $newValueTo, $state)
+function storeRangeParameter($id, &$valueFrom, &$valueTo, &$unit, &$res)
 {
    global $mysqli;
 
    $id = $mysqli->real_escape_string($id);
-   $value = $mysqli->real_escape_string($value);
+   $valueFrom = $mysqli->real_escape_string($valueFrom);
+   $valueTo = $mysqli->real_escape_string($valueTo);
    $timeout = time() + 5;
    $state = "";
+   list($tmp, $addr, $range) = explode("#", $id);
 
-   syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value is " . $value);
+   syslog(LOG_DEBUG, "p4: Storing time range parameter ($id), new value is $valueFrom - valueTo");
 
    $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'settrp', "
-               . "address = '$id', data = '$value'")
+               . "address = '$addr', data = '$range#$valueFrom#valueTo'")
       or die("Error" . $mysqli->error);
 
    $jobid = $mysqli->insert_id;
@@ -707,13 +714,13 @@ function storeRangeParameter($id, $newValue, $newValueTo, $state)
             return -1;
          }
 
-         list($state, $value, $unit, $default, $min, $max, $digits) = explode("#", $response);
+         list($state, $valueFrom, $valueTo, $unit) = explode("#", $response);
 
          return 0;
       }
    }
 
-   syslog(LOG_DEBUG, "p4: timeout on parameter store request!");
+   syslog(LOG_DEBUG, "p4: timeout on time range parameter store request!");
    $res = "p4d communication timeout";
 
    return -1;

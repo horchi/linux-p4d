@@ -239,6 +239,87 @@ int P4d::performWebifRequests()
          }
       }
 
+      else if (strcasecmp(command, "settrp") == 0)
+      {
+         int status = success;
+         Fs::TimeRanges t;
+         char fName[10+TB];
+         char tName[10+TB];
+         int rangeNo;
+         char valueFrom[100+TB];
+         char valueTo[100+TB];
+
+         // parse rangeNo and value from data
+
+         if (sscanf(data, "%d#%s#%s", &rangeNo, valueFrom, valueTo) != 3)
+            status = fail;
+
+         // get actual values from table
+
+         tableTimeRanges->clear();
+         tableTimeRanges->setValue("ADDRESS", addr);
+
+         if (status == success && tableTimeRanges->find())
+         {
+            for (int n = 0; n < 4; n++)
+            {
+               sprintf(fName, "FROM%d", n+1);
+               sprintf(tName, "TO%d", n+1);
+
+               status += t.setTimeRange(n, tableTimeRanges->getStrValue(fName), tableTimeRanges->getStrValue(tName));
+            }
+
+            // override the 'rangeNo' with new value
+
+            status += t.setTimeRange(rangeNo, valueFrom, valueTo);
+
+            if (status == success)
+            {
+               tell(eloAlways, "Storing '%s' for time range %d of parameter 0x%x", t.getTimeRange(rangeNo), rangeNo+1, addr);
+
+               if ((status = request->setTimeRanges(&t)) == success)
+               {
+                  char* buf = 0;
+
+                  // store job result
+
+                  asprintf(&buf, "success#%s#%s#%s", t.getTimeRangeFrom(rangeNo), t.getTimeRangeTo(rangeNo), "Zeitbereich");
+                  tableJobs->setValue("RESULT", buf);
+                  free(buf);
+
+                  // update time range table
+
+                  sprintf(fName, "FROM%d", rangeNo+1);
+                  sprintf(tName, "TO%d", rangeNo+1);
+                  tableTimeRanges->setValue(fName, t.getTimeRangeFrom(rangeNo));
+                  tableTimeRanges->setValue(tName, t.getTimeRangeTo(rangeNo));
+                  tableTimeRanges->update();
+               }
+               else
+               {
+                  tell(eloAlways, "Set of time range parameter failed, error %d", status);
+
+                  if (status == P4Request::wrnNonUpdate)
+                     tableJobs->setValue("RESULT", "fail#no update");
+                  else if (status == P4Request::wrnOutOfRange)
+                     tableJobs->setValue("RESULT", "fail#out of range");
+                  else
+                     tableJobs->setValue("RESULT", "fail#communication error");
+               }
+            }
+            else
+            {
+               tell(eloAlways, "Set of time range parameter failed, wrong format");
+               tableJobs->setValue("RESULT", "fail#format error");
+            }
+         }
+         else
+         {
+            tell(eloAlways, "Set of time range parameter failed, addr 0x%x for '%s' not found", addr, data);
+            tableJobs->setValue("RESULT", "fail#id not found");
+         }
+      }
+
       else if (strcasecmp(command, "getv") == 0)
       {
          Value v(addr);

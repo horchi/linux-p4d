@@ -270,6 +270,7 @@ class P4Request : public FroelingService
 
       int getFirstTimeRanges(TimeRanges* t)  { return getTimeRanges(t, yes); }
       int getNextTimeRanges(TimeRanges* t)   { return getTimeRanges(t, no); }
+      int setTimeRanges(TimeRanges* t);
 
       int getValue(Value* v);
       int getDigitalOut(IoValue* v);

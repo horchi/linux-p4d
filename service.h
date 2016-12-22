@@ -335,12 +335,12 @@ class FroelingService
 
       struct TimeRanges
       {
-         TimeRanges()  { address = 0; }
+         TimeRanges()  { address = 0xFF; }
          ~TimeRanges() { }
 
          int isSet(int n)
          {
-            if (n >= 4 || (timesFrom[n] == 0xFF && timesTo[n] == 0xFF))
+            if (n >= 4 || (timesFrom[n] == 0xff && timesTo[n] == 0xff))
                return no;
 
             return yes;
@@ -375,6 +375,30 @@ class FroelingService
             static char nice[20+TB];
             sprintf(nice, "%s - %s", getTimeRangeFrom(n), getTimeRangeTo(n));
             return nice;
+         }
+
+         int setTimeRange(int n, const char* from, const char* to)
+         {
+            uint hF = 0xff, mF = 0xff, hT = 0xff, mT = 0xff;
+
+            if (!strchr(from, ':') || !strchr(to, ':'))
+               return fail;
+
+            if (strcasecmp(from, "nn:nn") != 0 && strcasecmp(to, "nn:nn") != 0)
+            {
+               hF = atoi(from);
+               mF = atoi(strchr(from, ':') + 1);
+               hT = atoi(to);
+               mT = atoi(strchr(to, ':') + 1);
+            }
+
+            if (hF > 23 || hT > 23 || mF > 59 || mT > 59)
+               return fail;
+
+            timesFrom[n] = hF*10 + mF/10;
+            timesTo[n] = hT*10 + mT/10;
+
+            return success;
          }
 
          byte address;

@@ -916,6 +916,7 @@ int P4Request::setParameter(ConfigParameter* p)
 int P4Request::getTimeRanges(TimeRanges* t, int first)
 {
    static int last = no;
+
    RequestClean clean(this);
    int status = fail;
 
@@ -934,17 +935,17 @@ int P4Request::getTimeRanges(TimeRanges* t, int first)
       sword w;
 
       status = readWord(w)            // what ever (always 01 00 ?)
-         + readByte(t->address)       // address  (here only a byte!!)
-         + readByte(t->timesFrom[0])  // time range 1
-         + readByte(t->timesTo[0])
-         + readByte(t->timesFrom[1])  // time range 2
-         + readByte(t->timesTo[1])
-         + readByte(t->timesFrom[2])  // time range 3
-         + readByte(t->timesTo[2])
-         + readByte(t->timesFrom[3])  // time range 4
-         + readByte(t->timesTo[3])
+         + readByte(t->address);       // address  (here only a byte!!)
 
-         + readByte(crc);
+      for (int n = 0; n < 4; n++)
+      {
+         // read time range 'n'
+
+         status += readByte(t->timesFrom[n]);
+         status += readByte(t->timesTo[n]);
+      }
+
+      status += readByte(crc);
 
       show("<- ");
    }
@@ -952,6 +953,65 @@ int P4Request::getTimeRanges(TimeRanges* t, int first)
    last = t->address == 0xdf;
 
    return status == success ? success : fail;
+}
+
+//***************************************************************************
+// Set Time Ranges
+//***************************************************************************
+
+int P4Request::setTimeRanges(TimeRanges* t)
+{
+   RequestClean clean(this);
+   int status;
+   byte crc;
+   sword tmp, addr;
+
+   if (!t || t->address == 0xFF)
+      return errWrongAddress;
+
+   clear();
+   addAddress(t->address);
+
+   for (int n = 0; n < 4; n++)
+   {
+      sword value;
+
+      if ((t->timesFrom[n] > 0xeb && t->timesFrom[n] != 0xff) ||
+          (t->timesTo[n] > 0xeb && t->timesTo[n] != 0xff))            // 0xeb => 235 => 23:50
+      {
+         tell(eloAlways, "Value '%s' isn't a valid time range!", t->getTimeRange(n));
+         return wrnOutOfRange;
+      }
+
+      value = t->timesFrom[n] << 8 & t->timesTo[n];
+      addAddress(value);
+   }
+
+   if (request(cmdSetTimes) != success)
+      return errRequestFailed;
+
+   // reas response
+
+   status = readHeader();
+   status += readWord(tmp);   // always 00 00 ?
+   status += readWord(addr);
+
+   for (int n = 0; n < 4; n++)
+   {
+      // read time range 'n'
+
+      status += readByte(t->timesFrom[n]);
+      status += readByte(t->timesTo[n]);
+   }
+
+   status += readByte(crc);
+
+   if (status != success)
+     return errRequestFailed;
+
+   show("<- ");
+
+   return success;
 }
 
 //***************************************************************************

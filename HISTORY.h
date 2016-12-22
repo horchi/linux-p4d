@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.1.45"
+#define _VERSION     "0.1.46"
 #define VERSION_DATE "22.12.2016"
 
 #ifdef GIT_REV
@@ -17,7 +17,10 @@
 /*
  * ------------------------------------
 
-2016-12-2:  version 0.1.45
+2016-12-22:  version 0.1.46
+   - added:  storage for time range parameters
+
+2016-12-22:  version 0.1.45
    - change: WEBIF: redesign all tabs, added a 'light' stylesheet
    - added:  display of time range parameters
 
