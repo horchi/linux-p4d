@@ -33,6 +33,7 @@ P4d::P4d()
    tableMenu = 0;
    tableConfig = 0;
    tableErrors = 0;
+   tableTimeRanges = 0;
 
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
@@ -226,6 +227,9 @@ int P4d::initDb()
    tableConfig = new cDbTable(connection, "config");
    if (tableConfig->open() != success) return fail;
 
+   tableTimeRanges = new cDbTable(connection, "timeranges");
+   if (tableTimeRanges->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -335,6 +339,7 @@ int P4d::exitDb()
    delete tableSmartConf;          tableSmartConf = 0;
    delete tableErrors;             tableErrors = 0;
    delete tableConfig;             tableConfig = 0;
+   delete tableTimeRanges;         tableTimeRanges = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
@@ -417,7 +422,7 @@ int P4d::initialize(int truncate)
    tell(eloAlways, "Update html schema configuration");
    updateSchemaConfTable();
    tell(eloAlways, "Requesting menu structure from s 3200");
-   updateMenu();
+   initMenu();
 
    serial->close();
 
@@ -741,10 +746,10 @@ int P4d::updateValueFacts()
 }
 
 //***************************************************************************
-// Update Menu Structure
+// Initialize Menu Structure
 //***************************************************************************
 
-int P4d::updateMenu()
+int P4d::initMenu()
 {
    int status;
    Fs::MenuItem m;

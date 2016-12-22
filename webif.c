@@ -206,6 +206,39 @@ int P4d::performWebifRequests()
          }
       }
 
+      else if (strcasecmp(command, "gettrp") == 0)
+      {
+         // first update the time range data
+         //  s3200 support no single request of a time range parameter
+
+         // don't update since it takes to long (assume table is up to date)
+         // updateTimeRangeData();
+
+         // now read it from the table
+
+         tableTimeRanges->clear();
+         tableTimeRanges->setValue("ADDRESS", addr);
+
+         if (tableTimeRanges->find())
+         {
+            char* buf = 0;
+            char fName[10+TB];
+            char tName[10+TB];
+            int n = atoi(data);
+
+            sprintf(fName, "FROM%d", n);
+            sprintf(tName, "TO%d", n);
+
+            asprintf(&buf, "success#%s#%s#%s",
+                     tableTimeRanges->getStrValue(fName),
+                     tableTimeRanges->getStrValue(tName),
+                     "Zeitraum");
+            tableJobs->setValue("RESULT", buf);
+
+            free(buf);
+         }
+      }
+
       else if (strcasecmp(command, "getv") == 0)
       {
          Value v(addr);
@@ -232,7 +265,7 @@ int P4d::performWebifRequests()
 
       else if (strcasecmp(command, "initmenu") == 0)
       {
-         updateMenu();
+         initMenu();
          tableJobs->setValue("RESULT", "success:done");
       }
 
@@ -401,6 +434,9 @@ int P4d::performWebifRequests()
          }
 
          selectAllMenuItems->freeResult();
+
+         updateTimeRangeData();
+
          tableJobs->setValue("RESULT", "success:done");
       }
 
@@ -420,6 +456,39 @@ int P4d::performWebifRequests()
    selectPendingJobs->freeResult();
 
    return success;
+}
+
+//***************************************************************************
+// Update Time Range Data
+//***************************************************************************
+
+int P4d::updateTimeRangeData()
+{
+   Fs::TimeRanges t;
+   int status;
+   char fName[10+TB];
+   char tName[10+TB];
+
+   // update / insert time ranges
+
+   for (status = request->getFirstTimeRanges(&t); status != Fs::wrnLast; status = request->getNextTimeRanges(&t))
+   {
+      tableTimeRanges->clear();
+      tableTimeRanges->setValue("ADDRESS", t.address);
+
+      for (int n = 0; n < 4; n++)
+      {
+         sprintf(fName, "FROM%d", n+1);
+         sprintf(tName, "TO%d", n+1);
+         tableTimeRanges->setValue(fName, t.getTimeRangeFrom(n));
+         tableTimeRanges->setValue(tName, t.getTimeRangeTo(n));
+      }
+
+      tableTimeRanges->store();
+      tableTimeRanges->reset();
+   }
+
+   return done;
 }
 
 //***************************************************************************

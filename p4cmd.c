@@ -23,6 +23,7 @@ enum UserCommand
    ucGetValue,
    ucGetParameter,
    ucSetParameter,
+   ucGetTimeRanges,
    ucParameterList,
    ucValueList,
    ucErrorList,
@@ -57,6 +58,7 @@ void showUsage(const char* bin)
    printf("     getv     show value at <addr>\n");
    printf("     getp     show parameter at <addr>\n");
    printf("     setp     set parameter at <addr> to <value>\n");
+   printf("     times    get time ranges of <addr>\n");
    printf("     getdo    show digital output at <addr>\n");
    printf("     getao    show analog output at <addr>\n");
    printf("     w1       show data of all connected one wire sensors\n");
@@ -79,9 +81,9 @@ int main(int argc, char** argv)
 
 //    {
 //       md5Buf defaultPwd;
-      
+
 //       // init default user and password
-      
+
 //       createMd5("p4-3200", defaultPwd);
 //       printf("'%s'\n", defaultPwd);
 //       return done;
@@ -99,17 +101,19 @@ int main(int argc, char** argv)
       showUsage(argv[0]);
       return 0;
    }
- 
+
    // get command
-   
+
    if (strcasecmp(argv[1], "getv") == 0)
-      cmd = ucGetValue; 
+      cmd = ucGetValue;
    else if (strcasecmp(argv[1], "w1") == 0)
-      cmd = ucShowW1; 
+      cmd = ucShowW1;
    else if (strcasecmp(argv[1], "getp") == 0)
-      cmd = ucGetParameter; 
+      cmd = ucGetParameter;
    else if (strcasecmp(argv[1], "setp") == 0)
-      cmd = ucSetParameter; 
+      cmd = ucSetParameter;
+   else if (strcasecmp(argv[1], "times") == 0)
+      cmd = ucGetTimeRanges;
    else if (strcasecmp(argv[1], "values") == 0)
       cmd = ucValueList;
    else if (strcasecmp(argv[1], "errors") == 0)
@@ -146,7 +150,7 @@ int main(int argc, char** argv)
 
       return 0;
    }
-   
+
    // parse options
 
    for (int i = 1; argv[i]; i++)
@@ -196,7 +200,7 @@ int main(int argc, char** argv)
 
          break;
       }
-      
+
       case ucGetDo:
       {
          Fs::IoValue v(addr);
@@ -254,13 +258,13 @@ int main(int argc, char** argv)
       case ucGetParameter:
       {
          Fs::ConfigParameter p(addr);
-         
+
          if (request.getParameter(&p) == success)
          {
             tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Digits: %d; "
-                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (factor already applied)", 
+                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (factor already applied)",
                  p.address, p.unit, p.digits, p.value, p.min, p.max, p.def, p.factor);
-            
+
             tell(eloAlways, "=> %d%s", p.value, p.unit);
          }
 
@@ -269,13 +273,13 @@ int main(int argc, char** argv)
       case ucSetParameter:
       {
          Fs::ConfigParameter p(addr);
-         
+
          if (value != Fs::addrUnknown)
          {
             p.value = value;
-            
+
             if ((status = request.setParameter(&p)) == success)
-               tell(eloAlways, "Parameter 0x%4.4X changed successfully to %d%s", 
+               tell(eloAlways, "Parameter 0x%4.4X changed successfully to %d%s",
                     p.address, p.value, p.unit);
             else
                tell(eloAlways, "Set of parameter failed, error %d", status);
@@ -283,10 +287,26 @@ int main(int argc, char** argv)
 
          break;
       }
+      case ucGetTimeRanges:
+      {
+         Fs::TimeRanges t;
+
+         for (status = request.getFirstTimeRanges(&t); status != Fs::wrnLast; status = request.getNextTimeRanges(&t))
+         {
+            tell(eloAlways, "XXXXX:");
+
+            for (int n = 0; n < 4; n++)
+               tell(eloAlways, "  Range %d: %s [0x%02x]", n+1, t.getTimeRange(n), t.address);
+
+            tell(eloAlways, "-------------------");
+         }
+
+         break;
+      }
       case ucGetValue:
       {
          Fs::Value v(addr);
-         
+
          if ((status = request.getValue(&v)) == success)
             tell(eloAlways, "value 0x%x is %d", v.address, v.value);
          else
@@ -323,10 +343,10 @@ int main(int argc, char** argv)
          {
             ct = strdup(ctime(&e.time));
             ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
-            
-            tell(eloAlways, "%s:  %03d/%03d  '%s' - %s", 
+
+            tell(eloAlways, "%s:  %03d/%03d  '%s' - %s",
                  ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
-            
+
             free(ct);
          }
 
@@ -341,7 +361,7 @@ int main(int argc, char** argv)
          for (status = request.getFirstMenuItem(&m); status != Fs::wrnLast; status = request.getNextMenuItem(&m))
          {
             if (status == success)
-               tell(eloAlways, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'", 
+               tell(eloAlways, "%3d) Address: 0x%04x, parent: 0x%04x, child: 0x%04x; '%s'",
                     n++, m.address, m.parent, m.child, m.description);
             else if (status != Fs::wrnSkip)
                break;
@@ -367,9 +387,9 @@ int main(int argc, char** argv)
 
       default: break;
    }
-   
+
    serial.close();
    sem.v();
-   
+
    return 0;
 }

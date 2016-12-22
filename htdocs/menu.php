@@ -43,16 +43,26 @@ if ($store == "store")
 {
    if (isset($_POST["new_value"]) && isset($_POST["store_id"]))
    {
+      $state = -1;
       $newValue = htmlspecialchars($_POST["new_value"]);
+      $newValueTo = htmlspecialchars($_POST["new_value_to"]);
       $storeId = htmlspecialchars($_POST["store_id"]);
+      $isTimeRange = (strncmp($storeId, "tr#", 3) == 0);
 
-      if (storeParameter($storeId, $newValue, $unit, $state) == 0)
+      if ($isTimeRange)
+         // $state = storeRangeParameter($storeId, $newValue, $newValueTo, $state);
+         echo "      <br/><div class=\"infoWarn\"><b><center>storage of range time parameters not supported yet!</center></b></div><br/>\n";
+      else
+         $state = storeParameter($storeId, $newValue, $unit, $state);
+
+      if ($state == 0)
          echo "      <br/><div class=\"info\"><b><center>Gespeichert!</center></b></div><br/>\n";
       else
          echo "      <br/><div class=\"infoError\"><b><center>Fehler beim speichern von '$newValue' "
             . "für Parameter $storeId<br/>>> $state <<</center></b></div><br/>\n";
    }
 }
+
 
 // -----------------------
 // Edit Parameter
@@ -61,18 +71,41 @@ if ($edit != "")
 {
    if (haveLogin())
    {
-      $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
+      $default = $min = $max = $digits = $valueTo = 0;
+      $isTimeRange = (strncmp($edit, "tr#", 3) == 0);
+
+      if ($isTimeRange)
+         $res = requestRangeParameter($edit, $title, $value, $valueTo, $unit);
+      else
+         $res = requestParameter($edit, $title, $value, $unit, $default, $min, $max, $digits);
+
+      error_log("DEBUG: $edit, $title, $value, $valueTo, $unit, $default, $min, $max, $digits");
 
       if ($res == 0)
       {
          echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
          echo "        <br/><br/>\n";
          echo "        <div class=\"input\">\n";
-         echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
+
+         if ($isTimeRange)
+            echo "          " . $title . ":  <span style=\"color:blue\">$value - $valueTo</span><br/><br/>\n";
+         else
+            echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
+
          echo "          <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
          echo "          <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
-         echo "          <span style=\"color:blue\">" . $unit . "</span>\n";
-         echo "          (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")\n";
+
+         if ($isTimeRange)
+         {
+            echo "          <span style=\"color:blue\"> - </span>\n";
+            echo "          <input class=\"inputEdit\" type=int name=new_value_to value=$valueTo></input>\n";
+         }
+         else
+         {
+            echo "          <span style=\"color:blue\">" . $unit . "</span>\n";
+            echo "          (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")\n";
+         }
+
          echo "          <button class=\"rounded-border button3\" type=submit name=store value=store>Speichern</button>\n";
          echo "          <br/><br/>\n";
          echo "        </div>\n";
@@ -169,10 +202,6 @@ function beginTable($title)
    echo "          <tr>\n";
    echo "            <td><center><b>$title</b></center></td>\n";
    echo "          </tr>\n";
-   echo "        </table>\n";
-   echo "        <br/>\n";
-
-   echo "        <table class=\"tableHead\" cellspacing=0 rules=rows>\n";
 }
 
 function endTable()
@@ -186,7 +215,7 @@ function endTable()
 
 function showChilds($parnt, $level)
 {
-   global $debug, $mysqli;
+   global $debug, $mysqli, $wd_disp;
 
    $parnt = $mysqli->real_escape_string($parnt);
    $i = 0;
@@ -208,6 +237,8 @@ function showChilds($parnt, $level)
       $u1      = mysqli_result($result, $i, "unknown1");
       $u2      = mysqli_result($result, $i, "unknown2");
       $value   = "";
+
+      $timeRangeGroup = ($u1 == 31 && $u2 == 16 && ($child == 573 || $child == 230 || $child == 350 || $child == 430));  // try to detect a time range
 
       if (rtrim($title) == "" && !$debug)
       {
@@ -245,6 +276,7 @@ function showChilds($parnt, $level)
             case 0x22: $txttp = "Empty?";    break;
             case 0x23: $txttp = "Reset";     break;
             case 0x26: $txttp = "Zeiten";    break;
+            case 0x2a: $txttp = "Par Guppe"; break;
             case 0x3a: $txttp = "Anzeigen";  break;
             case 0x16: $txttp = "Firmware";  break;
 
@@ -272,16 +304,14 @@ function showChilds($parnt, $level)
       }
       else
       {
-         if (!$child)
-            $style = "cellL0";
+         if (!$child || $level == 4)
+            $style = "cellL4";
          elseif ($level == 1)
             $style = "cellL1";
          elseif ($level == 2)
             $style = "cellL2";
          elseif ($level == 3)
             $style = "cellL3";
-         elseif ($level == 4)
-            $style = "cellL4";
          else
          {
             syslog(LOG_DEBUG, "p4: unexpected menu level " . $level);
@@ -316,8 +346,50 @@ function showChilds($parnt, $level)
          echo "          </tr>\n";
       }
 
-      if ($child)
+      if ($timeRangeGroup)
+      {
+         switch ($child)
+         {
+            case 230: $baseAddr = 0x00; break;
+            case 350: $baseAddr = 0x3f; break;
+            case 430: $baseAddr = 0xb6; break;
+            case 573: $baseAddr = 0xd9; break;
+         }
+
+         for ($wday = 0; $wday < 7; $wday++)
+         {
+            $trAddr = $baseAddr + $wday;
+            $stmt = "select * from timeranges where address = " . $trAddr;
+            echo "          <tr class=\"cellL2\">\n";
+            echo "            <td><center><b>$wd_disp[$wday]</b></center></td>\n";
+            echo "            <td></td>\n";
+            echo "          </tr>\n";
+
+
+            $result = $mysqli->query("select * from timeranges where address = " . $trAddr)
+               or die("Error" . $mysqli->error);
+
+            $row = $result->fetch_array(MYSQLI_ASSOC);
+
+            if ($row == NULL)
+               continue;
+
+            for ($n = 1; $n < 5; $n++)
+            {
+               $from = $row['from' . $n];
+               $to = $row['to' . $n];
+
+               echo "           <tr class=\"cellL4\">\n";
+               echo "            <td><button class=buttont type=submit name=edit value=tr#$trAddr#$n>Bereich $n</button></td>\n";
+               echo "             <td style=\"color:blue\">$from - $to</td>\n";
+               echo "           </tr>\n";
+            }
+         }
+      }
+      else if ($child)
+      {
          showChilds($child, $level+1);
+      }
 
       $i++;
    }
@@ -444,9 +516,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
    global $mysqli;
 
    $id = $mysqli->real_escape_string($id);
-
    $timeout = time() + 5;
-
    $address = 0;
    $type = "";
 
@@ -492,7 +562,7 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
       }
    }
 
-   syslog(LOG_DEBUG, "p4: timeout on parameter request ");
+   syslog(LOG_DEBUG, "p4: timeout on parameter request!");
 
    return -1;
 }
@@ -503,6 +573,8 @@ function requestParameter($id, &$title, &$value, &$unit, &$default, &$min, &$max
 
 function storeParameter($id, &$value, &$unit, &$res)
 {
+   global $mysqli;
+
    $id = $mysqli->real_escape_string($id);
    $value = $mysqli->real_escape_string($value);
    $timeout = time() + 5;
@@ -540,7 +612,108 @@ function storeParameter($id, &$value, &$unit, &$res)
       }
    }
 
-   syslog(LOG_DEBUG, "p4: timeout on parameter request ");
+   syslog(LOG_DEBUG, "p4: timeout on parameter store request!");
+   $res = "p4d communication timeout";
+
+   return -1;
+}
+
+//***************************************************************************
+// Request Time Range Parameter
+//***************************************************************************
+
+function requestRangeParameter($id, &$title, &$valueFrom, &$valueTo, &$unit)
+{
+   global $mysqli, $wd_disp;
+
+   list($tmp, $addr, $range) = explode("#", $id);
+   $timeout = time() + 5;
+   $title = "Zeitbereich $range für $wd_disp[$range]";
+
+
+   syslog(LOG_DEBUG, "p4: requesting time range parameter at address $addr for range $range ");
+
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'gettrp', address = '$addr', data = '$range'")
+      or die("Error" . $mysqli->error);
+
+   $jobid = $mysqli->insert_id;
+
+   while (time() < $timeout)
+   {
+      usleep(10000);
+
+      $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
+         or die("Error" . $mysqli->error);
+
+      if ($result->num_rows > 0)
+      {
+         $response = mysqli_result($result, 0, "result");
+         list($state, $valueFrom, $valueTo, $unit) = explode("#", $response);
+         $unit = ""; // don't show 'Zeitbereich'
+
+         if ($state == "fail")
+         {
+            return -1;
+         }
+         else
+         {
+            syslog(LOG_DEBUG, "p4: got response for time range parameter $addr/$range -> $value");
+            return 0;
+         }
+      }
+   }
+
+   syslog(LOG_DEBUG, "p4: timeout on time range parameter request!");
+
+   return -1;
+}
+
+//***************************************************************************
+// Store Time Range Parameter
+//***************************************************************************
+
+function storeRangeParameter($id, $newValue, $newValueTo, $state)
+{
+   global $mysqli;
+
+   $id = $mysqli->real_escape_string($id);
+   $value = $mysqli->real_escape_string($value);
+   $timeout = time() + 5;
+   $state = "";
+
+   syslog(LOG_DEBUG, "p4: Storing parameter (" . $id . "), new value is " . $value);
+
+   $mysqli->query("insert into jobs set requestat = now(), state = 'P', command = 'settrp', "
+               . "address = '$id', data = '$value'")
+      or die("Error" . $mysqli->error);
+
+   $jobid = $mysqli->insert_id;
+
+   while (time() < $timeout)
+   {
+      usleep(10000);
+
+      $result = $mysqli->query("select * from jobs where id = $jobid and state = 'D'")
+         or die("Error" . $mysqli->error);
+
+      if ($result->num_rows > 0)
+      {
+         $response = mysqli_result($result, 0, "result");
+
+         if (!strstr($response, "success"))
+         {
+            list($state, $res) = explode("#", $response);
+
+            return -1;
+         }
+
+         list($state, $value, $unit, $default, $min, $max, $digits) = explode("#", $response);
+
+         return 0;
+      }
+   }
+
+   syslog(LOG_DEBUG, "p4: timeout on parameter store request!");
    $res = "p4d communication timeout";
 
    return -1;

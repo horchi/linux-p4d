@@ -46,14 +46,14 @@ class P4Packet : public FroelingService, public Serial
       std::vector<Parameter>* getParameters() { return &parameters; }
 
       Parameter* getParameter(int index)
-      { 
+      {
          std::vector<Parameter>::iterator it;
 
          for (it = parameters.begin(); it != parameters.end(); it++)
             if ((*it).index == index)
                return &(*it);
 
-         return 0; 
+         return 0;
       }
 
       const char* all()                        { return buffer; }
@@ -82,15 +82,15 @@ class P4Packet : public FroelingService, public Serial
 class P4Request : public FroelingService
 {
    public:
-      
+
       P4Request(Serial* aSerial)    { s = aSerial; text = 0; clear(); }
       virtual ~P4Request()          { clear(); }
-      
+
       class RequestClean
       {
          public:
-            
-            RequestClean(P4Request* aReq) 
+
+            RequestClean(P4Request* aReq)
             {
                req = aReq;
             }
@@ -99,31 +99,31 @@ class P4Request : public FroelingService
             {
                int count = 0;
                byte b;
-               
+
                while (req->readByte(b, yes, 10) == success)
                   count++;
-               
+
                if (count)
                {
                   tell(eloAlways, "Got %d unexpected bytes", count);
                   req->show("<- ");
                }
             }
-            
+
          private:
-            
+
             P4Request* req;
       };
-      
-      int clear() 
-      { 
+
+      int clear()
+      {
          free(text);
          text = 0;
          sizeBufferContent = 0;
          sizeDecodedContent = 0;
-         memset(&header, 0, sizeof(Header)); 
-         memset(buffer, 0, sizeof(buffer)); 
-         memset(decoded, 0, sizeof(buffer)); 
+         memset(&header, 0, sizeof(Header));
+         memset(buffer, 0, sizeof(buffer));
+         memset(decoded, 0, sizeof(buffer));
          clearBytes();
          clearAddresses();
          return done;
@@ -131,32 +131,32 @@ class P4Request : public FroelingService
 
       void clearAddresses()
       {
-         memset(addresses, 0, sizeof(addresses)); 
+         memset(addresses, 0, sizeof(addresses));
          addressCount = 0;
       }
 
       int addAddress(word address)
-      { 
-         if (addressCount >= maxAddresses) 
-            return fail; 
+      {
+         if (addressCount >= maxAddresses)
+            return fail;
 
-         addresses[addressCount++] = htons(address); 
-         return success; 
+         addresses[addressCount++] = htons(address);
+         return success;
       }
 
       void clearBytes()
       {
-         memset(bytes, 0, sizeof(bytes)); 
+         memset(bytes, 0, sizeof(bytes));
          byteCount = 0;
       }
 
       int addByte(byte b)
-      { 
-         if (byteCount >= maxBytes) 
-            return fail; 
+      {
+         if (byteCount >= maxBytes)
+            return fail;
 
-         bytes[byteCount++] = b; 
-         return success; 
+         bytes[byteCount++] = b;
+         return success;
       }
 
       int addText(const char* t)
@@ -267,18 +267,22 @@ class P4Request : public FroelingService
       int getParameter(ConfigParameter* p);
       int setParameter(ConfigParameter* p);
 
+
+      int getFirstTimeRanges(TimeRanges* t)  { return getTimeRanges(t, yes); }
+      int getNextTimeRanges(TimeRanges* t)   { return getTimeRanges(t, no); }
+
       int getValue(Value* v);
       int getDigitalOut(IoValue* v);
       int getDigitalIn(IoValue* v);
       int getAnalogOut(IoValue* v);
 
-      int getFirstError(ErrorInfo* e)      { return getError(e, yes); }
-      int getNextError(ErrorInfo* e)       { return getError(e, no); }
-      int getFirstValueSpec(ValueSpec* v)  { return getValueSpec(v, yes); }
-      int getNextValueSpec(ValueSpec* v)   { return getValueSpec(v, no); }
+      int getFirstError(ErrorInfo* e)        { return getError(e, yes); }
+      int getNextError(ErrorInfo* e)         { return getError(e, no); }
+      int getFirstValueSpec(ValueSpec* v)    { return getValueSpec(v, yes); }
+      int getNextValueSpec(ValueSpec* v)     { return getValueSpec(v, no); }
 
-      int getFirstMenuItem(MenuItem* m)    { return getMenuItem(m, yes); }
-      int getNextMenuItem(MenuItem* m)     { return getMenuItem(m, no); }
+      int getFirstMenuItem(MenuItem* m)      { return getMenuItem(m, yes); }
+      int getNextMenuItem(MenuItem* m)       { return getMenuItem(m, no); }
 
       int getUser(byte cmd);
       int getItem(int first);
@@ -291,11 +295,12 @@ class P4Request : public FroelingService
       int getError(ErrorInfo* e, int first);
       int getValueSpec(ValueSpec* v, int first);
       int getMenuItem(MenuItem* m, int first);
+      int getTimeRanges(TimeRanges* t, int first);
 
       int readByte(byte& v, int decode = yes, int tms = 1000);
       int readWord(word& v, int decode = yes, int tms = 1000);
       int readWord(sword& v, int decode = yes, int tms = 1000);
-      int readTime(time_t& t);         // 3 byte  
+      int readTime(time_t& t);         // 3 byte
       int readDate(time_t& t);         // 3 byte
       int readDateExt(time_t& t);      // 4 byte
       int readTimeDate(time_t& t);     // 6 byte
@@ -316,7 +321,7 @@ class P4Request : public FroelingService
 
       byte decoded[sizeMaxRequest*2+TB];  // for debug
       int sizeDecodedContent;
-      
+
       Serial* s;
 };
 

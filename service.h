@@ -69,14 +69,14 @@ class FroelingService
       enum InterfaceDef1
       {
          commId = 0x02FD,     // communication identifier
-         
+
          sizeId = 2,
          posSize = 2,
          sizeSize = 2,
          sizeCommand = 1,
          sizeDataMax = 254,
          sizeCrc  = 1,        // CRC (over all bytes incl. complete header)
-         
+
          sizeAddress = 2,
          sizeByte    = 1,
 
@@ -111,7 +111,7 @@ class FroelingService
          cmdGetValueListNext  = 0x32,   //   "
 
          cmdGetUnknownFirst   = 0x35,   // What ever :o
-         cmdGetUnknownNext    = 0x36,   // 
+         cmdGetUnknownNext    = 0x36,   //
 
          cmdGetMenuListFirst  = 0x37,   // Menuestruktur auslesen
          cmdGetMenuListNext   = 0x38,   //   "
@@ -152,7 +152,7 @@ class FroelingService
       };
 
       // menu struct types
-      
+
       enum MenuStructType
       {
          mstMesswert  = 0x03,
@@ -166,8 +166,8 @@ class FroelingService
          mstParZeit  = 0x0a,
 
          mstDigOut   = 0x11,
-         mstAnlOut   = 0x12, 
-         mstDigIn    = 0x13, 
+         mstAnlOut   = 0x12,
+         mstDigIn    = 0x13,
          mstEmpty    = 0x22,
          mstReset    = 0x23,
          mstZeiten   = 0x26,
@@ -181,10 +181,10 @@ class FroelingService
       {
          switch (state)
          {
-            case 1:  return "gekommen"; 
+            case 1:  return "gekommen";
             case 2:  return "quittiert";
-            case 4:  return "gegangen"; 
-            default: return "unknown"; 
+            case 4:  return "gegangen";
+            default: return "unknown";
          }
       }
 
@@ -194,11 +194,11 @@ class FroelingService
 
             ConfigParameter(word addr = addrUnknown)  { unit = 0; address = addr; }
             ~ConfigParameter() { free(unit); }
-            
+
             static cRetBuf toNice(sword value, byte type)
             {
                char nice[100+TB];
-               
+
                if (type == mstParDig)
                   sprintf(nice, "%s", value ? "ja" : "nein");
                else if (type == mstParZeit)
@@ -232,17 +232,17 @@ class FroelingService
 
                      value = atoi(h)*60 + atoi(m);
                   }
-                  else 
+                  else
                      return fail;
 
                   free(h);
                }
-               else if (type == mstPar || type == mstParSet || 
+               else if (type == mstPar || type == mstParSet ||
                         type == mstParSet1  || type == mstParSet2)
                {
                   if (!isNum(nice))
                      return fail;
-                  
+
                   value = atoi(nice);
                }
                else
@@ -252,7 +252,7 @@ class FroelingService
             }
 
             void setUnit(const char* u) { free(unit); unit = strdup(u); }
-            
+
             word address;
             char* unit;
             byte digits;
@@ -267,18 +267,18 @@ class FroelingService
       {
          Status()  { modeinfo = 0; stateinfo = 0; clear(); }
          ~Status() { clear(); }
- 
-         void clear() 
-         { 
+
+         void clear()
+         {
             free(modeinfo);  modeinfo = 0;
             free(stateinfo); stateinfo = 0;
-            *version = 0; 
-            time = 0; 
-            mode = 0; 
+            *version = 0;
+            time = 0;
+            mode = 0;
             state = 0;
          }
 
-         time_t time; 
+         time_t time;
          byte mode;           // Betriebsart
          byte state;          // Zustand
          char* modeinfo;      // Betriebsart Text
@@ -331,6 +331,55 @@ class FroelingService
          word unknown2;
          char* description;
          char* unit;
+      };
+
+      struct TimeRanges
+      {
+         TimeRanges()  { address = 0; }
+         ~TimeRanges() { }
+
+         int isSet(int n)
+         {
+            if (n >= 4 || (timesFrom[n] == 0xFF && timesTo[n] == 0xFF))
+               return no;
+
+            return yes;
+         }
+
+         const char* getTimeRangeFrom(int n)
+         {
+            static char nice[10+TB];
+
+            if (!isSet(n))
+               return "nn:nn";
+
+            sprintf(nice, "%02d:%02d", timesFrom[n]/10, timesFrom[n]%10*10);
+
+            return nice;
+         }
+
+         const char* getTimeRangeTo(int n)
+         {
+            static char nice[10+TB];
+
+            if (!isSet(n))
+               return "nn:nn";
+
+            sprintf(nice, "%02d:%02d", timesTo[n]/10, timesTo[n]%10*10);
+
+            return nice;
+         }
+
+         const char* getTimeRange(int n)
+         {
+            static char nice[20+TB];
+            sprintf(nice, "%s - %s", getTimeRangeFrom(n), getTimeRangeTo(n));
+            return nice;
+         }
+
+         byte address;
+         byte timesFrom[4];
+         byte timesTo[4];
       };
 
       struct ErrorInfo

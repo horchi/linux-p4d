@@ -164,6 +164,9 @@ printHeader(60);
         $type = $row['s_type'];
         $txtaddr = sprintf("0x%x", $address);
 
+        if ($type == 'DI' || $type == 'DO')
+           $value = $value == "1.00" ? "an" : "aus";
+
         if ($row['f_unit'] == 'T')
            $value = str_replace($wd_value, $wd_disp, $text);
 

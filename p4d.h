@@ -92,7 +92,8 @@ class P4d : public FroelingService
 
       int updateSchemaConfTable();
       int updateValueFacts();
-      int updateMenu();
+      int updateTimeRangeData();
+      int initMenu();
       int isMailState();
       int loadHtmlHeader();
 
@@ -116,6 +117,7 @@ class P4d : public FroelingService
       cDbTable* tableSchemaConf;
       cDbTable* tableSmartConf;
       cDbTable* tableConfig;
+      cDbTable* tableTimeRanges;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;

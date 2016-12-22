@@ -431,15 +431,6 @@ Body
     box-shadow: 8px 8px 8px #666;
 }
 
-.tableHead
-{
-    width: 1150px;
-    background-color: #FF9900;
-    color: white;
-    font: bold 16px Verdana;
-    padding: 20px;
-}
-
 .chart
 {
     background-color: #FFFFCC;

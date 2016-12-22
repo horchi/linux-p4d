@@ -1,9 +1,22 @@
 
 @import url("normalize.css");
 
+:root
+{
+    /* colors */
+
+    --light1: #fdfddf;
+    --light2: #ffffc6;
+    --light3: #f6f694;
+    --light4: #efef65;
+
+    --caption1: #ffc766;
+    --caption2: #F90;
+    --border: #f1caa4;
+}
+
 Body
 {
-    background-color: #EEEEEE;
     font-family: Helvetica,Arial,sans-serif;
     font-size: 1.0em;
 }
@@ -18,14 +31,14 @@ Body
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #ffaa66;
+    border-color: var(--border);
 }
 
 .button1
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     color: black;
-    margin: 1px;
+    margin: 5px 1px 5px 1px;
     display: inline-block;
     padding: 6px 6px;
     text-decoration: none;
@@ -33,13 +46,12 @@ Body
 
 .button1:hover
 {
-    background: #ffaa66;
+    background-color: var(--caption1);
 }
 
 .button2
 {
-    background-color: #ffaa66;
-    margin-top: 10px;
+    background-color: var(--caption1);
     color: black;
     padding: 5px 10px;
     text-decoration: none;
@@ -52,7 +64,7 @@ Body
 
 .button2sel
 {
-    background-color: #FF6600;
+    background-color: var(--caption2);
     color: black;
     margin: 2px;
     padding: 5px 15px;
@@ -80,7 +92,7 @@ Body
 .buttont
 {
     background-color: rgba(255, 255, 255, 0);
-    color: black;
+    color: #04387b;
     border: 0;
     text-decoration: none;
     border-radius: 5px;
@@ -88,43 +100,43 @@ Body
 
 .buttont:hover
 {
-    background: #FF6600;
+    background-color: #818382;
     color: white;
     border: 0;
 }
 
 .seperatorTitle1
 {
-    background-color: #ffaa66;
+    background-color: var(--caption1);
     margin-top: 15px;
     padding: 5px 15px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .seperatorTitle2
 {
-    background-color: #ffffae;
+    background-color: var(--light3);
     margin-top: 5px;
     padding: 5px 15px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .input
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     margin-top: 5px;
     color: black;
     padding: 5px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .inputComment
@@ -200,21 +212,21 @@ Body
 
 .box
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     padding: 10px;
     margin-top: 10px;
 }
 
 .imageBox
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     padding: 10px;
     margin-top: 10px;
     position: relative;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .boxedValue
@@ -225,13 +237,13 @@ Body
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .table2Col
 {
     width: 100%;
-    background-color: #fdfddf;
+    background-color: var(--light1);
     color: black;
     margin-top: 10px;
     padding: 0;
@@ -240,7 +252,7 @@ Body
 
 .table2Col > div:nth-child(even)
 {
-    background-color: #ffff9d;
+    background-color: var(--light3);
 }
 
 .table2Col > div > span
@@ -255,29 +267,34 @@ Body
 .tableMultiCol
 {
     width: 100%;
-    background-color: #fdfddf;
+    background-color: var(--light1);
     color: black;
     margin-top: 10px;
     padding: 0;
-    font-size: 20px;
+    font-size: 17px;
+}
+
+table.tableMultiCol tr:nth-child(even)
+{
+    background-color: var(--light3);
 }
 
 .tableMultiCol > div:nth-child(even)
 {
-    background-color: #ffff9d;
+    background-color: var(--light3);
 }
 
 .tableMultiCol > div > span
 {
     width: 21%;
-    padding: 8px 10px 8px 10px;
+    padding: 5px 10px 5px 10px;
     display: inline-block;
     text-align: left;
 }
 
 .stateInfo
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     display: flex;
     flex-wrap: wrap;
     padding: 10px;
@@ -369,80 +386,76 @@ Body
 
 #aSelect
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     margin-top: 10px;
     padding: 10px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 #aSelectChart
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     padding: 10px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .tableTitle
 {
     width: 100%;
-    background-color: #CC0033;
-    color: white;
+    background-color: var(--caption1);
+    color: black;
     font-size: 20px;
-    padding: 20px;
-}
-
-.tableHead
-{
-    width: 100%;
-    background-color: #FF9900;
-    color: white;
-    font-size: 16px;
     padding: 20px;
 }
 
 .chart
 {
-    background-color: #fdfddf;
+    background-color: var(--light1);
     padding: 10px;
     margin-top: 10px;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: #f1caa4;
+    border-color: var(--border);
 }
 
 .cellL0
 {
-    background-color: #fdfddf;
+    font-size: 16px;
+    background-color: var(--caption1);
     color: black;
 }
 
 .cellL1
 {
-    background-color: #FF6600;
+    font-size: 16px;
+    background-color: var(--light4);
     color: black;
 }
 
 .cellL2
 {
-    background-color: #FFF660;
+    font-size: 16px;
+    background-color: var(--light3);
     color: black;
 }
 
 .cellL3
 {
-    background-color: #FFAA66;
+    font-size: 16px;
+    background-color: var(--light2);
     color: black;
 }
 
 .cellL4
 {
-    background-color: white;
+    font-size: 16px;
+    background-color: var(--light1);
     color: black;
 }

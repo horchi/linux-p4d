@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.1.44"
-#define VERSION_DATE "15.12.2016"
+#define _VERSION     "0.1.45"
+#define VERSION_DATE "22.12.2016"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2016-12-2:  version 0.1.45
+   - change: WEBIF: redesign all tabs, added a 'light' stylesheet
+   - added:  display of time range parameters
 
 2016-12-15:  version 0.1.44
    - change: WEBIF: finished redesign of 'Aktuell' tab

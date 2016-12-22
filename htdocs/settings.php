@@ -111,33 +111,22 @@ function showTable($type, $tableTitle)
 {
    global $debug, $mysqli;
 
-   $i = 0;
+   seperator($tableTitle, 0);
 
-   echo "        <br/>\n";
-   echo "        <table class=\"tableTitle\" cellspacing=0 rules=rows>\n";
-   echo "          <tr>\n";
-   echo "            <td><center><b>$tableTitle</b></center></td>\n";
-   echo "          </tr>\n";
-   echo "        </table>\n";
-   echo "        <br/>\n";
-
-   echo "        <table class=\"tableLight\" border=1 cellspacing=0 rules=rows>
-          <tr class=\"tableHead\">\n";
-
-
-   echo "            <td width=\"43%\"> Name </td>\n";
-   echo "            <td> Bezeichnung </td>\n";
-   echo "            <td> Einheit </td>\n";
-   echo "            <td> Aufzeichnen </td>\n";
-   echo "            <td> ID / Typ </td>\n";
-   echo "          </tr>\n";
+   echo "        <table class=\"tableMultiCol\">\n";
+   echo "          <tbody>\n";
+   echo "            <tr>\n";
+   echo "              <td>Name</td>\n";
+   echo "              <td>Bezeichnung</td>\n";
+   echo "              <td>Einheit</td>\n";
+   echo "              <td>Aufzeichnen</td>\n";
+   echo "              <td>ID / Typ</td>\n";
+   echo "            </tr>\n";
 
    $result = $mysqli->query("select * from valuefacts where type = '$type'")
       or die("<br/>Error" . $mysqli->error);
 
-   $num = $result->num_rows;
-
-   while ($i < $num)
+   for ($i = 0; $i < $result->num_rows; $i++)
    {
       $address = mysqli_result($result, $i, "address");
       $type    = mysqli_result($result, $i, "type");
@@ -146,32 +135,23 @@ function showTable($type, $tableTitle)
       $state   = mysqli_result($result, $i, "state");
       $usrtitle= mysqli_result($result, $i, "usrtitle");
       $txtaddr = sprintf("0x%04x", $address);
+      $checked = ($state == "A") ? " checked" : "";
 
-      if ($state == "A")
-         $checked = " checked";
-      else
-         $checked = "";
-
-      if ($i % 2)
-         echo "         <tr class=\"tableLight\">";
-      else
-         echo "         <tr class=\"tableDark\">";
-
-
-      echo "            <td> $title </td>\n";
-      echo "            <td><input class=\"inputSettings\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"></input></td>\n";
-      echo "            <td> $unit </td>\n";
+      echo "            <tr>\n";
+      echo "              <td> $title </td>\n";
+      echo "              <td><input class=\"inputSettings\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
+      echo "              <td> $unit </td>\n";
 
       if ($type != "UD")
-         echo "            <td> <input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked></input></td>\n";
+         echo "              <td><input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked/></td>\n";
       else
-         echo "            <td>[x]</td>\n";
-      echo "            <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"></input> $address / $type </td>\n";
-      echo "          </tr>\n";
+         echo "              <td>[x]</td>\n";
 
-      $i++;
+      echo "              <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"/> $address / $type </td>\n";
+      echo "            </tr>\n";
    }
 
+   echo "          </tbody>\n";
    echo "        </table>\n";
 }
 
