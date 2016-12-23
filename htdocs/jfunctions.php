@@ -1,5 +1,5 @@
- 
-<script language="JavaScript" type="text/JavaScript"> 
+
+<script language="JavaScript" type="text/JavaScript">
 
 
-</script> 
+</script>

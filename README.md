@@ -10,23 +10,23 @@ Homepage: https://github.com/horchi/linux-p4d
 This code is distributed under the terms and conditions of the GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 
 ## Disclaimer
-USE AT YOUR OWN RISK. No warranty. 
+USE AT YOUR OWN RISK. No warranty.
 
-Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der 
+Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der
 GPLv2 veröffentlicht.
 
 Es ist kein fertiges Produkt, die Software entstand als Studie was hinsichtlich der Kommunikation
 mit der s3200 Steuerung möglich ist und kann Bastlern als Basis und Anregung für eigene
 Projekte dienen.
 
-Es besteht kein Anspruch auf Funktion, jeder der sie einsetzen möchte 
-muss das Risiko selbst abschätzen können und wissen was er tut, insbesondere auch in 
+Es besteht kein Anspruch auf Funktion, jeder der sie einsetzen möchte
+muss das Risiko selbst abschätzen können und wissen was er tut, insbesondere auch in
 Hinblick auf die Einstellungen der Heizungsparameter und den damit verbundenen Risiken
-hinsichtlich Fehlfunktion, Störung, Brand, etc. Falsche Einstellung können unter anderem 
+hinsichtlich Fehlfunktion, Störung, Brand, etc. Falsche Einstellung können unter anderem
 durch Bedienfehler und Fehler in dieser Software ausgelöst werden!
 Die Vorgaben, Vorschriften und AGB des Herstellers der Heizung bleiben Maßgebend!
-Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalten, 
-auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder 
+Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalten,
+auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder
 weniger kritischen Fehlfunktionen derselben kommen kann!
 
 
@@ -58,11 +58,11 @@ It's not required to host the database on the Raspberry. A remote database is as
 `apt-get install mysql-server-5.5 libmysqlclient-dev`
 (set database password for root user during installation)
 
-	
+
 ### P4 database setup:
 If database isn't located on the Raspberry check the chapter remote database setup at the end of the Readme.
 
-- login as root: 
+- login as root:
 ```
 > mysql -u root -p
   CREATE DATABASE p4 charset utf8;
@@ -83,7 +83,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 
 ### Installation p4d Application:
 - Install build essentials like make, g++, ...
-- Install libssl-dev 
+- Install libssl-dev
   - `apt-get install libssl-dev`
 - Change to directory `/usr/src/` (or another folder if download should be persistent stay on the device)
 - Run command to download current version
@@ -131,7 +131,7 @@ update-rc.d p4d defaults
 - Store the extracted download in the webroot folder (eg. `/var/www/pChart2.1.3`)
 - Create symbolic link
   - `ln -s /var/www/pChart2.1.3/ /var/www/pChart`
-- Change access to cache folder 
+- Change access to cache folder
   - `chmod 777 /var/www/pChart/cache`
 - Change owner of www folder
   - `chown www-data /var/www`
@@ -201,7 +201,7 @@ echo "w1-gpio" >> /etc/modules
 
 ## Additional information
 ### Remote database setup
-Login as root: 
+Login as root:
 ```
 > mysql -u root -p
  CREATE DATABASE p4 charset utf8;
@@ -210,7 +210,7 @@ Login as root:
 ```
 
 ### MySQL HINTS
-If you cannot figure out why you get Access denied, remove all entries from the user table that have Host values with wildcars contained (entries that match `%` or `_` characters). A very common error is to insert a new entry with `Host='%'` and `User='some_user'`, thinking that this allows you to specify localhost to connect from the same machine. The reason that this does not work is that the default privileges include an entry with `Host='localhost'` and `User=''`. Because that entry has a Host value `localhost` that is more specific than `%`, it is used in preference to the new entry when connecting from localhost! The correct procedure is to insert a second entry with `Host='localhost'` and `User='some_user'`, or to delete the entry with `Host='localhost'` and `User=''`. After deleting the entry, remember to issue a `FLUSH PRIVILEGES` statement to reload the grant tables. 
+If you cannot figure out why you get Access denied, remove all entries from the user table that have Host values with wildcars contained (entries that match `%` or `_` characters). A very common error is to insert a new entry with `Host='%'` and `User='some_user'`, thinking that this allows you to specify localhost to connect from the same machine. The reason that this does not work is that the default privileges include an entry with `Host='localhost'` and `User=''`. Because that entry has a Host value `localhost` that is more specific than `%`, it is used in preference to the new entry when connecting from localhost! The correct procedure is to insert a second entry with `Host='localhost'` and `User='some_user'`, or to delete the entry with `Host='localhost'` and `User=''`. After deleting the entry, remember to issue a `FLUSH PRIVILEGES` statement to reload the grant tables.
 
 To analyze this you can show all users:
 ```

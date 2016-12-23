@@ -18,7 +18,7 @@ int main()
    P4Packet* tlg = new P4Packet();
 
    logstdout = yes;
-   
+
    if (tlg->open(ttyDevice) != success)
    {
       tell(0, "Opening serial line '%s' failed, aborting", ttyDevice);
@@ -32,7 +32,7 @@ int main()
       // try serial read
 
       if ((status = tlg->read()) != success)
-      {   
+      {
          tell(0, "Reading serial line failed with %d, try reopen in 5 seconds");
          sleep(5);
          tlg->reopen(ttyDevice);
@@ -45,13 +45,13 @@ int main()
       for (it = tlg->getParameters()->begin(); it != tlg->getParameters()->end(); it++)
       {
          Fs::Parameter p = *it;
-         
-         if (*p.name) 
+
+         if (*p.name)
             tell(eloAlways, "(%2d) %-17s: %.2f %s", p.index, p.name, p.value, p.unit);
       }
    }
-   
+
    tlg->close();
-   
+
    return success;
 }

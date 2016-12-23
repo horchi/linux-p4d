@@ -76,7 +76,7 @@ class P4d : public FroelingService
       int performWebifRequests();
       int cleanupWebifRequests();
 
-      int store(time_t now, const char* type, int address, double value, 
+      int store(time_t now, const char* type, int address, double value,
                 unsigned int factor, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);
@@ -84,7 +84,7 @@ class P4d : public FroelingService
       void afterUpdate();
       void sensorAlertCheck(time_t now);
       int performAlertCheck(cDbRow* alertRow, time_t now, int recurse);
-      int add2AlertMail(cDbRow* alertRow, const char* title, 
+      int add2AlertMail(cDbRow* alertRow, const char* title,
                             double value, const char* unit);
       int sendAlertMail(const char* to);
 
@@ -92,15 +92,16 @@ class P4d : public FroelingService
 
       int updateSchemaConfTable();
       int updateValueFacts();
-      int updateMenu();
+      int updateTimeRangeData();
+      int initMenu();
       int isMailState();
       int loadHtmlHeader();
-   
+
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
       int getConfigItem(const char* name, int& value, int def = na);
       int setConfigItem(const char* name, int value);
-      
+
       int doShutDown() { return shutdown; }
 
       // data
@@ -116,6 +117,7 @@ class P4d : public FroelingService
       cDbTable* tableSchemaConf;
       cDbTable* tableSmartConf;
       cDbTable* tableConfig;
+      cDbTable* tableTimeRanges;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
@@ -132,7 +134,7 @@ class P4d : public FroelingService
       Sem* sem;
 
       P4Request* request;
-      Serial* serial;    
+      Serial* serial;
 
       W1 w1;                       // for one wire sensors
 
@@ -152,13 +154,13 @@ class P4d : public FroelingService
       time_t nextTimeSyncAt;
       int maxTimeLeak;
       MemoryStruct htmlHeader;
-   
+
       string alertMailBody;
       string alertMailSubject;
 
       time_t nextAggregateAt;
 
-      // 
+      //
 
       static int shutdown;
 };

@@ -16,7 +16,7 @@
 
 char* confDir = (char*)confDirDefault;
 
-// defaults 
+// defaults
 
 char dbHost[100+TB] = "localhost";
 int  dbPort;
@@ -37,13 +37,13 @@ int  aggregateHistory = 0;       // history in days
 int atConfigItem(const char* Name, const char* Value)
 {
    // Parse setup parameters and store values.
-   
+
    if      (!strcasecmp(Name, "dbHost"))      sstrcpy(dbHost, Value, sizeof(dbHost));
    else if (!strcasecmp(Name, "dbPort"))      dbPort = atoi(Value);
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
-   
+
    else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
    else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);
    else if (!strcasecmp(Name, "stateCheckInterval"))  stateCheckInterval = atoi(Value);
@@ -92,7 +92,7 @@ int readConfig()
 
       if (!(value = strchr(line, '=')))
          continue;
-      
+
       *value = 0;
       value++;
       lTrim(value);
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
       }
    }
 
-   if (_stdout != na) 
+   if (_stdout != na)
       logstdout = _stdout;
    else
       logstdout = no;
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
 
    if (setup)
       return job->setup();
-   
+
    if (init)
       return job->initialize(truncOnInit);
 
@@ -213,7 +213,7 @@ int main(int argc, char** argv)
          printf("Can't fork daemon, %s\n", strerror(errno));
          return 1;
       }
-      
+
       if (pid != 0)
          return 0;
    }

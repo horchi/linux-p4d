@@ -73,6 +73,24 @@ Table menu
 }
 
 // ----------------------------------------------------------------
+// Table TimeRanges
+// ----------------------------------------------------------------
+
+Table timeranges
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+
+   FROM1                ""  from1                Ascii        5 Data,
+   TO1                  ""  to1                  Ascii        5 Data,
+   FROM2                ""  from2                Ascii        5 Data,
+   TO2                  ""  to2                  Ascii        5 Data,
+   FROM3                ""  from3                Ascii        5 Data,
+   TO3                  ""  to3                  Ascii        5 Data,
+   FROM4                ""  from4                Ascii        5 Data,
+   TO4                  ""  to4                  Ascii        5 Data,
+}
+
+// ----------------------------------------------------------------
 // Table SchemaConf
 // ----------------------------------------------------------------
 
@@ -182,14 +200,14 @@ Index jobs
 Table sensoralert
 {
    ID                   ""  id                   UInt        11 Primary|Autoinc,
- 
+
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
 
    KIND                 ""  kind                 Ascii        1 Data,  // 'S' sub rule 'M' or blank master rule ! not used !
    SUBID                ""  subid                UInt        11 Data,  // reference to 'sub' rule
    LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
-   
+
    ADDRESS              ""  address              UInt         4 Data,
    TYPE                 ""  type                 Ascii        2 Data,
    STATE                ""  state                Ascii        1 Data,

@@ -58,7 +58,7 @@ int P4Packet::evaluate()
 
    parameters.clear();
 
-   // 
+   //
 
    while ((status = getItem(&p)) == success)
    {
@@ -113,7 +113,7 @@ int P4Packet::getItem(Parameter* p)
             sprintf(p->text, "%.*s", sizeText, lastToken);
 
             break;
-            
+
       }
    }
 
@@ -158,7 +158,7 @@ int P4Packet::getToken(char* token)
 
    if (*pBuf != delimiter)
    {
-      tell(eloAlways, "Error: Missing delimiter at (%p/%p) [%s] [%s]", 
+      tell(eloAlways, "Error: Missing delimiter at (%p/%p) [%s] [%s]",
            pBuf, buffer, pBuf, buffer);
       return fail;
    }
@@ -195,7 +195,7 @@ int P4Packet::readPacket(const char*& packet)
       if (!foundStart)
       {
          foundStart = (b == seqStart);
-         
+
          if (!foundStart)
             skipped++;
 
@@ -328,21 +328,21 @@ int P4Request::prepareRequest()
    if (addressCount)
    {
       // add addresses
-      
+
       memcpy(tmp+sizeNetto, addresses, addressCount*sizeAddress);
       sizeNetto += addressCount*sizeAddress;
    }
    else if (byteCount)
    {
       // add bytes
-      
+
       memcpy(tmp+sizeNetto, bytes, byteCount);
       sizeNetto += byteCount;
    }
    else if (!isEmpty(text))
    {
       // add text without TB
-      
+
       memcpy(tmp+sizeNetto, text, strlen(text));
       sizeNetto += strlen(text);
    }
@@ -352,7 +352,7 @@ int P4Request::prepareRequest()
    tmp[sizeNetto] = crc(tmp, sizeNetto);
    sizeNetto++;
 
-   // convert (mask) all bytes behind id 
+   // convert (mask) all bytes behind id
 
    sizeBufferContent = sizeNetto;
 
@@ -389,7 +389,7 @@ int P4Request::readByte(byte& v, int decode, int tms)
 
    if ((status = s->look(b, tms)) != success)
       return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
-   
+
    buffer[sizeBufferContent++] = b;
 
    if (!decode)
@@ -399,7 +399,7 @@ int P4Request::readByte(byte& v, int decode, int tms)
 
       return success;
    }
-   
+
    // decode ...
 
    if (b != 0x02 && b != 0x2b && b != 0x0fe)
@@ -412,14 +412,14 @@ int P4Request::readByte(byte& v, int decode, int tms)
          return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
 
       buffer[sizeBufferContent++] = b1;
-      
+
       v = b;
    }
    else if (b == 0x0fe)
    {
       if ((status = s->look(b1, tms)) != success)
          return status == Serial::wrnTimeout ? (int)wrnTimeout : fail;
-      
+
       buffer[sizeBufferContent++] = b1;
 
       if (b1 == 0x12)
@@ -451,10 +451,10 @@ int P4Request::readWord(word& v, int decode, int tms)
 
    if ((status = readByte(b1, decode, tms)) != success)
       return status;
-   
+
    if ((status = readByte(b2, decode, tms)) != success)
       return status;
-   
+
    v = (b1 << 8) | b2;
 
    return success;
@@ -468,10 +468,10 @@ int P4Request::readWord(sword& v, int decode, int tms)
 
    if ((status = readByte(b1, decode, tms)) != success)
       return status;
-   
+
    if ((status = readByte(b2, decode, tms)) != success)
       return status;
-   
+
    v = (signed short)(b1 << 8) | b2;
 
    return success;
@@ -483,16 +483,16 @@ int P4Request::readWord(sword& v, int decode, int tms)
 int P4Request::readTime(time_t& t)
 {
    byte s, m, h;
-   
+
    if (readByte(s) != success)
       return fail;
-   
+
    if (readByte(m) != success)
       return fail;
 
    if (readByte(h) != success)
       return fail;
-   
+
    t = s + tmeSecondsPerMinute*m + tmeSecondsPerHour*h;
 
    return success;
@@ -509,7 +509,7 @@ int P4Request::readDate(time_t& t)
 
    if (readByte(d) != success)
       return fail;
-   
+
    if (readByte(m) != success)
       return fail;
 
@@ -539,7 +539,7 @@ int P4Request::readDateExt(time_t& t)
 
    if (readByte(d) != success)
       return fail;
-   
+
    if (readByte(m) != success)
       return fail;
 
@@ -548,9 +548,9 @@ int P4Request::readDateExt(time_t& t)
 
    if (readByte(y) != success)
       return fail;
-   
+
    memset(&tm, 0, sizeof(tm));
-   
+
    tm.tm_mday = d;
    tm.tm_mon = m - 1;
    tm.tm_year = y + 100;
@@ -611,16 +611,16 @@ int P4Request::readText(char*& s, int size)
    char* tmp = (char*)malloc(size+1);
 
    s = 0;
-   
+
    for (i = 0; i < size; i++)
    {
       if (readByte(b) != success)
       {
          free(tmp);
-            
+
          return fail;
       }
-     
+
       if (b)
          tmp[p++] = b;
    }
@@ -691,27 +691,27 @@ int P4Request::getStatus(Status* s)
       char* text = 0;
       char* p;
       int size = getHeader()->size;
-      
+
       status += readByte(s->mode);
       size--;
       status += readByte(s->state);
       size--;
-      
+
       status += readText(text, size-sizeCrc);
       status += readByte(b);
- 
+
       if ((p = strchr(text, ';')))
       {
          *p = 0;
-      
+
          s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
          s->stateinfo = strdup(p+1);
-   
+
          free(text);
          show("<- ");
       }
       else
-      {  
+      {
          s->stateinfo = strdup("Communication error");
          tell(eloAlways, "Communication error while reading state, got size %d, status was %d", size, status);
 
@@ -727,7 +727,7 @@ int P4Request::getStatus(Status* s)
 
    clear();
    request(cmdGetVersion);
-   
+
    if ((status += readHeader()) == success)
    {
       int size = getHeader()->size;
@@ -794,7 +794,7 @@ int P4Request::syncTime(int offset)
    if ((status += readHeader()) == success)
    {
       status += readByte(b);
-      
+
       if (b != 0)
          status = fail;
 
@@ -813,21 +813,20 @@ int P4Request::syncTime(int offset)
 int P4Request::getParameter(ConfigParameter* p)
 {
    RequestClean clean(this);
-
    int status = fail;
 
    if (!p || p->address == addrUnknown)
       return errWrongAddress;
-   
+
    clear();
    addAddress(p->address);
    request(cmdGetParameter);
-   
+
    if (readHeader() == success)
    {
       byte b;
       word w;
-      
+
       status = readByte(b)            // what ever
 
          + readWord(p->address)       // address
@@ -838,10 +837,10 @@ int P4Request::getParameter(ConfigParameter* p)
          + readWord(p->min)           // min value
          + readWord(p->max)           // max value
          + readWord(p->def)           // default value
-         
+
          + readWord(w)                // what ever
          + readByte(b)                // what ever
-         
+
          + readByte(b);               // crc
 
       if (status == success)
@@ -866,7 +865,6 @@ int P4Request::getParameter(ConfigParameter* p)
 int P4Request::setParameter(ConfigParameter* p)
 {
    RequestClean clean(this);
-
    byte crc;
 
    if (!p || p->address == addrUnknown)
@@ -876,13 +874,13 @@ int P4Request::setParameter(ConfigParameter* p)
 
    if (getParameter(&pActual) != success)
       return fail;
-   
+
    if (p->value == pActual.value)
       return wrnNonUpdate;
 
    if (p->value < pActual.min || p->value > pActual.max)
    {
-      tell(eloAlways, "value %d out of range %d-%d", 
+      tell(eloAlways, "value %d out of range %d-%d",
            p->value, pActual.min, pActual.max);
 
       return wrnOutOfRange;
@@ -894,7 +892,7 @@ int P4Request::setParameter(ConfigParameter* p)
 
    if (request(cmdSetParameter) != success)
       return errRequestFailed;
-   
+
    if (readHeader() + readWord(p->address) + readWord(p->value) + readByte(crc) != success)
       return fail;
 
@@ -912,6 +910,114 @@ int P4Request::setParameter(ConfigParameter* p)
 }
 
 //***************************************************************************
+// Get Time Ranges
+//***************************************************************************
+
+int P4Request::getTimeRanges(TimeRanges* t, int first)
+{
+   static int last = no;
+
+   RequestClean clean(this);
+   int status = fail;
+
+   if (!first && last)
+      return wrnLast;
+
+   if (!t)
+      return fail;
+
+   clear();
+   request(first ? cmdGetTimesFirst : cmdGetTimesNext);
+
+   if (readHeader() == success)
+   {
+      byte crc;
+      sword w;
+
+      status = readWord(w)            // what ever (always 01 00 ?)
+         + readByte(t->address);       // address  (here only a byte!!)
+
+      for (int n = 0; n < 4; n++)
+      {
+         // read time range 'n'
+
+         status += readByte(t->timesFrom[n]);
+         status += readByte(t->timesTo[n]);
+      }
+
+      status += readByte(crc);
+
+      show("<- ");
+   }
+
+   last = t->address == 0xdf;
+
+   return status == success ? success : fail;
+}
+
+//***************************************************************************
+// Set Time Ranges
+//***************************************************************************
+
+int P4Request::setTimeRanges(TimeRanges* t)
+{
+   RequestClean clean(this);
+   int status;
+   byte crc;
+   byte tmp;
+   sword addr;
+
+   if (!t || t->address == 0xFF)
+      return errWrongAddress;
+
+   clear();
+   addAddress(t->address);
+
+   for (int n = 0; n < 4; n++)
+   {
+      sword value;
+
+      if ((t->timesFrom[n] > 0xeb && t->timesFrom[n] != 0xff) ||
+          (t->timesTo[n] > 0xeb && t->timesTo[n] != 0xff))            // 0xeb => 235 => 23:50
+      {
+         tell(eloAlways, "Value '%s' isn't a valid time range!", t->getTimeRange(n));
+         return wrnOutOfRange;
+      }
+
+      value = t->timesFrom[n] << 8 | t->timesTo[n];
+      addAddress(value);
+   }
+
+   if (request(cmdSetTimes) != success)
+      return errRequestFailed;
+
+   tell(eloAlways, "Stored successfully, try to reading response");
+
+   // reas response
+
+   status = readHeader();
+   status += readByte(tmp);   // always 00 ?
+   status += readWord(addr);
+
+   for (int n = 0; n < 4; n++)
+   {
+      // read time range 'n'
+
+      status += readByte(t->timesFrom[n]);
+      status += readByte(t->timesTo[n]);
+   }
+
+   status += readByte(crc);
+
+   if (status != success)
+     return errTransmissionFailed;
+
+   show("<- ");
+
+   return success;
+}
+
+//***************************************************************************
 // Get Value
 //***************************************************************************
 
@@ -923,11 +1029,11 @@ int P4Request::getValue(Value* v)
 
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
-   
+
    clear();
    addAddress(v->address);
    request(cmdGetValue);
-   
+
    if (readHeader() == success)
    {
       status = readWord(v->value)
@@ -951,11 +1057,11 @@ int P4Request::getDigitalOut(IoValue* v)
 
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
-   
+
    clear();
    addAddress(v->address);
    request(cmdGetDigOut);
-   
+
    if (readHeader() == success)
    {
       status = readByte(v->mode)
@@ -980,11 +1086,11 @@ int P4Request::getDigitalIn(IoValue* v)
 
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
-   
+
    clear();
    addAddress(v->address);
    request(cmdGetDigIn);
-   
+
    if (readHeader() == success)
    {
       status = readByte(v->mode)
@@ -1009,11 +1115,11 @@ int P4Request::getAnalogOut(IoValue* v)
 
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
-   
+
    clear();
    addAddress(v->address);
    request(cmdGetAnlOut);
-   
+
    if (readHeader() == success)
    {
       status = readByte(v->mode)
@@ -1043,15 +1149,15 @@ int P4Request::getError(ErrorInfo* e, int first)
 
    clear();
    request(first ? cmdGetErrorFirst : cmdGetErrorNext);
-   
+
    if (readHeader() != success)
       return fail;
 
    size = getHeader()->size;
-   
+
    status += readByte(more);
    size--;
-   
+
    if (!more)
    {
       readByte(crc);
@@ -1060,7 +1166,7 @@ int P4Request::getError(ErrorInfo* e, int first)
 
       return wrnLast;
    }
-   
+
    status += readWord(e->number);
    size -= 2;
    status += readByte(e->info);
@@ -1071,7 +1177,7 @@ int P4Request::getError(ErrorInfo* e, int first)
    size -= 6;
    status += readText(e->text, size-sizeCrc);
    size -= size-sizeCrc;
-   
+
    status += readByte(crc);
    show("<- ");
 
@@ -1092,7 +1198,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    clear();
    request(first ? cmdGetValueListFirst : cmdGetValueListNext);
-   
+
    if (readHeader() != success)
       return fail;
 
@@ -1131,7 +1237,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    size -= size-sizeCrc-1;
    status += readByte(tb);  // termination byte
    size--;
-   
+
    status += readByte(crc);
    show("<- ");
 
@@ -1147,10 +1253,10 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    for (int i = 0; v->unit[i]; i++)
       if (!isprint(v->unit[i]))
          v->unit[i] = ' ';
-         
+
    allTrim(v->unit);
-   
-   return status;   
+
+   return status;
 }
 
 //***************************************************************************
@@ -1169,7 +1275,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
 
    clear();
    request(first ? cmdGetMenuListFirst : cmdGetMenuListNext);
-   
+
    if ((status = readHeader()) != success)
       return status;
 
@@ -1247,7 +1353,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
          show("<- ");
          return status;
       }
-      
+
       size--;
    }
 
@@ -1288,7 +1394,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    }
 
    size--;
-   
+
    if ((status = readByte(crc)) != success)
    {
       tell(eloAlways, "Missing at least %d bytes at reading crc", size);
@@ -1299,7 +1405,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    show("<- ");
    showDecoded("DEBUG: ");
 
-   return status;   
+   return status;
 }
 
 int P4Request::getItem(int first)
@@ -1307,7 +1413,7 @@ int P4Request::getItem(int first)
    RequestClean clean(this);
    byte more;
    clear();
-   
+
    request(first ? cmdGetUnknownFirst : cmdGetUnknownNext);
 
    if (readHeader() != success)
@@ -1341,10 +1447,10 @@ int P4Request::getItem(int first)
 
 int P4Request::getUser(byte cmd)
 {
-   RequestClean clean(this); 
+   RequestClean clean(this);
    clear();
    request(cmd);
-   
+
    if (readHeader() != success)
    {
       tell(eloAlways, "request of %d failed", cmd);
