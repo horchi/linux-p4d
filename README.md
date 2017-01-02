@@ -85,7 +85,11 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 - Install build essentials like make, g++, ...
 - Install libssl-dev
   - `apt-get install libssl-dev`
-- Change to directory `/usr/src/` (or another folder if download should be persistent stay on the device)
+- Install libxml2-dev
+  - `apt-get install libxml2-dev`
+- Install libcurl-dev
+  - `apt-get install libcurl4-openssl-dev`
+- Change to directory `/usr/src/`
 - Run command to download current version
   - `git clone https://github.com/horchi/linux-p4d/`
 - Change to directory `/usr/src/linux-p4d`

@@ -34,19 +34,19 @@ if ($action == "init")
 
 else if ($action == "store")
 {
-    foreach ($_POST['usrtitle'] as $key => $value)
-    {
-       $value = htmlspecialchars($value);
-       $addr = htmlspecialchars($_POST["addr"][$key]);
-       list ($addr, $type) = explode(":", $addr);
+   foreach ($_POST['usrtitle'] as $key => $value)
+   {
+      $value = htmlspecialchars($value);
+      $addr = htmlspecialchars($_POST["addr"][$key]);
+      list ($addr, $type) = explode(":", $addr);
 
-       $addr = $mysqli->real_escape_string($addr);
-       $type = $mysqli->real_escape_string($type);
+      $addr = $mysqli->real_escape_string($addr);
+      $type = $mysqli->real_escape_string($type);
 
-       $sql = "UPDATE valuefacts set usrtitle = '$value' where address = '$addr' and type = '$type'";
-       $mysqli->query($sql)
-          or die("<br/>Error" . $mysqli->error);
-    }
+      $sql = "UPDATE valuefacts set usrtitle = '$value' where address = '$addr' and type = '$type'";
+      $mysqli->query($sql)
+         or die("<br/>Error" . $mysqli->error);
+   }
 
    if (isset($_POST["selected"]))
    {

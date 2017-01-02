@@ -118,7 +118,10 @@ if ($action == "store")
       $_SESSION['maxTimeLeak'] = htmlspecialchars($_POST["maxTimeLeak"]);
 
    if (isset($_POST["webUrl"]))
-    $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]);
+      $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]);
+
+   if (isset($_POST["hmHost"]))
+      $_SESSION['hmHost'] = htmlspecialchars($_POST["hmHost"]);
 
    // ------------------
    // store settings
@@ -148,6 +151,7 @@ if ($action == "store")
    writeConfigItem("heatingType", $_SESSION['heatingType']);
    writeConfigItem("stateAni", $_SESSION['stateAni']);
    writeConfigItem("webUrl", $_SESSION['webUrl']);
+   writeConfigItem("hmHost", $_SESSION['hmHost']);
 
    if ($_POST["passwd2"] != "")
    {
@@ -199,6 +203,9 @@ if ($_SESSION['chart34'] == "1")
 seperator("Login", 0, "seperatorTitle2");
 configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
 configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
+
+seperator("HomeMatic Interface", 0);
+configStrItem(6, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
 
 seperator("p4d Konfiguration", 0);
 

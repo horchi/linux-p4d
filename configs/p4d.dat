@@ -219,5 +219,38 @@ Table sensoralert
    MSUBJECT             ""  msubject             Ascii      100 Data,
    MBODY                ""  mbody                Text      2000 Data,
    LASTALERT            ""  lastalert            Int         10 Data,
-   MAXREPEAT            ""  maxrepeat            Int         10 Data,
+   MAXREPEAT            ""  maxrepeat            Int         10 Data
+}
+
+// ----------------------------------------------------------------
+// Table HomeMatic System Variables
+// ----------------------------------------------------------------
+
+Table hmsysvars
+{
+   ID                   ""  id                   UInt        11 Primary,
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+
+   NAME                 ""  name                 Ascii      100 Data,
+   TYPE                 ""  type                 UInt         1 Data,
+   UNIT                 ""  unit                 Ascii       10 Data,
+   VISIBLE              ""  visible              UInt         1 Data,
+   MIN                  ""  min                  Ascii      100 Data,
+   MAX                  ""  max                  Ascii      100 Data,
+
+   TIME                 ""  time                 DateTime     0 Data,
+   VALUE                ""  value                Ascii      100 Data,
+
+   ADDRESS              ""  address              UInt         4 Data,
+   ATYPE                ""  atype                Ascii        2 Data
+}
+
+// ----------------------------------------------------------------
+// Indices for HomeMatic System Variables
+// ----------------------------------------------------------------
+
+Index hmsysvars
+{
+   address             ""  ADDRESS, ATYPE
 }

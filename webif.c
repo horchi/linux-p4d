@@ -355,6 +355,14 @@ int P4d::performWebifRequests()
          tableJobs->setValue("RESULT", "success:done");
       }
 
+      else if (strcasecmp(command, "updatehm") == 0)
+      {
+         if (hmSyncSysVars() == success)
+            tableJobs->setValue("RESULT", "success:done");
+         else
+            tableJobs->setValue("RESULT", "fail:error");
+      }
+
       else if (strcasecmp(command, "p4d-state") == 0)
       {
          struct tm tim = {0};

@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <string>
+#include <map>
 
 #include <openssl/md5.h> // MD5_*
 
@@ -31,7 +32,7 @@ typedef short sword;
 typedef unsigned int dword;
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 inline long min(long a, long b) { return a < b ? a : b; }
@@ -97,7 +98,7 @@ struct MemoryStruct
 
          copyAttributes(o);
       }
-      
+
       ~MemoryStruct()  { clear(); }
 
       int isEmpty()  { return memory == 0; }
@@ -107,7 +108,7 @@ struct MemoryStruct
       {
          if (!len)
             len = strlen(buf) + TB;
-         
+
          memory = srealloc(memory, size+len);
          memcpy(memory+size, buf, len);
          size += len;
@@ -126,8 +127,8 @@ struct MemoryStruct
          modTime = o->modTime;
          expireAt = o->expireAt;
       }
-     
-      void clear() 
+
+      void clear()
       {
          free(memory);
          memory = 0;
@@ -142,34 +143,38 @@ struct MemoryStruct
          *mimeType = 0;
          modTime = time(0);
          headerOnly = no;
+         headers.clear();
+         statusCode = 0;
          // expireAt = time(0); -> don't reset 'expireAt' here !!!!
       }
 
       // data
-      
+
       char* memory;
       long unsigned int size;
 
       char* zmemory;
       long unsigned int zsize;
-      
+
       // tag attribute
-      
-      char tag[100+TB];              // the tag to be compared 
+
+      char tag[100+TB];              // the tag to be compared
       char name[100+TB];             // content name (filename)
       char contentType[100+TB];      // e.g. text/html
-      char mimeType[100+TB];         // 
-      char contentEncoding[100+TB];  // 
+      char mimeType[100+TB];         //
+      char contentEncoding[100+TB];  //
       int headerOnly;
+      long statusCode;
       time_t modTime;
       time_t expireAt;
+      std::map<std::string, std::string> headers;
 };
 
 //***************************************************************************
 // cMyMutex
 //***************************************************************************
 
-class cMyMutex 
+class cMyMutex
 {
    friend class cCondVar;
 
@@ -245,7 +250,7 @@ void tellZipError(int errorCode, const char* op, const char* msg);
 #endif // WITH_GUNZIP
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 class cRetBuf
@@ -268,10 +273,10 @@ class cRetBuf
 };
 
 //***************************************************************************
-// cTimeMs 
+// cTimeMs
 //***************************************************************************
 
-class cTimeMs 
+class cTimeMs
 {
    public:
 
@@ -302,12 +307,12 @@ class Sem
          key = aKey;
 
          if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
-            tell(eloAlways, "Error: Can't get semaphore, errno (%d) '%s'", 
+            tell(eloAlways, "Error: Can't get semaphore, errno (%d) '%s'",
                  errno, strerror(errno));
       }
 
-      ~Sem() 
-      { 
+      ~Sem()
+      {
          if (locked)
             v();
       }
@@ -318,20 +323,20 @@ class Sem
       int p()
       {
          sembuf sops[2];
-         
+
          sops[0].sem_num = 0;
          sops[0].sem_op = 0;                        // wait for lock
          sops[0].sem_flg = SEM_UNDO;
-         
+
          sops[1].sem_num = 0;
-         sops[1].sem_op = 1;                        // increment 
+         sops[1].sem_op = 1;                        // increment
          sops[1].sem_flg = SEM_UNDO | IPC_NOWAIT;
-         
+
          if (semop(id, sops, 2) == -1)
          {
-            tell(eloAlways, "Error: Can't lock semaphore, errno (%d) '%s'", 
+            tell(eloAlways, "Error: Can't lock semaphore, errno (%d) '%s'",
                  errno, strerror(errno));
-            
+
             return fail;
          }
 
@@ -339,24 +344,24 @@ class Sem
 
          return success;
       }
-      
+
       int inc()
       {
          sembuf sops[1];
-         
+
          sops[0].sem_num = 0;
-         sops[0].sem_op = 1;                        // increment 
+         sops[0].sem_op = 1;                        // increment
          sops[0].sem_flg = SEM_UNDO | IPC_NOWAIT;
-         
+
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'", 
+               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
                     errno, strerror(errno));
-            
+
             return fail;
          }
-         
+
          locked = yes;
 
          return success;
@@ -376,20 +381,20 @@ class Sem
       int check()
       {
          sembuf sops[1];
-         
+
          sops[0].sem_num = 0;
-         sops[0].sem_op = 0; 
+         sops[0].sem_op = 0;
          sops[0].sem_flg = SEM_UNDO | IPC_NOWAIT;
-         
+
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'", 
+               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
                     errno, strerror(errno));
-            
+
             return fail;
          }
-         
+
          return success;
       }
 
@@ -399,24 +404,24 @@ class Sem
       int v()
       {
          sembuf sops;
-         
+
          sops.sem_num = 0;
          sops.sem_op = -1;                          // release control
          sops.sem_flg = SEM_UNDO | IPC_NOWAIT;
-         
+
          if (semop(id, &sops, 1) == -1)
          {
             tell(eloAlways, "Error: Can't unlock semaphore, errno (%d) '%s'",
                  errno, strerror(errno));
-            
+
             return fail;
          }
-         
+
          locked = no;
 
          return success;
       }
-      
+
    private:
 
       int key;

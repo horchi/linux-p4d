@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.0"
-#define VERSION_DATE "23.12.2016"
+#define _VERSION     "0.2.1"
+#define VERSION_DATE "01.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-02:  version 0.2.1
+   - added:  Synchronisation to HomeMatic System-Variables
 
 2016-12-23:  version 0.2.0
    - added:  update of web interface

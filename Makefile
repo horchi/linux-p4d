@@ -12,7 +12,9 @@ CMDTARGET = p4
 CHARTTARGET = p4chart
 HISTFILE  = "HISTORY.h"
 
-LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto
+LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl
+LIBS += $(shell xml2-config --libs)
+
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
@@ -25,14 +27,15 @@ LASTTAG     = $(shell git describe --tags --abbrev=0)
 BRANCH      = $(shell git rev-parse --abbrev-ref HEAD)
 GIT_REV     = $(shell git describe --always 2>/dev/null)
 
-# object files 
+# object files
 
-LOBJS =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o
+LOBJS =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
 OBJS += $(LOBJS) main.o p4io.o service.o w1.o webif.o
 CLOBJS = $(LOBJS) chart.o
 CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
 CFLAGS += $(shell mysql_config --include)
+CFLAGS += $(shell xml2-config --cflags)
 DEFINES += -DDEAMON=P4d -DUSEMD5
 OBJS += p4d.o
 
@@ -116,11 +119,12 @@ HEADER = lib/db.h lib/dbdict.h lib/common.h
 lib/common.o    :  lib/common.c    $(HEADER)
 lib/db.o        :  lib/db.c        $(HEADER)
 lib/dbdict.o    :  lib/dbdict.c    $(HEADER)
+lib/curl.o      :  lib/curl.c    $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 
 main.o			 :  main.c          $(HEADER) p4d.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h
-p4io.o          :  p4io.c          $(HEADER) p4io.h 
+p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o			 :  webif.c         $(HEADER) p4d.h
 w1.o			    :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h

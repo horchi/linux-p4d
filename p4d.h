@@ -18,6 +18,7 @@
 #include "service.h"
 #include "p4io.h"
 #include "w1.h"
+#include "lib/curl.h"
 #include "HISTORY.h"
 
 #define confDirDefault "/etc/p4d"
@@ -94,6 +95,10 @@ class P4d : public FroelingService
       int updateValueFacts();
       int updateTimeRangeData();
       int initMenu();
+
+      int hmUpdateSysVars();
+      int hmSyncSysVars();
+
       int isMailState();
       int loadHtmlHeader();
 
@@ -118,6 +123,7 @@ class P4d : public FroelingService
       cDbTable* tableSmartConf;
       cDbTable* tableConfig;
       cDbTable* tableTimeRanges;
+      cDbTable* tableHmSysVars;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
@@ -126,6 +132,7 @@ class P4d : public FroelingService
       cDbStatement* selectSensorAlerts;
       cDbStatement* selectSampleInRange;
       cDbStatement* cleanupJobs;
+      cDbStatement* selectHmSysVarByAddr;
 
       cDbValue rangeEnd;
 
@@ -137,6 +144,7 @@ class P4d : public FroelingService
       Serial* serial;
 
       W1 w1;                       // for one wire sensors
+      cCurl* curl;
 
       Status currentState;
       string mailBody;

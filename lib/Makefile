@@ -11,14 +11,15 @@ HLIB      = -L. -lhorchi
 
 TEST = tst
 
-LIBOBJS = common.o db.o dbdict.o 
+LIBOBJS = common.o db.o dbdict.o
 
-BASELIBS = -lrt -lz -luuid 
+BASELIBS = -lrt -lz -luuid
 BASELIBS += $(shell mysql_config --libs_r)
 
-ifdef USELIBXML
-  BASELIBS += $(shell xml2-config --libs) $(shell xslt-config --libs)
-endif
+BASELIBS += $(shell xml2-config --libs)
+
+LIBOBJS += curl.o
+BASELIBS += -lcurl
 
 DEBUG = 1
 
@@ -31,10 +32,7 @@ CFLAGS += -fPIC -Wreturn-type -Wall -Wno-parentheses -Wformat -pedantic -Wunused
           -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 CFLAGS += $(shell mysql_config --include)
-
-ifdef USELIBXML
-  CFLAGS += $(shell xml2-config --cflags) $(shell xslt-config --cflags)
-endif
+CFLAGS += $(shell xml2-config --cflags)
 
 DEFINES = $(USES)
 
@@ -52,7 +50,7 @@ clean:
 	rm -f *.o *~ core $(TEST) $(DEMO) $(LIBTARGET).a
 
 cppchk:
-	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h 
+	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
 
 %.o: %.c
 	@echo Compile "$(*F)" ...
@@ -73,6 +71,5 @@ epgservice.o :  epgservice.c  $(HEADER) epgservice.h
 dbdict.o     :  dbdict.c      $(HEADER) dbdict.h
 json.o       :  json.c        $(HEADER) json.h
 
-demo.o       :  demo.c        $(HEADER) 
-test.o       :  test.c        $(HEADER) 
-
+demo.o       :  demo.c        $(HEADER)
+test.o       :  test.c        $(HEADER)

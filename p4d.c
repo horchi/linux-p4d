@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <libxml/parser.h>
 
 #include "p4d.h"
 
@@ -34,6 +35,7 @@ P4d::P4d()
    tableConfig = 0;
    tableErrors = 0;
    tableTimeRanges = 0;
+   selectHmSysVarByAddr = 0;
 
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;
@@ -41,6 +43,7 @@ P4d::P4d()
    selectAllMenuItems = 0;
    selectSensorAlerts = 0;
    selectSampleInRange = 0;
+   selectHmSysVarByAddr = 0;
    cleanupJobs = 0;
 
    nextAt = time(0);
@@ -70,6 +73,7 @@ P4d::P4d()
    sem = new Sem(0x3da00001);
    serial = new Serial;
    request = new P4Request(serial);
+   curl = new cCurl();
 }
 
 P4d::~P4d()
@@ -84,6 +88,7 @@ P4d::~P4d()
    delete serial;
    delete request;
    delete sem;
+   delete curl;
 
    cDbConnection::exit();
 }
@@ -95,6 +100,8 @@ P4d::~P4d()
 int P4d::init()
 {
    char* dictPath = 0;
+
+   curl->init();
 
    // initialize the dictionary
 
@@ -127,6 +134,7 @@ int P4d::exit()
 {
    exitDb();
    serial->close();
+   curl->exit();
 
    return success;
 }
@@ -230,6 +238,9 @@ int P4d::initDb()
    tableTimeRanges = new cDbTable(connection, "timeranges");
    if (tableTimeRanges->open() != success) return fail;
 
+   tableHmSysVars = new cDbTable(connection, "hmsysvars");
+   if (tableHmSysVars->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -313,6 +324,18 @@ int P4d::initDb()
 
    // ------------------
 
+   selectHmSysVarByAddr = new cDbStatement(tableHmSysVars);
+
+   selectHmSysVarByAddr->build("select ");
+   selectHmSysVarByAddr->bindAllOut();
+   selectHmSysVarByAddr->build(" from %s where ", tableHmSysVars->TableName());
+   selectHmSysVarByAddr->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
+   selectHmSysVarByAddr->bind("ATYPE", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectHmSysVarByAddr->prepare();
+
+   // ------------------
+
    cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
@@ -340,6 +363,7 @@ int P4d::exitDb()
    delete tableErrors;             tableErrors = 0;
    delete tableConfig;             tableConfig = 0;
    delete tableTimeRanges;         tableTimeRanges = 0;
+   delete tableHmSysVars;          tableHmSysVars = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
@@ -746,6 +770,96 @@ int P4d::updateValueFacts()
 }
 
 //***************************************************************************
+// Synchronize HM System Variables
+//***************************************************************************
+
+int P4d::hmSyncSysVars()
+{
+   char* hmUrl = 0;
+   char* hmHost = 0;
+   xmlDoc* document = 0;
+   xmlNode* root = 0;
+   int readOptions = 0;
+   MemoryStruct data;
+   int count = 0;
+   int size = 0;
+
+#if LIBXML_VERSION >= 20900
+   readOptions |=  XML_PARSE_HUGE;
+#endif
+
+   getConfigItem("hmHost", hmHost, "");
+
+   if (isEmpty(hmHost))
+      return done;
+
+   tell(eloAlways, "Updating HomeMatic system variables");
+   asprintf(&hmUrl, "http://%s/config/xmlapi/sysvarlist.cgi", hmHost);
+
+   if (curl->downloadFile(hmUrl, size, &data) != success)
+   {
+      tell(0, "Error: Requesting sysvar list at homematic '%s' failed", hmUrl);
+      free(hmUrl);
+      return fail;
+   }
+
+   free(hmUrl);
+
+   tell(3, "Got [%s]", data.memory ? data.memory : "<null>");
+
+   if (document = xmlReadMemory(data.memory, data.size, "", 0, readOptions))
+      root = xmlDocGetRootElement(document);
+
+   if (!root)
+   {
+      tell(0, "Error: Failed to parse XML document [%s]", data.memory ? data.memory : "<null>");
+      return fail;
+   }
+
+   for (xmlNode* node = root->children; node; node = node->next)
+   {
+      xmlChar* id = xmlGetProp(node, (xmlChar*)"ise_id");
+      xmlChar* name = xmlGetProp(node, (xmlChar*)"name");
+      xmlChar* type = xmlGetProp(node, (xmlChar*)"type");
+      xmlChar* unit = xmlGetProp(node, (xmlChar*)"unit");
+      xmlChar* visible = xmlGetProp(node, (xmlChar*)"visible");
+      xmlChar* min = xmlGetProp(node, (xmlChar*)"min");
+      xmlChar* max = xmlGetProp(node, (xmlChar*)"max");
+      xmlChar* time = xmlGetProp(node, (xmlChar*)"timestamp");
+      xmlChar* value = xmlGetProp(node, (xmlChar*)"value");
+
+      tableHmSysVars->clear();
+      tableHmSysVars->setValue("ID", atol((const char*)id));
+      tableHmSysVars->find();
+      tableHmSysVars->setValue("NAME", (const char*)name);
+      tableHmSysVars->setValue("TYPE", atol((const char*)type));
+      tableHmSysVars->setValue("UNIT", (const char*)unit);
+      tableHmSysVars->setValue("VISIBLE", strcmp((const char*)visible, "true") == 0);
+      tableHmSysVars->setValue("MIN", (const char*)min);
+      tableHmSysVars->setValue("MAX", (const char*)max);
+      tableHmSysVars->setValue("TIME", atol((const char*)time));
+      tableHmSysVars->setValue("VALUE", (const char*)value);
+      tableHmSysVars->store();
+
+      xmlFree(id);
+      xmlFree(name);
+      xmlFree(type);
+      xmlFree(unit);
+      xmlFree(visible);
+      xmlFree(min);
+      xmlFree(max);
+      xmlFree(time);
+      xmlFree(value);
+
+      count++;
+   }
+
+   tell(eloAlways, "Upate of (%d) HomeMatic system variables succeeded", count);
+
+   return success;
+}
+
+//***************************************************************************
 // Initialize Menu Structure
 //***************************************************************************
 
@@ -825,6 +939,50 @@ int P4d::store(time_t now, const char* type, int address, double value,
    tableSamples->setValue("SAMPLES", 1);
 
    tableSamples->store();
+
+   // HomeMatic
+   {
+      char* hmHost = 0;
+      char* hmUrl = 0;
+      MemoryStruct data;
+      int size = 0;
+
+      getConfigItem("hmHost", hmHost, "");
+
+      if (!isEmpty(hmHost))
+      {
+         tableHmSysVars->clear();
+         tableHmSysVars->setValue("ADDRESS", address);
+         tableHmSysVars->setValue("ATYPE", type);
+
+         if (selectHmSysVarByAddr->find())
+         {
+            char* buf;
+
+            asprintf(&buf, "%f", value);
+            tableHmSysVars->setValue("VALUE", buf);
+            free(buf);
+
+            tableHmSysVars->setValue("TIME", now);
+            tableHmSysVars->update();
+
+            asprintf(&hmUrl, "http://%s/config/xmlapi/statechange.cgi?ise_id=%ld&new_value=%f;",
+                     hmHost, tableHmSysVars->getIntValue("ID"), value / (double)factor);
+
+            if (curl->downloadFile(hmUrl, size, &data) != success)
+            {
+               tell(0, "Error: Requesting sysvar change at homematic %s failed [%s]", hmHost, hmUrl);
+               free(hmUrl);
+               return fail;
+            }
+
+            tell(1, "Info: Call of [%s] succeeded", hmUrl);
+            free(hmUrl);
+         }
+
+         selectHmSysVarByAddr->freeResult();
+      }
+   }
 
    return success;
 }

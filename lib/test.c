@@ -8,6 +8,7 @@
 #include "common.h"
 #include "db.h"
 #include "dbdict.h"
+#include "curl.h"
 
 cDbConnection* connection = 0;
 
@@ -33,13 +34,13 @@ void initConnection()
 void exitConnection()
 {
    cDbConnection::exit();
-   
+
    if (connection)
       delete connection;
 }
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 //***************************************************************************
@@ -59,12 +60,12 @@ void chkStatement1()
 #ifdef __NEW
 
    cDbTable* db = new cDbTable(connection, "samples");
-   
+
    if (db->open() != success)
-   { 
-      tell(0, "Could not access database '%s:%d' (%s)", 
+   {
+      tell(0, "Could not access database '%s:%d' (%s)",
            cDbConnection::getHost(), cDbConnection::getPort(), db->TableName());
-      
+
       return ;
    }
 
@@ -82,12 +83,12 @@ void chkStatement1()
 #else
 
    cTableSamples* db = new cTableSamples(connection);
-   
+
    if (db->open() != success)
-   { 
-      tell(0, "Could not access database '%s:%d' (%s)", 
+   {
+      tell(0, "Could not access database '%s:%d' (%s)",
            cDbConnection::getHost(), cDbConnection::getPort(), db->TableName());
-      
+
       return ;
    }
 
@@ -105,7 +106,7 @@ void chkStatement1()
 #endif
 
    db->store();
-   
+
    tell(0, "---------------------------------------------------");
 
    delete db;
@@ -124,10 +125,77 @@ cRetBuf tst()
 // Main
 //***************************************************************************
 
+#include <libxml/parser.h>
+
 int main(int argc, char** argv)
 {
    logstdout = yes;
    loglevel = 2;
+
+   MemoryStruct data;
+   cCurl curl;
+   int size = 0;
+
+   curl.init();
+
+   curl.downloadFile("http://192.168.200.151//config/xmlapi/sysvarlist.cgi", size, &data);
+   curl.exit();
+
+   // tell(0, "%s", data.memory);
+
+   xmlDoc* document = 0;
+   xmlNode* root = 0;
+   int readOptions = 0;
+
+#if LIBXML_VERSION >= 20900
+   readOptions |=  XML_PARSE_HUGE;
+#endif
+
+   tell(1, "Got [%s]", data.memory ? data.memory : "<null>");
+
+   if (document = xmlReadMemory(data.memory, data.size, "", 0, readOptions))
+      root = xmlDocGetRootElement(document);
+
+   if (!root)
+   {
+      tell(0, "Error: Failed to parse XML document [%s]", data.memory ? data.memory : "<null>");
+      return fail;
+   }
+
+   for (xmlNode* node = root->children; node; node = node->next)
+   {
+      xmlChar* id = xmlGetProp(node, (xmlChar*)"ise_id");
+      xmlChar* name = xmlGetProp(node, (xmlChar*)"name");
+      xmlChar* type = xmlGetProp(node, (xmlChar*)"type");
+      xmlChar* unit = xmlGetProp(node, (xmlChar*)"unit");
+      xmlChar* visible = xmlGetProp(node, (xmlChar*)"visible");
+      xmlChar* min = xmlGetProp(node, (xmlChar*)"min");
+      xmlChar* max = xmlGetProp(node, (xmlChar*)"max");
+      xmlChar* time = xmlGetProp(node, (xmlChar*)"timestamp");
+      xmlChar* value = xmlGetProp(node, (xmlChar*)"value");
+
+      if (strcmp((const char*)visible, "true") == 0)
+         tell(0, "  SysVar (%d): '%s' [%s ; unit: %s]", atoi((const char*)id), name, value, unit);
+
+      xmlFree(id);
+      xmlFree(name);
+      xmlFree(type);
+      xmlFree(unit);
+      xmlFree(visible);
+      xmlFree(min);
+      xmlFree(max);
+      xmlFree(time);
+      xmlFree(value);
+
+      // for (xmlAttr* attr = node->properties; NULL != attr; attr = attr->next)
+      // {
+      //    xmlChar* value = xmlNodeListGetString(node->doc, attr->children, 1);
+      //    tell(0, "     %s: %s", attr->name, value);
+      //    xmlFree(value);
+      // }
+   }
+
+   return 0;
 
 //    Sem* sem = new Sem(0x3da00001);
 
