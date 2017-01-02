@@ -927,6 +927,8 @@ int P4d::initMenu()
 int P4d::store(time_t now, const char* type, int address, double value,
                 unsigned int factor, const char* text)
 {
+   double theValue = value / (double)factor;
+
    tableSamples->clear();
 
    tableSamples->setValue("TIME", now);
@@ -934,7 +936,7 @@ int P4d::store(time_t now, const char* type, int address, double value,
    tableSamples->setValue("TYPE", type);
    tableSamples->setValue("AGGREGATE", "S");
 
-   tableSamples->setValue("VALUE", value / (double)factor);
+   tableSamples->setValue("VALUE", theValue);
    tableSamples->setValue("TEXT", text);
    tableSamples->setValue("SAMPLES", 1);
 
@@ -959,7 +961,7 @@ int P4d::store(time_t now, const char* type, int address, double value,
          {
             char* buf;
 
-            asprintf(&buf, "%f", value);
+            asprintf(&buf, "%f", theValue);
             tableHmSysVars->setValue("VALUE", buf);
             free(buf);
 
@@ -967,7 +969,7 @@ int P4d::store(time_t now, const char* type, int address, double value,
             tableHmSysVars->update();
 
             asprintf(&hmUrl, "http://%s/config/xmlapi/statechange.cgi?ise_id=%ld&new_value=%f;",
-                     hmHost, tableHmSysVars->getIntValue("ID"), value / (double)factor);
+                     hmHost, tableHmSysVars->getIntValue("ID"), theValue);
 
             if (curl->downloadFile(hmUrl, size, &data) != success)
             {
