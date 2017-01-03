@@ -177,7 +177,7 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
 
 function seperator($title, $top = 0, $class = "seperatorTitle1")
 {
-   echo "        <div class=\"" . $class . "\">$title</div>\n";
+   echo "        <div class=\"rounded-border " . $class . "\">$title</div>\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -329,13 +329,13 @@ function htmTags($new)
 {
   switch ($new)
   {
-   	case 1: echo   "        <div class=\"input\">\n";
+   	case 1: echo   "        <div class=\"rounded-border input\">\n";
               $end = "";
               break;
-   	case 2: echo   "        </div>\n        <div class=\"input\">\n";
+   	case 2: echo   "        </div>\n        <div class=\"rounded-border input\">\n";
               $end = "";
               break;
-   	case 3: echo   "        <div class=\"input\">\n" ;
+   	case 3: echo   "        <div class=\"rounded-border input\">\n" ;
               $end = "        </div>\n";
               break;
    	case 4: echo   "          &nbsp;|&nbsp;\n" ;
@@ -344,7 +344,7 @@ function htmTags($new)
    	case 5: echo   "          &nbsp;|&nbsp;\n";
               $end = "";
               break;
-   	case 6: echo   "        </div>\n        <div class=\"input\">\n" ;
+   	case 6: echo   "        </div>\n        <div class=\"rounded-border input\">\n" ;
               $end = "        </div>\n";
               break;
    	case 7: echo   "        \n";

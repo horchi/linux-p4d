@@ -122,7 +122,7 @@ $schemaImg = $schema_path . substr($schema_pattern, 0, -5) . $_SESSION["schema"]
 $forConfig = true;
 
 echo "    <form action='" . htmlspecialchars($_SERVER["PHP_SELF"]) . "' method='post'>\n";
-echo "      <div id=\"image\" class=\"imageBox\" style=\"z-index:2;\">\n";
+echo "      <div id=\"image\" class=\"rounded-border imageBox\" style=\"z-index:2;\">\n";
 echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\" onmousemove=\"displayCoords(event, 'image', 'coords');\"></input>\n";
 echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\"18\" readonly>";
 
@@ -140,7 +140,7 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "        <input type=radio name=showtext value=Value checked />Wert\n";
    echo "        <input type=radio name=showtext value=Text />Text\n";
    echo "      </span>\n";
-   echo "      <div class=\"seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br /> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
+   echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br /> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
 }
 else
    echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Start>Start der Werte-Positionierung</button>\n";
@@ -223,7 +223,7 @@ echo "        <button class=\"rounded-border button3\" type=submit name=action v
 
 seperator("Piktogramme<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");
 
-echo "        <div class=\"input\" id=\"hlp\" style=\"display:none;\">\n";
+echo "        <div class=\"rounded-border input\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\"\n>";
 echo "          Oben links könnt ihr ein Schema aus der Liste auswählen, die Sensorbezeichnungen aus der 'Aufzeichnung'-Liste anzeigen und<br/>
                 zur besseren Sichtbarkeit die Werte hinterlegen.<br/><br/>
@@ -304,7 +304,7 @@ function nextConf($dir)
 
    // show
 
-   echo "      <div class=\"seperatorTitle2\">";
+   echo "      <div class=\"rounded-border seperatorTitle2\">";
    echo $title . " - ";
    echo "  Wert: " . $value . $unit;
    echo "  Text: " . $text;

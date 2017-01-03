@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 echo "      <form action=\"login.php\" method=\"post\">\n";
 echo "        <br/>\n";
-echo "        <div class=\"input\">\n";
+echo "        <div class=\"rounded-border input\">\n";
 echo "          <table>\n";
 echo "            <tr><td>User:&nbsp;&nbsp;</td><td><input class=\"inputEdit\" style=\"width:200px\" type=\"text\" name=\"username\"></input></td></tr>\n";
 echo "            <tr><td>&nbsp;</td><td>&nbsp;</td></tr>\n";

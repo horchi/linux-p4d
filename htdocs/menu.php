@@ -87,7 +87,7 @@ if ($edit != "")
       {
          echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
          echo "        <br/><br/>\n";
-         echo "        <div class=\"input\">\n";
+         echo "        <div class=\"rounded-border input\">\n";
 
          if ($isTimeRange)
             echo "          " . $title . ":  <span style=\"color:blue\">$value - $valueTo</span><br/><br/>\n";

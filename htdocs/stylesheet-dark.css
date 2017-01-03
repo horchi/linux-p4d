@@ -6,22 +6,24 @@
 {
     /* colors */
 
-    --light1: #d9e9ff;
-    --light2: #0066FF;
-    --light3: #89c9ff;
-    --light4: #1100ee;
+    --light1: gray;
+    --light2: lightgray;
+    --light3: #565353;
+    --light4: #efef65;
 
-    --caption1: darkcyan;
-    --caption2: cyan;
-    --border: blue;
+    --caption1: #292929;
+    --caption2: #565353;
+    --border: black;
     --buttonAction: #818382;
-    --buttonFont: black;
+    --buttonFont: white;
 }
 
 Body
 {
     font-family: Helvetica,Arial,sans-serif;
     font-size: 1.0em;
+    color: white;
+    background-color: black;
 }
 
 .content
@@ -31,7 +33,7 @@ Body
 
 .rounded-border
 {
-    border-radius: 3px;
+    border-radius: 0px;
     border-style: solid;
     border-width: 1px;
     border-color: var(--border);

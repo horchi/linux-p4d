@@ -94,7 +94,7 @@ echo "        <button class=\"rounded-border button3\" type=\"submit\" name=\"ac
 seperator("Benachrichtigungen bei bestimmten Sensor-Werten", 0);
 seperator("Bedingungen<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");
 
-echo "        <div class=\"input\" id=\"hlp\" style=\"display:none;\">\n";
+echo "        <div class=\"rounded-border input\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\">
                 Hier formulierst du die Bedingungen (Alarmwerte) für die einzelnen Sensoren, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
                 'Aufzeichnung' entnehmen und hier eintragen.<br /><br />
@@ -116,7 +116,7 @@ while ($row = $result->fetch_array(MYSQLI_ASSOC))
 {
    $ID =  $row['id']; $i++; $a = chr($ID+64);
    $cnt = $cnt . "|" . $row['id']; $s = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
-   echo "        <div class=\"input\">\n";
+   echo "        <div class=\"rounded-border input\">\n";
    echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
    echo "          <input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input> aktiv?\n";
    echo "          ID:<input        class=\"inputEdit\" id=\"a$a\" style=\"width:77px$s\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>\n";
@@ -139,7 +139,7 @@ $mysqli->close();
 $ID++;
 $cnt = $cnt . "|" . $ID;
 
-echo "        <div class=\"input\">\n";
+echo "        <div class=\"rounded-border input\">\n";
 echo "          <input type=checkbox name=Act(" . $ID . ")" . (($row['state'] == "A") ? " checked" : "") . "></input> aktiv?\n";
 echo "          ID:<input        class=\"inputEdit\" style=\"width:33px\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>\n";
 echo "          Typ:<input       class=\"inputEdit\" style=\"width:33px\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input>\n";

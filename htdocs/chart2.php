@@ -25,7 +25,7 @@ printHeader();
 
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
-  echo "  <div id=\"aSelect\">\n";
+  echo "  <div class=\"rounded-border\" id=\"aSelect\">\n";
   echo "    <form name='navigation' method='get'>\n";
   echo "      Zeitraum der Charts<br/>\n";
   echo datePicker("", "c2s", $year, $day, $month);
@@ -39,12 +39,12 @@ printHeader();
   echo "    </form>\n";
   echo "  </div>\n";
 
-  echo "  <div class=\"chart\">\n";
+  echo "  <div class=\"rounded-border chart\">\n";
   $condition = "address in (" . $_SESSION['chart3'] . ")";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
-  echo "  <div class=\"chart\">\n";
+  echo "  <div class=\"rounded-border chart\">\n";
   $condition = "address in (" . $_SESSION['chart4']. ")";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";

@@ -170,7 +170,7 @@ printHeader(60);
         if ($row['f_unit'] == 'T')
            $value = str_replace($wd_value, $wd_disp, $text);
 
-        $url = "<a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
+        $url = "<a class=\"rounded-border boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
            . $from . "&range=" . $srange . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
            . $_SESSION['chartDiv'] . " ','_blank',"
            . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
@@ -187,7 +187,7 @@ printHeader(60);
   // ----------------
   // Date Picker
   {
-     echo "      <div id=\"aSelect\">\n";
+     echo "      <div class=\"rounded-border\" id=\"aSelect\">\n";
      echo "        <form name='navigation' method='get'>\n";
      echo "          Zeitraum der Charts<br/>\n";
      echo datePicker("", "s", $syear, $sday, $smonth);

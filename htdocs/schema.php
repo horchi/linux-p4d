@@ -39,7 +39,7 @@ while ($rowConf = $resultConf->fetch_assoc())
 
    if ($row = $result->fetch_assoc())
    {
-      $urlStart = "          <a class=\"boxedValue\">";
+      $urlStart = "          <a class=\"rounded-border boxedValue\">";
       $urlEnd   = "</a>\n";
 
       $value = $row['s_value'];
@@ -52,7 +52,7 @@ while ($rowConf = $resultConf->fetch_assoc())
       setTxt();
 
       if (!isset($forConfig))
-         $urlStart = "          <a class=\"boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from="
+         $urlStart = "          <a class=\"rounded-border boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$addr&type=$type&from="
                 . $from . "&range=" . ($schemaRange / 24) . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . " ','_blank',"
                 . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
