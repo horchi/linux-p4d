@@ -49,6 +49,8 @@ include("functions.php");
      readConfigItem("user", $_SESSION['user']);
      readConfigItem("passwd", $_SESSION['passwd']);
 
+     readConfigItem("hmHost", $_SESSION['hmHost']);
+
      readConfigItem("mail", $_SESSION['mail']);
      readConfigItem("htmlMail", $_SESSION['htmlMail']);
      readConfigItem("stateMailTo", $_SESSION['stateMailTo']);

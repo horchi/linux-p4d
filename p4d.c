@@ -925,8 +925,10 @@ int P4d::initMenu()
 //***************************************************************************
 
 int P4d::store(time_t now, const char* type, int address, double value,
-                unsigned int factor, const char* text)
+               unsigned int factor, const char* text)
 {
+   static time_t lastHmFailAt = 0;
+
    double theValue = value / (double)factor;
 
    tableSamples->clear();
@@ -943,6 +945,8 @@ int P4d::store(time_t now, const char* type, int address, double value,
    tableSamples->store();
 
    // HomeMatic
+
+   if (lastHmFailAt < time(0) - 3*tmeSecondsPerMinute)  // on fail retry not before 3 minutes
    {
       char* hmHost = 0;
       char* hmUrl = 0;
@@ -974,6 +978,7 @@ int P4d::store(time_t now, const char* type, int address, double value,
             if (curl->downloadFile(hmUrl, size, &data) != success)
             {
                tell(0, "Error: Requesting sysvar change at homematic %s failed [%s]", hmHost, hmUrl);
+               lastHmFailAt = time(0);
                free(hmUrl);
                return fail;
             }
@@ -984,6 +989,10 @@ int P4d::store(time_t now, const char* type, int address, double value,
 
          selectHmSysVarByAddr->freeResult();
       }
+   }
+   else
+   {
+      tell(1, "Skipping HomeMatic request due to error within the last 3 minutes");
    }
 
    return success;
