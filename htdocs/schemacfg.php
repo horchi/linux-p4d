@@ -123,8 +123,8 @@ $forConfig = true;
 
 echo "    <form action='" . htmlspecialchars($_SERVER["PHP_SELF"]) . "' method='post'>\n";
 echo "      <div id=\"image\" class=\"rounded-border imageBox\" style=\"z-index:2;\">\n";
-echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\" onmousemove=\"displayCoords(event, 'image', 'coords');\"></input>\n";
-echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\"18\" readonly>";
+echo "        <input type=\"image\" src=\"$schemaImg\" value=\"click\" name=\"mouse\" alt=\"Schema to configure\" style=\"cursor:crosshair;\" onmousemove=\"displayCoords(event, 'image', 'coords');\"/>\n";
+echo "        <input type=\"text\" id=\"coords\" value=\"Xpos=?; Ypos=?\" size=\"18\" readonly/>\n";
 
 // -------------------------
 // show buttons
@@ -136,14 +136,16 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Hide>Hide</button>\n";
    echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Back>Back</button>\n";
    echo "      <span class=\"checkbox\">\n";
-   echo "        <input type=checkbox name=unit value=unit checked />Einheit\n";
-   echo "        <input type=radio name=showtext value=Value checked />Wert\n";
-   echo "        <input type=radio name=showtext value=Text />Text\n";
+   echo "        <input type=checkbox name=unit value=unit checked/>Einheit\n";
+   echo "        <input type=radio name=showtext value=Value checked/>Wert\n";
+   echo "        <input type=radio name=showtext value=Text/>Text\n";
    echo "      </span>\n";
    echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br /> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
 }
 else
-   echo "      <button class=\"rounded-border button3\" type=submit name=cfg value=Start>Start der Werte-Positionierung</button>\n";
+{
+   echo "        <button class=\"rounded-border button3\" type=submit name=cfg value=Start>Start der Werte-Positionierung</button>\n";
+}
 
 if ($started == 1)
 {
@@ -179,8 +181,9 @@ if ($started == 1)
          $result = $mysqli->query($selectAllSchemaConf);
          $_SESSION["num"] = $result->num_rows;  // update ... who knows :o
          store("A", $mouseX, $mouseY, "black");
-			   nextConf(1);
-			}
+         nextConf(1);
+         $result->close();
+      }
    }
 }
 
@@ -260,10 +263,11 @@ include("footer.php");
 
 function nextConf($dir)
 {
-   global $selectAllSchemaConf, $started;
+   global $selectAllSchemaConf, $started, $mysqli;
    $_SESSION["cur"] += $dir;
 
    syslog(LOG_DEBUG, "p4: schema-cfg select " .  $_SESSION["cur"]);
+
    if ($_SESSION["cur"] >= $_SESSION["num"])
    {
       syslog(LOG_DEBUG, "p4: schema-cfg done");
@@ -277,19 +281,39 @@ function nextConf($dir)
    $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
    $row = $result->fetch_array(MYSQLI_ASSOC);
    $max = $row['max(time)'];
+   $result->close();
 
    // select conf item
 
-   $result = $mysqli->query($selectAllSchemaConf);
-   $_SESSION["num"] = $result->num_rows;
-   $_SESSION["addr"] = mysqli_result($result, $_SESSION["cur"], "f.address");
-   $_SESSION["type"] = mysqli_result($result, $_SESSION["cur"], "f.type");
+   $result = $mysqli->query($selectAllSchemaConf)
+      or die("Error" . $mysqli->error);
 
-   $title = (mysqli_result($result, $_SESSION["cur"], "f.usrtitle") != "") ? $mysqli->result($result, $_SESSION["cur"], "f.usrtitle") : $mysqli->result($result, $_SESSION["cur"], "f.title");
+   $i = 0;
+
+   while ($row = $result->fetch_array(MYSQLI_ASSOC))
+   {
+      if ($i == $_SESSION["cur"])
+      {
+         $_SESSION["num"] = $result->num_rows;
+         $_SESSION["addr"] = $row['address'];
+         $_SESSION["type"] = $row['type'];
+         $title = ($row['usrtitle'] != "") ? $row['usrtitle']: $row['title'];
+
+         break;
+      }
+
+      $i++;
+   }
+
+   $result->close();
 
    // get coresponding value/text and unit
 
-   $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';",
+   $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.unit as f_unit " .
+                       " from samples s, valuefacts f " .
+                       " where f.address = s.address " .
+                       "  and f.type = s.type and s.time = '%s' " .
+                       "  and f.address = %s and f.type = '%s';",
                        $max, $_SESSION["addr"], $_SESSION["type"]);
 
    $result = $mysqli->query($strQuery)
@@ -302,6 +326,8 @@ function nextConf($dir)
       $text = $row['s_text'];
    }
 
+   $result->close();
+
    // show
 
    echo "      <div class=\"rounded-border seperatorTitle2\">";
@@ -309,8 +335,6 @@ function nextConf($dir)
    echo "  Wert: " . $value . $unit;
    echo "  Text: " . $text;
    echo "</div>\n";
-
-
 }
 
 //***************************************************************************
@@ -319,6 +343,8 @@ function nextConf($dir)
 
 function store($state, $xpos, $ypos, $color)
 {
+   global $mysqli;
+
    $showUnit = 0;
    $showText = 0;
 

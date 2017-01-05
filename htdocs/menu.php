@@ -372,7 +372,6 @@ function showChilds($parnt, $level)
             echo "            <td></td>\n";
             echo "          </tr>\n";
 
-
             $result = $mysqli->query("select * from timeranges where address = " . $trAddr)
                or die("Error" . $mysqli->error);
 

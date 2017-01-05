@@ -267,12 +267,12 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
 
    if ($ispwd)
    {
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"></input>\n";
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
       echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"></input>\n";
+      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
    }
    else
-      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"></input>\n";
+      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -288,7 +288,7 @@ function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "></input>\n";
+   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";

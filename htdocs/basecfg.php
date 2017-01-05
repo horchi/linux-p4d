@@ -205,7 +205,7 @@ configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
 configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
 
 seperator("HomeMatic Interface", 0);
-configStrItem(6, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
+configStrItem(1, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
 
 seperator("p4d Konfiguration", 0);
 

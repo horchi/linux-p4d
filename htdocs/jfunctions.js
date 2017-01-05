@@ -73,14 +73,14 @@ function displayCoords(e, id, elm)
         e = window.event;
 
     var mydiv = document.getElementById(id);
-/*	 var body = (window.document.compatMode && window.document.compatMode == "CSS1Compat")
-          ? window.document.documentElement : window.document.body; */
+	 var body = (window.document.compatMode && window.document.compatMode == "CSS1Compat")
+          ? window.document.documentElement : window.document.body;
 
-	 // xpos = e.pageX ? e.pageX : e.clientX + mydiv.scrollLeft  - mydiv.clientLeft
-	 // ypos = e.pageY ? e.pageY : e.clientY + mydiv.scrollTop - mydiv.clientTop,
+	 xpos = e.pageX ? e.pageX : e.clientX + mydiv.scrollLeft  - mydiv.clientLeft
+	 ypos = e.pageY ? e.pageY : e.clientY + mydiv.scrollTop - mydiv.clientTop,
 
-    xpos = mydiv.clientLeft
-    ypos = mydiv.clientTop,
+//    xpos = mydiv.clientLeft
+//    ypos = mydiv.clientTop,
 
     txt = "Xpos="+xpos+"; Ypos="+ypos+"  ";
 

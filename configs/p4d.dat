@@ -204,7 +204,7 @@ Table sensoralert
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
 
-   KIND                 ""  kind                 Ascii        1 Data,  // 'S' sub rule 'M' or blank master rule ! not used !
+   KIND                 ""  kind                 Ascii        1 Data,  // 'S'ub or 'M'aster rule
    SUBID                ""  subid                UInt        11 Data,  // reference to 'sub' rule
    LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
 
@@ -219,7 +219,7 @@ Table sensoralert
    MSUBJECT             ""  msubject             Ascii      100 Data,
    MBODY                ""  mbody                Text      2000 Data,
    LASTALERT            ""  lastalert            Int         10 Data,
-   MAXREPEAT            ""  maxrepeat            Int         10 Data
+   MAXREPEAT            ""  maxrepeat            Int         10 Data   // [minutes]
 }
 
 // ----------------------------------------------------------------

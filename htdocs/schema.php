@@ -60,7 +60,7 @@ while ($rowConf = $resultConf->fetch_assoc())
 
       if (!preg_match("/img/", $value))
       {
-         echo "        <div title=\"" . $title . "\"" . $styleFixPosition . ">\n";
+         echo "        <div title=\"" . $title . "\" " . $styleFixPosition . ">\n";
       }
       else                               // Bilder ohne Stylesheet-Klasse anzeigen
       {
