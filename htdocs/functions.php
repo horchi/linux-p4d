@@ -1,9 +1,11 @@
 <?php
 
-if(!function_exists("functions_once"))
+if (!function_exists("functions_once"))
 {
 
-function functions_once()  {  }
+function functions_once()
+{
+}
 
 // ---------------------------------------------------------------------------
 // Check for mobile browser

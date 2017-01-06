@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.3"
-#define VERSION_DATE "05.01.2017"
+#define _VERSION     "0.2.4"
+#define VERSION_DATE "06.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,8 +17,12 @@
 /*
  * ------------------------------------
 
+2017-01-06:  version 0.2.4
+   - change: WEBIF: Some CSS finetuning
+   - change: WEBIF: added chown to WEBOWNER (of Make.config) to web-install
+
 2017-01-05:  version 0.2.3
-   - added:  WEBIF: Fixed configuration of schema
+   - bugfix: WEBIF: Fixed configuration of schema
 
 2017-01-03:  version 0.2.2
    - added:  WEBIF: new CSS style 'dark'

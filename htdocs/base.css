@@ -1,4 +1,20 @@
 
+.rounded-border
+{
+    border-radius: var(--borderRadius);
+    border-color: var(--borderColor);
+    border-style: solid;
+    border-width: 1px;
+}
+
+.boxedValueBorder
+{
+    border-radius: var(--borderRadiusBoxedValue);
+    border-color: var(--borderColorBoxedValue);
+    border-style: solid;
+    border-width: 1px;
+}
+
 .button1
 {
     background-color: var(--caption1);

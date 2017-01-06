@@ -13,7 +13,12 @@
 
     --caption1: #292929;
     --caption2: #565353;
-    --border: black;
+
+    --borderColor: black;
+    --borderColorBoxedValue: white;
+    --borderRadius: 0px;
+    --borderRadiusBoxedValue: 3px;
+
     --buttonAction: #818382;
     --buttonFont: white;
 }
@@ -29,12 +34,4 @@ Body
 .content
 {
     margin: 5px;
-}
-
-.rounded-border
-{
-    border-radius: 0px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--border);
 }
