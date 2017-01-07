@@ -89,7 +89,8 @@ install-web:
 		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist"; \
 		cp -p "$(WEBDEST)/config.php.save" "$(WEBDEST)/config.php"; \
 	fi
-	chmod -R a+r $(WEBDEST) \
+	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > $(WEBDEST)/header.php; \
+	chmod -R a+r $(WEBDEST); \
 	chown -R $(WEBOWNER):$(WEBOWNER) $(WEBDEST)
 
 dist: clean

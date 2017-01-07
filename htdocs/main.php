@@ -117,12 +117,12 @@ printHeader(60);
      if ($p4dstate == 0)
      {
         echo  "              <div id=\"aStateOk\"><span>Fröling $heatingType ONLINE</span>   </div>\n";
-        echo  "              <div><span>Läuft seit:</span>      <span>$p4dSince</span>       </div>\n";
-        echo  "              <div><span>Messungen heute:</span> <span>$p4dCountDay</span>    </div>\n";
-        echo  "              <div><span>Letzte Messung:</span>  <span>$maxPrettyShort</span> </div>\n";
-        echo  "              <div><span>Nächste Messung:</span> <span>$p4dNext</span>        </div>\n";
-        echo  "              <div><span>Version:</span>         <span>$p4dVersion</span>     </div>\n";
-        echo  "              <div><span>CPU-Last:</span>        <span>$load</span>           </div>\n";
+        echo  "              <div><span>Läuft seit:</span>            <span>$p4dSince</span>       </div>\n";
+        echo  "              <div><span>Messungen heute:</span>       <span>$p4dCountDay</span>    </div>\n";
+        echo  "              <div><span>Letzte Messung:</span>        <span>$maxPrettyShort</span> </div>\n";
+        echo  "              <div><span>Nächste Messung:</span>       <span>$p4dNext</span>        </div>\n";
+        echo  "              <div><span>Version (p4d / webif):</span> <span>$p4dVersion / $p4WebVersion</span></div>\n";
+        echo  "              <div><span>CPU-Last:</span>              <span>$load</span>           </div>\n";
      }
      else
      {
