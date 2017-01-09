@@ -41,7 +41,8 @@ if ($action == "store")
    if (isset($_POST["heatingType"]))
       $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
 
-   $_SESSION['stateAni'] = ($_POST["stateAni"] != $_SESSION['stateAni']) ? $_POST["stateAni"] : $_SESSION['stateAni'];
+   if (isset($_POST["stateAni"]))
+      $_SESSION['stateAni'] = $_SESSION['stateAni'];
 
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
@@ -180,7 +181,7 @@ echo "        <button class=\"rounded-border button3\" type=submit name=action v
 seperator("Web Interface", 0);
 colorSchemeItem(1, "Farbschema");
 heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
-configBoolItem(4, "Status-Ani?", "stateAni", $_SESSION['stateAni'], "");
+configBoolItem(4, "Status Gif animiert?", "stateAni", $_SESSION['stateAni'], "");
 
 seperator("Ansicht 'Aktuell'", 0, "seperatorTitle2");
 configStrItem(1, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
