@@ -349,6 +349,21 @@ function showChilds($parnt, $level)
          echo "          </tr>\n";
       }
 
+      if ($debug)
+      {
+         echo "          <tr class=\"cellL4\">\n";
+         echo "            <td style=\"color:red\">($id)</td>\n";
+         echo "            <td>$txtaddr</td>\n";
+         echo "            <td style=\"color:blue\">$level</td>\n";
+         echo "            <td>$txtchild</td>\n";
+         echo "            <td style=\"color:red\">$txttp</td>\n";
+         echo "            <td>$txtu1</td>\n";
+         echo "            <td>$txtu2</td>\n";
+         echo "            <td>TR: " . ($timeRangeGroup ? "ja" : "nein") . "</td>\n";
+         echo "            <td>$title</td>\n";
+         echo "          </tr>\n";
+      }
+
       if ($timeRangeGroup)
       {
          // bei timeRangeGroup 'Zeiten' Menüpunkten enthält adress immer der wievielte (Heizkreis, Puffer, Bouiler, ... ) es ist
@@ -367,15 +382,28 @@ function showChilds($parnt, $level)
          {
             $trAddr = $baseAddr + $wday;
             $stmt = "select * from timeranges where address = " . $trAddr;
+
             echo "          <tr class=\"cellL2\">\n";
+
+            if ($debug)
+            {
+               echo "            <td style=\"color:red\">($id)</td>\n";
+               echo "            <td>$txtaddr</td>\n";
+               echo "            <td style=\"color:blue\">$level</td>\n";
+               echo "            <td>$txtchild</td>\n";
+               echo "            <td style=\"color:red\">$txttp</td>\n";
+               echo "            <td>$txtu1</td>\n";
+               echo "            <td>$txtu2</td>\n";
+            }
+
             echo "            <td><center><b>$wd_disp[$wday]</b></center></td>\n";
             echo "            <td></td>\n";
             echo "          </tr>\n";
 
-            $result = $mysqli->query("select * from timeranges where address = " . $trAddr)
+            $res = $mysqli->query("select * from timeranges where address = " . $trAddr)
                or die("Error" . $mysqli->error);
 
-            $row = $result->fetch_array(MYSQLI_ASSOC);
+            $row = $res->fetch_array(MYSQLI_ASSOC);
 
             if ($row == NULL)
                continue;
@@ -386,6 +414,18 @@ function showChilds($parnt, $level)
                $to = $row['to' . $n];
 
                echo "           <tr class=\"cellL4\">\n";
+
+               if ($debug)
+               {
+                  echo "            <td style=\"color:red\">($id)</td>\n";
+                  echo "            <td>$txtaddr</td>\n";
+                  echo "            <td style=\"color:blue\">$level</td>\n";
+                  echo "            <td>$txtchild</td>\n";
+                  echo "            <td style=\"color:red\">$txttp</td>\n";
+                  echo "            <td>$txtu1</td>\n";
+                  echo "            <td>$txtu2</td>\n";
+               }
+
                echo "            <td><button class=buttont type=submit name=edit value=tr#$trAddr#$n#$wday>Bereich $n</button></td>\n";
                echo "             <td style=\"color:blue\">$from - $to</td>\n";
                echo "           </tr>\n";
