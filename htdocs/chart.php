@@ -23,7 +23,7 @@ printHeader();
   $year  = isset($_GET['csyear'])  ? $_GET['csyear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
   $range = isset($_GET['crange'])  ? $_GET['crange']  : $_SESSION['chartStart'];
 
-  $range = $range > 7 ? 31 : $range > 1 ? 7 : 1;
+  $range = ($range > 7) ? 31 : (($range > 1) ? 7 : 1);
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   echo "  <div class=\"rounded-border\" id=\"aSelect\">\n";
