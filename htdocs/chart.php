@@ -21,8 +21,9 @@ printHeader();
   $day   = isset($_GET['csday'])   ? $_GET['csday']   : (int)date("d",time()-86400*$_SESSION['chartStart']);
   $month = isset($_GET['csmonth']) ? $_GET['csmonth'] : (int)date("m",time()-86400*$_SESSION['chartStart']);
   $year  = isset($_GET['csyear'])  ? $_GET['csyear']  : (int)date("Y",time()-86400*$_SESSION['chartStart']);
-  $range = isset($_GET['crange'])  ? $_GET['crange']  : $_SESSION['chartStart'] > 7 ? 31 : $_SESSION['chartStart'] > 1 ? 7 : 1;
+  $range = isset($_GET['crange'])  ? $_GET['crange']  : $_SESSION['chartStart'];
 
+  $range = $range > 7 ? 31 : $range > 1 ? 7 : 1;
   $from = date_create_from_format('!Y-m-d', $year.'-'.$month.'-'.$day)->getTimestamp();
 
   echo "  <div class=\"rounded-border\" id=\"aSelect\">\n";
@@ -30,7 +31,7 @@ printHeader();
   echo "      Zeitraum der Charts<br/>\n";
   echo datePicker("", "cs", $year, $day, $month);
 
-  echo "      <select name=\"range\">\n";
+  echo "      <select name=\"crange\">\n";
   echo "        <option value='1' "  . ($range == 1  ? "SELECTED" : "") . ">Tag</option>\n";
   echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
   echo "        <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";

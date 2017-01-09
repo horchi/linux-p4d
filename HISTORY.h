@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.7"
+#define _VERSION     "0.2.8"
 #define VERSION_DATE "09.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-09:  version 0.2.8
+   - bugfix: WEBIF: Fixed chart range
 
 2017-01-09:  version 0.2.7
    - bugfix: WEBIF: Fixed php warning 'Undefined index: stateAni'
