@@ -4,6 +4,8 @@ session_start();
 
 $mysqlport = 3306;
 
+$p4WebVersion = "<VERSION>";
+
 include("config.php");
 include("functions.php");
 

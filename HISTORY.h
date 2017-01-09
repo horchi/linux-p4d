@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.5"
+#define _VERSION     "0.2.6"
 #define VERSION_DATE "09.01.2017"
 
 #ifdef GIT_REV
@@ -17,8 +17,12 @@
 /*
  * ------------------------------------
 
-2017-01-09:  version 0.2.5
+2017-01-09:  version 0.2.6
    - bugfix: WEBIF: Fixed missing parameter (since 0.1.46)
+
+2017-01-07:  version 0.2.5
+   - change: WEBIF: fixed make install-web
+   - change: WEBIF: show version of webif on main page
 
 2017-01-06:  version 0.2.4
    - change: WEBIF: Some CSS finetuning
