@@ -35,10 +35,12 @@ if (isset($_POST["action"]))
 
 if ($action == "mailtest")
 {
-   if (sendTestMail("Test Mail", "test"))
+   $resonse = "";
+
+   if (sendTestMail("Test Mail", "test", $resonse))
       echo "      <br/><div class=\"info\"><b><center>Mail Test</center></div><br/>\n";
    else
-      echo "      <br/><div class=\"infoError\"><b><center>Sending Mail failed, p4d log for further details</center></div><br/>\n";
+      echo "      <br/><div class=\"infoError\"><b><center>Sending Mail failed '$resonse' - p4d log for further details</center></div><br/>\n";
 }
 
 else if ($action == "store")

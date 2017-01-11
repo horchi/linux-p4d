@@ -40,16 +40,16 @@ int P4d::performWebifRequests()
          {
             *body = 0; body++;
 
-            tell(eloDetail, "Test mail requested with: %s/%s", subject, body);
+            tell(eloDetail, "Test mail requested with: '%s/%s'", subject, body);
 
             if (isEmpty(mailScript))
                tableJobs->setValue("RESULT", "success:missing mailscript");
             else if (!fileExists(mailScript))
-               tableJobs->setValue("RESULT", "success:mail-script not found");
+               tableJobs->setValue("RESULT", "fail:mail-script not found");
             else if (isEmpty(stateMailTo))
-               tableJobs->setValue("RESULT", "success:missing-receiver");
+               tableJobs->setValue("RESULT", "fail:missing-receiver");
             else if (sendMail(stateMailTo, subject, body, "text/plain") == success)
-               tableJobs->setValue("RESULT", "success:mail-sended");
+               tableJobs->setValue("RESULT", "fail:mail-sended");
             else
                tableJobs->setValue("RESULT", "fail:mail-failed");
          }

@@ -45,7 +45,7 @@ function checkLogin($user, $passwd)
    return false;
 }
 
-function sendTestMail($subject, $body)
+function sendTestMail($subject, $body, &$resonse)
 {
    global $mysqli;
 
