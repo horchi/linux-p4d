@@ -31,7 +31,31 @@ int P4d::performWebifRequests()
       tell(eloAlways, "Processing WEBIF job %d '%s:0x%04x/%s'",
            jobId, command, addr, data);
 
-      if (strcasecmp(command, "check-login") == 0)
+      if (strcasecmp(command, "test-mail") == 0)
+      {
+         char* subject = strdup(data);
+         char* body = 0;
+
+         if ((body = strchr(subject, ':')))
+         {
+            *body = 0; body++;
+
+            tell(eloDetail, "Test mail requested with: %s/%s", subject, body);
+
+            if (isEmpty(mailScript))
+               tableJobs->setValue("RESULT", "success:missing mailscript");
+            else if (!fileExists(mailScript))
+               tableJobs->setValue("RESULT", "success:mail-script not found");
+            else if (isEmpty(stateMailTo))
+               tableJobs->setValue("RESULT", "success:missing-receiver");
+            else if (sendMail(stateMailTo, subject, body, "text/plain") == success)
+               tableJobs->setValue("RESULT", "success:mail-sended");
+            else
+               tableJobs->setValue("RESULT", "fail:mail-failed");
+         }
+      }
+
+      else if (strcasecmp(command, "check-login") == 0)
       {
          char* webUser = 0;
          char* webPass = 0;

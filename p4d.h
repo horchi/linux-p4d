@@ -88,8 +88,8 @@ class P4d : public FroelingService
       int add2AlertMail(cDbRow* alertRow, const char* title,
                             double value, const char* unit);
       int sendAlertMail(const char* to);
-
-      int sendMail();
+      int sendStateMail();
+      int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
 
       int updateSchemaConfTable();
       int updateValueFacts();

@@ -33,7 +33,15 @@ $action = "";
 if (isset($_POST["action"]))
    $action = htmlspecialchars($_POST["action"]);
 
-if ($action == "store")
+if ($action == "mailtest")
+{
+   if (sendTestMail("Test Mail", "test"))
+      echo "      <br/><div class=\"info\"><b><center>Mail Test</center></div><br/>\n";
+   else
+      echo "      <br/><div class=\"infoError\"><b><center>Sending Mail failed, p4d log for further details</center></div><br/>\n";
+}
+
+else if ($action == "store")
 {
    // ------------------
    // store settings
@@ -219,6 +227,7 @@ configStrItem(2, "Status Mail Empfänger", "stateMailTo id=Mail1", $_SESSION['st
 configStrItem(2, "Fehler Mail Empfänger", "errorMailTo id=Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
 configStrItem(2, "Status Mail für folgende Stati", "stateMailStates id=Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
 configStrItem(2, "p4d sendet Mails über das Skript", "mailScript id=Mail4", $_SESSION['mailScript'], "", 400, $ro);
+echo "        <button class=\"rounded-border button3\" type=submit name=action value=mailtest>Test Mail</button>\n";
 configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 
 seperator("Sonstiges", 0, "seperatorTitle2");

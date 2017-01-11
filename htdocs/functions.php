@@ -45,6 +45,16 @@ function checkLogin($user, $passwd)
    return false;
 }
 
+function sendTestMail($subject, $body)
+{
+   global $mysqli;
+
+   if (requestAction("test-mail", 5, 0, "$subject:$body", $resonse) == 0)
+      return true;
+
+   return false;
+}
+
 // ---------------------------------------------------------------------------
 // Date Picker
 // ---------------------------------------------------------------------------

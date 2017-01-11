@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.8"
-#define VERSION_DATE "09.01.2017"
+#define _VERSION     "0.2.9"
+#define VERSION_DATE "11.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-11:  version 0.2.9
+   - added:  Mail check button
 
 2017-01-09:  version 0.2.8
    - bugfix: WEBIF: Fixed chart range

@@ -1186,7 +1186,7 @@ int P4d::loop()
       // mail
 
       if (mail && stateChanged)
-         sendMail();
+         sendStateMail();
 
       sem->v();
    }
@@ -1763,8 +1763,6 @@ int P4d::updateErrors()
 
 int P4d::sendAlertMail(const char* to)
 {
-   char* command = 0;
-
    // check
 
    if (isEmpty(to) || isEmpty(mailScript))
@@ -1799,17 +1797,10 @@ int P4d::sendAlertMail(const char* to)
       free(html);
    }
 
-   // prepare command and perform system call
+   // send mail
 
-   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
-            alertMailSubject.c_str(), alertMailBody.c_str(),
-            htmlMail ? "text/html" : "text/plain", to);
-
-   tell(eloAlways, "Sending mail '%s' to '%s'", alertMailSubject.c_str(), to);
-
-   system(command);
-
-   free(command);
+   sendMail(to, alertMailSubject.c_str(), alertMailBody.c_str(),
+            htmlMail ? "text/html" : "text/plain");
 
    return success;
 }
@@ -1882,10 +1873,10 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
 }
 
 //***************************************************************************
-// Send Mail
+// Send State Mail
 //***************************************************************************
 
-int P4d::sendMail()
+int P4d::sendStateMail()
 {
    char* webUrl = 0;
    const char* receiver = 0;
@@ -1945,17 +1936,10 @@ int P4d::sendMail()
 
    if (!htmlMail)
    {
-      char* command = 0;
-
-      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
-               subject.c_str(), mailBody.c_str(), "text/plain", receiver);
-
-      system(command);
-      free(command);
+      sendMail(receiver, subject.c_str(), mailBody.c_str(), "text/plain");
    }
    else
    {
-      char* command = 0;
       char* html = 0;
 
       loadHtmlHeader();
@@ -1985,21 +1969,30 @@ int P4d::sendMail()
 
       // send HTML mail
 
-      asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
-               subject.c_str(), html, "text/html", receiver);
+      sendMail(receiver, subject.c_str(), html, "text/html");
 
-      system(command);
-
-      free(command);
       free(html);
    }
 
    //
 
-   tell(eloAlways, "Send mail '%s' with [%s] to '%s'",
-        subject.c_str(), mailBody.c_str(), receiver);
-
    return success;
+}
+
+int P4d::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
+{
+   char* command = 0;
+
+   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
+            subject, body, mimeType, receiver);
+
+   system(command);
+   free(command);
+
+   tell(eloAlways, "Send mail '%s' with [%s] to '%s'",
+        subject, body, receiver);
+
+   return done;
 }
 
 //***************************************************************************
