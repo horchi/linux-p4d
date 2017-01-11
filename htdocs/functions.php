@@ -337,34 +337,39 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
 // Set Start and End Div-Tags
 // ---------------------------------------------------------------------------
 
-function htmTags($new)
+function htmTags($flow)
 {
-  switch ($new)
-  {
-   	case 1: echo   "        <div class=\"rounded-border input\">\n";
-              $end = "";
-              break;
-   	case 2: echo   "        </div>\n        <div class=\"rounded-border input\">\n";
-              $end = "";
-              break;
-   	case 3: echo   "        <div class=\"rounded-border input\">\n" ;
-              $end = "        </div>\n";
-              break;
-   	case 4: echo   "          &nbsp;|&nbsp;\n" ;
-              $end = "        </div>\n";
-              break;
-   	case 5: echo   "          &nbsp;|&nbsp;\n";
-              $end = "";
-              break;
-   	case 6: echo   "        </div>\n        <div class=\"rounded-border input\">\n" ;
-              $end = "        </div>\n";
-              break;
-   	case 7: echo   "        \n";
-              $end = "";
-              break;
-  }
+   $end = "";
 
-  return $end;
+   switch ($flow)
+   {
+      case 1:           // 'begin' input div block
+         echo   "        <div class=\"rounded-border input\">\n";
+         break;
+   	case 2:           // 'end/begin' input div block
+         echo   "        </div>\n        <div class=\"rounded-border input\">\n";
+         break;
+   	case 3:           // 'begin/end' input div block
+         echo   "        <div class=\"rounded-border input\">\n" ;
+         $end = "        </div>\n";
+         break;
+   	case 4:           // 'end' input div block
+         echo   "        \n" ;
+         $end = "        </div>\n";
+         break;
+   	case 5:           // '' input div block
+         echo   "        \n";
+         break;
+   	case 6:           // 'end/begin/end' input div block
+         echo   "        </div>\n        <div class=\"rounded-border input\">\n" ;
+         $end = "        </div>\n";
+         break;
+   	case 7:           // '' input div block
+         echo   "        \n";
+         break;
+   }
+
+   return $end;
 }
 
 // ---------------------------------------------------------------------------
