@@ -84,7 +84,7 @@ int readConfig()
    {
       char* p = strchr(line, '#');
 
-      if (p && *(p-1) && *(p-1) != '\\')
+      if (p && (!*(p-1) || *(p-1) != '\\'))
          *p = 0;
       else if (p && *(p-1) && *(p-1) == '\\')
       {
