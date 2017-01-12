@@ -83,7 +83,16 @@ int readConfig()
    while (getline(&line, &size, f) > 0)
    {
       char* p = strchr(line, '#');
-      if (p) *p = 0;
+
+      if (p && *(p-1) && *(p-1) != '\\')
+         *p = 0;
+      else if (p && *(p-1) && *(p-1) == '\\')
+      {
+         std::string s = strReplace("\\#", "#", line);
+         free(line);
+         line = strdup(s.c_str());
+         size = strlen(line+TB);
+      }
 
       allTrim(line);
 

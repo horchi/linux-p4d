@@ -712,14 +712,11 @@ class cDbConnection
             if (!(mysql = mysql_init(0)))
                return errorSql(this, "attachConnection(init)");
 
-            if (!mysql_real_connect(mysql, dbHost,
-                                    dbUser, dbPass, dbName, dbPort, 0, 0))
+            if (!mysql_real_connect(mysql, dbHost, dbUser, dbPass, dbName, dbPort, 0, 0))
             {
+               errorSql(this, "connecting to database");
+               tell(0, "Error, connecting to database at '%s' on port (%d) failed", dbHost, dbPort);
                close();
-
-               tell(0, "Error, connecting to database at '%s' on port (%d) failed",
-                    dbHost, dbPort);
-
                return fail;
             }
 
@@ -849,6 +846,26 @@ class cDbConnection
             MYSQL_RES* result = mysql_use_result(getMySql());
             mysql_free_result(result);
          }
+      }
+
+      // escapeSqlString - only need to be used in string statements not in bind values!!
+
+      virtual std::string escapeSqlString(const char* str)
+      {
+         std::string result = "";
+
+         if (!isConnected())
+            return result;
+
+         int length = strlen(str);
+         int bufferSize = length*2 + TB;
+
+         char* buffer = (char*)malloc(bufferSize);
+         mysql_real_escape_string(getMySql(), buffer, str, length);
+         result = buffer;
+         free(buffer);
+
+         return result;
       }
 
       virtual int executeSqlFile(const char* file)
