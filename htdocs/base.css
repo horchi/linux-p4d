@@ -183,7 +183,6 @@
 
 .inputTable
 {
-    width: 100%;
     background-color: var(--light1);
     margin-top: 2px;
     color: black;
@@ -200,7 +199,6 @@
 
 .table2Col
 {
-    width: 100%;
     background-color: var(--light1);
     color: var(--buttonFont);
     margin-top: 10px;
