@@ -54,6 +54,7 @@ if ($action == "store")
       $mbod  = "MBod(" . $ID[$i] . ")";
       $act   = ($_POST["Act($ID[$i])"]) ? "A" : "D";
 
+      $deb = mb_strtoupper("xxfffffff");
       $time = time();
       $data = " address=\"$_POST[$adr]\", type=\"" . mb_strtoupper($_POST[$type]) . "\", min=\"$_POST[$min]\", max=\"$_POST[$max]\", maxrepeat=\"$_POST[$int]\", delta=\"$_POST[$delta]\", rangem=\"$_POST[$range]\", maddress=\"$_POST[$madr]\", msubject=\"$_POST[$msub]\", mbody=\"$_POST[$mbod]\", state=\"$act\" ";
 
@@ -77,7 +78,7 @@ if ($action == "store")
 // delete entry
 
 if (substr($action,0,6) == "delete")
-   $update = $mysqli->query("delete from sensoralert where id=" . substr($action,6))
+   $update = $mysqli->query("delete from sensoralert where id=" . substr($action, 6))
      or die("<br/>Error: " . $mysqli->error);
 
 // ------------------
@@ -105,8 +106,8 @@ echo "          <span class=\"inputComment\">
                 Intervall, Zeitraum:</b> Zahl (Minuten)<br /><br />
                 für Betreff und Text können folgende Platzhalter verwendet werden:<br />
                 %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br />
-                mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss
-          </span>\n";
+                mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss\n
+               </span>\n";
 echo "        </div>\n";
 
 $result = $mysqli->query("select * from sensoralert")
@@ -114,53 +115,80 @@ $result = $mysqli->query("select * from sensoralert")
 
 while ($row = $result->fetch_array(MYSQLI_ASSOC))
 {
-   $ID =  $row['id']; $i++; $a = chr($ID+64);
-   $cnt = $cnt . "|" . $row['id']; $s = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
-   echo "        <div class=\"rounded-border input\">\n";
-   echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button>\n";
-   echo "          <input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input> aktiv?\n";
-   echo "          ID:<input        class=\"inputEdit\" id=\"a$a\" style=\"width:77px$s\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>\n";
-   echo "          Typ:<input       class=\"inputEdit\" id=\"b$a\" style=\"width:28px$s\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input>\n";
-   echo "          min:<input       class=\"inputEdit\" id=\"c$a\" style=\"width:42px$s\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input>\n";
-   echo "          max:<input       class=\"inputEdit\" id=\"d$a\" style=\"width:42px$s\" type=\"text\" name=\"max(" . $ID . ")\"   value=\"" . $row['max'] . "\"></input>\n";
-   echo "          Intervall:<input class=\"inputEdit\" id=\"e$a\" style=\"width:42px$s\" type=\"text\" name=\"Int(" . $ID . ")\"   value=\"" . $row['maxrepeat'] . "\"></input>\n";
-   echo "          Änderung:<input  class=\"inputEdit\" id=\"f$a\" style=\"width:33px$s\" type=\"text\" name=\"Delta(" . $ID . ")\" value=\"" . $row['delta'] . "\"></input>\n";
-   echo "          Zeitraum:<input  class=\"inputEdit\" id=\"g$a\" style=\"width:42px$s\" type=\"text\" name=\"Range(" . $ID . ")\" value=\"" . $row['rangem'] . "\"></input>\n";
-   echo "          <br/><br/>\n";
-   echo "          Empfänger:<input class=\"inputEdit\" id=\"h$a\" style=\"width:260px$s\" type=\"text\" name=\"MAdr(" . $ID . ")\"  value=\"" . $row['maddress'] . "\"></input>\n";
-   echo "          Betreff:<input   class=\"inputEdit\" id=\"i$a\" style=\"width:450px$s\" type=\"text\" name=\"MSub(" . $ID . ")\"  value=\"" . $row['msubject'] . "\"></input>\n";
-   echo "          <br/><br/>\n";
-   echo "          <span style=\"vertical-align:top\">Inhalt:</span>\n";
-   echo "          <textarea        class=\"inputEdit\" cols=\"400\" rows=\"7\" id=\"j$a\" style=\"width:805px $s\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea>\n";
-   echo "        </div>\n";
+   $ID =  $row['id'];
+   $i++;
+   $cnt = $cnt . "|" . $row['id'];
+   $style = ($row['state'] == "D") ? "; background-color:#ddd\" readOnly=\"true" : "";
+
+   displayAlertConfig($ID, $row, $style);
 }
 
 $mysqli->close();
 $ID++;
 $cnt = $cnt . "|" . $ID;
 
-echo "        <div class=\"rounded-border input\">\n";
-echo "          <input type=checkbox name=Act(" . $ID . ")" . (($row['state'] == "A") ? " checked" : "") . "></input> aktiv?\n";
-echo "          ID:<input        class=\"inputEdit\" style=\"width:33px\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input>\n";
-echo "          Typ:<input       class=\"inputEdit\" style=\"width:33px\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input>\n";
-echo "          min:<input       class=\"inputEdit\" style=\"width:42px\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input>\n";
-echo "          max:<input       class=\"inputEdit\" style=\"width:42px\" type=\"text\" name=\"max(" . $ID . ")\"   value=\"" . $row['max'] . "\"></input>\n";
-echo "          Intervall:<input class=\"inputEdit\" style=\"width:42px\" type=\"text\" name=\"Int(" . $ID . ")\"   value=\"" . $row['maxrepeat'] . "\"></input>\n";
-echo "          Änderung:<input  class=\"inputEdit\" style=\"width:33px\" type=\"text\" name=\"Delta(" . $ID . ")\" value=\"" . $row['delta'] . "\"></input>\n";
-echo "          Zeitraum:<input  class=\"inputEdit\" style=\"width:42px\" type=\"text\" name=\"Range(" . $ID . ")\" value=\"" . $row['rangem'] . "\"></input>\n";
-echo "          <br/><br/>\n";
-echo "          Empfänger:<input class=\"inputEdit\" style=\"width:260px\" type=\"text\" name=\"MAdr(" . $ID . ")\"  value=\"" . $row['maddress'] . "\"></input>\n";
-echo "          Betreff:<input   class=\"inputEdit\" style=\"width:450px\" type=\"text\" name=\"MSub(" . $ID . ")\"  value=\"" . $row['msubject'] . "\"></input>\n";
-echo "          <br/><br/>\n";
-echo "          <span style=\"vertical-align:top\">Inhalt:</span>\n";
-echo "          <textarea        class=\"inputEdit\" cols=\"400\" rows=\"7\" style=\"width:805px\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea>\n";
-echo "        </div>\n";
-
+displayAlertConfig($ID, $row, "");
 
 echo "        <input type=hidden name=id value=" . ($i+1) . ">\n";
 echo "        <input type=hidden name=cnt value=" . $cnt . ">\n";
 echo "      </form>\n";
 
 include("footer.php");
+
+//***************************************************************************
+// Display Alert Config Block
+//***************************************************************************
+
+function displayAlertConfig($ID, $row, $style)
+{
+   $a = chr($ID+64);
+
+   echo "        <div class=\"rounded-border inputTable\">\n";
+
+
+   echo "         <div>\n";
+   echo "           <span>Aktiv</span>\n";
+   echo "           <span><input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input></span>\n";
+   echo "         </div>\n";
+   echo "         <div>\n";
+   echo "           <span>Intervall:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Int(" . $ID . ")\"   value=\"" . $row['maxrepeat'] . "\"></input>Minuten</span>\n";
+   echo "         </div>\n";
+   echo "         <div>\n";
+   echo "           <span>ID:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input></span>\n";
+   echo "           <span>Typ:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input></span>\n";
+   echo "         </div>\n";
+
+   echo "         <div>\n";
+   echo "           <span>Minimum:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input></span>\n";
+   echo "           <span>Maximum:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"max(" . $ID . ")\"   value=\"" . $row['max'] . "\"></input></span>\n";
+   echo "         </div>\n";
+
+   echo "         <div>\n";
+   echo "           <span>Änderung:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Delta(" . $ID . ")\" value=\"" . $row['delta'] . "\"></input>%</span>\n";
+   echo "           <span>im Zeitraum:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Range(" . $ID . ")\" value=\"" . $row['rangem'] . "\"></input>Minuten</span>\n";
+   echo "         </div>\n";
+
+   echo "         <div>\n";
+   echo "           <span>Empfänger:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:805px$style\" type=\"text\" name=\"MAdr(" . $ID . ")\"  value=\"" . $row['maddress'] . "\"></input></span>\n";
+   echo "         </div>\n";
+   echo "         <div>\n";
+   echo "           <span>Betreff:</span>\n";
+   echo "           <span><input class=\"inputEdit\" style=\"width:805px$style\" type=\"text\" name=\"MSub(" . $ID . ")\"  value=\"" . $row['msubject'] . "\"></input></span>\n";
+   echo "         </div>\n";
+   echo "         <div>\n";
+   echo "           <span>Inhalt:</span>\n";
+   echo "           <span><textarea class=\"inputEdit\" cols=\"400\" rows=\"7\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
+   echo "           <span><button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button></span>\n";
+   echo "         </div>\n";
+   echo "        </div>\n";
+}
 
 ?>

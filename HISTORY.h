@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.10"
-#define VERSION_DATE "12.01.2017"
+#define _VERSION     "0.2.11"
+#define VERSION_DATE "13.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-13:  version 0.2.11
+   - change:  WEBIF: redesign of page 'Sensor-Alerts'
 
 2017-01-12:  version 0.2.10
    - bugfix:  Fixed config problem with # sign in mysql password

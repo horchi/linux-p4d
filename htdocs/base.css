@@ -181,6 +181,23 @@
     text-decoration: none;
 }
 
+.inputTable
+{
+    width: 100%;
+    background-color: var(--light1);
+    margin-top: 2px;
+    color: black;
+    padding: 5px;
+}
+
+.inputTable > div > span
+{
+    width: 12%;
+    min-width: 100px;
+    display: inline-table;
+    text-align: left;
+}
+
 .table2Col
 {
     width: 100%;
