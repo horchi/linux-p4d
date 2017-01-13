@@ -226,7 +226,7 @@ echo "        <button class=\"rounded-border button3\" type=submit name=action v
 
 seperator("Piktogramme<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");
 
-echo "        <div class=\"rounded-border input\" id=\"hlp\" style=\"display:none;\">\n";
+echo "        <div class=\"rounded-border inputTable\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\"\n>";
 echo "          Oben links könnt ihr ein Schema aus der Liste auswählen, die Sensorbezeichnungen aus der 'Aufzeichnung'-Liste anzeigen und<br/>
                 zur besseren Sichtbarkeit die Werte hinterlegen.<br/><br/>

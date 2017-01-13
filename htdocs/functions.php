@@ -251,7 +251,7 @@ function schemaItem($new, $title, $schema)
 
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=checkbox name=\"schema\">\n";
+   echo "          <select class=\"rounded-border input\" name=\"schema\">\n";
 
    $path  = $schema_path . $schema_pattern;
 
@@ -279,12 +279,12 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
 
    if ($ispwd)
    {
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
       echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
-      echo "          <input class=\"inputEdit\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
    }
    else
-      echo "          <input class=\"inputEdit\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -300,7 +300,7 @@ function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <input type=checkbox name=$name$ro" . ($value ? " checked" : "") . "/>\n";
+   echo "          <input type=checkbox class=\"rounded-border input\" name=$name$ro" . ($value ? " checked" : "") . "/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -317,7 +317,7 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=checkbox name=$name$ro>\n";
+   echo "          <select class=\"rounded-border input\" name=$name$ro>\n";
 
    foreach (explode(" ", $options) as $option)
    {
@@ -344,13 +344,13 @@ function htmTags($flow)
    switch ($flow)
    {
       case 1:           // 'begin' input div block
-         echo   "        <div class=\"rounded-border input\">\n";
+         echo   "        <div class=\"rounded-border inputTable\">\n";
          break;
    	case 2:           // 'end/begin' input div block
-         echo   "        </div>\n        <div class=\"rounded-border input\">\n";
+         echo   "        </div>\n        <div class=\"rounded-border inputTable\">\n";
          break;
    	case 3:           // 'begin/end' input div block
-         echo   "        <div class=\"rounded-border input\">\n" ;
+         echo   "        <div class=\"rounded-border inputTable\">\n" ;
          $end = "        </div>\n";
          break;
    	case 4:           // 'end' input div block
@@ -361,7 +361,7 @@ function htmTags($flow)
          echo   "        \n";
          break;
    	case 6:           // 'end/begin/end' input div block
-         echo   "        </div>\n        <div class=\"rounded-border input\">\n" ;
+         echo   "        </div>\n        <div class=\"rounded-border inputTable\">\n" ;
          $end = "        </div>\n";
          break;
    	case 7:           // '' input div block

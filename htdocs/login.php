@@ -44,11 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 echo "      <form action=\"login.php\" method=\"post\">\n";
 echo "        <br/>\n";
-echo "        <div class=\"rounded-border input\">\n";
+echo "        <div class=\"rounded-border inputTable\">\n";
 echo "          <table>\n";
-echo "            <tr><td>User:</td><td><input class=\"inputEdit\" style=\"width:200px\" type=\"text\" name=\"username\"></input></td></tr>\n";
+echo "            <tr><td>User:</td><td><input class=\"rounded-border input\" style=\"width:200px\" type=\"text\" name=\"username\"></input></td></tr>\n";
 echo "            <tr><td></td><td></td></tr>\n";
-echo "            <tr><td>Passwort:</td><td><input class=\"inputEdit\" style=\"width:200px\" type=\"password\" name=\"passwort\"></input></td></tr>\n";
+echo "            <tr><td>Passwort:</td><td><input class=\"rounded-border input\" style=\"width:200px\" type=\"password\" name=\"passwort\"></input></td></tr>\n";
 echo "          </table>\n";
 echo "          <br/>\n";
 echo "          <button class=\"rounded-border button3\" type=submit name=store value=login>Anmelden</button>\n";

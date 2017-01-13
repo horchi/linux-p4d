@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.12"
+#define _VERSION     "0.2.13"
 #define VERSION_DATE "13.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-13:  version 0.2.13
+   - change: WEBIF: Some CSS finetuning again ;)
 
 2017-01-13:  version 0.2.12
    - change:  Improved state handling

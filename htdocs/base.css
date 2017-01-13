@@ -101,22 +101,13 @@
 
 .input
 {
-    background-color: var(--light1);
+    background-color: var(--edit);
     margin-top: 2px;
     color: black;
-    padding: 5px;
+    padding: 3px;
 }
 
 .inputComment
-{
-}
-
-.inputEdit
-{
-    margin: 1px;
-}
-
-.checkbox
 {
 }
 

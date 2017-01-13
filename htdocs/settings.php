@@ -139,7 +139,7 @@ function showTable($type, $tableTitle)
 
       echo "            <tr>\n";
       echo "              <td> $title </td>\n";
-      echo "              <td><input class=\"inputEdit\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
+      echo "              <td><input class=\"rounded-border input\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
       echo "              <td> $unit </td>\n";
 
       if ($type != "UD")

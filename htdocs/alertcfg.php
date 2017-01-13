@@ -95,7 +95,7 @@ echo "        <button class=\"rounded-border button3\" type=\"submit\" name=\"ac
 seperator("Benachrichtigungen bei bestimmten Sensor-Werten", 0);
 seperator("Bedingungen<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");
 
-echo "        <div class=\"rounded-border input\" id=\"hlp\" style=\"display:none;\">\n";
+echo "        <div class=\"rounded-border inputTable\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\">
                 Hier werden die die Bedingungen für die Alarmwerte der einzelnen Sensoren definiert. Ddabei gilt wieder: Sensor-ID und -Typ aus der Tabelle <br/>
                 'Aufzeichnung' entnehmen und hier eintragen.<br/><br/>
@@ -145,7 +145,6 @@ function displayAlertConfig($ID, $row, $style)
 
    echo "        <div class=\"rounded-border inputTable\">\n";
 
-
    echo "         <div>\n";
    echo "           <span>Aktiv</span>\n";
    echo "           <span><input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input></span>\n";
@@ -153,40 +152,40 @@ function displayAlertConfig($ID, $row, $style)
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>Intervall:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Int(" . $ID . ")\"   value=\"" . $row['maxrepeat'] . "\"></input>Minuten</span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Int(" . $ID . ")\"   value=\"" . $row['maxrepeat'] . "\"></input> Minuten</span>\n";
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>ID:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input></span>\n";
    echo "           <span>Typ:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input></span>\n";
    echo "         </div>\n";
 
    echo "         <div>\n";
    echo "           <span>Minimum:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"min(" . $ID . ")\"   value=\"" . $row['min'] . "\"></input></span>\n";
    echo "           <span>Maximum:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"max(" . $ID . ")\"   value=\"" . $row['max'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"max(" . $ID . ")\"   value=\"" . $row['max'] . "\"></input></span>\n";
    echo "         </div>\n";
 
    echo "         <div>\n";
    echo "           <span>Änderung:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Delta(" . $ID . ")\" value=\"" . $row['delta'] . "\"></input>%</span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Delta(" . $ID . ")\" value=\"" . $row['delta'] . "\"></input> %</span>\n";
    echo "           <span>im Zeitraum:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:60px$style\" type=\"text\" name=\"Range(" . $ID . ")\" value=\"" . $row['rangem'] . "\"></input>Minuten</span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Range(" . $ID . ")\" value=\"" . $row['rangem'] . "\"></input> Minuten</span>\n";
    echo "         </div>\n";
 
    echo "         <div>\n";
    echo "           <span>Empfänger:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:805px$style\" type=\"text\" name=\"MAdr(" . $ID . ")\"  value=\"" . $row['maddress'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:805px$style\" type=\"text\" name=\"MAdr(" . $ID . ")\"  value=\"" . $row['maddress'] . "\"></input></span>\n";
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>Betreff:</span>\n";
-   echo "           <span><input class=\"inputEdit\" style=\"width:805px$style\" type=\"text\" name=\"MSub(" . $ID . ")\"  value=\"" . $row['msubject'] . "\"></input></span>\n";
+   echo "           <span><input class=\"rounded-border input\" style=\"width:805px$style\" type=\"text\" name=\"MSub(" . $ID . ")\"  value=\"" . $row['msubject'] . "\"></input></span>\n";
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>Inhalt:</span>\n";
-   echo "           <span><textarea class=\"inputEdit\" rows=\"5\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
+   echo "           <span><textarea class=\"rounded-border input\" rows=\"5\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
    echo "         </div>\n";
    echo "        </div>\n";
 }

@@ -251,7 +251,7 @@ function colorSchemeItem($new, $title)
 
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=checkbox name=\"style\">\n";
+   echo "          <select class=\"rounded-border input\" name=\"style\">\n";
 
    foreach (glob("stylesheet-*.css") as $filename)
    {
@@ -299,7 +299,7 @@ function heatingTypeItem($new, $title, $type)
 
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=checkbox name=\"heatingType\">\n";
+   echo "          <select class=\"rounded-border input\" name=\"heatingType\">\n";
 
    $path = "img/type/";
 

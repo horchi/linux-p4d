@@ -129,8 +129,8 @@ function showTable($tableTitle)
       echo "              <td>$value$unit</td>\n";
       echo "              <td>$time</td>\n";
 
-      echo "              <td><input class=\"inputEdit\" name=\"address[]\" type=\"text\" value=\"$address\"/></td>\n";
-      echo "              <td><input class=\"inputEdit\" name=\"atype[]\" type=\"text\" value=\"$atype\"/></td>\n";
+      echo "              <td><input class=\"rounded-border input\" name=\"address[]\" type=\"text\" value=\"$address\"/></td>\n";
+      echo "              <td><input class=\"rounded-border input\" name=\"atype[]\" type=\"text\" value=\"$atype\"/></td>\n";
       echo "            </tr>\n";
    }
 

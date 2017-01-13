@@ -87,7 +87,7 @@ if ($edit != "")
       {
          echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
          echo "        <br/><br/>\n";
-         echo "        <div class=\"rounded-border input\">\n";
+         echo "        <div class=\"rounded-border inputTable\">\n";
 
          if ($isTimeRange)
             echo "          " . $title . ":  <span style=\"color:blue\">$value - $valueTo</span><br/><br/>\n";
@@ -95,12 +95,12 @@ if ($edit != "")
             echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
 
          echo "          <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
-         echo "          <input class=\"inputEdit\" type=int name=new_value value=$value></input>\n";
+         echo "          <input class=\"rounded-border input\" type=int name=new_value value=$value></input>\n";
 
          if ($isTimeRange)
          {
             echo "          <span style=\"color:blue\"> - </span>\n";
-            echo "          <input class=\"inputEdit\" type=int name=new_value_to value=$valueTo></input>\n";
+            echo "          <input class=\"rounded-border input\" type=int name=new_value_to value=$valueTo></input>\n";
             echo "          ('nn:nn - nn:nn' zum deaktivieren des Zeitbereichs)\n";
          }
          else
