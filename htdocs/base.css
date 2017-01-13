@@ -205,7 +205,7 @@
     color: var(--buttonFont);
     margin-top: 10px;
     padding: 0;
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .table2Col > div:nth-child(even)
@@ -217,7 +217,7 @@
 {
     width: 35%;
     min-width: 280px;
-    padding: 8px 10px 8px 10px;
+    padding: 6px 10px 6px 10px;
     display: inline-block;
     text-align: left;
 }
