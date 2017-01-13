@@ -186,7 +186,7 @@ function displayAlertConfig($ID, $row, $style)
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>Inhalt:</span>\n";
-   echo "           <span><textarea class=\"inputEdit\" cols=\"400\" rows=\"7\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
+   echo "           <span><textarea class=\"inputEdit\" rows=\"5\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
    echo "         </div>\n";
    echo "        </div>\n";
 }
