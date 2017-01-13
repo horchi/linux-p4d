@@ -149,6 +149,7 @@ function displayAlertConfig($ID, $row, $style)
    echo "         <div>\n";
    echo "           <span>Aktiv</span>\n";
    echo "           <span><input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input></span>\n";
+   echo "           <span><button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button></span>\n";
    echo "         </div>\n";
    echo "         <div>\n";
    echo "           <span>Intervall:</span>\n";
@@ -186,7 +187,6 @@ function displayAlertConfig($ID, $row, $style)
    echo "         <div>\n";
    echo "           <span>Inhalt:</span>\n";
    echo "           <span><textarea class=\"inputEdit\" cols=\"400\" rows=\"7\" style=\"width:805px$style\" name=\"MBod(" . $ID . ")\">" . $row['mbody'] . "</textarea></span>\n";
-   echo "           <span><button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button></span>\n";
    echo "         </div>\n";
    echo "        </div>\n";
 }
