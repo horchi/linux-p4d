@@ -97,15 +97,15 @@ seperator("Bedingungen<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe
 
 echo "        <div class=\"rounded-border input\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\">
-                Hier formulierst du die Bedingungen (Alarmwerte) für die einzelnen Sensoren, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
-                'Aufzeichnung' entnehmen und hier eintragen.<br /><br />
-                <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br />
+                Hier werden die die Bedingungen für die Alarmwerte der einzelnen Sensoren definiert. Ddabei gilt wieder: Sensor-ID und -Typ aus der Tabelle <br/>
+                'Aufzeichnung' entnehmen und hier eintragen.<br/><br/>
+                <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp;
-                max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br />
-                <b>Zulässige Werte:</b><br /><b>ID:</b> Zahl (auch Hex) | <b>Typ:</b> UD, VA, DI, DO, W1 | <b>min, max, Änderung:</b> Zahl | <b>
-                Intervall, Zeitraum:</b> Zahl (Minuten)<br /><br />
-                für Betreff und Text können folgende Platzhalter verwendet werden:<br />
-                %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br />
+                max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br/>
+                <b>Zulässige Werte:</b><br/><b>ID:</b> Zahl (auch Hex) | <b>Typ:</b> UD, VA, DI, DO, W1 | <b>min, max, Änderung:</b> Zahl | <b>
+                Intervall, Zeitraum:</b> Zahl (Minuten)<br/><br/>
+                für Betreff und Text können folgende Platzhalter verwendet werden:<br/>
+                %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br/>
                 mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss\n
                </span>\n";
 echo "        </div>\n";

@@ -31,13 +31,6 @@ class FroelingService
          loOrNot
       };
 
-      enum WorkingState
-      {
-         wsUnknown = na,
-
-         wsError
-      };
-
       struct StateInfo
       {
          int code;
@@ -48,6 +41,7 @@ class FroelingService
 
       static StateInfo stateInfos[];
       static const char* toTitle(int code);
+      static int isError(int code);
 
       // -------------------------
       // COM1 (service interface)

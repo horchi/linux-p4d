@@ -140,7 +140,7 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "        <input type=radio name=showtext value=Value checked/>Wert\n";
    echo "        <input type=radio name=showtext value=Text/>Text\n";
    echo "      </span>\n";
-   echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br /> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
+   echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br/> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
 }
 else
 {
@@ -235,10 +235,10 @@ echo "          Oben links könnt ihr ein Schema aus der Liste auswählen, die S
                 <b>Wichtig:</b> damit die Pumpen im AUS-Zustand in die richtige Richtung zeigen, muss in der 'Aufzeichnung'-Liste<br/>
                 im 'Bezeichnung'-Feld der jeweiligen ID die Richtung angehangen werden (Bsp: 'HKP-1-up', oder nur '-up', '-down', '-left', '-right')!<br/>
                 Sonst werden die Pumpen im AUS-Zustand immer 'nach oben zeigend' verwendet!<br/><br/>
-                Unten notiert ihr die IDs (kommagetrennt) der Pumpen, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle <br />
-                'Aufzeichnung' entnehmen und hier eintragen.<br /><br />
-                <b>Achtung:</b> Um Lüfter und Pumpen mit separaten Grafiken zu bedienen und dennoch Übersichtlichkeit zu wahren,<br />
-                gebt ihr bitte die Lüfter in Klammern an. <b>Beispiel (VA):</b> 140,141,(15),143,...<br />
+                Unten notiert ihr die IDs (kommagetrennt) der Pumpen, dabei gilt wieder: Sensor-ID und Typ aus der Tabelle<br/>
+                'Aufzeichnung' entnehmen und hier eintragen.<br/><br/>
+                <b>Achtung:</b> Um Lüfter und Pumpen mit separaten Grafiken zu bedienen und dennoch Übersichtlichkeit zu wahren,<br/>
+                gebt ihr bitte die Lüfter in Klammern an. <b>Beispiel (VA):</b> 140,141,(15),143,...<br/>
                 <b>das bedeutet:</b> 140,141,143 sind Pumpen - (15) ist der Saugzug-Ventilator <br/>";
 echo "          </span>\n";
 echo "        </div><br/>\n";

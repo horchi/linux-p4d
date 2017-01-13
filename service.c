@@ -20,8 +20,8 @@ const char* FroelingService::nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL
 
 FroelingService::StateInfo FroelingService::stateInfos[] =
 {
-   {  wsError,  "Störung"        }, 
-   {  1,        "Brenner aus"    }, 
+   {  0,        "Störung"        },
+   {  1,        "Brenner aus"    },
    {  2,        "Anheizen"       },
    {  3,        "Heizen"         },
    {  4,        "Feuerhaltung"   },
@@ -85,7 +85,7 @@ FroelingService::StateInfo FroelingService::stateInfos[] =
    { 70,        "Onlinereinigen" },
    { 72,        "SH Heizen" },
 
-   { wsUnknown, "" }
+   { na,        "" }
 };
 
 //***************************************************************************
@@ -99,4 +99,17 @@ const char* FroelingService::toTitle(int code)
          return stateInfos[i].title;
 
    return "unknown";
+}
+
+int FroelingService::isError(int code)
+{
+   const char* title = toTitle(code);
+
+   if (!isEmpty(title))
+   {
+      if (strcasecmp(title, "Fehler") == 0 || strcasecmp(title, "Störung") == 0)
+         return yes;
+   }
+
+   return no;
 }

@@ -46,7 +46,7 @@ P4d::P4d()
    selectHmSysVarByAddr = 0;
    cleanupJobs = 0;
 
-   nextAt = time(0);
+   nextAt = time(0);           // intervall for 'reading values'
    startedAt = time(0);
    nextAggregateAt = 0;
    nextTimeSyncAt = 0;
@@ -1129,7 +1129,7 @@ int P4d::loop()
       {
          sem->p();
          serial->close();
-         tell(eloAlways, "Error reading serial interface, repopen now!");
+         tell(eloAlways, "Error reading serial interface, reopen now!");
          status = serial->open(ttyDeviceSvc);
          sem->v();
 
@@ -1167,7 +1167,7 @@ int P4d::loop()
       if (status != success)
       {
          serial->close();
-         tell(eloAlways, "Error reading serial interface");
+         tell(eloAlways, "Error reading serial interface, reopen now");
          serial->open(ttyDeviceSvc);
 
          continue;
@@ -1217,6 +1217,8 @@ int P4d::updateState(Status* state)
 
    if (status != success)
       return status;
+
+   tell(eloDetail, "... got (%d) '%s'", state->state, toTitle(state->state));
 
    // ----------------------
    // check time sync
@@ -1894,7 +1896,7 @@ int P4d::sendStateMail()
 
    // build mail ..
 
-   if (currentState.state == wsError)
+   if (isError(currentState.state))
    {
       Fs::ErrorInfo e;
 
