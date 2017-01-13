@@ -1218,7 +1218,8 @@ int P4d::updateState(Status* state)
    if (status != success)
       return status;
 
-   tell(eloDetail, "... got (%d) '%s'", state->state, toTitle(state->state));
+   tell(eloDetail, "... got (%d) '%s'%s", state->state, toTitle(state->state),
+        isError(state->state) ? " -> Störung" : "");
 
    // ----------------------
    // check time sync
