@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.14"
+#define _VERSION     "0.2.15"
 #define VERSION_DATE "15.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-15:  version 0.2.15
+   - buttons: WEBIF: Fixed store of mail setting
 
 2017-01-15:  version 0.2.14
    - change: WEBIF: Down override selected style with install-web

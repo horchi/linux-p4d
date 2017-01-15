@@ -224,7 +224,7 @@ seperator("p4d Konfiguration", 0);
 seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
 $a = ($_SESSION['mail']) ? "" : "disabled=true";
 $ro = ($_SESSION['mail']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
-configBoolItem(1, "Mail Benachrichtigung", "mail onClick=\"disableContent('htM',this); readonlyContent('Mail',this)\"", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
+configBoolItem(1, "Mail Benachrichtigung", "mail\" onClick=\"disableContent('htM',this); readonlyContent('Mail',this)", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
 configBoolItem(5, "HTML-Mail?", "htmlMail id='htM'", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
 configStrItem(2, "Status Mail Empfänger", "stateMailTo id=Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
 configStrItem(2, "Fehler Mail Empfänger", "errorMailTo id=Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
@@ -235,7 +235,7 @@ configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webU
 
 seperator("Sonstiges", 0, "seperatorTitle2");
 $ro = ($_SESSION['tsync']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
-configBoolItem(1, "Zeitsynchronisation", "tsync onClick=\"readonlyContent('timeLeak',this)\"", $_SESSION['tsync'], "tägl. 23:00Uhr");
+configBoolItem(1, "Zeitsynchronisation", "tsync\" onClick=\"readonlyContent('timeLeak',this)", $_SESSION['tsync'], "tägl. 23:00Uhr");
 configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak id='timeLeak'", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
 
 echo "      </form>\n";

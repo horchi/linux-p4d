@@ -1757,12 +1757,12 @@ int P4d::updateErrors()
          tableErrors->setValue("ID", lastId);
 
          if (!tableErrors->find())
-            tell(0, "Warning, error (%d) not found", lastId);
+            tell(eloDebug, "Debug: Error id (%d) not found", lastId);
          else if (e.state != 1)
             update = yes;
       }
 
-      tell(0, "got error '%s' %d '%s' %d [%s]; lastId is %d (%s)",
+      tell(eloDebug, "Debug: Got error '%s' %d '%s' %d [%s]; lastId is %d (%s)",
            l2pTime(e.time).c_str(), e.number, Fs::errState2Text(e.state), e.info, e.text,
            lastId, update ? "update" : "insert");
 

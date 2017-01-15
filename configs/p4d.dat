@@ -163,6 +163,7 @@ Table errors
    INFO                 ""  info                 Int         10 Data,
    STATE                ""  state                Ascii       10 Data,
    TEXT                 ""  text                 Ascii      100 Data,
+   MAILCNT              ""  mailcnt              Int          0 Data,
 }
 
 // ----------------------------------------------------------------
