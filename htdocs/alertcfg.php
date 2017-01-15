@@ -97,7 +97,7 @@ seperator("Bedingungen<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe
 
 echo "        <div class=\"rounded-border inputTable\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\">
-                Hier werden die die Bedingungen für die Alarmwerte der einzelnen Sensoren definiert. Ddabei gilt wieder: Sensor-ID und -Typ aus der Tabelle <br/>
+                Hier werden die die Bedingungen für die Alarmwerte der einzelnen Sensoren definiert. Dabei gilt wieder: Sensor-ID und -Typ aus der Tabelle <br/>
                 'Aufzeichnung' entnehmen und hier eintragen.<br/><br/>
                 <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp;

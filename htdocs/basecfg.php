@@ -51,8 +51,7 @@ else if ($action == "store")
    if (isset($_POST["heatingType"]))
       $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
 
-   if (isset($_POST["stateAni"]))
-      $_SESSION['stateAni'] = $_SESSION['stateAni'];
+   $_SESSION['stateAni'] = isset($_POST['stateAni']);
 
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
@@ -66,7 +65,7 @@ else if ($action == "store")
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
 
-   $_SESSION['chartXLines'] =  isset($_POST["chartXLines"]);
+   $_SESSION['chartXLines'] = isset($_POST["chartXLines"]);
 
    if (isset($_POST["chartDiv"]))
       $_SESSION['chartDiv'] = htmlspecialchars($_POST["chartDiv"]);
@@ -89,13 +88,15 @@ else if ($action == "store")
 
    // ---
 
-   if (isset($_POST["mail"])) {
+   if (isset($_POST["mail"]))
+   {
       $_SESSION['mail'] = true;
       if (isset($_POST["htmlMail"]))
          $_SESSION['htmlMail'] = true;
       else
          $_SESSION['htmlMail'] = false;
-   } else {
+   } else
+   {
       $_SESSION['mail'] = false;
    }
 
@@ -227,7 +228,7 @@ configBoolItem(1, "Mail Benachrichtigung", "mail onClick=\"disableContent('htM',
 configBoolItem(5, "HTML-Mail?", "htmlMail id='htM'", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
 configStrItem(2, "Status Mail Empfänger", "stateMailTo id=Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
 configStrItem(2, "Fehler Mail Empfänger", "errorMailTo id=Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
-configStrItem(2, "Status Mail für folgende Stati", "stateMailStates id=Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
+configStrItem(2, "Status Mail für folgende Status", "stateMailStates id=Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
 configStrItem(2, "p4d sendet Mails über das Skript", "mailScript id=Mail4", $_SESSION['mailScript'], "", 400, $ro);
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=mailtest>Test Mail</button>\n";
 configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);

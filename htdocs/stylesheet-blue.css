@@ -16,9 +16,15 @@
     --edit: #f9f9ef;
 
     --borderColor: blue;
-    --borderColorBoxedValue: blue;
     --borderRadius: 3px;
-    --borderRadiusBoxedValue: 3px;
+
+    --borderColorSchemaValue: blue;
+    --borderRadiusSchemaValue: 3px;
+    --borderStyleSchemaValue: solid;
+
+    --borderColorTableButton: blue;
+    --colorTableButton: beige;
+    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: black;

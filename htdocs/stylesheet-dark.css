@@ -16,9 +16,15 @@
     --edit: #f9f9ef;
 
     --borderColor: black;
-    --borderColorBoxedValue: white;
     --borderRadius: 0px;
-    --borderRadiusBoxedValue: 3px;
+
+    --borderColorSchemaValue: white;
+    --borderRadiusSchemaValue: 3px;
+    --borderStyleSchemaValue: solid;
+
+    --colorTableButton: none;
+    --borderColorTableButton: white;
+    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: white;

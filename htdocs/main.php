@@ -170,7 +170,7 @@ printHeader(60);
         if ($row['f_unit'] == 'T')
            $value = str_replace($wd_value, $wd_disp, $text);
 
-        $url = "<a class=\"boxedValueBorder boxedValue\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
+        $url = "<a class=\"tableButton\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
            . $from . "&range=" . $srange . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
            . $_SESSION['chartDiv'] . " ','_blank',"
            . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";

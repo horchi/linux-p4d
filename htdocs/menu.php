@@ -337,9 +337,9 @@ function showChilds($parnt, $level)
          if ($child)
             echo "            <td><center><b>$title</b></center></td>\n";
          elseif ($type == 0x07 || $type == 0x08 || $type == 0x40 || $type == 0x39 || $type == 0x32 || $type == 0x0a)
-            echo "            <td><button class=buttont type=submit name=edit value=$id>$title</button></td>\n";
+            echo "            <td><button class=tableButton type=submit name=edit value=$id>$title</button></td>\n";
          else
-            echo "            <td>&nbsp;&nbsp;$title</td>\n";
+            echo "            <td>$title</td>\n";
 
          if ($value != "on (A)")
             echo "            <td style=\"color:blue\">$value</td>\n";
@@ -426,7 +426,7 @@ function showChilds($parnt, $level)
                   echo "            <td>$txtu2</td>\n";
                }
 
-               echo "            <td><button class=buttont type=submit name=edit value=tr#$trAddr#$n#$wday>Bereich $n</button></td>\n";
+               echo "            <td><button class=tableButton type=submit name=edit value=tr#$trAddr#$n#$wday>Bereich $n</button></td>\n";
                echo "             <td style=\"color:blue\">$from - $to</td>\n";
                echo "           </tr>\n";
             }

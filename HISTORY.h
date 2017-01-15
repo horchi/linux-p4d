@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.13"
-#define VERSION_DATE "13.01.2017"
+#define _VERSION     "0.2.14"
+#define VERSION_DATE "15.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,14 @@
 
 /*
  * ------------------------------------
+
+2017-01-15:  version 0.2.14
+   - change: WEBIF: Down override selected style with install-web
+   - change: WEBIF: Stylesheet (CSS) modifications for schema-values and table-buttons
+   - change: Error list now shows only one line per error with the newest state
+   - bugfix: WEBIF: Fixed charts34
+   - bugfix: WEBIF: Fixed animated status gif
+   - bugfix: WEBIF: Fixed schema config (selection of Text/Value)
 
 2017-01-13:  version 0.2.13
    - change: WEBIF: Some CSS finetuning again ;)
@@ -27,7 +35,7 @@
    - change:  WEBIF: redesign of page 'Sensor-Alerts'
 
 2017-01-12:  version 0.2.10
-   - bugfix:  Fixed config problem with # sign in mysql password
+   - bugfix:  Fixed config problem with '#' sign in mysql password
 
 2017-01-11:  version 0.2.9
    - added:  Mail check button

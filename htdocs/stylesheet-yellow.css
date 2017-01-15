@@ -16,9 +16,15 @@
     --edit: #f9f9ef;
 
     --borderColor: #f1caa4;
-    --borderColorBoxedValue: black;
     --borderRadius: 3px;
-    --borderRadiusBoxedValue: 3px;
+
+    --borderColorSchemaValue: black;
+    --borderRadiusSchemaValue: 3px;
+    --borderStyleSchemaValue: solid;
+
+    --borderColorTableButton: blue;
+    --colorTableButton: beige;
+    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: black;
@@ -28,9 +34,4 @@ Body
 {
     font-family: Helvetica,Arial,sans-serif;
     font-size: 1.0em;
-}
-
-.content
-{
-    margin: 5px;
 }

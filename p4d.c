@@ -1741,12 +1741,30 @@ int P4d::updateErrors()
 {
    int status;
    Fs::ErrorInfo e;
+   int lastId = na;
+   int lastError = na;
 
    tableErrors->truncate();
 
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
    {
+      int update = no;
+
       tableErrors->clear();
+
+      if (lastId != na && e.number == lastError)
+      {
+         tableErrors->setValue("ID", lastId);
+
+         if (!tableErrors->find())
+            tell(0, "Warning, error (%d) not found", lastId);
+         else if (e.state != 1)
+            update = yes;
+      }
+
+      tell(0, "got error '%s' %d '%s' %d [%s]; lastId is %d (%s)",
+           l2pTime(e.time).c_str(), e.number, Fs::errState2Text(e.state), e.info, e.text,
+           lastId, update ? "update" : "insert");
 
       tableErrors->setValue("TIME", e.time);
       tableErrors->setValue("NUMBER", e.number);
@@ -1754,7 +1772,13 @@ int P4d::updateErrors()
       tableErrors->setValue("STATE", Fs::errState2Text(e.state));
       tableErrors->setValue("TEXT", e.text);
 
-      tableErrors->insert();
+      if (update)
+         tableErrors->update();
+      else
+         tableErrors->insert();
+
+      lastId = tableErrors->getLastInsertId();
+      lastError = e.number;
    }
 
    return success;

@@ -81,6 +81,9 @@ install-web:
 		mkdir -p "$(WEBDEST)"; \
 		chmod a+rx $(WEBDEST); \
 	fi
+	if test -f "$(WEBDEST)/stylesheet.css"; then \
+		cp -Pp "$(WEBDEST)/stylesheet.css" "$(WEBDEST)/stylesheet.css.save"; \
+	fi
 	if test -f "$(WEBDEST)/config.php"; then \
 		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.save"; \
 	fi
@@ -88,6 +91,9 @@ install-web:
 	if test -f "$(WEBDEST)/config.php.save"; then \
 		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist"; \
 		cp -p "$(WEBDEST)/config.php.save" "$(WEBDEST)/config.php"; \
+	fi
+	if test -f "$(WEBDEST)/stylesheet.css.save"; then \
+		cp -Pp "$(WEBDEST)/stylesheet.css.save" "$(WEBDEST)/stylesheet.css"; \
 	fi
 	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > $(WEBDEST)/header.php; \
 	chmod -R a+r $(WEBDEST); \

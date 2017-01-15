@@ -284,7 +284,7 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
       echo "          <input class=\"rounded-border input\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
    }
    else
-      echo "          <input class=\"rounded-border input\" style='width:" . $width . "px$ro type=\"text\" name=$name value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style='width:" . $width . "px$ro type=\"text\" name=\"$name\" value=\"$value\"/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -300,7 +300,7 @@ function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <input type=checkbox class=\"rounded-border input\" name=$name$ro" . ($value ? " checked" : "") . "/>\n";
+   echo "          <input type=checkbox class=\"rounded-border input\" name=\"" . $name . $ro . "\"" . ($value ? " checked" : "") . "/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -317,7 +317,7 @@ function configOptionItem($new, $title, $name, $value, $options, $comment = "", 
 {
    $end = htmTags($new);
    echo "          $title:\n";
-   echo "          <select class=\"rounded-border input\" name=$name$ro>\n";
+   echo "          <select class=\"rounded-border input\" name=\"" . $name . $ro . "\">\n";
 
    foreach (explode(" ", $options) as $option)
    {
@@ -380,30 +380,30 @@ function getStateImage($state, $p4dstate)
 {
   if ($state == 0 || $p4dstate != 0)
      $img = "img/state/state-error.gif";
-  elseif ($state == 1)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
-  elseif ($state == 2)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
-  elseif ($state == 3)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
-  elseif ($state == 4)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
-  elseif ($state == 5)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
-  elseif ($state == 6)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
-  elseif ($state == 7)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
-  elseif ($state == 8)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
-  elseif ($state == 9)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
-  elseif ($state == 15 || $state == 70 || $state == 69)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
-  elseif (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
-  elseif ($state == 60 || $state == 61  || $state == 72)
-     $img = (isset($_SESSION['stateAni']) && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
+  else if ($state == 1)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+  else if ($state == 2)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+  else if ($state == 3)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-fire.gif")) ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
+  else if ($state == 4)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-firehold.gif")) ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
+  else if ($state == 5)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+  else if ($state == 6)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-dooropen.gif")) ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
+  else if ($state == 7)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-preparation.gif")) ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
+  else if ($state == 8)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-warmup.gif")) ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
+  else if ($state == 9)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-heatup.gif")) ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+  else if ($state == 15 || $state == 70 || $state == 69)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-clean.gif")) ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
+  else if (($state >= 10 && $state <= 14) || $state == 35 || $state == 16)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-wait.gif")) ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
+  else if ($state == 60 || $state == 61  || $state == 72)
+     $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-shfire.gif")) ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
   else
      $img = "img/type/heating-" . $_SESSION['heatingType'] . ".png";
 
