@@ -100,10 +100,12 @@ function printHeader($refresh = 0)
    if ($refresh)
       echo "    <meta http-equiv=\"refresh\" content=\"$refresh\"/>\n";
 
+   $img = "img/type/heating-" . $_SESSION['heatingType'] . ".png";
    echo "    <meta name=\"author\" content=\"Jörg Wendel\"/>\n";
    echo "    <meta name=\"copyright\" content=\"Jörg Wendel\"/>\n";
    echo "    <meta name=\"viewport\" content=\"initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1\"/>\n";
-   echo "    <link rel=\"shortcut icon\" href=\"" . $_SESSION['heatingType'] . ".ico\" type=\"image/x-icon\"/>\n";
+   echo "    <link rel=\"shortcut icon\" href=\"img/type/heating-" . $_SESSION['heatingType'] . ".png\" type=\"image/png\"/>\n";
+   echo "    <link rel=\"icon\" href=\"img/type/heating-" . $_SESSION['heatingType'] . ".png\" type=\"image/png\"/>\n";
    echo "    <link rel=\"stylesheet\" type=\"text/css\" href=\"stylesheet.css\"/>\n";
    echo "    <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script>\n";
    echo "    <title>Fröling " . $_SESSION['heatingType'] . "</title>\n";
