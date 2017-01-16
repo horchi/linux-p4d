@@ -155,15 +155,17 @@ Table config
 
 Table errors
 {
-   ID                   ""  id                   UInt        11 Primary|Autoinc,
-   INSSP                ""  inssp                Int          0 Meta,
-   UPDSP                ""  updsp                Int          0 Meta,
-   TIME                 ""  time                 DateTime     0 Data,
-   NUMBER               ""  number               Int         10 Data,
-   INFO                 ""  info                 Int         10 Data,
-   STATE                ""  state                Ascii       10 Data,
-   TEXT                 ""  text                 Ascii      100 Data,
-   MAILCNT              ""  mailcnt              Int          0 Data,
+   ID                   ""                id                   UInt        11 Primary|Autoinc,
+   INSSP                ""                inssp                Int          0 Meta,
+   UPDSP                ""                updsp                Int          0 Meta,
+   TIME1                "time gekommen"   time1                DateTime     0 Data,
+   TIME4                "time gegangen"   time4                DateTime     0 Data,
+   TIME2                "time quittiert"  time2                DateTime     0 Data,
+   NUMBER               ""                number               Int         10 Data,
+   INFO                 ""                info                 Int         10 Data,
+   STATE                ""                state                Ascii       10 Data,
+   TEXT                 ""                text                 Ascii      100 Data,
+   MAILCNT              ""                mailcnt              Int          0 Data,
 }
 
 // ----------------------------------------------------------------

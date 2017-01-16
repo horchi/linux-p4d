@@ -1741,45 +1741,74 @@ int P4d::updateErrors()
 {
    int status;
    Fs::ErrorInfo e;
-   int lastId = na;
-   int lastError = na;
+   char timeField[5+TB] = "";
+   time_t timeOne = 0;
 
-   tableErrors->truncate();
+   tell(eloAlways, "Updateing error list");
 
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
    {
-      int update = no;
+      int insert = yes;
 
-      tableErrors->clear();
+      sprintf(timeField, "TIME%d", e.state);
 
-      if (lastId != na && e.number == lastError)
+      tell(eloDebug, "Debug: Error %d / %d '%s' '%s' %d [%s]; (for %s)",
+           e.number, e.state, l2pTime(e.time).c_str(),  Fs::errState2Text(e.state), e.info, e.text,
+           timeField);
+
+      if (e.state == 1)
+         timeOne = e.time;
+
+      if (!timeOne)
+         continue;
+
+      if (timeOne)
       {
-         tableErrors->setValue("ID", lastId);
+         cDbStatement* select = new cDbStatement(tableErrors);
+         select->build("select ");
+         select->bindAllOut();
+         select->build(" from %s where ", tableErrors->TableName());
+         select->bind("NUMBER", cDBS::bndIn | cDBS::bndSet);
+         select->bind("TIME1", cDBS::bndIn | cDBS::bndSet, " and ");
 
-         if (!tableErrors->find())
-            tell(eloDebug, "Debug: Error id (%d) not found", lastId);
-         else if (e.state != 1)
-            update = yes;
+         if (select->prepare() != success)
+         {
+            tell(eloAlways, "prepare failed!");
+            delete select;
+            continue;
+         }
+
+         tableErrors->clear();
+         tableErrors->setValue("NUMBER", e.number);
+         tableErrors->setValue("TIME1", timeOne);
+
+         insert = !select->find();
+         delete select;
       }
 
-      tell(eloDebug, "Debug: Got error '%s' %d '%s' %d [%s]; lastId is %d (%s)",
-           l2pTime(e.time).c_str(), e.number, Fs::errState2Text(e.state), e.info, e.text,
-           lastId, update ? "update" : "insert");
+      tableErrors->clearChanged();
 
-      tableErrors->setValue("TIME", e.time);
-      tableErrors->setValue("NUMBER", e.number);
-      tableErrors->setValue("INFO", e.info);
-      tableErrors->setValue("STATE", Fs::errState2Text(e.state));
-      tableErrors->setValue("TEXT", e.text);
+      if (insert
+          || (e.state == 2 && !tableErrors->hasValue("STATE", Fs::errState2Text(2)))
+          || (e.state == 4 && tableErrors->hasValue("STATE", Fs::errState2Text(1))))
+      {
+         tableErrors->setValue(timeField, e.time);
+         tableErrors->setValue("STATE", Fs::errState2Text(e.state));
+         tableErrors->setValue("NUMBER", e.number);
+         tableErrors->setValue("INFO", e.info);
+         tableErrors->setValue("TEXT", e.text);
+      }
 
-      if (update)
-         tableErrors->update();
-      else
+      if (insert)
          tableErrors->insert();
+      else if (tableErrors->getChanges())
+         tableErrors->update();
 
-      lastId = tableErrors->getLastInsertId();
-      lastError = e.number;
+      if (e.state == 2)
+         timeOne = 0;
    }
+
+   tell(eloAlways, "Updateing error list done");
 
    return success;
 }

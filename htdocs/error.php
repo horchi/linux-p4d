@@ -20,7 +20,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 
    seperator("Fehlerspeicher", 0);
 
-   $result = $mysqli->query("select * from errors order by time desc")
+   $result = $mysqli->query("select * from errors order by time1 desc")
       or die("<br/>Error" . $mysqli->error);
 
    $num = $result->num_rows;
@@ -29,16 +29,19 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 
    while ($i < $num)
    {
-      $time    = mysqli_result($result, $i, "time");
-      $nr      = mysqli_result($result, $i, "number");
+      $time1   = mysqli_result($result, $i, "time1");
+      $time4   = mysqli_result($result, $i, "time4");
+      $time2   = mysqli_result($result, $i, "time2");
+      $errornr = mysqli_result($result, $i, "number");
       $state   = mysqli_result($result, $i, "state");
-      $text    = mysqli_result($result, $i, "text");
+      $errText = mysqli_result($result, $i, "text");
+
+      $time = max(max($time1, $time4), $time2);
 
       echo "         <div>\n";
       echo "           <span>$time</span>\n";
-      echo "           <span>$nr</span>\n";
+      echo "           <span>$errText</span>\n";
       echo "           <span>$state</span>\n";
-      echo "           <span>$text</span>\n";
       echo "         </div>\n";
 
       $i++;

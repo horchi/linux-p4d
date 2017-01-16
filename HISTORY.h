@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.16"
+#define _VERSION     "0.2.17"
 #define VERSION_DATE "16.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-16:  version 0.2.17
+   - change: prepared error list for 'Störungs-Mail feature
 
 2017-01-16:  version 0.2.16
    - change: WEBIF: Improved browser icon compatibility

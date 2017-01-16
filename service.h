@@ -176,8 +176,8 @@ class FroelingService
          switch (state)
          {
             case 1:  return "gekommen";
-            case 2:  return "quittiert";
             case 4:  return "gegangen";
+            case 2:  return "quittiert";
             default: return "unknown";
          }
       }

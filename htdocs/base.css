@@ -239,7 +239,7 @@ table.tableMultiCol tr:nth-child(even)
 
 .tableMultiCol > div > span
 {
-    width: 21%;
+    width: 25%;
     padding: 5px 10px 5px 10px;
     display: inline-block;
     text-align: left;
