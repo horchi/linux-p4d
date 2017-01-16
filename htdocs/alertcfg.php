@@ -102,7 +102,7 @@ echo "          <span class=\"inputComment\">
                 <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp;
                 max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br/>
-                <b>Zulässige Werte:</b><br/><b>ID:</b> Zahl (auch Hex) | <b>Typ:</b> UD, VA, DI, DO, W1 | <b>min, max, Änderung:</b> Zahl | <b>
+                <b>Zulässige Werte:</b><br/><b>ID:</b> Zahl (auch Hex) | <b>min, max, Änderung:</b> Zahl | <b>
                 Intervall, Zeitraum:</b> Zahl (Minuten)<br/><br/>
                 für Betreff und Text können folgende Platzhalter verwendet werden:<br/>
                 %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br/>
@@ -157,8 +157,9 @@ function displayAlertConfig($ID, $row, $style)
    echo "         <div>\n";
    echo "           <span>ID:</span>\n";
    echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Adr(" . $ID . ")\"   value=\"" . $row['address'] . "\"></input></span>\n";
-   echo "           <span>Typ:</span>\n";
-   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input></span>\n";
+//   echo "           <span>Typ:</span>\n";
+   configOptionItem(5, "Typ", "Type(" . $ID . ")", $row['type'], "VA:VA UD:US DI:DI DO:DO W1:W1", "", "style=\"width:60px$style\"");
+//   echo "           <span><input class=\"rounded-border input\" style=\"width:60px$style\" type=\"text\" name=\"Type(" . $ID . ")\"  value=\"" . $row['type'] . "\"></input></span>\n";
    echo "         </div>\n";
 
    echo "         <div>\n";

@@ -244,12 +244,12 @@ function readConfigItem($name, &$value, $default = "")
 // Schema Selection
 // ---------------------------------------------------------------------------
 
-function schemaItem($new, $title, $schema)
+function schemaItem($flow, $title, $schema)
 {
    global $schema_path, $schema_pattern;
    $actual = "schema-$schema.png";
 
-   $end = htmTags($new);
+   $end = htmTags($flow);
    echo "          $title:\n";
    echo "          <select class=\"rounded-border input\" name=\"schema\">\n";
 
@@ -261,7 +261,7 @@ function schemaItem($new, $title, $schema)
 
       $sel = ($actual == $filename) ? "SELECTED" : "";
       $tp  = substr(strstr($filename, ".", true), 7);
-      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+      echo "            <option value=\"$tp\" " . $sel . ">$tp</option>\n";
    }
 
    echo "          </select>\n";
@@ -272,19 +272,25 @@ function schemaItem($new, $title, $schema)
 // Text Config items
 // ---------------------------------------------------------------------------
 
-function configStrItem($new, $title, $name, $value, $comment = "", $width = 200, $ro = "'", $ispwd = false)
+function configStrItem($flow, $title, $name, $value, $comment = "", $width = 200, $ro = "\"", $ispwd = false)
 {
-   $end = htmTags($new);
+   $end = htmTags($flow);
+
    echo "          $title:\n";
 
    if ($ispwd)
    {
-      echo "          <input class=\"rounded-border input\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style=\"width:"
+         . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
       echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
-      echo "          <input class=\"rounded-border input\" style=\"width:" . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
+      echo "          <input class=\"rounded-border input\" style=\"width:"
+         . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
    }
    else
-      echo "          <input class=\"rounded-border input\" style='width:" . $width . "px$ro type=\"text\" name=\"$name\" value=\"$value\"/>\n";
+   {
+      echo "          <input class=\"rounded-border input\" style=\"width:"
+         . $width . "px$ro type=\"text\" name=\"$name\" value=\"$value\"/>\n";
+   }
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
@@ -296,37 +302,44 @@ function configStrItem($new, $title, $name, $value, $comment = "", $width = 200,
 // Checkbox Config items
 // ---------------------------------------------------------------------------
 
-function configBoolItem($new, $title, $name, $value, $comment = "", $ro = "")
+function configBoolItem($flow, $title, $name, $value, $comment = "", $attributes = "")
 {
-   $end = htmTags($new);
+   $end = htmTags($flow);
+
    echo "          $title:\n";
-   echo "          <input type=checkbox class=\"rounded-border input\" name=\"" . $name . $ro . "\"" . ($value ? " checked" : "") . "/>\n";
+   echo "          <input type=\"checkbox\" class=\"rounded-border input\" name=\""
+      . $name . "\" " . $attributes . ($value ? " checked" : "") . "/>\n";
 
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
 
    echo $end;
-
 }
 
 // ---------------------------------------------------------------------------
 // Option Config Item
 // ---------------------------------------------------------------------------
 
-function configOptionItem($new, $title, $name, $value, $options, $comment = "", $ro = "")
+function configOptionItem($flow, $title, $name, $value, $options, $comment = "", $attributes = "")
 {
-   $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <select class=\"rounded-border input\" name=\"" . $name . $ro . "\">\n";
+   $end = htmTags($flow);
+
+   echo "          <span>$title:</span>\n";
+   echo "          <span>\n";
+   echo "            <select class=\"rounded-border input\" name=\"" . $name . "\" "
+      . $attributes . ">\n";
 
    foreach (explode(" ", $options) as $option)
    {
-      $opt = explode(",", $option);
+      $opt = explode(":", $option);
       $sel = ($value == $opt[1]) ? "SELECTED" : "";
-      echo "            <option value='$opt[1]' " . $sel . ">$opt[0]</option>\n";
+
+      echo "              <option value=\"$opt[1]\" " . $sel . ">$opt[0]</option>\n";
    }
 
-   echo "          </select>\n";
+   echo "            </select>\n";
+   echo "          </span>\n";
+
    if ($comment != "")
       echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
 

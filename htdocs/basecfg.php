@@ -192,7 +192,7 @@ configStrItem(4, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobi
 seperator("Charting", 0, "seperatorTitle2");
 configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
 configBoolItem(2, "senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
-configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein,15 mittel,25 groß,45", "");
+configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein:15 mittel:25 groß:45", "");
 configBoolItem(5, "Chart 3+4", "chart34", $_SESSION['chart34'], "aktivieren?");
 configStrItem(2, "Chart 1", "chart1", $_SESSION['chart1'], "", 250);
 configStrItem(4, "Chart 2", "chart2", $_SESSION['chart2'], "Werte-ID, siehe 'Aufzeichnung'", 250);
@@ -213,10 +213,9 @@ configStrItem(3, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
 seperator("p4d Konfiguration", 0);
 
 seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
-$a = ($_SESSION['mail']) ? "" : "disabled=true";
-$ro = ($_SESSION['mail']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
+$ro = ($_SESSION['mail']) ? "\"" : "; background-color:#ddd;\" readOnly=\"true\"";
 configBoolItem(1, "Mail Benachrichtigung", "mail\" onClick=\"disableContent('htM',this); readonlyContent('Mail',this)", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
-configBoolItem(5, "HTML-Mail?", "htmlMail\" id=\"htM", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
+configBoolItem(5, "HTML-Mail", "htmlMail\" id=\"htM", $_SESSION['htmlMail'], "gilt für alle Mails", $_SESSION['mail'] ? "" : "disabled=\"true\"");
 configStrItem(2, "Status Mail Empfänger", "stateMailTo\" id=\"Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
 configStrItem(2, "Fehler Mail Empfänger", "errorMailTo\" id=\"Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
 configStrItem(2, "Status Mail für folgende Status", "stateMailStates\" id=\"Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
@@ -225,7 +224,7 @@ echo "        <button class=\"rounded-border button3\" type=submit name=action v
 configStrItem(6, "URL deiner Visualisierung", "webUrl\" id=\"Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 
 seperator("Sonstiges", 0, "seperatorTitle2");
-$ro = ($_SESSION['tsync']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
+$ro = ($_SESSION['tsync']) ? "\"" : "; background-color:#ddd;\" readOnly=\"true\"";
 configBoolItem(1, "Zeitsynchronisation", "tsync\" onClick=\"readonlyContent('timeLeak',this)", $_SESSION['tsync'], "tägl. 23:00Uhr");
 configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak\" id=\"timeLeak", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
 

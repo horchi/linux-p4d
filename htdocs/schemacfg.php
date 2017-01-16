@@ -220,7 +220,7 @@ seperator("Grund-Einstellungen", 0);
 schemaItem(1, "Schema", $_SESSION['schema']);
 
 configBoolItem(5, "Sensor-Bezeichnungen", "schemaBez", $_SESSION['schemaBez']);
-configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24,24 48,48 60,60 72,72", "Stunden");
+configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24:24 48:48 60:60 72:72", "Stunden");
 
 echo "        <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"store\">Einstellungen Speichern</button>\n";
 
