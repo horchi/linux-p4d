@@ -88,17 +88,8 @@ else if ($action == "store")
 
    // ---
 
-   if (isset($_POST["mail"]))
-   {
-      $_SESSION['mail'] = true;
-      if (isset($_POST["htmlMail"]))
-         $_SESSION['htmlMail'] = true;
-      else
-         $_SESSION['htmlMail'] = false;
-   } else
-   {
-      $_SESSION['mail'] = false;
-   }
+   $_SESSION['mail'] = isset($_POST["mail"]);
+   $_SESSION['htmlMail'] = isset($_POST["htmlMail"]);
 
    if (isset($_POST["stateMailTo"]))
       $_SESSION['stateMailTo'] = htmlspecialchars($_POST["stateMailTo"]);
@@ -225,18 +216,18 @@ seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
 $a = ($_SESSION['mail']) ? "" : "disabled=true";
 $ro = ($_SESSION['mail']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
 configBoolItem(1, "Mail Benachrichtigung", "mail\" onClick=\"disableContent('htM',this); readonlyContent('Mail',this)", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
-configBoolItem(5, "HTML-Mail?", "htmlMail id='htM'", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
-configStrItem(2, "Status Mail Empfänger", "stateMailTo id=Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
-configStrItem(2, "Fehler Mail Empfänger", "errorMailTo id=Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
-configStrItem(2, "Status Mail für folgende Status", "stateMailStates id=Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
-configStrItem(2, "p4d sendet Mails über das Skript", "mailScript id=Mail4", $_SESSION['mailScript'], "", 400, $ro);
+configBoolItem(5, "HTML-Mail?", "htmlMail\" id=\"htM", $_SESSION['htmlMail'], "gilt für alle Mails", $a);
+configStrItem(2, "Status Mail Empfänger", "stateMailTo\" id=\"Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(2, "Fehler Mail Empfänger", "errorMailTo\" id=\"Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(2, "Status Mail für folgende Status", "stateMailStates\" id=\"Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
+configStrItem(2, "p4d sendet Mails über das Skript", "mailScript\" id=\"Mail4", $_SESSION['mailScript'], "", 400, $ro);
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=mailtest>Test Mail</button>\n";
-configStrItem(6, "URL deiner Visualisierung", "webUrl id=Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
+configStrItem(6, "URL deiner Visualisierung", "webUrl\" id=\"Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 
 seperator("Sonstiges", 0, "seperatorTitle2");
 $ro = ($_SESSION['tsync']) ? "'" : "; background-color:#ddd;' readOnly=\"true\"";
 configBoolItem(1, "Zeitsynchronisation", "tsync\" onClick=\"readonlyContent('timeLeak',this)", $_SESSION['tsync'], "tägl. 23:00Uhr");
-configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak id='timeLeak'", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
+configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak\" id=\"timeLeak", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
 
 echo "      </form>\n";
 
