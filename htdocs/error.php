@@ -37,8 +37,10 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
       $errText = mysqli_result($result, $i, "text");
 
       $time = max(max($time1, $time4), $time2);
+      $style = $state == "quittiert" ? "greenCircle" : "redCircle";
 
       echo "         <div>\n";
+      echo "           <span style=\"width:10px;\"><div class=\"$style\"></div></span>\n";
       echo "           <span>$time</span>\n";
       echo "           <span>$errText</span>\n";
       echo "           <span>$state</span>\n";

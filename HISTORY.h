@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.18"
+#define _VERSION     "0.2.19"
 #define VERSION_DATE "17.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-17:  version 0.2.19
+   - added:  WEBIF: Added red/green dot to error dialog
 
 2017-01-17:  version 0.2.18
    - added:  'Störungs'-Mails for pending errors in S-3200 error list
