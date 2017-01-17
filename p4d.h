@@ -84,11 +84,12 @@ class P4d : public FroelingService
 
       void afterUpdate();
       void sensorAlertCheck(time_t now);
-      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse);
+      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
       int add2AlertMail(cDbRow* alertRow, const char* title,
                             double value, const char* unit);
       int sendAlertMail(const char* to);
       int sendStateMail();
+      int sendErrorMail();
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
 
       int updateSchemaConfTable();
@@ -131,8 +132,10 @@ class P4d : public FroelingService
       cDbStatement* selectAllMenuItems;
       cDbStatement* selectSensorAlerts;
       cDbStatement* selectSampleInRange;
-      cDbStatement* cleanupJobs;
+      cDbStatement* selectPendingErrors;
+      cDbStatement* selectMaxTime;
       cDbStatement* selectHmSysVarByAddr;
+      cDbStatement* cleanupJobs;
 
       cDbValue rangeEnd;
 
@@ -158,6 +161,7 @@ class P4d : public FroelingService
       char* stateMailAtStates;
       char* stateMailTo;
       char* errorMailTo;
+      int errorsPending;
       int tSync;
       time_t nextTimeSyncAt;
       int maxTimeLeak;

@@ -45,14 +45,17 @@ function checkLogin($user, $passwd)
    return false;
 }
 
-function sendTestMail($subject, $body, &$resonse)
+function sendTestMail($subject, $body, &$resonse, $alertid = "")
 {
    global $mysqli;
+   $state = 0;
 
-   if (requestAction("test-mail", 5, 0, "$subject:$body", $resonse) == 0)
-      return true;
+   if ($alertid != "")
+      $state = requestAction("test-alert-mail", 5, 0, "$alertid", $resonse);
+   else
+      $state = requestAction("test-mail", 5, 0, "$subject:$body", $resonse);
 
-   return false;
+   return $state == 0 ? true : false;
 }
 
 // ---------------------------------------------------------------------------

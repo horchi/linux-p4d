@@ -49,9 +49,46 @@ int P4d::performWebifRequests()
             else if (isEmpty(stateMailTo))
                tableJobs->setValue("RESULT", "fail:missing-receiver");
             else if (sendMail(stateMailTo, subject, body, "text/plain") != success)
-               tableJobs->setValue("RESULT", "fail:mail-sended");
+               tableJobs->setValue("RESULT", "fail:send failed");
             else
-               tableJobs->setValue("RESULT", "success:mail-sended");
+               tableJobs->setValue("RESULT", "success:mail sended");
+         }
+      }
+
+      else if (strcasecmp(command, "test-alert-mail") == 0)
+      {
+         int id = atoi(data);
+
+         tell(eloDetail, "Test mail for alert (%d) requested", id);
+
+         if (isEmpty(mailScript))
+            tableJobs->setValue("RESULT", "fail:missing mailscript");
+         else if (!fileExists(mailScript))
+            tableJobs->setValue("RESULT", "fail:mail-script not found");
+         else
+         {
+            time_t last;
+
+            if (!selectMaxTime->find())
+               tell(eloAlways, "Warning: Got no result by 'select max(time) from samples'");
+
+            last = tableSamples->getTimeValue("TIME");
+            selectMaxTime->freeResult();
+
+            tableSensorAlert->clear();
+            tableSensorAlert->setValue("ID", id);
+
+            alertMailBody = "";
+            alertMailSubject = "";
+
+            if (!tableSensorAlert->find())
+               tableJobs->setValue("RESULT", "fail:requested alert ID not found");
+            else if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
+               tableJobs->setValue("RESULT", "fail:send failed");
+            else
+               tableJobs->setValue("RESULT", "success:mail sended");
+
+            tableSensorAlert->reset();
          }
       }
 

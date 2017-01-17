@@ -43,6 +43,8 @@ P4d::P4d()
    selectAllMenuItems = 0;
    selectSensorAlerts = 0;
    selectSampleInRange = 0;
+   selectPendingErrors = 0;
+   selectMaxTime = 0;
    selectHmSysVarByAddr = 0;
    cleanupJobs = 0;
 
@@ -61,6 +63,7 @@ P4d::P4d()
    errorMailTo = 0;
    tSync = no;
    maxTimeLeak = 10;
+   errorsPending = 0;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -324,6 +327,31 @@ int P4d::initDb()
 
    // ------------------
 
+   selectPendingErrors = new cDbStatement(tableErrors);
+
+   selectPendingErrors->build("select ");
+   selectPendingErrors->bindAllOut();
+   selectPendingErrors->build(" from %s where %s <> 'quittiert' and (%s <= 0 or %s is null)",
+                              tableErrors->TableName(),
+                              tableErrors->getField("STATE")->getDbName(),
+                              tableErrors->getField("MAILCNT")->getDbName(),
+                              tableErrors->getField("MAILCNT")->getDbName());
+
+   status += selectPendingErrors->prepare();
+
+   // --------------------
+   // select max(time) from samples
+
+   selectMaxTime = new cDbStatement(tableSamples);
+
+   selectMaxTime->build("select ");
+   selectMaxTime->bind("TIME", cDBS::bndOut, "max(");
+   selectMaxTime->build(") from %s", tableSamples->TableName());
+
+   status += selectMaxTime->prepare();
+
+   // ------------------
+
    selectHmSysVarByAddr = new cDbStatement(tableHmSysVars);
 
    selectHmSysVarByAddr->build("select ");
@@ -371,6 +399,8 @@ int P4d::exitDb()
    delete selectAllMenuItems;      selectAllMenuItems = 0;
    delete selectSensorAlerts;      selectSensorAlerts = 0;
    delete selectSampleInRange;     selectSampleInRange = 0;
+   delete selectPendingErrors;     selectPendingErrors = 0;
+   delete selectMaxTime;           selectMaxTime = 0;
    delete cleanupJobs;             cleanupJobs = 0;
 
    delete connection;              connection = 0;
@@ -1188,6 +1218,9 @@ int P4d::loop()
       if (mail && stateChanged)
          sendStateMail();
 
+      if (errorsPending)
+         sendErrorMail();
+
       sem->v();
    }
 
@@ -1466,7 +1499,7 @@ void P4d::sensorAlertCheck(time_t now)
 // Perform Alert Check
 //***************************************************************************
 
-int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
+int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
 {
    int alert = 0;
 
@@ -1485,8 +1518,6 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    int min = alertRow->getIntValue("MIN");
    int max = alertRow->getIntValue("MAX");
 
-   int rangeIsNull = alertRow->getValue("RANGEM")->isNull();
-   int deltaIsNull = alertRow->getValue("DELTA")->isNull();
    int range = alertRow->getIntValue("RANGEM");
    int delta = alertRow->getIntValue("DELTA");
 
@@ -1506,7 +1537,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
    if (!tableSamples->find() || !tableValueFacts->find())
    {
-      tell(eloAlways, "Info: Can't perform sensor check for %s/%d", type, addr);
+      tell(eloAlways, "Info: Can't perform sensor check for %s/%d '%s'", type, addr, l2pTime(now).c_str());
       return 0;
    }
 
@@ -1522,14 +1553,14 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
    if (!minIsNull || !maxIsNull)
    {
-      if ((!minIsNull && value < min) || (!maxIsNull && value > max))
+      if (force || (!minIsNull && value < min) || (!maxIsNull && value > max))
       {
          tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
               id, type, addr, value, min, max);
 
          // max one alert mail per maxRepeat [minutes]
 
-         if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+         if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
          {
             alert = 1;
             add2AlertMail(alertRow, title, value, unit);
@@ -1540,7 +1571,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
    // -------------------------------
    // check range delta
 
-   if (!rangeIsNull && !deltaIsNull)
+   if (range && delta)
    {
       // select value of this sensor around 'time = (now - range)'
 
@@ -1558,14 +1589,14 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
       {
          double oldValue = tableSamples->getFloatValue("VALUE");
 
-         if (labs(value - oldValue) > delta)
+         if (force || labs(value - oldValue) > delta)
          {
             tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes",
                  id, type, addr, value, delta, range);
 
             // max one alert mail per maxRepeat [minutes]
 
-            if (!lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+            if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
             {
                alert = 1;
                add2AlertMail(alertRow, title, value, unit);
@@ -1616,8 +1647,11 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse)
 
       if (tableSensorAlert->find())
       {
-         tableSensorAlert->setValue("LASTALERT", time(0));
-         tableSensorAlert->update();
+         if (!force)
+         {
+            tableSensorAlert->setValue("LASTALERT", time(0));
+            tableSensorAlert->update();
+         }
 
          sendAlertMail(tableSensorAlert->getStrValue("MADDRESS"));
       }
@@ -1744,7 +1778,7 @@ int P4d::updateErrors()
    char timeField[5+TB] = "";
    time_t timeOne = 0;
 
-   tell(eloAlways, "Updateing error list");
+   tell(eloAlways, "Updating error list");
 
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
    {
@@ -1808,7 +1842,16 @@ int P4d::updateErrors()
          timeOne = 0;
    }
 
-   tell(eloAlways, "Updateing error list done");
+   tell(eloAlways, "Updating error list done");
+
+   // count pending (not 'quittiert' AND not mailed) errors
+
+   tableErrors->clear();
+   selectPendingErrors->find();
+   errorsPending = selectPendingErrors->getResultCount();
+   selectPendingErrors->freeResult();
+
+   tell(eloDetail, "Info: Found (%d) pending errors", errorsPending);
 
    return success;
 }
@@ -1831,10 +1874,10 @@ int P4d::sendAlertMail(const char* to)
    {
       char* html = 0;
 
-      alertMailBody = strReplace("\n", "<br>\n", alertMailBody);
+      alertMailBody = strReplace("\n", "<br/>\n", alertMailBody);
 
       const char* htmlHead =
-         "<head>"
+         "<head>\n"
          "  <style type=\"text/css\">\n"
          "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
          "  </style>\n"
@@ -1870,7 +1913,6 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
 {
    char* webUrl = 0;
    char* sensor = 0;
-   char* htmlWebUrl = 0;
 
    string subject = alertRow->getStrValue("MSUBJECT");
    string body = alertRow->getStrValue("MBODY");
@@ -1887,7 +1929,6 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
       body = "- undefined -";
 
    getConfigItem("webUrl", webUrl, "http://");
-   asprintf(&htmlWebUrl, "<a href=\"%s\">S 3200</a>", webUrl);
 
    // prepare
 
@@ -1917,13 +1958,97 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
    body = strReplace("%delta%", (long)delta, body);
    body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
    body = strReplace("%repeat%", (long)maxRepeat, body);
-   body = strReplace("%weburl%", htmlMail ? htmlWebUrl : webUrl, body);
+   body = strReplace("%weburl%", webUrl, body);
 
    alertMailSubject += string(" ") + subject;
    alertMailBody += string("\n") + body;
 
    free(sensor);
-   free(htmlWebUrl);
+
+   return success;
+}
+
+//***************************************************************************
+// Send Error Mail
+//***************************************************************************
+
+int P4d::sendErrorMail()
+{
+   char* webUrl = 0;
+   string body = "";
+   const char* subject = "Heizung: STÖRUNG";
+   char* html = 0;
+
+   // check
+
+   if (isEmpty(mailScript) || isEmpty(errorMailTo))
+      return done;
+
+   // get web url ..
+
+   getConfigItem("webUrl", webUrl, "http://to-be-configured");
+
+   // build mail ..
+
+   for (int f = selectPendingErrors->find(); f; f = selectPendingErrors->fetch())
+   {
+      char* line = 0;
+      time_t t = max(max(tableErrors->getTimeValue("TIME1"), tableErrors->getTimeValue("TIME4")), tableErrors->getTimeValue("TIME2"));
+
+      if (htmlMail)
+         asprintf(&line, "        <tr><td>%s</td><td>%s</td>td>%s</td></tr>\n",
+                  l2pTime(t).c_str(), tableErrors->getStrValue("TEXT"), tableErrors->getStrValue("STATE"));
+      else
+         asprintf(&line, "%s:  %s  %s\n",
+                  l2pTime(t).c_str(), tableErrors->getStrValue("TEXT"), tableErrors->getStrValue("STATE"));
+
+      body += line;
+
+      tableErrors->setValue("MAILCNT", tableErrors->getIntValue("MAILCNT")+1);
+      tableErrors->update();
+
+      free(line);
+   }
+
+   selectPendingErrors->freeResult();
+
+   // send mail ...
+
+   if (!htmlMail)
+      return sendMail(stateMailTo, subject, body.c_str(), "text/plain");
+
+   // HTML mail
+
+   loadHtmlHeader();
+
+   asprintf(&html,
+            "<html>\n"
+            " %s\n"
+            "  <body>\n"
+            "   <font face=\"Arial\"><br/>WEB Interface: <a href=\"%s\">S 3200</a><br/></font>\n"
+            "   <br/>\n"
+            "Aktueller Status: %s"
+            "   <br/>\n"
+            "   <table>\n"
+            "     <thead>\n"
+            "       <tr class=\"head\">\n"
+            "         <th><font>Zeit</font></th>\n"
+            "         <th><font>Fehler</font></th>\n"
+            "         <th><font>Status</font></th>\n"
+            "       </tr>\n"
+            "     </thead>\n"
+            "     <tbody>\n"
+            "%s"
+            "     </tbody>\n"
+            "   </table>\n"
+            "   <br/>\n"
+            "  </body>\n"
+            "</html>\n",
+            htmlHeader.memory, webUrl, currentState.stateinfo, body.c_str());
+
+   sendMail(stateMailTo, subject, html, "text/html");
+
+   free(html);
 
    return success;
 }
@@ -1935,102 +2060,53 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
 int P4d::sendStateMail()
 {
    char* webUrl = 0;
-   const char* receiver = 0;
-   string subject = "";
-   string errorBody = "";
+   string subject = "Heizung - Status: " + string(currentState.stateinfo);
 
    // check
 
-   if (isEmpty(mailScript) || !mailBody.length())
-      return fail;
+   if (!isMailState() || isEmpty(mailScript) || !mailBody.length() || isEmpty(stateMailTo))
+      return done;
 
    // get web url ..
 
    getConfigItem("webUrl", webUrl, "http://to-be-configured");
 
-   // build mail ..
-
-   if (isError(currentState.state))
-   {
-      Fs::ErrorInfo e;
-
-      subject = "Heizung: STÖRUNG";
-      receiver = errorMailTo;
-
-      for (int status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
-      {
-         // nur Fehler der letzten 2 Tage
-
-         if (e.time > time(0) - 2*tmeSecondsPerDay)
-         {
-            char* ct = strdup(ctime(&e.time));
-            char* line;
-
-            ct[strlen(ct)-1] = 0;   // remove linefeed of ctime()
-
-            asprintf(&line, "%s:  %03d/%03d  %s (%s)\n", ct, e.number, e.info, e.text, Fs::errState2Text(e.state));
-            errorBody += line;
-
-            free(line);
-            free(ct);
-         }
-      }
-
-      mailBody = errorBody + string("\n\n") + mailBody;
-   }
-
-   else if (isMailState())
-   {
-      subject = "Heizung - Status: " + string(currentState.stateinfo);
-      receiver = stateMailTo;
-   }
-
-   if (isEmpty(receiver))
-      return done;
-
    // send mail ...
 
    if (!htmlMail)
-   {
-      sendMail(receiver, subject.c_str(), mailBody.c_str(), "text/plain");
-   }
-   else
-   {
-      char* html = 0;
+      return sendMail(stateMailTo, subject.c_str(), mailBody.c_str(), "text/plain");
 
-      loadHtmlHeader();
+   // HTML mail
 
-      asprintf(&html,
-               "<html>\n"
-               " %s\n"
-               "  <body>\n"
-               "   <font face=\"Arial\"><br>WEB Interface: <a href=\"%s\">S 3200</a><br></font>\n"
-               "   %s\n"
-               "   <br>\n"
-               "   <table>\n"
-               "     <thead>\n"
-               "       <tr class=\"head\">\n"
-               "         <th><font>Parameter</font></th>\n"
-               "         <th><font>Wert</font></th>\n"
-               "       </tr>\n"
-               "     </thead>\n"
-               "     <tbody>\n"
-               "%s"
-               "     </tbody>\n"
-               "   </table>\n"
-               "   <br></br>\n"
-               "  </body>\n"
-               "</html>\n",
-               htmlHeader.memory, webUrl, errorBody.c_str(), mailBodyHtml.c_str());
+   char* html = 0;
 
-      // send HTML mail
+   loadHtmlHeader();
 
-      sendMail(receiver, subject.c_str(), html, "text/html");
+   asprintf(&html,
+            "<html>\n"
+            " %s\n"
+            "  <body>\n"
+            "   <font face=\"Arial\"><br/>WEB Interface: <a href=\"%s\">S 3200</a><br/></font>\n"
+            "   <br/>\n"
+            "   <table>\n"
+            "     <thead>\n"
+            "       <tr class=\"head\">\n"
+            "         <th><font>Parameter</font></th>\n"
+            "         <th><font>Wert</font></th>\n"
+            "       </tr>\n"
+            "     </thead>\n"
+            "     <tbody>\n"
+            "%s"
+            "     </tbody>\n"
+            "   </table>\n"
+            "   <br/>\n"
+            "  </body>\n"
+            "</html>\n",
+            htmlHeader.memory, webUrl, mailBodyHtml.c_str());
 
-      free(html);
-   }
+   sendMail(stateMailTo, subject.c_str(), html, "text/html");
 
-   //
+   free(html);
 
    return success;
 }

@@ -59,6 +59,11 @@ $(CMDTARGET) : $(CMDOBJS)
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 
+instf: $(TARGET) $(CMDTARGET) install-config install-scripts
+	/etc/init.d/p4d stop
+	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
+	/etc/init.d/p4d start
+
 install-config:
 	if ! test -d $(CONFDEST); then \
 	   mkdir -p $(CONFDEST); \

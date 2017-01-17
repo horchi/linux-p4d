@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.17"
-#define VERSION_DATE "16.01.2017"
+#define _VERSION     "0.2.18"
+#define VERSION_DATE "17.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2017-01-17:  version 0.2.18
+   - added:  'Störungs'-Mails for pending errors in S-3200 error list
+   - added:  WEBIF: Select box for sensor type in sensort alert dialog
+   - added:  WEBIF: 'Test Mail' button for sensort alerts
+   - bugfix: WEBIF: fixed problem with escape of sql strings at sensor alert dialog
 
 2017-01-16:  version 0.2.17
    - change: prepared error list for 'Störungs-Mail feature
