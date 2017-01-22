@@ -110,6 +110,7 @@
 .seperatorTitle1
 {
     background-color: var(--caption1);
+    color: var(--light2);
     margin-top: 0px;
     padding: 5px 15px;
 }
@@ -191,6 +192,7 @@
 .inputTable
 {
     background-color: var(--light1);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
     margin-top: 2px;
     color: black;
     padding: 5px;
@@ -207,6 +209,7 @@
 .inputTableConfig
 {
     background-color: var(--light1);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
     margin-top: 2px;
     color: black;
     padding: 5px;
@@ -272,14 +275,28 @@
     font-size: 17px;
 }
 
-table.tableMultiCol tr:nth-child(even)
-{
-    background-color: var(--light3);
-}
-
 .tableMultiCol > div:nth-child(even)
 {
     background-color: var(--light3);
+    background: linear-gradient(to bottom, var(--light1), var(--light3)); /* Standard syntax (must be last) */
+}
+
+.tableMultiCol > div
+{
+    background-color: var(--light3);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+}
+
+table.tableMultiCol tr:nth-child(even)
+{
+    background-color: var(--light3);
+    background: linear-gradient(to bottom, var(--light1), var(--light3)); /* Standard syntax (must be last) */
+}
+
+table.tableMultiCol tr:nth-child(odd)
+{
+    background-color: var(--light1);
+    background: linear-gradient(to bottom right, var(--light1), var(--light3)); /* Standard syntax (must be last) */
 }
 
 .tableMultiCol > div > span

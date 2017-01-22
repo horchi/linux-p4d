@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.20"
+#define _VERSION     "0.2.21"
 #define VERSION_DATE "22.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-22:  version 0.2.21
+   - added:  WEBIF: Added even more gradients
 
 2017-01-22:  version 0.2.20
    - bugfix: Fixed redundant error mails

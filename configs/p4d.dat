@@ -257,3 +257,19 @@ Index hmsysvars
 {
    address             ""  ADDRESS, ATYPE
 }
+
+// ----------------------------------------------------------------
+// Table
+// ----------------------------------------------------------------
+
+Table scripts
+{
+   ID                   ""                      id                   UInt        11 Primary|Autoinc,
+
+   INSSP                ""                      inssp                Int          0 Meta,
+   UPDSP                ""                      updsp                Int          0 Meta,
+
+   NAME                 ""                      name                 Ascii      100 Data,
+   VISIBLE              "'Y'es, 'N'o"           visible              UInt         1 Data,  // button visible in webif
+   PATH                 ""                      path                 Ascii      100 Data,
+}
