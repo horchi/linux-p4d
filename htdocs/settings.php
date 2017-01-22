@@ -97,9 +97,11 @@ include("footer.php");
 
 function showButtons()
 {
-   echo "        <div>\n";
+   echo "        <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
    echo "          <button class=\"rounded-border button3\" type=submit name=action value=init onclick=\"return confirmSubmit('Stammdaten der Messwerte initialisieren')\">Init</button>\n";
    echo "          <button class=\"rounded-border button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
+   echo "        </div>\n";
+   echo "        <div class=\"menu\" style=\"top=88px;\">\n";
    echo "        </div>\n";
 }
 

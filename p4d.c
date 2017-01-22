@@ -1213,6 +1213,9 @@ int P4d::loop()
       sem->p();
       update();
 
+      updateErrors();
+      afterUpdate();
+
       // mail
 
       if (mail && stateChanged)
@@ -1445,11 +1448,8 @@ int P4d::update()
 
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
-   afterUpdate();
 
    sensorAlertCheck(now);
-
-   updateErrors();
 
    return success;
 }
@@ -1996,7 +1996,7 @@ int P4d::sendErrorMail()
       time_t t = max(max(tableErrors->getTimeValue("TIME1"), tableErrors->getTimeValue("TIME4")), tableErrors->getTimeValue("TIME2"));
 
       if (htmlMail)
-         asprintf(&line, "        <tr><td>%s</td><td>%s</td>td>%s</td></tr>\n",
+         asprintf(&line, "        <tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
                   l2pTime(t).c_str(), tableErrors->getStrValue("TEXT"), tableErrors->getStrValue("STATE"));
       else
          asprintf(&line, "%s:  %s  %s\n",
@@ -2004,6 +2004,9 @@ int P4d::sendErrorMail()
 
       body += line;
 
+      tell(eloDebug, "Debug: MAILCNT is (%ld), setting to (%ld)",
+           tableErrors->getIntValue("MAILCNT"), tableErrors->getIntValue("MAILCNT")+1);
+      tableErrors->find();
       tableErrors->setValue("MAILCNT", tableErrors->getIntValue("MAILCNT")+1);
       tableErrors->update();
 
@@ -2046,7 +2049,7 @@ int P4d::sendErrorMail()
             "</html>\n",
             htmlHeader.memory, webUrl, currentState.stateinfo, body.c_str());
 
-   sendMail(stateMailTo, subject, html, "text/html");
+   sendMail(errorMailTo, subject, html, "text/html");
 
    free(html);
 

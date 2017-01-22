@@ -6,9 +6,12 @@
 {
     /* colors */
 
+    --menu: #fdfddf;
+
     --light1: #fdfddf;
     --light2: #ffffc6;
-    --light3: #f6f694;
+    --light3old: #f6f694;
+    --light3: #cccc93;
     --light4: #efef65;
 
     --caption1: #F90;

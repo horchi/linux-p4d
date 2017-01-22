@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.19"
-#define VERSION_DATE "17.01.2017"
+#define _VERSION     "0.2.20"
+#define VERSION_DATE "22.01.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,15 @@
 
 /*
  * ------------------------------------
+
+2017-01-22:  version 0.2.20
+   - bugfix: Fixed redundant error mails
+   - change: Improved style of base-config page
+   - change: WEBIF: Switch main page to mobile mode < 800px
+   - added:  WEBIF: Display menu on fixed position at top of page (even while scrolling)
+   - added:  WEBIF: Added gradient to table on main page
+   - bugfix: WEBIF: Fixed range setting on main page
+   - bugfix: Minor fix of error mail style
 
 2017-01-17:  version 0.2.19
    - added:  WEBIF: Added red/green dot to error dialog

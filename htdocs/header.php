@@ -116,26 +116,29 @@ function printHeader($refresh = 0)
 
    // menu button bar ...
 
-   echo "    <a href=\"main.php\"><button class=\"rounded-border button1\">Aktuell</button></a>\n";
-   echo "    <a href=\"chart.php\"><button class=\"rounded-border button1\">Charts</button></a>\n";
+   echo "    <div class=\"menu\" style=\"position: fixed; top=0px;\">\n";
+   echo "      <a href=\"main.php\"><button class=\"rounded-border button1\">Aktuell</button></a>\n";
+   echo "      <a href=\"chart.php\"><button class=\"rounded-border button1\">Charts</button></a>\n";
 
    if ($_SESSION['chart34'] == "1")
-      echo "    <a href=\"chart2.php\"><button class=\"rounded-border button1\">Charts...</button></a>\n";
+      echo "      <a href=\"chart2.php\"><button class=\"rounded-border button1\">Charts...</button></a>\n";
 
-   echo "    <a href=\"schemadsp.php\"><button class=\"rounded-border button1\">Schema</button></a>\n";
-   echo "    <a href=\"menu.php\"><button class=\"rounded-border button1\">Menü</button></a>\n";
-   echo "    <a href=\"error.php\"><button class=\"rounded-border button1\">Fehler</button></a>\n";
+   echo "      <a href=\"schemadsp.php\"><button class=\"rounded-border button1\">Schema</button></a>\n";
+   echo "      <a href=\"menu.php\"><button class=\"rounded-border button1\">Menü</button></a>\n";
+   echo "      <a href=\"error.php\"><button class=\"rounded-border button1\">Fehler</button></a>\n";
 
    if (haveLogin())
    {
-      echo "    <a href=\"basecfg.php\"><button class=\"rounded-border button1\">Setup</button></a>\n";
-      echo "    <a href=\"logout.php\"><button class=\"rounded-border button1\">Logout</button></a>\n";
+      echo "      <a href=\"basecfg.php\"><button class=\"rounded-border button1\">Setup</button></a>\n";
+      echo "      <a href=\"logout.php\"><button class=\"rounded-border button1\">Logout</button></a>\n";
    }
    else
    {
-      echo "    <a href=\"login.php\"><button class=\"rounded-border button1\">Login</button></a>\n";
+      echo "      <a href=\"login.php\"><button class=\"rounded-border button1\">Login</button></a>\n";
    }
-
+   echo "    </div>\n";
+   echo "    <div class=\"menu\">\n";
+   echo "    </div>\n";
    echo "    <div class=\"content\">\n";
 }
 

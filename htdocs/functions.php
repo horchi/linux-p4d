@@ -253,7 +253,8 @@ function schemaItem($flow, $title, $schema)
    $actual = "schema-$schema.png";
 
    $end = htmTags($flow);
-   echo "          $title:\n";
+   echo "          <span>$title:</span>\n";
+   echo "          <span>\n";
    echo "          <select class=\"rounded-border input\" name=\"schema\">\n";
 
    $path  = $schema_path . $schema_pattern;
@@ -268,6 +269,7 @@ function schemaItem($flow, $title, $schema)
    }
 
    echo "          </select>\n";
+   echo "          </span>\n";
    echo $end;
 }
 
@@ -279,24 +281,15 @@ function configStrItem($flow, $title, $name, $value, $comment = "", $width = 200
 {
    $end = htmTags($flow);
 
-   echo "          $title:\n";
+   echo "          <span>$title:</span>\n";
 
    if ($ispwd)
-   {
-      echo "          <input class=\"rounded-border input\" style=\"width:"
-         . $width . "px\" type=\"password\" name=\"passwd1\" value=\"$value\"/>\n";
-      echo "          &nbsp;&nbsp;&nbsp;wiederholen:&nbsp;\n";
-      echo "          <input class=\"rounded-border input\" style=\"width:"
-         . $width . "px\" type=\"password\" name=\"passwd2\" value=\"$value\"/>\n";
-   }
+      echo "          <span><input class=\"rounded-border input\" type=\"password\" name=\"$name\" value=\"$value\"/></span>\n";
    else
-   {
-      echo "          <input class=\"rounded-border input\" style=\"width:"
-         . $width . "px$ro type=\"text\" name=\"$name\" value=\"$value\"/>\n";
-   }
+      echo "          <span><input class=\"rounded-border input\" style=\"$ro type=\"text\" name=\"$name\" value=\"$value\"/></span>\n";
 
    if ($comment != "")
-      echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
+      echo "          <span class=\"inputComment\">($comment)</span>\n";
 
    echo $end;
 }
@@ -309,12 +302,12 @@ function configBoolItem($flow, $title, $name, $value, $comment = "", $attributes
 {
    $end = htmTags($flow);
 
-   echo "          $title:\n";
-   echo "          <input type=\"checkbox\" class=\"rounded-border input\" name=\""
-      . $name . "\" " . $attributes . ($value ? " checked" : "") . "/>\n";
+   echo "          <span>$title:</span>\n";
+   echo "          <span><input type=\"checkbox\" class=\"rounded-border input\" name=\""
+      . $name . "\" " . $attributes . ($value ? " checked" : "") . "/></span>\n";
 
    if ($comment != "")
-      echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
+      echo "          <span class=\"inputComment\">($comment)</span>\n";
 
    echo $end;
 }
@@ -344,9 +337,19 @@ function configOptionItem($flow, $title, $name, $value, $options, $comment = "",
    echo "          </span>\n";
 
    if ($comment != "")
-      echo "          <span class=\"inputComment\">&nbsp;($comment)</span>\n";
+      echo "          <span class=\"inputComment\">($comment)</span>\n";
 
    echo $end;
+}
+
+function lineS()
+{
+   echo   "        <div>\n";
+}
+
+function lineE()
+{
+   echo   "        </div>\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -360,13 +363,13 @@ function htmTags($flow)
    switch ($flow)
    {
       case 1:           // 'begin' input div block
-         echo   "        <div class=\"rounded-border inputTable\">\n";
+         echo   "        <div>\n";
          break;
    	case 2:           // 'end/begin' input div block
-         echo   "        </div>\n        <div class=\"rounded-border inputTable\">\n";
+         echo   "        </div>\n        <div>\n";
          break;
    	case 3:           // 'begin/end' input div block
-         echo   "        <div class=\"rounded-border inputTable\">\n" ;
+         echo   "        <div>\n" ;
          $end = "        </div>\n";
          break;
    	case 4:           // 'end' input div block
@@ -377,7 +380,7 @@ function htmTags($flow)
          echo   "        \n";
          break;
    	case 6:           // 'end/begin/end' input div block
-         echo   "        </div>\n        <div class=\"rounded-border inputTable\">\n" ;
+         echo   "        </div>\n        <div>\n" ;
          $end = "        </div>\n";
          break;
    	case 7:           // '' input div block

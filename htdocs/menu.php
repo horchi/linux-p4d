@@ -86,13 +86,12 @@ if ($edit != "")
       if ($res == 0)
       {
          echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-         echo "        <br/><br/>\n";
          echo "        <div class=\"rounded-border inputTable\">\n";
 
          if ($isTimeRange)
-            echo "          " . $title . ":  <span style=\"color:blue\">$value - $valueTo</span><br/><br/>\n";
+            echo "          " . $title . ":  <span style=\"color:blue\">$value - $valueTo</span><br/>\n";
          else
-            echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/><br/>\n";
+            echo "          " . $title . ":  <span style=\"color:blue\">" . $value . $unit . "</span><br/>\n";
 
          echo "          <input type=\"hidden\" name=\"store_id\" value=$edit></input>\n";
          echo "          <input class=\"rounded-border input\" type=int name=new_value value=$value></input>\n";
@@ -110,7 +109,6 @@ if ($edit != "")
          }
 
          echo "          <button class=\"rounded-border button3\" type=submit name=store value=store>Speichern</button>\n";
-         echo "          <br/><br/>\n";
          echo "        </div>\n";
          echo "      </form>\n";
       }
@@ -135,7 +133,7 @@ if ($menu == "update")
 elseif ($menu == "init")
 {
    requestAction("initmenu", 60, 0, "", $resonse);
-   echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/><br/>";
+   echo "      <br/><div class=\"info\"><b><center>Initialisierung abgeschlossen</center></b></div><br/>";
    $menu = $lastMenu;
 }
 
@@ -166,8 +164,8 @@ function showMenu($current)
 
    $count = $result->num_rows;
 
-   echo "      <div>\n";
-   echo "        <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+   echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+   echo "      <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
 
    while ($i < $count)
    {
@@ -182,16 +180,21 @@ function showMenu($current)
       $i++;
    }
 
+   echo "    </div>\n";
+   echo "    <div class=\"menu\" style=\"top=44px;\">\n";
+   echo "    </div>\n";
+
    if (haveLogin())
    {
-      echo "        <div>\n";
-      echo "          <button class=\"rounded-border button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
-      echo "          <button class=\"rounded-border button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
-      echo "        </div>\n";
-}
+      echo "    <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
+      echo "      <button class=\"rounded-border button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
+      echo "      <button class=\"rounded-border button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
+      echo "    </div>\n";
+      echo "    <div class=\"menu\" style=\"top=88px;\">\n";
+      echo "    </div>\n";
+   }
 
    echo "        </form>\n";
-   echo "      </div>\n";
 }
 
 //***************************************************************************
@@ -200,7 +203,6 @@ function showMenu($current)
 
 function beginTable($title)
 {
-   echo "        <br/>\n";
    echo "        <table class=\"tableTitle\" cellspacing=0 rules=rows>\n";
    echo "          <tr>\n";
    echo "            <td><center><b>$title</b></center></td>\n";

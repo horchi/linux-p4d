@@ -175,58 +175,81 @@ else if ($action == "store")
 // setup form
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+echo "      <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=store>Speichern</button>\n";
+echo "      </div>\n";
+echo "      <div class=\"menu\" style=\"top=88px;\">\n";
+echo "      </div>\n";
 
 // ------------------------
 // setup items ...
 
+// --------------------
+
+echo "        <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Web Interface", 0);
-colorSchemeItem(1, "Farbschema");
-heatingTypeItem(5, "Heizung", $_SESSION['heatingType']);
-configBoolItem(4, "Status Gif animiert?", "stateAni", $_SESSION['stateAni'], "");
+colorSchemeItem(3, "Farbschema");
+heatingTypeItem(3, "Heizung", $_SESSION['heatingType']);
+configBoolItem(3, "Status Gif animiert?", "stateAni", $_SESSION['stateAni'], "");
+echo "       </div>\n";
 
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Ansicht 'Aktuell'", 0, "seperatorTitle2");
-configStrItem(1, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
-configStrItem(4, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
+configStrItem(3, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
+configStrItem(3, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
+echo "       </div>\n";
 
-seperator("Charting", 0, "seperatorTitle2");
-configStrItem(1, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
-configBoolItem(2, "senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
-configOptionItem(5, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein:15 mittel:25 groß:45", "");
-configBoolItem(5, "Chart 3+4", "chart34", $_SESSION['chart34'], "aktivieren?");
-configStrItem(2, "Chart 1", "chart1", $_SESSION['chart1'], "", 250);
-configStrItem(4, "Chart 2", "chart2", $_SESSION['chart2'], "Werte-ID, siehe 'Aufzeichnung'", 250);
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
+seperator("Charts", 0, "seperatorTitle2");
+configStrItem(3, "Chart Zeitraum (Tage)", "chartStart", $_SESSION['chartStart'], "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)", 50);
+configBoolItem(3, "Senkrechte Hilfslinien", "chartXLines", $_SESSION['chartXLines'], "");
+configOptionItem(3, "Linien-Abstand der Y-Achse", "chartDiv", $_SESSION['chartDiv'], "klein:15 mittel:25 groß:45", "");
+configBoolItem(3, "Chart 3+4", "chart34", $_SESSION['chart34'], "aktivieren?");
+configStrItem(3, "Chart 1", "chart1", $_SESSION['chart1'], "", 250);
+configStrItem(3, "Chart 2", "chart2", $_SESSION['chart2'], "Werte-ID, siehe 'Aufzeichnung'", 250);
 
 if ($_SESSION['chart34'] == "1")
 {
-   configStrItem(1, "Chart 3", "chart3", $_SESSION['chart3'], "", 250);
-   configStrItem(4, "Chart 4", "chart4", $_SESSION['chart4'], "Werte-ID siehe 'Aufzeichnung'", 250);
+   configStrItem(3, "Chart 3", "chart3", $_SESSION['chart3'], "", 250);
+   configStrItem(3, "Chart 4", "chart4", $_SESSION['chart4'], "Werte-ID siehe 'Aufzeichnung'", 250);
 }
+echo "       </div>\n";
 
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Login", 0, "seperatorTitle2");
-configStrItem(1, "User", "user", $_SESSION['user'], "", 400);
-configStrItem(6, "Passwort", "passwd1", "", "", 350, "", true);
+configStrItem(3, "User", "user", $_SESSION['user'], "", 350);
+configStrItem(3, "Passwort", "passwd1", "", "", 350, "", true);
+configStrItem(3, "Wiederholen", "passwd2", "", "", 350, "", true);
+echo "       </div>\n";
 
+// --------------------
+
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("HomeMatic Interface", 0);
 configStrItem(3, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
+echo "       </div>\n";
 
+// --------------------
+
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("p4d Konfiguration", 0);
-
 seperator("Mail Benachrichtigungen", 0, "seperatorTitle2");
 $ro = ($_SESSION['mail']) ? "\"" : "; background-color:#ddd;\" readOnly=\"true\"";
-configBoolItem(1, "Mail Benachrichtigung", "mail\" onClick=\"disableContent('htM',this); readonlyContent('Mail',this)", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
-configBoolItem(5, "HTML-Mail", "htmlMail\" id=\"htM", $_SESSION['htmlMail'], "gilt für alle Mails", $_SESSION['mail'] ? "" : "disabled=\"true\"");
-configStrItem(2, "Status Mail Empfänger", "stateMailTo\" id=\"Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
-configStrItem(2, "Fehler Mail Empfänger", "errorMailTo\" id=\"Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
-configStrItem(2, "Status Mail für folgende Status", "stateMailStates\" id=\"Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
-configStrItem(2, "p4d sendet Mails über das Skript", "mailScript\" id=\"Mail4", $_SESSION['mailScript'], "", 400, $ro);
+configBoolItem(3, "Mail Benachrichtigung", "mail\" onClick=\"disableContent('htM',this); readonlyContent('Mail',this)", $_SESSION['mail'], "Mail Benachrichtigungen aktivieren/deaktivieren");
+configBoolItem(3, "HTML-Mail", "htmlMail\" id=\"htM", $_SESSION['htmlMail'], "gilt für alle Mails", $_SESSION['mail'] ? "" : "disabled=\"true\"");
+configStrItem(3, "Status Mail Empfänger", "stateMailTo\" id=\"Mail1", $_SESSION['stateMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(3, "Fehler Mail Empfänger", "errorMailTo\" id=\"Mail2", $_SESSION['errorMailTo'], "Komma separierte Empängerliste", 500, $ro);
+configStrItem(3, "Status Mail für folgende Status", "stateMailStates\" id=\"Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
+configStrItem(3, "p4d sendet Mails über das Skript", "mailScript\" id=\"Mail4", $_SESSION['mailScript'], "", 400, $ro);
+configStrItem(3, "URL deiner Visualisierung", "webUrl\" id=\"Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=mailtest>Test Mail</button>\n";
-configStrItem(6, "URL deiner Visualisierung", "webUrl\" id=\"Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
+echo "       </div>\n";
 
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Sonstiges", 0, "seperatorTitle2");
 $ro = ($_SESSION['tsync']) ? "\"" : "; background-color:#ddd;\" readOnly=\"true\"";
-configBoolItem(1, "Zeitsynchronisation", "tsync\" onClick=\"readonlyContent('timeLeak',this)", $_SESSION['tsync'], "tägl. 23:00Uhr");
-configStrItem(4, "Mind. Abweichung [s]", "maxTimeLeak\" id=\"timeLeak", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
+configBoolItem(3, "Zeitsynchronisation", "tsync\" onClick=\"readonlyContent('timeLeak',this)", $_SESSION['tsync'], "tägl. 23:00Uhr");
+configStrItem(3, "Mind. Abweichung [s]", "maxTimeLeak\" id=\"timeLeak", $_SESSION['maxTimeLeak'], "Mindestabweichung für Synchronisation", 45, $ro);
 
 echo "      </form>\n";
 
@@ -241,17 +264,19 @@ function colorSchemeItem($new, $title)
    $actual = readlink("stylesheet.css");
 
    $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <select class=\"rounded-border input\" name=\"style\">\n";
+   echo "          <span>$title:</span>\n";
+   echo "          <span>\n";
+   echo "            <select class=\"rounded-border input\" name=\"style\">\n";
 
    foreach (glob("stylesheet-*.css") as $filename)
    {
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 11);
-      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+      echo "              <option value='$tp' " . $sel . ">$tp</option>\n";
    }
 
-   echo "          </select>\n";
+   echo "            </select>\n";
+   echo "          </span>\n";
    echo $end;
 }
 
@@ -289,8 +314,9 @@ function heatingTypeItem($new, $title, $type)
    $actual = "heating-$type.png";
 
    $end = htmTags($new);
-   echo "          $title:\n";
-   echo "          <select class=\"rounded-border input\" name=\"heatingType\">\n";
+   echo "          <span>$title:</span>\n";
+   echo "          <span>\n";
+   echo "            <select class=\"rounded-border input\" name=\"heatingType\">\n";
 
    $path = "img/type/";
 
@@ -300,10 +326,11 @@ function heatingTypeItem($new, $title, $type)
 
       $sel = $actual == $filename ? "SELECTED" : "";
       $tp = substr(strstr($filename, ".", true), 8);
-      echo "            <option value='$tp' " . $sel . ">$tp</option>\n";
+      echo "              <option value='$tp' " . $sel . ">$tp</option>\n";
    }
 
-   echo "          </select>\n";
+   echo "            </select>\n";
+   echo "          </span>\n";
    echo $end;
 }
 
