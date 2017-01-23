@@ -43,18 +43,17 @@ printHeader();
   echo "  </div>\n";
 
   echo "  <div id=\"imgDiv\" class=\"rounded-border chart\">\n";
-  $condition = "address in (" . $_SESSION['chart1'] . ")";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range
-     . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines']
+     . "&condition=" . $_SESSION['chart1'] . "&chartXLines=" . $_SESSION['chartXLines']
      . "&chartDiv=" . $_SESSION['chartDiv'] . "'/>\n";
   echo "  </div>\n";
 
   echo "  <div class=\"rounded-border chart\">\n";
-  $condition = "address in (" . $_SESSION['chart2']. ")";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range
-     . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines']
+     . "&condition=" . $_SESSION['chart2'] . "&chartXLines=" . $_SESSION['chartXLines']
      . "&chartDiv=" . $_SESSION['chartDiv'] . "'/>\n";
   echo "  </div>\n";
 
 include("footer.php");
+
 ?>

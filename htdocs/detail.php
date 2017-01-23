@@ -34,17 +34,22 @@ if (isset($_GET['chartXLines']) && $_GET['chartXLines'] == true)
 else
    $XLines = false;
 
-if (isset($_GET['address']) && is_numeric($_GET['address']))
-   $sensorCond = " address = " .  $mysqli->real_escape_string(htmlspecialchars($_GET['address'])) . " ";
-elseif (isset($_GET['condition']))
-   $sensorCond = " " . $mysqli->real_escape_string(htmlspecialchars($_GET['condition'])) . " ";
+if (isset($_GET['condition']))
+{
+   $sensorCond = buildAddrCondition(htmlspecialchars($_GET['condition']));
+}
 else
-   $sensorCond = " address in (0,1,21,25,4) ";
+{
+   if (isset($_GET['address']) && is_numeric($_GET['address']))
+      $sensorCond = " address = " .  $mysqli->real_escape_string(htmlspecialchars($_GET['address'])) . " ";
+   else
+      $sensorCond = " address in (0,1,21,25,4) ";
 
-if (isset($_GET['type']))
-   $sensorCond .= "and type = '" .  $mysqli->real_escape_string(htmlspecialchars($_GET['type'])) . "' ";
-else
-   $sensorCond .= "and type = 'VA' ";
+   if (isset($_GET['type']))
+      $sensorCond .= "and type = '" .  $mysqli->real_escape_string(htmlspecialchars($_GET['type'])) . "' ";
+   else
+      $sensorCond .= "and type = 'VA' ";
+}
 
 if (isset($_GET['width']) && is_numeric($_GET['width']))
    $width = htmlspecialchars($_GET['width']);
@@ -84,7 +89,6 @@ syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $fro
 $factResult = $mysqli->query($factsQuery)
    or die("Error" . $mysqli->error . "query [" . $factsQuery . "]");
 
-
 $skipTicks = 0;
 $count = 0;
 $first = true;
@@ -122,7 +126,7 @@ while ($fact = $factResult->fetch_assoc())
    $result = $mysqli->query($query)
       or die("Error: " . $mysqli->error . ", query: [" . $query . "]");
 
-   syslog(LOG_DEBUG, "p4: " . $result->num_rows . " for $title ($address)");
+   // syslog(LOG_DEBUG, "p4: " . $result->num_rows . " for $title ($address)");
 
    $lastLabel = "";
 
@@ -261,5 +265,32 @@ else
 
 $dd = time() - $start;
 syslog(LOG_DEBUG, "p4: --------- done in $dd seconds");
+
+
+//***************************************************************************
+// Build Address Condition
+//***************************************************************************
+
+function buildAddrCondition($tuples)
+{
+   $condition = "";
+
+   foreach (explode(",", $tuples) as $tuple)
+   {
+      $type = "VA";
+      $tup = explode("/", $tuple);
+      $addr = $tup[0];
+
+      if (count($tup) > 1)
+         $type = $tup[1];
+
+      if ($condition != "")
+         $condition .= " or ";
+
+      $condition .= "(type = '$type' and address = $addr)";
+   }
+
+   return $condition;
+}
 
 ?>

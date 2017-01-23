@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.23"
+#define _VERSION     "0.2.24"
 #define VERSION_DATE "23.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-01-23:  version 0.2.24
+   - added:  WEBIF: Charts support now all sensors types (not only 'VA')
 
 2017-01-23:  version 0.2.23
    - bugfix: Fixed potentially endless loop on communication trouble
