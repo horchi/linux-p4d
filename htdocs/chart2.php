@@ -41,14 +41,17 @@ printHeader();
   echo "  </div>\n";
 
   echo "  <div class=\"rounded-border chart\">\n";
-  $condition = "address in (" . $_SESSION['chart3'] . ")";
-  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range
+     . "&condition=" . $_SESSION['chart3'] . "&chartXLines=" . $_SESSION['chartXLines']
+     . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
   echo "  <div class=\"rounded-border chart\">\n";
-  $condition = "address in (" . $_SESSION['chart4']. ")";
-  echo "    <img src='detail.php?from=" . $from . "&range=" . $range . "&condition=" . $condition . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+  echo "    <img src='detail.php?from=" . $from . "&range=" . $range
+     . "&condition=" . $_SESSION['chart4'] . "&chartXLines=" . $_SESSION['chartXLines']
+     . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
   echo "  </div>\n";
 
 include("footer.php");
+
 ?>

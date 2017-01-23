@@ -24,7 +24,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
 // parameters
 // echo $Div.":".$_GET['chartDiv']." - ".$XLines.":".$_GET['chartXLines'];
 
-if(isset($_GET['chartDiv']) && is_numeric($_GET['chartDiv']))
+if (isset($_GET['chartDiv']) && is_numeric($_GET['chartDiv']))
    $Div = htmlspecialchars($_GET['chartDiv']);
 else
    $Div = 25;
@@ -41,14 +41,14 @@ if (isset($_GET['condition']))
 else
 {
    if (isset($_GET['address']) && is_numeric($_GET['address']))
-      $sensorCond = " address = " .  $mysqli->real_escape_string(htmlspecialchars($_GET['address'])) . " ";
+      $sensorCond = "address = " .  $mysqli->real_escape_string(htmlspecialchars($_GET['address']));
    else
-      $sensorCond = " address in (0,1,21,25,4) ";
+      $sensorCond = "address in (0,1,21,25,4)";
 
    if (isset($_GET['type']))
-      $sensorCond .= "and type = '" .  $mysqli->real_escape_string(htmlspecialchars($_GET['type'])) . "' ";
+      $sensorCond .= " and type = '" .  $mysqli->real_escape_string(htmlspecialchars($_GET['type'])) . "'";
    else
-      $sensorCond .= "and type = 'VA' ";
+      $sensorCond .= " and type = 'VA'";
 }
 
 if (isset($_GET['width']) && is_numeric($_GET['width']))
@@ -60,6 +60,7 @@ if (isset($_GET['height']) && is_numeric($_GET['height']))
    $height = htmlspecialchars($_GET['height']);
 else
    $height = 600;
+
 if (isset($_GET['from']) && is_numeric($_GET['from']))
    $from = $mysqli->real_escape_string(htmlspecialchars($_GET['from']));
 else
@@ -82,7 +83,7 @@ syslog(LOG_DEBUG, "p4: ---------");
 // ------------------------------
 // get data from db
 
-$factsQuery = "select address, type, name, usrtitle, title, unit from valuefacts where" . $sensorCond;
+$factsQuery = "select address, type, name, usrtitle, title, unit from valuefacts where " . $sensorCond;
 syslog(LOG_DEBUG, "p4: range $range; from '" . strftime("%d. %b %Y  %H:%M", $from)
        . "' to '" . strftime("%d. %b %Y %H:%M", $to) . " [$factsQuery]");
 
@@ -126,7 +127,7 @@ while ($fact = $factResult->fetch_assoc())
    $result = $mysqli->query($query)
       or die("Error: " . $mysqli->error . ", query: [" . $query . "]");
 
-   // syslog(LOG_DEBUG, "p4: " . $result->num_rows . " for $title ($address)");
+   syslog(LOG_DEBUG, "p4: " . $result->num_rows . " for $title ($address) $name");
 
    $lastLabel = "";
 
@@ -197,12 +198,12 @@ foreach ($series as $sensor => $serie)
 
 $chartHash = $cache->getHash($data);
 
-if ($cache->isInCache($chartHash))
-{
-   syslog(LOG_DEBUG, "p4: got from cache");
-   $cache->strokeFromCache($chartHash);
-}
-else
+//if ($cache->isInCache($chartHash))
+//{
+//   syslog(LOG_DEBUG, "p4: got from cache");
+//   $cache->strokeFromCache($chartHash);
+//}
+//else
 {
    $points = $data->getSerieCount("Timestamps");
 

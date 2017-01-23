@@ -36,9 +36,7 @@ printHeader();
   echo "        <option value='7' "  . ($range == 7  ? "SELECTED" : "") . ">Woche</option>\n";
   echo "        <option value='31' " . ($range == 31 ? "SELECTED" : "") . ">Monat</option>\n";
   echo "      </select>\n";
-
   echo "      <input type=submit value=\"Go\">\n";
-
   echo "    </form>\n";
   echo "  </div>\n";
 
