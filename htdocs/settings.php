@@ -50,19 +50,18 @@ else if ($action == "store")
 
    if (isset($_POST["selected"]))
    {
-      $sql = "UPDATE valuefacts SET state = 'D'";
-      $result = $mysqli->query($sql)
+      $result = $mysqli->query("update valuefacts set state = 'D'")
          or die("<br/>Error" . $mysqli->error);
 
       foreach ($_POST['selected'] as $key => $value)
       {
          $value = htmlspecialchars($value);
-         list ($addr, $type) = explode(":", $value);
+         list($addr, $type) = explode(":", $value);
 
          $addr = $mysqli->real_escape_string($addr);
          $type = $mysqli->real_escape_string($type);
 
-         $sql = "UPDATE valuefacts set state = 'A' where address = '$addr' and type = '$type'";
+         $sql = "update valuefacts set state = 'A' where address = '$addr' and type = '$type'";
 
          $mysqli->query($sql)
             or die("<br/>Error" . $mysqli->error);
@@ -73,7 +72,7 @@ else if ($action == "store")
 
       requestAction("update-schemacfg", 2, 0, "", $resonse);
 
-      echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
+      echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
    }
 }
 

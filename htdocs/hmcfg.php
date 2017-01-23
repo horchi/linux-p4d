@@ -60,7 +60,7 @@ else if ($action == "store")
          or die("<br/>Error" . $mysqli->error);
    }
 
-   echo "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div><br/><br/>";
+   echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
 }
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
@@ -79,8 +79,8 @@ include("footer.php");
 function showButtons()
 {
    echo "        <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
-   echo "          <button class=\"rounded-border button3\" type=submit name=action value=sync>Import/Sync</button>\n";
-   echo "          <button class=\"rounded-border button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
+   echo "          <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"sync\">Import/Sync</button>\n";
+   echo "          <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"store\" onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
    echo "        </div>\n";
    echo "        <div class=\"menu\" style=\"top=88px;\">\n";
    echo "        </div>\n";
@@ -96,16 +96,15 @@ function showTable($tableTitle)
 
    seperator($tableTitle, 0);
 
-   echo "        <table class=\"tableMultiCol\">\n";
-   echo "          <tbody>\n";
-   echo "            <tr>\n";
-   echo "              <td>HM ID</td>\n";
-   echo "              <td>Name</td>\n";
-   echo "              <td>Value</td>\n";
-   echo "              <td>Aktualisiert</td>\n";
-   echo "              <td>ID</td>\n";
-   echo "              <td>Typ</td>\n";
-   echo "            </tr>\n";
+   echo "        <div class=\"rounded tableMultiCol\">\n";
+   echo "          <div>\n";
+   echo "            <span style=\"width:5%;\"><strong>HM</strong></span>\n";
+   echo "            <span style=\"width:30%;\"><strong>Name</strong></span>\n";
+   echo "            <span style=\"width:10%;\"><strong>Value</strong></span>\n";
+   echo "            <span style=\"width:15%;\"><strong>Aktualisiert</strong></span>\n";
+   echo "            <span style=\"width:10%;\"><strong>ID</strong></span>\n";
+   echo "            <span style=\"width:10%;\"><strong>Typ</strong></span>\n";
+   echo "          </div>\n";
 
    $result = $mysqli->query("select * from hmsysvars where visible = 1")
       or die("<br/>Error" . $mysqli->error);
@@ -125,19 +124,17 @@ function showTable($tableTitle)
       if ($type == 4 && $value != 0)
          $value = number_format(round($value, 1), 2);
 
-      echo "            <tr>\n";
-      echo "              <td><input type=\"hidden\" name=\"id[]\" value=\"$id\"/> $id </td>\n";
-      echo "              <td>$name</td>\n";
-      echo "              <td>$value$unit</td>\n";
-      echo "              <td>$time</td>\n";
-
-      echo "              <td><input class=\"rounded-border input\" name=\"address[]\" type=\"text\" value=\"$address\"/></td>\n";
-      echo "              <td><input class=\"rounded-border input\" name=\"atype[]\" type=\"text\" value=\"$atype\"/></td>\n";
-      echo "            </tr>\n";
+      echo "          <div>\n";
+      echo "            <span style=\"width:5%;\"><input type=\"hidden\" name=\"id[]\" value=\"$id\"/> $id </span>\n";
+      echo "            <span style=\"width:30%;\">$name</span>\n";
+      echo "            <span style=\"width:10%;\">$value$unit</span>\n";
+      echo "            <span style=\"width:15%;\">$time</span>\n";
+      echo "            <span style=\"width:10%;\"><input class=\"rounded-border input\" name=\"address[]\" type=\"text\" value=\"$address\"/></span>\n";
+      echo "            <span style=\"width:10%;\"><input class=\"rounded-border input\" name=\"atype[]\" type=\"text\" value=\"$atype\"/></span>\n";
+      echo "          </div>\n";
    }
 
-   echo "          </tbody>\n";
-   echo "        </table>\n";
+   echo "        </div>\n";
 }
 
 ?>

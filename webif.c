@@ -123,6 +123,23 @@ int P4d::performWebifRequests()
          free(user);
       }
 
+      else if (strcasecmp(command, "call-script") == 0)
+      {
+         const char* result;
+
+         if (callScript(data, result) != success)
+         {
+            char* responce;
+            asprintf(&responce, "fail:%s", result);
+            tableJobs->setValue("RESULT", responce);
+            free(responce);
+         }
+         else
+         {
+            tableJobs->setValue("RESULT", "success:done");
+         }
+      }
+
       else if (strcasecmp(command, "update-schemacfg") == 0)
       {
          updateSchemaConfTable();
@@ -663,4 +680,47 @@ int P4d::cleanupWebifRequests()
    status = cleanupJobs->execute();
 
    return status;
+}
+
+//***************************************************************************
+// Call Script
+//***************************************************************************
+
+int P4d::callScript(const char* scriptName, const char*& result)
+{
+   int status;
+   const char* path;
+
+   result = "";
+
+   tableScripts->clear();
+   tableScripts->setValue("NAME", scriptName);
+
+   if (!selectScriptByName->find())
+   {
+      selectScriptByName->freeResult();
+      tell(eloAlways, "Script '%s' not found in database", scriptName);
+      result = "script name not found";
+      return fail;
+   }
+
+   selectScriptByName->freeResult();
+   path = tableScripts->getStrValue("PATH");
+
+   if (!fileExists(path))
+   {
+      tell(eloAlways, "Path '%s' not found", path);
+      result = "path not found";
+      return fail;
+   }
+
+   if ((status = system(path)) == -1)
+   {
+      tell(eloAlways, "Called script '%s' failed", path);
+      return fail;
+   }
+
+   tell(eloAlways, "Called script '%s' at path '%s', exit status was (%d)", scriptName, path, status);
+
+   return success;
 }

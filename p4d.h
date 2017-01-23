@@ -96,7 +96,8 @@ class P4d : public FroelingService
       int updateValueFacts();
       int updateTimeRangeData();
       int initMenu();
-
+      int updateScripts();
+      int callScript(const char* scriptName, const char*& result);
       int hmUpdateSysVars();
       int hmSyncSysVars();
 
@@ -125,6 +126,7 @@ class P4d : public FroelingService
       cDbTable* tableConfig;
       cDbTable* tableTimeRanges;
       cDbTable* tableHmSysVars;
+      cDbTable* tableScripts;
 
       cDbStatement* selectActiveValueFacts;
       cDbStatement* selectAllValueFacts;
@@ -135,6 +137,8 @@ class P4d : public FroelingService
       cDbStatement* selectPendingErrors;
       cDbStatement* selectMaxTime;
       cDbStatement* selectHmSysVarByAddr;
+      cDbStatement* selectScriptByName;
+      cDbStatement* selectScript;
       cDbStatement* cleanupJobs;
 
       cDbValue rangeEnd;

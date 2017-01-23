@@ -18,7 +18,7 @@ int W1::show()
 {
    for (SensorList::iterator it = sensors.begin(); it != sensors.end(); ++it)
       tell(0, "%s: %2.3f", it->first.c_str(), it->second);
-   
+
    return done;
 }
 
@@ -29,29 +29,29 @@ int W1::update()
       char line[100+TB];
       FILE* in;
       char* path;
-      
+
       asprintf(&path, "%s/%s/w1_slave", w1Path, it->first.c_str());
-      
+
       if (!(in = fopen(path, "r")))
       {
          tell(eloAlways, "Error: Opening '%s' failed, %s", path, strerror(errno));
          free(path);
          continue;
       }
-      
+
       while (fgets(line, 100, in))
       {
          char* p;
-         
+
          line[strlen(line)-1] = 0;
-         
+
          if ((p = strstr(line, " t=")))
          {
             double temp = atoi(p+3) / 1000.0;
             sensors[it->first] = temp;
          }
       }
-      
+
       fclose(in);
       free(path);
    }
@@ -93,16 +93,16 @@ unsigned int W1::toId(const char* name)
 {
    const char* p;
    int len = strlen(name);
-   
+
    // use 4 minor bytes as id
-   
+
    if (len <= 2)
       return na;
-   
+
    if (len <= 8)
       p = name;
    else
       p = name + (len - 8);
-   
+
    return strtoull(p, 0, 16);
 }

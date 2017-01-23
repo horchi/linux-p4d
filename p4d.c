@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <libxml/parser.h>
 
 #include "p4d.h"
@@ -35,6 +36,7 @@ P4d::P4d()
    tableConfig = 0;
    tableErrors = 0;
    tableTimeRanges = 0;
+   tableScripts = 0;
    selectHmSysVarByAddr = 0;
 
    selectActiveValueFacts = 0;
@@ -46,6 +48,8 @@ P4d::P4d()
    selectPendingErrors = 0;
    selectMaxTime = 0;
    selectHmSysVarByAddr = 0;
+   selectScriptByName = 0;
+   selectScript = 0;
    cleanupJobs = 0;
 
    nextAt = time(0);           // intervall for 'reading values'
@@ -244,6 +248,9 @@ int P4d::initDb()
    tableHmSysVars = new cDbTable(connection, "hmsysvars");
    if (tableHmSysVars->open() != success) return fail;
 
+   tableScripts = new cDbTable(connection, "scripts");
+   if (tableScripts->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -364,6 +371,28 @@ int P4d::initDb()
 
    // ------------------
 
+   selectScriptByName = new cDbStatement(tableScripts);
+
+   selectScriptByName->build("select ");
+   selectScriptByName->bindAllOut();
+   selectScriptByName->build(" from %s where ", tableScripts->TableName());
+   selectScriptByName->bind("NAME", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectScriptByName->prepare();
+
+   // ------------------
+
+   selectScript = new cDbStatement(tableScripts);
+
+   selectScript->build("select ");
+   selectScript->bindAllOut();
+   selectScript->build(" from %s where ", tableScripts->TableName());
+   selectScript->bind("PATH", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectScript->prepare();
+
+   // ------------------
+
    cleanupJobs = new cDbStatement(tableJobs);
 
    cleanupJobs->build("delete from %s where ", tableJobs->TableName());
@@ -375,6 +404,8 @@ int P4d::initDb()
 
    if (status == success)
       tell(eloAlways, "Connection to database established");
+
+   updateScripts();
 
    return status;
 }
@@ -392,6 +423,7 @@ int P4d::exitDb()
    delete tableConfig;             tableConfig = 0;
    delete tableTimeRanges;         tableTimeRanges = 0;
    delete tableHmSysVars;          tableHmSysVars = 0;
+   delete tableScripts;            tableScripts = 0;
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
@@ -401,6 +433,8 @@ int P4d::exitDb()
    delete selectSampleInRange;     selectSampleInRange = 0;
    delete selectPendingErrors;     selectPendingErrors = 0;
    delete selectMaxTime;           selectMaxTime = 0;
+   delete selectScriptByName;      selectScriptByName = 0;
+   delete selectScript;            selectScript = 0;
    delete cleanupJobs;             cleanupJobs = 0;
 
    delete connection;              connection = 0;
@@ -797,6 +831,51 @@ int P4d::updateValueFacts()
    }
 
    return success;
+}
+
+//***************************************************************************
+// Update Script Table
+//***************************************************************************
+
+int P4d::updateScripts()
+{
+   char* scriptPath = 0;
+   DIR* dir;
+   dirent* dp;
+
+   asprintf(&scriptPath, "%s/scripts.d", confDir);
+
+   if (!(dir = opendir(scriptPath)))
+   {
+      tell(0, "Info: Script path '%s' not exists - '%s'", scriptPath, strerror(errno));
+      free(scriptPath);
+      return fail;
+   }
+
+   while ((dp = readdir(dir)))
+   {
+      char* script = 0;
+      asprintf(&script, "%s/%s", scriptPath, dp->d_name);
+
+      tableScripts->clear();
+      tableScripts->setValue("PATH", script);
+
+      free(script);
+
+      if (dp->d_type != DT_LNK && dp->d_type != DT_REG)
+         continue;
+
+      if (!selectScript->find())
+      {
+         tableScripts->setValue("NAME", dp->d_name);
+         tableScripts->insert();
+      }
+   }
+
+   closedir(dir);
+   free(scriptPath);
+
+   return done;
 }
 
 //***************************************************************************

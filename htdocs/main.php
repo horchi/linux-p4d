@@ -44,10 +44,49 @@ printHeader(60);
   $syear  = isset($_GET['syear'])  ? $_GET['syear']   : (int)date("Y",time()-86400*$_SESSION['chartStart']);
   $srange = isset($_GET['srange'])  ? $_GET['srange'] : $_SESSION['chartStart'];
 
-  // $srange = isset($_GET['range'])  ? $_GET['range']  : $_SESSION['chartStart'] > 7 ? 31 : $_SESSION['chartStart'] > 1 ? 7 : 1;
-
-  $range = ($range > 7) ? 31 : (($range > 1) ? 7 : 1);
+  $range = ($srange > 7) ? 31 : (($srange > 1) ? 7 : 1);
   $from = date_create_from_format('!Y-m-d', $syear.'-'.$smonth.'-'.$sday)->getTimestamp();
+
+  // ------------------
+  // Script Buttons
+
+  $action = "";
+
+  if (isset($_POST["action"]))
+     $action = htmlspecialchars($_POST["action"]);
+
+  if (substr($action, 0, 6) == "script")
+  {
+     $script = substr($action, 7);
+
+     if (requestAction("call-script", 5, 0, "$script", $resonse) != 0)
+        echo "      <div class=\"infoError\"><b><center>Calling Skript failed '$resonse' - p4d log for further details</center></div></br>\n";
+  }
+
+  $result = $mysqli->query("select * from scripts where visible = 'Y'")
+     or die("Error" . $mysqli->error);
+
+  $count = $result->num_rows;
+
+  if ($count > 0)
+  {
+     $i = 0;
+
+     echo "      <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
+     echo "        <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+
+     while ($i < $count)
+     {
+        $name = mysqli_result($result, $i, "name");
+        echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"script-$name\"" . $name . "\">$name</button>\n";
+        $i++;
+     }
+
+     echo "        </div>\n";
+     echo "        <div class=\"menu\" style=\"top=44px;\">\n";
+     echo "        </div>\n";
+     echo "      </form>\n";
+  }
 
   // ------------------
   // State of P4 Daemon

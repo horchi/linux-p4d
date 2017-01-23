@@ -65,7 +65,6 @@ if ($store == "store")
    }
 }
 
-
 // -----------------------
 // Edit Parameter
 
@@ -108,7 +107,7 @@ if ($edit != "")
             echo "          (Bereich: " . $min . "-" . $max . ")   (Default: " . $default . ")\n";
          }
 
-         echo "          <button class=\"rounded-border button3\" type=submit name=store value=store>Speichern</button>\n";
+         echo "          <button class=\"rounded-border button3\" type=\"submit\" name=\"store\" value=\"store\">Speichern</button>\n";
          echo "        </div>\n";
          echo "      </form>\n";
       }
@@ -164,7 +163,7 @@ function showMenu($current)
 
    $count = $result->num_rows;
 
-   echo "    <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+   echo "    <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
    echo "      <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
 
    while ($i < $count)
@@ -173,9 +172,9 @@ function showMenu($current)
       $title = mysqli_result($result, $i, "title");
 
       if ($child == $current)
-         echo "          <button class=\"rounded-border button2sel\" type=submit name=menu value=$child>$title</button>\n";
+         echo "          <button class=\"rounded-border button2sel\" type=\"submit\" name=\"menu\" value=\"" . $child . "\">" . $title . "</button>\n";
       else
-         echo "          <button class=\"rounded-border button2\" type=submit name=menu value=$child>$title</button>\n";
+         echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"menu\" value=\"" . $child . "\">" . $title . "</button>\n";
 
       $i++;
    }
@@ -187,8 +186,8 @@ function showMenu($current)
    if (haveLogin())
    {
       echo "    <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
-      echo "      <button class=\"rounded-border button3\" type=submit name=menu value=init onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
-      echo "      <button class=\"rounded-border button3\" type=submit name=menu value=update onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
+      echo "      <button class=\"rounded-border button3\" type=submit name=\"menu\" value=\"init\" onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
+      echo "      <button class=\"rounded-border button3\" type=submit name=\"menu\" value=\"update\" onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
       echo "    </div>\n";
       echo "    <div class=\"menu\" style=\"top=88px;\">\n";
       echo "    </div>\n";
