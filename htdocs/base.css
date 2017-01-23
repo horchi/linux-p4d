@@ -466,8 +466,9 @@ table.tableMultiCol tr:nth-child(odd)
 
 .cellL4
 {
-    font-size: 16px;
     background-color: var(--light1);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    font-size: 16px;
     color: black;
 }
 

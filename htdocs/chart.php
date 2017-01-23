@@ -42,17 +42,6 @@ printHeader();
   echo "    </form>\n";
   echo "  </div>\n";
 
-/* ?>
-
- <script language="javascript">
-   var mydiv = document.getElementById('imgDiv');
-   var mydivWidth = mydiv.width;
- </script>
-
- <?php
-
- $width = var mydivWidth; */
-
   echo "  <div id=\"imgDiv\" class=\"rounded-border chart\">\n";
   $condition = "address in (" . $_SESSION['chart1'] . ")";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range
