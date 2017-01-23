@@ -63,29 +63,32 @@ printHeader(60);
         echo "      <div class=\"infoError\"><b><center>Calling Skript failed '$resonse' - p4d log for further details</center></div></br>\n";
   }
 
-  $result = $mysqli->query("select * from scripts where visible = 'Y'")
-     or die("Error" . $mysqli->error);
-
-  $count = $result->num_rows;
-
-  if ($count > 0)
+  if (haveLogin())
   {
-     $i = 0;
+    $result = $mysqli->query("select * from scripts where visible = 'Y'")
+       or die("Error" . $mysqli->error);
 
-     echo "      <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
-     echo "        <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+    $count = $result->num_rows;
 
-     while ($i < $count)
-     {
-        $name = mysqli_result($result, $i, "name");
-        echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"script-$name\"" . $name . "\">$name</button>\n";
-        $i++;
-     }
+    if ($count > 0)
+    {
+       $i = 0;
 
-     echo "        </div>\n";
-     echo "        <div class=\"menu\" style=\"top=44px;\">\n";
-     echo "        </div>\n";
-     echo "      </form>\n";
+       echo "      <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
+       echo "        <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+
+       while ($i < $count)
+       {
+          $name = mysqli_result($result, $i, "name");
+          echo "          <button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"script-$name\"" . $name . "\">$name</button>\n";
+          $i++;
+       }
+
+       echo "        </div>\n";
+       echo "        <div class=\"menu\" style=\"top=44px;\">\n";
+       echo "        </div>\n";
+       echo "      </form>\n";
+    }
   }
 
   // ------------------

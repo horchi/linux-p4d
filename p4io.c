@@ -748,7 +748,9 @@ int P4Request::getStatus(Status* s)
       status += readTimeDateExt(s->time);
       size -= 7;
 
-      while (size-- > 0)
+      int max = 0;
+
+      while (size-- > 0 && max++ < 10)
          status += readByte(b);
 
       show("<- ");

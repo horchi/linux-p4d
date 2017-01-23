@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.22"
+#define _VERSION     "0.2.23"
 #define VERSION_DATE "23.01.2017"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2017-01-23:  version 0.2.23
+   - bugfix: Fixed potentially endless loop on communication trouble
+   - change: WEBIF: Show script buttons only with login
 
 2017-01-23:  version 0.2.22
    - added:  WEBIF: More css/html improvements
