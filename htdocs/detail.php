@@ -198,12 +198,12 @@ foreach ($series as $sensor => $serie)
 
 $chartHash = $cache->getHash($data);
 
-//if ($cache->isInCache($chartHash))
-//{
-//   syslog(LOG_DEBUG, "p4: got from cache");
-//   $cache->strokeFromCache($chartHash);
-//}
-//else
+if ($cache->isInCache($chartHash))
+{
+   syslog(LOG_DEBUG, "p4: got from cache");
+   $cache->strokeFromCache($chartHash);
+}
+else
 {
    $points = $data->getSerieCount("Timestamps");
 
