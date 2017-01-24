@@ -359,7 +359,11 @@ table.tableMultiCol tr:nth-child(odd)
     display: block;
 }
 
-@media only screen and (max-width: 800px)
+@media only screen and (max-width: 500px)
+{
+}
+
+@media only screen and (max-width: 740px)
 {
     .content                   { padding: 0px; }
     #divP4dState               { display: none; }
@@ -368,6 +372,9 @@ table.tableMultiCol tr:nth-child(odd)
     .P4dInfo > div > span      { min-width: 110px; }
     .heatingState              { width: 56%; }
     .centerImage               { margin: 0px 0px 0px 0px; }
+
+    .inputTableConfig > div > span:nth-child(3) { width: 95%; }
+    .inputTableConfig > div > span              { width: 95%; }
 }
 
 @media only screen and (min-width: 768px) and (max-width:1139px)
