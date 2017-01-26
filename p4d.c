@@ -1215,6 +1215,9 @@ int P4d::loop()
          standby(10);
       }
 
+      if (doShutDown())
+         break;
+
       meanwhile();
 
       standbyUntil(min(nextStateAt, nextAt));
@@ -1241,6 +1244,7 @@ int P4d::loop()
             tell(eloAlways, "Retrying in 10 seconds");
             standby(10);
          }
+
          continue;
       }
 
