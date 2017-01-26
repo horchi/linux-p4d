@@ -175,7 +175,7 @@ int P4d::initDb()
       if (connection->attachConnection() != success)
       {
          tell(0, "Fatal: Initial database connect failed, aborting");
-         return abrt;
+         return fail;
       }
 
       std::map<std::string, cDbTableDef*>::iterator t;
