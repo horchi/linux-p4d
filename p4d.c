@@ -123,13 +123,6 @@ int P4d::init()
    tell(0, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
-   // initialize the database resources
-
-   if (initDb() != success)
-      return fail;
-
-   readConfiguration();
-
    // prepare one wire sensors
 
    w1.scan();
@@ -174,7 +167,7 @@ int P4d::initDb()
 
       if (connection->attachConnection() != success)
       {
-         tell(0, "Fatal: Initial database connect failed, aborting");
+         tell(0, "Error: Initial database connect failed");
          return fail;
       }
 
@@ -405,6 +398,7 @@ int P4d::initDb()
    if (status == success)
       tell(eloAlways, "Connection to database established");
 
+   readConfiguration();
    updateScripts();
 
    return status;
