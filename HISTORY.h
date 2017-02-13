@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.25"
-#define VERSION_DATE "24.01.2017"
+#define _VERSION     "0.2.26"
+#define VERSION_DATE "13.02.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-02-13:  version 0.2.26
+   - bugfix: WEBIF: Fixed store of sensor alerts
 
 2017-01-24:  version 0.2.25
    - change:  WEBIF: Updated config page style on small devices (< 740 pixel)

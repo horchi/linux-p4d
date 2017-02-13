@@ -37,30 +37,37 @@ if ($action == "store")
 {
    // store settings
 
-   $ID    = explode("|", $_POST["cnt"]);
+   $ID = explode("|", $_POST["cnt"]);
 
    for ($i = 1; $i <= intval($_POST["id"]); $i++)
    {
-      $adr   = "Adr(" . $ID[$i] . ")";
-      $type  = "Type(" . $ID[$i] . ")";
-      $min   = "min(" . $ID[$i] . ")";
-      $max   = "max(" . $ID[$i] . ")";
-      $int   = "Int(" . $ID[$i] . ")";
-      $delta = "Delta(" . $ID[$i] . ")";
-      $range = "Range(" . $ID[$i] . ")";
-      $madr  = "MAdr(" . $ID[$i] . ")";
-      $msub  = "MSub(" . $ID[$i] . ")";
-      $mbod  = "MBod(" . $ID[$i] . ")";
-      $act   = ($_POST["Act($ID[$i])"]) ? "A" : "D";
-      $time = time();
-      $body =  $mysqli->real_escape_string($_POST[$mbod]);
-      $subject = $mysqli->real_escape_string($_POST[$msub]);
+      $type    = $_POST["Type(" . $ID[$i] . ")"];
+      $adr     = $_POST["Adr(" . $ID[$i] . ")"];
+      $int     = $_POST["Int(" . $ID[$i] . ")"];
 
-      $data = " address='$_POST[$adr]', type='" . mb_strtoupper($_POST[$type]) . "', min='$_POST[$min]', max='$_POST[$max]', "
-         . "maxrepeat='$_POST[$int]', delta='$_POST[$delta]', rangem='$_POST[$range]', "
-         . "maddress='$_POST[$madr]', msubject='$subject', mbody='$body', state='$act' ";
+      $min     = $_POST["min(" . $ID[$i] . ")"];
+      $max     = $_POST["max(" . $ID[$i] . ")"];
+      $delta   = $_POST["Delta(" . $ID[$i] . ")"];
+      $range   = $_POST["Range(" . $ID[$i] . ")"];
 
-      if ($i == count($ID)-1 && $_POST[$adr] != "")
+      $madr    = $_POST["MAdr(" . $ID[$i] . ")"];
+      $msub    = $_POST["MSub(" . $ID[$i] . ")"];
+      $mbod    = $_POST["MBod(" . $ID[$i] . ")"];
+      $act     = ($_POST["Act(" . $ID[$i] . ")"]) ? "A" : "D";
+      $time    = time();
+      $body    = $mysqli->real_escape_string($mbod);
+      $subject = $mysqli->real_escape_string($msub);
+
+      if (!is_numeric($min))   $min = 0;
+      if (!is_numeric($max))   $max = 0;
+      if (!is_numeric($delta)) $delta = 0;
+      if (!is_numeric($range)) $range = 0;
+
+      $data = " address='$adr', type='" . mb_strtoupper($type) . "', min='$min', max='$max', "
+         . "maxrepeat='$int', delta='$delta', rangem='$range', "
+         . "maddress='$madr', msubject='$subject', mbody='$body', state='$act', kind='M' ";
+
+      if ($i == count($ID)-1 && $adr != "")
       {
          $stmt = "insert into sensoralert set inssp=$time, updsp=$time, ";
          $mysqli->query($stmt . $data)
@@ -164,7 +171,7 @@ function displayAlertConfig($ID, $row, $style)
    echo "        <div class=\"rounded-border inputTable\">\n";
    echo "         <div>\n";
    echo "           <span>Aktiv</span>\n";
-   echo "           <span><input type=checkbox name=Act(" . $ID . ")" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input></span>\n";
+   echo "           <span><input type=checkbox name=\"Act(" . $ID . ")\"" .(($row['state'] == "A") ? " checked" : "") . " onClick=\"readonlyContent('$a',this)\" onLoad=\"disableContent('$a',this)\"></input></span>\n";
    echo "           <span><button class=\"rounded-border button2\" type=\"submit\" id=\"$a\" name=\"action\" value=\"mailtest$ID\">Test Mail</button></span>\n";
    echo "           <span><button class=\"rounded-border button2\" type=\"submit\" name=\"action\" value=\"delete$ID\" onclick=\"return confirmSubmit('diesen Eintrag wirklich löschen?')\">Löschen</button></span>\n";
    echo "         </div>\n";
