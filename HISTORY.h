@@ -19,7 +19,7 @@
 
 2017-03-09:  version 0.2.27
    - change:  Time sync for S3200 now at 3:00 instead of 23:00
-   - added:    install tageta for pchart and apache config
+   - added:   install tagets for pchart and apache config
 
 2017-02-13:  version 0.2.26
    - bugfix: WEBIF: Fixed store of sensor alerts
