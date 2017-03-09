@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.26"
-#define VERSION_DATE "13.02.2017"
+#define _VERSION     "0.2.27"
+#define VERSION_DATE "09.03.2017"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2017-03-09:  version 0.2.27
+   - change:  Time sync for S3200 now at 3:00 instead of 23:00
+   - added:    install tageta for pchart and apache config
 
 2017-02-13:  version 0.2.26
    - bugfix: WEBIF: Fixed store of sensor alerts

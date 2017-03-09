@@ -1115,7 +1115,7 @@ void P4d::scheduleTimeSyncIn(int offset)
 
    tm.tm_sec = 0;
    tm.tm_min = 0;
-   tm.tm_hour = 23;
+   tm.tm_hour = 3;
    tm.tm_isdst = -1;               // force DST auto detect
 
    nextTimeSyncAt = mktime(&tm);
