@@ -73,8 +73,6 @@ If database isn't located on the Raspberry check the chapter remote database set
 ### Installation Apache Webserver:
 Run the following commands to install the Apache webserver and required packages
 ```
-groupadd www-data
-usermod -a -G www-data www-data
 apt-get update
 apt-get install apache2 php5 php5-mysql php5-gd
 ```

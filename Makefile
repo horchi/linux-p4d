@@ -106,7 +106,7 @@ install-web:
 
 install-apache-conf:
 	install --mode=644 -D apache2/p4.conf $(APACHECFGDEST)/conf-available/
-	rm $(APACHECFGDEST)/conf-enabled/p4.conf
+	rm -f $(APACHECFGDEST)/conf-enabled/p4.conf
 	ln -s $(APACHECFGDEST)/conf-available/p4.conf $(APACHECFGDEST)/conf-enabled/p4.conf
 
 install-pcharts:
