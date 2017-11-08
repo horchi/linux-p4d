@@ -104,6 +104,18 @@ install-web:
 	chmod -R a+r $(WEBDEST); \
 	chown -R $(WEBOWNER):$(WEBOWNER) $(WEBDEST)
 
+install-apache-conf:
+	install --mode=644 -D apache2/p4.conf $(APACHECFGDEST)/conf-available/
+	rm -f $(APACHECFGDEST)/conf-enabled/p4.conf
+	ln -s $(APACHECFGDEST)/conf-available/p4.conf $(APACHECFGDEST)/conf-enabled/p4.conf
+
+install-pcharts:
+	if ! test -d $(PCHARTDEST); then \
+		git clone https://github.com/bozhinov/pChart2.0-for-PHP7.git $(PCHARTDEST); \
+		ln -s $(PCHARTDEST) $(WEBDEST)/pChart; \
+		chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
+	fi
+
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
 	@mkdir $(TMPDIR)/$(ARCHIVE)
