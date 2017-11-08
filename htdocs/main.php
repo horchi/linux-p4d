@@ -75,7 +75,7 @@ printHeader(60);
        $i = 0;
 
        echo "      <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
-       echo "        <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+       echo "        <div class=\"menu\">\n";
 
        while ($i < $count)
        {
@@ -84,8 +84,6 @@ printHeader(60);
           $i++;
        }
 
-       echo "        </div>\n";
-       echo "        <div class=\"menu\" style=\"top=44px;\">\n";
        echo "        </div>\n";
        echo "      </form>\n";
     }

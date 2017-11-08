@@ -78,11 +78,9 @@ include("footer.php");
 
 function showButtons()
 {
-   echo "        <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
+   echo "        <div class=\"menu\">\n";
    echo "          <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"sync\">Import/Sync</button>\n";
    echo "          <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"store\" onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
-   echo "        </div>\n";
-   echo "        <div class=\"menu\" style=\"top=88px;\">\n";
    echo "        </div>\n";
 }
 

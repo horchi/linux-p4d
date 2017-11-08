@@ -1,16 +1,48 @@
 
+.fixed-menu1
+{
+    z-index: 9999;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    padding-left: 5px;
+    box-sizing: border-box;
+    background-color: var(--menu);
+}
+
+.fixed-menu2
+{
+    z-index: 9999;
+    position: fixed;
+    top: 44px;
+    left: 0px;
+    width: 100%;
+    height: 32px;
+    white-space: nowrap;
+    padding-left: 5px;
+    box-sizing: border-box;
+    background-color: var(--menu);
+}
+
 .menu
 {
-    left: 0px;
     z-index: 9999;
+    position: fixed;
+    top: 76px;
+    left: 0px;
     width: 100%;
-    height: 44px;
+    height: 40px;
+    white-space: nowrap;
     padding-left: 5px;
+    box-sizing: border-box;
     background-color: var(--menu);
 }
 
 .content
 {
+    top: 44px;
+    position: relative;
     margin: 0px 5px 0px 5px;
 }
 
@@ -147,7 +179,7 @@ span > input
     background-color: green;
     color: white;
     text-decoration: none;
-    font-size: 22px
+    font-size: 22px;
     width: 95%;
     padding: 15px;
     border-radius: 5px;
@@ -164,7 +196,7 @@ span > input
     background-color: orange;
     color: white;
     text-decoration: none;
-    font-size: 22px
+    font-size: 22px;
     width: 95%;
     padding: 15px;
     border-radius: 5px;
@@ -175,7 +207,7 @@ span > input
     background-color: red;
     color: white;
     text-decoration: none;
-    font-size: 22px
+    font-size: 22px;
     width: 95%;
     padding: 15px;
     border-radius: 5px;

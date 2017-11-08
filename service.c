@@ -83,6 +83,7 @@ FroelingService::StateInfo FroelingService::stateInfos[] =
    { 68,        "Störung Fallschluft" },
    { 69,        "Reinigen TMC" },
    { 70,        "Onlinereinigen" },
+   { 71,        "SH Anheizen" },
    { 72,        "SH Heizen" },
 
    { na,        "" }

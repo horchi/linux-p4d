@@ -67,7 +67,7 @@ If database isn't located on the Raspberry check the chapter remote database set
 > mysql -u root -p
   CREATE DATABASE p4 charset utf8;
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
-  GRANT ALL PRIVILEGES ON p4.* to 'p4'@'localhost';
+  GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
 ```
 
 ### Installation Apache Webserver:

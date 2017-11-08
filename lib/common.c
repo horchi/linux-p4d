@@ -55,7 +55,7 @@ void tell(int eloquence, const char* format, ...)
 #endif
 
    vsnprintf(t+strlen(t), sizeBuffer-strlen(t), format, ap);
-   
+
    if (logstdout)
    {
       char buf[50+TB];
@@ -65,12 +65,12 @@ void tell(int eloquence, const char* format, ...)
       {
          timeval tp;
          tm* tm;
-         
+
          gettimeofday(&tp, 0);
          tm = localtime(&tp.tv_sec);
-         
+
          sprintf(buf, "%2.2d:%2.2d:%2.2d,%3.3ld ",
-                 tm->tm_hour, tm->tm_min, tm->tm_sec, 
+                 tm->tm_hour, tm->tm_min, tm->tm_sec,
                  tp.tv_usec / 1000);
       }
 
@@ -107,7 +107,7 @@ double usNow()
 {
    struct timeval tp;
 
-   gettimeofday(&tp, 0); 
+   gettimeofday(&tp, 0);
 
    return tp.tv_sec * 1000000.0 + tp.tv_usec;
 }
@@ -155,7 +155,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
    char* file = 0;
 
    asprintf(&file, "%s/%s", path, name);
-   
+
    if (!(f = fopen(file, "r")))
    {
       tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
@@ -165,15 +165,15 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    free(file);
 
-   MD5_Init(&c);   
-   
+   MD5_Init(&c);
+
    while ((nread = fread(buffer, 1, 1000, f)) > 0)
       MD5_Update(&c, buffer, nread);
-   
+
    fclose(f);
 
    MD5_Final(out, &c);
-   
+
    for (int n = 0; n < MD5_DIGEST_LENGTH; n++)
       sprintf(md5+2*n, "%02x", out[n]);
 
@@ -201,7 +201,7 @@ void toUpper(std::string& str)
    for (int ps = 0; ps < lenSrc; ps += csSrc)
    {
       csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
-      
+
       if (csSrc == 1)
          *d++ = toupper(s[ps]);
       else if (csSrc == 2 && s[ps] == (char)0xc3 && s[ps+1] >= (char)0xa0)
@@ -236,7 +236,7 @@ void removeChars(std::string& str, const char* ignore)
    char* d = dest;
 
    int csSrc;  // size of character
-   int csIgn;  // 
+   int csIgn;  //
 
    for (int ps = 0; ps < lenSrc; ps += csSrc)
    {
@@ -278,7 +278,7 @@ void removeCharsExcept(std::string& str, const char* except)
    char* d = dest;
 
    int csSrc;  // size of character
-   int csIgn;  // 
+   int csIgn;  //
 
    for (int ps = 0; ps < lenSrc; ps += csSrc)
    {
@@ -320,8 +320,8 @@ void removeWord(string& pattern, string word)
 
 void prepareCompressed(std::string& pattern)
 {
-   // const char* ignore = " (),.;:-_+*!#?=&%$<>§/'`´@~\"[]{}"; 
-   const char* notignore = "ABCDEFGHIJKLMNOPQRSTUVWXYZßÖÄÜöäü0123456789"; 
+   // const char* ignore = " (),.;:-_+*!#?=&%$<>§/'`´@~\"[]{}";
+   const char* notignore = "ABCDEFGHIJKLMNOPQRSTUVWXYZßÖÄÜöäü0123456789";
 
    toUpper(pattern);
    removeWord(pattern, " TEIL ");
@@ -333,8 +333,8 @@ string strReplace(const string& what, const string& with, const string& subject)
 {
    string str = subject;
    size_t pos = 0;
-   
-   while((pos = str.find(what, pos)) != string::npos) 
+
+   while((pos = str.find(what, pos)) != string::npos)
    {
       str.replace(pos, what.length(), with);
       pos += with.length();
@@ -362,12 +362,12 @@ string strReplace(const string& what, double with, const string& subject)
 }
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 const char* plural(int n, const char* s)
-{ 
-   return n == 1 ? "" : s; 
+{
+   return n == 1 ? "" : s;
 }
 
 //***************************************************************************
@@ -380,12 +380,12 @@ char* lTrim(char* buf)
    {
       char *tp = buf;
 
-      while (*tp && strchr("\n\r\t ",*tp)) 
+      while (*tp && strchr("\n\r\t ",*tp))
          tp++;
 
       memmove(buf, tp, strlen(tp) +1);
    }
-   
+
    return buf;
 }
 
@@ -399,12 +399,12 @@ char* rTrim(char* buf)
    {
       char *tp = buf + strlen(buf);
 
-      while (tp >= buf && strchr("\n\r\t ",*tp)) 
+      while (tp >= buf && strchr("\n\r\t ",*tp))
          tp--;
 
       *(tp+1) = 0;
    }
-   
+
    return buf;
 }
 
@@ -484,14 +484,14 @@ string l2pTime(time_t t)
 {
    char txt[30];
    tm* tmp = localtime(&t);
-   
+
    strftime(txt, sizeof(txt), "%d.%m.%Y %T", tmp);
-   
+
    return string(txt);
 }
 
 const char* toElapsed(int seconds, char* buf)
-{   
+{
    char* p = buf;
    int parts = 0;
 
@@ -507,19 +507,19 @@ const char* toElapsed(int seconds, char* buf)
       p += sprintf(p, " %d Tag%s", days, plural(days, "en"));
       parts++;
    }
-   
+
    if (parts < 2 && hours)
    {
       p += sprintf(p, " %d Stunde%s", hours, plural(hours, "n"));
       parts++;
    }
-   
+
    if (parts < 2 && minutes)
    {
       p += sprintf(p, " %d Minute%s", minutes, plural(minutes, "n"));
       parts++;
    }
-   
+
    if (!parts)
    {
       p += sprintf(p, " %d Sekunde%s", seconds, plural(seconds, "n"));
@@ -545,7 +545,7 @@ char* sstrcpy(char* dest, const char* src, int max)
 
    strncpy(dest, src, max);
    dest[max-1] = 0;
-   
+
    return dest;
 }
 
@@ -573,7 +573,7 @@ const char* suffixOf(const char* path)
 
 int fileExists(const char* path)
 {
-   return access(path, F_OK) == 0; 
+   return access(path, F_OK) == 0;
 }
 
 int createLink(const char* link, const char* dest, int force)
@@ -582,9 +582,9 @@ int createLink(const char* link, const char* dest, int force)
    {
       // may be the link exists and point to a wrong or already deleted destination ...
       //   .. therefore we delete the link at first
-      
+
       unlink(link);
-      
+
       if (symlink(dest, link) != 0)
       {
          tell(0, "Failed to create symlink '%s', error was '%s'", link, strerror(errno));
@@ -605,12 +605,12 @@ int removeFile(const char* filename)
    if (unlink(filename) != 0)
    {
       tell(0, "Can't remove file '%s', '%s'", filename, strerror(errno));
-      
+
       return 1;
    }
 
    tell(2, "Removed file '%s'", filename);
-   
+
    return 0;
 }
 
@@ -650,7 +650,7 @@ int loadFromFile(const char* infile, MemoryStruct* data)
 
       if (strcmp(sfx, "gz") == 0)
          sprintf(data->contentEncoding, "gzip");
-      
+
       if (strcmp(sfx, "js") == 0)
          sprintf(data->contentType, "application/javascript");
 
@@ -690,7 +690,7 @@ int gunzip(MemoryStruct* zippedData, MemoryStruct* unzippedData)
 
    // determining the size in this way is taken from the sources of the gzip utility.
 
-   memcpy(&unzippedData->size, zippedData->memory + zippedData->size -4, 4); 
+   memcpy(&unzippedData->size, zippedData->memory + zippedData->size -4, 4);
    unzippedData->memory = (char*)malloc(unzippedData->size);
 
    // zlib initialisation
@@ -800,7 +800,7 @@ const char* getFirstIp()
    struct ifaddrs *ifaddr, *ifa;
    static char host[NI_MAXHOST] = "";
 
-   if (getifaddrs(&ifaddr) == -1) 
+   if (getifaddrs(&ifaddr) == -1)
    {
       tell(0, "getifaddrs() failed");
       return "";
@@ -808,16 +808,16 @@ const char* getFirstIp()
 
    // walk through linked interface list
 
-   for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) 
+   for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
    {
       if (!ifa->ifa_addr)
          continue;
-      
+
       // For an AF_INET interfaces
 
-      if (ifa->ifa_addr->sa_family == AF_INET) //  || ifa->ifa_addr->sa_family == AF_INET6) 
+      if (ifa->ifa_addr->sa_family == AF_INET) //  || ifa->ifa_addr->sa_family == AF_INET6)
       {
-         int res = getnameinfo(ifa->ifa_addr, 
+         int res = getnameinfo(ifa->ifa_addr,
                                (ifa->ifa_addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) :
                                sizeof(struct sockaddr_in6),
                                host, NI_MAXHOST, 0, 0, NI_NUMERICHOST);
@@ -866,13 +866,13 @@ int toUTF8(char* out, int outMax, const char* in, const char* from_code)
 
    *out = 0;
    fromLen = strlen(in);
-   
+
    if (!fromLen)
       return fail;
-   
+
 	cd = iconv_open(to_code, from_code);
 
-   if (cd == (iconv_t)-1) 
+   if (cd == (iconv_t)-1)
       return fail;
 
    fromPtr = (char*)in;
@@ -881,12 +881,12 @@ int toUTF8(char* out, int outMax, const char* in, const char* from_code)
 
    ret = iconv(cd, &fromPtr, &fromLen, &toPtr, &outlen);
 
-   *toPtr = 0;   
+   *toPtr = 0;
    iconv_close(cd);
 
    if (ret == (size_t)-1)
    {
-      tell(0, "Converting [%s] from '%s' to '%s' failed", 
+      tell(0, "Converting [%s] from '%s' to '%s' failed",
            fromPtr, from_code, to_code);
 
 		return fail;
@@ -914,7 +914,7 @@ byte crc(const byte* data, int size)
 }
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 cRetBuf::cRetBuf(const char* buf)
@@ -986,7 +986,7 @@ void cMyMutex::Unlock(void)
 
 
 //***************************************************************************
-// cTimeMs 
+// cTimeMs
 //***************************************************************************
 
 cTimeMs::cTimeMs(int Ms)

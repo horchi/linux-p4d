@@ -175,10 +175,8 @@ else if ($action == "store")
 // setup form
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
-echo "      <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
+echo "      <div class=\"menu\">\n";
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=store>Speichern</button>\n";
-echo "      </div>\n";
-echo "      <div class=\"menu\" style=\"top=88px;\">\n";
 echo "      </div>\n";
 
 // ------------------------

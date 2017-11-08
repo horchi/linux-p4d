@@ -164,7 +164,8 @@ function showMenu($current)
    $count = $result->num_rows;
 
    echo "    <form action=\"" . htmlspecialchars($_SERVER["PHP_SELF"]) . "\" method=\"post\">\n";
-   echo "      <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+//   echo "      <div class=\"menu\" style=\"position: fixed; top=44px;\">\n";
+   echo "      <nav class=\"fixed-menu2\">\n";
 
    while ($i < $count)
    {
@@ -179,17 +180,15 @@ function showMenu($current)
       $i++;
    }
 
-   echo "    </div>\n";
-   echo "    <div class=\"menu\" style=\"top=44px;\">\n";
-   echo "    </div>\n";
+   echo "    </nav>\n";
+   /* echo "    <div class=\"menu\" style=\"top=44px;\">\n"; */
+   /* echo "    </div>\n"; */
 
    if (haveLogin())
    {
-      echo "    <div class=\"menu\" style=\"position: fixed; top=88px;\">\n";
+      echo "    <div class=\"menu\">\n";
       echo "      <button class=\"rounded-border button3\" type=submit name=\"menu\" value=\"init\" onclick=\"return confirmSubmit('Menüstruktur-Tabelle löschen und neu initialisieren?')\">Init</button>\n";
       echo "      <button class=\"rounded-border button3\" type=submit name=\"menu\" value=\"update\" onclick=\"return confirmSubmit('Werte der Parameter einlesen?')\">Aktualisieren</button>\n";
-      echo "    </div>\n";
-      echo "    <div class=\"menu\" style=\"top=88px;\">\n";
       echo "    </div>\n";
    }
 
