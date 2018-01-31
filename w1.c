@@ -76,7 +76,7 @@ int W1::scan()
 
    while ((dp = readdir(dir)))
    {
-      if (strncmp(dp->d_name, "28-", 3) == 0)
+      if (strncmp(dp->d_name, "28-", 3) == 0 || strncasecmp(dp->d_name, "3b-", 3) == 0)
          sensors[dp->d_name] = 0;
    }
 
