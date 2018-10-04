@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.29"
-#define VERSION_DATE "31.01.2018"
+#define _VERSION     "0.2.30"
+#define VERSION_DATE "04.10.2018"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2018-10-04:  version 0.2.30
+   - change: Updated README.md, changes Makefile for 'old' pChart version
 
 2018-01-31:  version 0.2.29
    - added:  Added One-Wire sensor type '3b'
