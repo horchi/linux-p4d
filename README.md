@@ -37,16 +37,6 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
   e.g. a Raspberry Pi with a default OS setup (e.g. raspbian wheezy or stretch) is a good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
-#### Automated Installation by script:
-
-```
-cd ..
-cd p4d
-wget http://hungerphilipp.de/files/p4d/install.sh
-chmod +x install.sh
-./install.sh" or "sudo ./install.sh/
-```
-
 ### Installation MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is as well supported.
 
@@ -209,4 +199,14 @@ To analyze this you can show all users:
 ```
 use mysql
 SELECT host, user FROM user;
+```
+
+## Alternative install by script of Philipp:
+
+```
+cd ..
+cd p4d
+wget http://hungerphilipp.de/files/p4d/install.sh
+chmod +x install.sh
+./install.sh" or "sudo ./install.sh/
 ```
