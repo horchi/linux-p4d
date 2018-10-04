@@ -30,11 +30,6 @@ auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, meh
 weniger kritischen Fehlfunktionen derselben kommen kann!
 
 
-## Description of the README:
-
-This document describes how to setup and configure the p4d solution
-
-
 ### Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
@@ -85,7 +80,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ```
 apt apt install libssl-dev libxml2-dev libcurl4-openssl-dev
 ```
-# get the p4d and build it
+### get the p4d and build it
 ```
 cd /usr/src/
 git clone https://github.com/horchi/linux-p4d/
@@ -130,6 +125,7 @@ update-rc.d p4d defaults
 
 ### Install the WEB interface:
 ```
+ cd /usr/src/linux-p4d
  make install-web
  make install-pcharts
  make install-apache-conf
