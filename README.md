@@ -74,7 +74,8 @@ apt install apache2 libapache2-mod-php7.2 php7.2-mysql php7.2-gd
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
-### Installation p4d Application:
+## Installation p4d daemon:
+### install the build dependencies
 ```
 apt apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev
 ```
