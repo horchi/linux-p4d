@@ -33,8 +33,8 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 ### Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
-- A Linux based device is required
-- A Raspberry Pi with a default OS setup (e.g. wheezy-raspbian) is a very good option for the p4d
+- A Linux based host is required
+  e.g. a Raspberry Pi with a default OS setup (e.g. raspbian wheezy or stretch) is a good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 #### Automated Installation by script:
@@ -75,10 +75,8 @@ apt install apache2 libapache2-mod-php7.2 php7.2-mysql php7.2-gd
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
 ### Installation p4d Application:
-- Install build essentials like make, g++, ...
-- Install dependencies
 ```
-apt apt install libssl-dev libxml2-dev libcurl4-openssl-dev
+apt apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev
 ```
 ### get the p4d and build it
 ```
