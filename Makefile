@@ -51,7 +51,7 @@ $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
-	$(CC) $(CFLAGS) $(CHARTOBJS) $(LIBS) -lmgl -o $@
+	$(CC) $(CFLAGS) $(CHARTOBJS) $(LIBS) -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
