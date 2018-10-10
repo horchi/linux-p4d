@@ -30,27 +30,12 @@ auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, meh
 weniger kritischen Fehlfunktionen derselben kommen kann!
 
 
-## Description of the README:
-
-This document describes how to setup and configure the p4d solution
-
-
 ### Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
-- A Linux based device is required
-- A Raspberry Pi with a default OS setup (e.g. wheezy-raspbian) is a very good option for the p4d
+- A Linux based host is required
+  e.g. a Raspberry Pi with a default OS setup (e.g. raspbian wheezy or stretch) is a good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
-
-#### Automated Installation by script:
-
-```
-cd ..
-cd p4d
-wget http://hungerphilipp.de/files/p4d/install.sh
-chmod +x install.sh
-./install.sh" or "sudo ./install.sh/
-```
 
 ### Installation MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is as well supported.
@@ -73,27 +58,27 @@ If database isn't located on the Raspberry check the chapter remote database set
 ### Installation Apache Webserver:
 Run the following commands to install the Apache webserver and required packages
 ```
-apt-get update
-apt-get install apache2 php5 php5-mysql php5-gd
+apt update
+apt install apache2 libapache2-mod-php7.2 php7.2-mysql php7.2-gd
 ```
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
-### Installation p4d Application:
-- Install build essentials like make, g++, ...
-- Install libssl-dev
-  - `apt-get install libssl-dev`
-- Install libxml2-dev
-  - `apt-get install libxml2-dev`
-- Install libcurl-dev
-  - `apt-get install libcurl4-openssl-dev`
-- Change to directory `/usr/src/`
-- Run command to download current version
-  - `git clone https://github.com/horchi/linux-p4d/`
-- Change to directory `/usr/src/linux-p4d`
-- Call `make` in the source directory
-- Call `make install` in the source directory (file `configs/p4d.conf` is copied to `/etc` if not already present)
-- P4 daemon is installed in folder `/usr/local/bin`
+## Installation the p4d daemon:
+### install the build dependencies
+```
+apt apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev
+```
+### get the p4d and build it
+```
+cd /usr/src/
+git clone https://github.com/horchi/linux-p4d/
+cd linux-p4d
+make clean all
+make install
+```
+
+- Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
 
@@ -127,17 +112,13 @@ chmod 750 /etc/init.d/p4d
 update-rc.d p4d defaults
 ```
 
-### Setup and configure WEBIF:
-- Copy content of folder `/usr/src/linux-p4d/htdocs` to your webroot (`/var/www` is used as example in the next steps)
-- Download the tool `pChart2.1.x` from http://www.pchart.net/download (version 2.1.3 in our example)
-- Store the extracted download in the webroot folder (eg. `/var/www/pChart2.1.3`)
-- Create symbolic link
-  - `ln -s /var/www/pChart2.1.3/ /var/www/pChart`
-- Change access to cache folder
-  - `chmod 777 /var/www/pChart/cache`
-- Change owner of www folder
-  - `chown www-data /var/www`
-- For a test enter the web address `http://<IP_of_RPi>/index.php`
+### Install the WEB interface:
+```
+ cd /usr/src/linux-p4d
+ make install-web
+ make install-pcharts
+ make install-apache-conf
+```
 
 The default username and password for the login is
 User: *p4*
@@ -218,4 +199,14 @@ To analyze this you can show all users:
 ```
 use mysql
 SELECT host, user FROM user;
+```
+
+## Alternative install by script of Philipp:
+
+```
+cd ..
+cd p4d
+wget http://hungerphilipp.de/files/p4d/install.sh
+chmod +x install.sh
+./install.sh" or "sudo ./install.sh/
 ```

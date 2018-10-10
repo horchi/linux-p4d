@@ -112,6 +112,8 @@ install-apache-conf:
 install-pcharts:
 	if ! test -d $(PCHARTDEST); then \
 		git clone https://github.com/bozhinov/pChart2.0-for-PHP7.git $(PCHARTDEST); \
+		cd $(PCHARTDEST); \
+		git checkout 7.x-compatible; \
 		ln -s $(PCHARTDEST) $(WEBDEST)/pChart; \
 		chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
 	fi
