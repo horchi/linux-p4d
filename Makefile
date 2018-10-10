@@ -9,7 +9,7 @@ include Make.config
 
 TARGET = p4d
 CMDTARGET = p4
-CHARTTARGET = p4chart
+CHARTTARGET = dbchart
 HISTFILE  = "HISTORY.h"
 
 LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl
@@ -29,10 +29,10 @@ GIT_REV     = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
-OBJS += $(LOBJS) main.o p4io.o service.o w1.o webif.o
-CLOBJS = $(LOBJS) chart.o
-CMDOBJS = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
+LOBJS      =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
+OBJS      += $(LOBJS) main.o p4io.o service.o w1.o webif.o
+CHARTOBJS  = $(LOBJS) chart.o
+CMDOBJS    = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
 CFLAGS += $(shell mysql_config --include)
 CFLAGS += $(shell xml2-config --cflags)
@@ -45,13 +45,13 @@ endif
 
 # rules:
 
-all: $(TARGET) $(CMDTARGET)
+all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
 
-$(CHARTTARGET): $(CLOBJS)
-	$(CC) $(CFLAGS) $(CLOBJS) $(LIBS) -lmgl -o $@
+$(CHARTTARGET): $(CHARTOBJS)
+	$(CC) $(CFLAGS) $(CHARTOBJS) $(LIBS) -lmgl -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
 	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
@@ -59,7 +59,7 @@ $(CMDTARGET) : $(CMDOBJS)
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 
-instf: $(TARGET) $(CMDTARGET) install-config install-scripts
+inst_rest: $(TARGET) $(CMDTARGET) install-config install-scripts
 	/etc/init.d/p4d stop
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	/etc/init.d/p4d start
@@ -144,7 +144,7 @@ HEADER = lib/db.h lib/dbdict.h lib/common.h
 lib/common.o    :  lib/common.c    $(HEADER)
 lib/db.o        :  lib/db.c        $(HEADER)
 lib/dbdict.o    :  lib/dbdict.c    $(HEADER)
-lib/curl.o      :  lib/curl.c    $(HEADER)
+lib/curl.o      :  lib/curl.c      $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 
 main.o			 :  main.c          $(HEADER) p4d.h
