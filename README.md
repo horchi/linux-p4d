@@ -67,7 +67,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ## Installation the p4d daemon:
 ### install the build dependencies
 ```
-apt apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev
+apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev
 ```
 ### get the p4d and build it
 ```
