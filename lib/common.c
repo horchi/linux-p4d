@@ -480,12 +480,12 @@ char* eos(char* s)
 // Long to Pretty Time
 //***************************************************************************
 
-string l2pTime(time_t t)
+string l2pTime(time_t t, const char* fmt)
 {
-   char txt[30];
+   char txt[300];
    tm* tmp = localtime(&t);
 
-   strftime(txt, sizeof(txt), "%d.%m.%Y %T", tmp);
+   strftime(txt, sizeof(txt), fmt, tmp);
 
    return string(txt);
 }
