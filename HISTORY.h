@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.30"
-#define VERSION_DATE "04.10.2018"
+#define _VERSION     "0.2.31"
+#define VERSION_DATE "30.10.2018"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2018-10-30:  version 0.2.31
+   - added: Install target for systemV init scripts
 
 2018-10-04:  version 0.2.30
    - change: Updated README.md, changes Makefile for 'old' pChart version

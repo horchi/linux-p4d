@@ -64,6 +64,11 @@ instf: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	/etc/init.d/p4d start
 
+inst-sysv-init:
+	install --mode=755 -D ./contrib/p4d /etc/init.d/
+	install --mode=755 -D ./contrib/runp4d /usr/local/bin/
+	update-rc.d p4d defaults
+
 install-config:
 	if ! test -d $(CONFDEST); then \
 	   mkdir -p $(CONFDEST); \
