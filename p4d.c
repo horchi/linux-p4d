@@ -36,8 +36,8 @@ P4d::P4d()
    tableConfig = 0;
    tableErrors = 0;
    tableTimeRanges = 0;
+   tableHmSysVars = 0;
    tableScripts = 0;
-   selectHmSysVarByAddr = 0;
 
    selectActiveValueFacts = 0;
    selectAllValueFacts = 0;

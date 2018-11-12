@@ -218,7 +218,7 @@ printHeader(60);
            . $_SESSION['chartDiv'] . " ','_blank',"
            . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
 
-        echo "         <div>\n";
+        echo "         <div class=\"mainrow\">\n";
         echo "           <span>$url $title</a></span>\n";
         echo "           <span>$value$unit</span>\n";
         echo "         </div>\n";

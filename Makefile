@@ -72,6 +72,7 @@ inst-sysv-init:
 install-config:
 	if ! test -d $(CONFDEST); then \
 	   mkdir -p $(CONFDEST); \
+	   mkdir -p $(CONFDEST)/scripts.d; \
 	   chmod a+rx $(CONFDEST); \
 	fi
 	if ! test -f $(CONFDEST)/p4d.conf; then \

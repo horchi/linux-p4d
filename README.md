@@ -34,7 +34,7 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - A Linux based host is required
-  e.g. a Raspberry Pi with a default OS setup (e.g. raspbian wheezy or stretch) is a good option for the p4d
+  e.g. a Raspberry Pi with a default OS setup (e.g. raspbian stretch) is a good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 ### Installation MySQL Database:
@@ -76,6 +76,7 @@ git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
 make clean all
 make install
+make inst-sysv-init
 ```
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/

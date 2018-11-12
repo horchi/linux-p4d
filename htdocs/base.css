@@ -71,7 +71,7 @@
     color: var(--buttonFont);
     padding: 2px;
     text-decoration: none;
-    background-color: var(--colorTableButton);
+/*    background-color: var(--colorTableButton); */
     border-radius: var(--borderRadiusTableButton);
     border-color: var(--borderColorTableButton);
     border-style: none;
@@ -284,7 +284,7 @@ span > input
     font-size: 18px;
 }
 
-.table2Col > div:nth-child(even)
+._table2Col > div:nth-child(even)
 {
     background: linear-gradient(to bottom, var(--light1), var(--light3)); /* Standard syntax (must be last) */
 }
@@ -302,6 +302,14 @@ span > input
     padding: 6px 10px 6px 10px;
     display: inline-block;
     text-align: left;
+}
+
+.mainrow {
+    border-radius: var(--borderRadius);
+    border-color: var(--borderColor);
+    border-style: solid;
+    border-width: 1px;
+    margin: 2px;
 }
 
 .tableMultiCol
