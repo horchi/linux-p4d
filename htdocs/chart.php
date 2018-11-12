@@ -2,9 +2,9 @@
 
 include("header.php");
 
-include("pChart/pData.php");
-include("pChart/pDraw.php");
-include("pChart/pImage.php");
+include("pChart/class/pData.class.php");
+include("pChart/class/pDraw.class.php");
+include("pChart/class/pImage.class.php");
 
 printHeader();
 

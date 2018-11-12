@@ -1,9 +1,9 @@
 <?php
 
-include("pChart/pData.php");
-include("pChart/pDraw.php");
-include("pChart/pImage.php");
-include("pChart/pCache.php");
+include("pChart/class/pData.class.php");
+include("pChart/class/pDraw.class.php");
+include("pChart/class/pImage.class.php");
+include("pChart/class/pCache.class.php");
 
 $mysqlport = 3306;
 
