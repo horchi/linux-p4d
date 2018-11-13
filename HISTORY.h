@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.32"
-#define VERSION_DATE "31.10.2018"
+#define _VERSION     "0.2.3r32"
+#define VERSION_DATE "12.11.2018"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2018-11-12:  version 0.2.332
+   - change: Fixed pChart compatibility problem again
 
 2018-10-31:  version 0.2.32
    - added: Create scripts.d folder at "make install" do avoid warning message
