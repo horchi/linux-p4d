@@ -25,7 +25,7 @@ function dumpTable()
 # main
 # ----------------------------------------------------------------
 
-if ! dumpTable "config";      then    exit 1; fi
+if ! dumpTable "config";      then  exit 1; fi
 if ! dumpTable "errors";      then  exit 1; fi
 if ! dumpTable "jobs";        then  exit 1; fi
 if ! dumpTable "menu";        then  exit 1; fi
@@ -34,6 +34,9 @@ if ! dumpTable "schemaconf";  then  exit 1; fi
 if ! dumpTable "sensoralert"; then  exit 1; fi
 if ! dumpTable "smartconfig"; then  exit 1; fi
 if ! dumpTable "valuefacts";  then  exit 1; fi
+if ! dumpTable "timeranges";  then  exit 1; fi
+if ! dumpTable "hmsysvars";   then  exit 1; fi
+if ! dumpTable "scrips";      then  exit 1; fi
 
 echo "to import the tables call mysql per file:"
 echo "  zcat the-dumpfile.gz | mysql -u p4 -pp4 -Dp4"
