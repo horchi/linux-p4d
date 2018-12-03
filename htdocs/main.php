@@ -187,7 +187,7 @@ printHeader(60);
                 from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
      else
         $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and (s.type = 'VA' or s.type = 'W1) and s.time = '%s';", $addresses, $max);
+                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s';", $addresses, $max);
 
      // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
