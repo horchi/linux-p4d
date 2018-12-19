@@ -19,7 +19,7 @@
 
 2018-12-19:  version 0.2.333
    - added: Added php hint regarding setup menue problem with large value counts to README
-   - change:
+   - change: storing all samples in one transaction
 
 2018-11-12:  version 0.2.332
    - change: Fixed pChart compatibility problem again
