@@ -125,6 +125,10 @@ The default username and password for the login is
 User: *p4*
 Pass: *p4-3200*
 
+### PHP Settings:
+file /etc/php/7.0/apache2/php.ini
+set max_input_vars = 5000
+
 ### Fist steps to enable data logging:
 
 1. Log in

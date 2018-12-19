@@ -1273,8 +1273,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    byte crc, tb, b;
    byte more;
 
-   memset(m, 0, sizeof(MenuItem));
-
+   m->clear();
    clear();
    request(first ? cmdGetMenuListFirst : cmdGetMenuListNext);
 

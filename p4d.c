@@ -1393,6 +1393,8 @@ int P4d::update()
    tableValueFacts->clear();
    tableValueFacts->setValue("STATE", "A");
 
+   connection->startTransaction();
+
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       int addr = tableValueFacts->getIntValue("ADDRESS");
@@ -1523,6 +1525,7 @@ int P4d::update()
       count++;
    }
 
+   connection->commit();
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 

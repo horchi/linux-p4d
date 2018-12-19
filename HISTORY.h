@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.3r32"
-#define VERSION_DATE "12.11.2018"
+#define _VERSION     "0.2.333"
+#define VERSION_DATE "19.12.2018"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2018-12-19:  version 0.2.333
+   - added: Added php hint regarding setup menue problem with large value counts to README
+   - change:
 
 2018-11-12:  version 0.2.332
    - change: Fixed pChart compatibility problem again

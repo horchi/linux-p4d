@@ -357,7 +357,6 @@ function store($state, $xpos, $ypos, $color)
 
    if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
    {
-
       if ($state == "D")
          $mysqli->query("update schemaconf set state = '" . $state . "'" .
                      " where address = '" . $_SESSION["addr"] . "' and type = '" .
