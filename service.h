@@ -314,7 +314,7 @@ class FroelingService
 
       struct MenuItem
       {
-         MenuItem() {}
+         MenuItem()  { description = 0; unit = 0; clear(); }
          ~MenuItem() { free(unit); free(description); }
 
          void clear()
@@ -329,14 +329,14 @@ class FroelingService
             free(unit); unit = 0;
          }
 
-         byte type = 0;
-         byte unknown1 = 0;
-         word parent = 0;
-         word child = 0;
-         word address = 0;
-         word unknown2 = 0;
-         char* description = 0;
-         char* unit = 0;
+         byte type;
+         byte unknown1;
+         word parent;
+         word child;
+         word address;
+         word unknown2;
+         char* description;
+         char* unit;
       };
 
       struct TimeRanges

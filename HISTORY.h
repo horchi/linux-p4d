@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.2.333"
+#define _VERSION     "0.2.334"
 #define VERSION_DATE "19.12.2018"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2018-12-19:  version 0.2.334
+   - change: compatible with old g++ 4.6 again
 
 2018-12-19:  version 0.2.333
    - added: Added php hint regarding setup menue problem with large value counts to README
