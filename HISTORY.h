@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.334"
-#define VERSION_DATE "19.12.2018"
+#define _VERSION     "0.2.335"
+#define VERSION_DATE "20.12.2018"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2018-12-20:  version 0.2.335
+   - added: script p4getvalue.py to query actual values from database
 
 2018-12-19:  version 0.2.334
    - change: compatible with old g++ 4.6 again
