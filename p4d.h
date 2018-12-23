@@ -3,7 +3,7 @@
 // File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 01.03.2016  Jörg Wendel
+// Date 04.11.2010 - 01.03.2018  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4D_H_
@@ -20,6 +20,10 @@
 #include "w1.h"
 #include "lib/curl.h"
 #include "HISTORY.h"
+
+#ifdef MQTT_HASS
+#  include "lib/mqtt.h"
+#endif
 
 #define confDirDefault "/etc/p4d"
 
@@ -77,8 +81,10 @@ class P4d : public FroelingService
       int performWebifRequests();
       int cleanupWebifRequests();
 
-      int store(time_t now, const char* type, int address, double value,
+      int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
                 unsigned int factor, const char* text = 0);
+
+      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0);
 
       void addParameter2Mail(const char* name, const char* value);
 
@@ -156,6 +162,17 @@ class P4d : public FroelingService
       Status currentState;
       string mailBody;
       string mailBodyHtml;
+
+      // Home Assistant stuff
+
+      string hassMqttUrl;
+
+#ifdef MQTT_HASS
+
+      MqTTPublishClient* mqttWriter;
+      MqTTSubscribeClient* mqttReader;
+
+#endif // HASS
 
       // config
 

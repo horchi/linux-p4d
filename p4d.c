@@ -3,7 +3,7 @@
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2015  Jörg Wendel
+// Date 04.11.2010 - 05.03.2018  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -81,11 +81,21 @@ P4d::P4d()
    serial = new Serial;
    request = new P4Request(serial);
    curl = new cCurl();
+
+#ifdef MQTT_HASS
+   mqttWriter = 0;
+   mqttReader = 0;
+#endif
 }
 
 P4d::~P4d()
 {
    exit();
+
+#ifdef MQTT_HASS
+   delete mqttWriter;
+   delete mqttReader;
+#endif
 
    free(mailScript);
    free(stateMailAtStates);
@@ -1027,7 +1037,7 @@ int P4d::initMenu()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* type, int address, double value,
+int P4d::store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
                unsigned int factor, const char* text)
 {
    static time_t lastHmFailAt = 0;
@@ -1046,6 +1056,10 @@ int P4d::store(time_t now, const char* type, int address, double value,
    tableSamples->setValue("SAMPLES", 1);
 
    tableSamples->store();
+
+   // Home Assistant
+
+   hassPush(name, title, unit, theValue, text);
 
    // HomeMatic
 
@@ -1219,7 +1233,6 @@ int P4d::loop()
          break;
 
       meanwhile();
-
       standbyUntil(min(nextStateAt, nextAt));
 
       // aggregate
@@ -1417,7 +1430,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, type, v.address, v.value, factor);
+         store(now, name, title, unit, type, v.address, v.value, factor);
          sprintf(num, "%.2f", v.value / factor);
 
          if (strcmp(unit, "°") == 0)
@@ -1438,7 +1451,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1453,7 +1466,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1468,7 +1481,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1477,7 +1490,7 @@ int P4d::update()
       {
          double value = w1.valueOf(name);
 
-         store(now, type, addr, value, factor);
+         store(now, name, title, unit, type, addr, value, factor);
          sprintf(num, "%.2f", value / factor);
 
          if (strcmp(unit, "°") == 0)
@@ -1494,14 +1507,14 @@ int P4d::update()
          {
             case udState:
             {
-               store(now, type, udState, currentState.state, factor, currentState.stateinfo);
+               store(now, name, unit, title, type, udState, currentState.state, factor, currentState.stateinfo);
                addParameter2Mail(title, currentState.stateinfo);
 
                break;
             }
             case udMode:
             {
-               store(now, type, udMode, currentState.mode, factor, currentState.modeinfo);
+               store(now, name, title, unit, type, udMode, currentState.mode, factor, currentState.modeinfo);
                addParameter2Mail(title, currentState.modeinfo);
 
                break;
@@ -1514,7 +1527,7 @@ int P4d::update()
                localtime_r(&currentState.time, &tim);
                strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
 
-               store(now, type, udTime, currentState.time, factor, date);
+               store(now, name, title, unit, type, udTime, currentState.time, factor, date);
                addParameter2Mail(title, date);
 
                break;

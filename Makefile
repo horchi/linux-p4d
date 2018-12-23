@@ -30,14 +30,21 @@ GIT_REV     = $(shell git describe --always 2>/dev/null)
 # object files
 
 LOBJS      =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
-OBJS      += $(LOBJS) main.o p4io.o service.o w1.o webif.o
+OBJS       = $(LOBJS) main.o p4io.o service.o w1.o webif.o hass.o
+MQTTBJS    = lib/mqtt.c
 CHARTOBJS  = $(LOBJS) chart.o
 CMDOBJS    = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
-CFLAGS += $(shell mysql_config --include)
-CFLAGS += $(shell xml2-config --cflags)
-DEFINES += -DDEAMON=P4d -DUSEMD5
-OBJS += p4d.o
+CFLAGS    += $(shell mysql_config --include)
+CFLAGS    += $(shell xml2-config --cflags)
+DEFINES   += -DDEAMON=P4d -DUSEMD5
+OBJS      += p4d.o
+
+ifdef MQTTINTERFACE
+   OBJS    += $(MQTTBJS)
+   LIBS    += -lpaho-mqtt3cs
+	DEFINES += -DMQTT_HASS
+endif
 
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
@@ -154,13 +161,15 @@ lib/db.o        :  lib/db.c        $(HEADER)
 lib/dbdict.o    :  lib/dbdict.c    $(HEADER)
 lib/curl.o      :  lib/curl.c      $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
+lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h
 
 main.o			 :  main.c          $(HEADER) p4d.h
-p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h
+p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o			 :  webif.c         $(HEADER) p4d.h
 w1.o			    :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
+hass.o          :  hass.c          p4d.h
 chart.o         :  chart.c
 
 # ------------------------------------------------------
