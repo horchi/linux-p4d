@@ -153,7 +153,7 @@ int MqTTSubscribeClient::subscribe(const char* aTopic)
       return fail;
    }
 
-   tell(0, "Subscribing to topic '%s' succeeded", topic.c_str());
+   tell(3, "Subscribing to topic '%s' succeeded", topic.c_str());
 
    return success;
 }
