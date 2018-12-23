@@ -164,7 +164,7 @@ lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h
 
 main.o			 :  main.c          $(HEADER) p4d.h
-p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h mqtt.h
+p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o			 :  webif.c         $(HEADER) p4d.h
 w1.o			    :  w1.c            $(HEADER) w1.h
