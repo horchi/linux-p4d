@@ -1175,6 +1175,11 @@ int P4d::meanwhile()
    if (!connection || !connection->isConnected())
       return fail;
 
+#ifdef MQTT_HASS
+   if (mqttReader && mqttReader->isConnected()) mqttReader->yield();
+   if (mqttWriter && mqttWriter->isConnected()) mqttWriter->yield();
+#endif
+
    performWebifRequests();
 
    if (lastCleanup < time(0) - 6*tmeSecondsPerHour)
