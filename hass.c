@@ -93,7 +93,11 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
    // publish actual value
 
    char* valueJson = 0;
-   asprintf(&valueJson, "{ \"value\" : \"%.2f\" }", value);
+
+   if (!isEmpty(text))
+      asprintf(&valueJson, "{ \"value\" : \"%s\" }", text);
+   else
+      asprintf(&valueJson, "{ \"value\" : \"%.2f\" }", value);
 
    mqttWriter->write(stateTopic, valueJson);
 
