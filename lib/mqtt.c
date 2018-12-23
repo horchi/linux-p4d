@@ -111,7 +111,7 @@ int MqTTPublishClient::write(const char* topic, const char* msg, size_t size)
       return fail;
    }
 
-   tell(0, "-> (%s)[%s]", topic, msg);
+   tell(1, "-> (%s)[%s]", topic, msg);
 
    return success;
 }
