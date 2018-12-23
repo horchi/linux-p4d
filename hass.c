@@ -22,13 +22,13 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 
    if (!mqttWriter)
    {
-      mqttWriter = new MqTTPublishClient(hassMqttUrl.c_str(), "p4d_publisher");
+      mqttWriter = new MqTTPublishClient(hassMqttUrl, "p4d_publisher");
       mqttWriter->setConnectTimeout(15); // seconds
    }
 
    if (!mqttReader)
    {
-      mqttReader = new MqTTSubscribeClient(hassMqttUrl.c_str(), "p4d_subscriber");
+      mqttReader = new MqTTSubscribeClient(hassMqttUrl, "p4d_subscriber");
       mqttReader->setConnectTimeout(15); // seconds
       mqttReader->setTimeout(100);       // milli seconds
    }
@@ -37,17 +37,17 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
    {
       if (mqttWriter->connect() != success)
       {
-         tell(0, "Error: Connecting writer to '%s' failed", hassMqttUrl.c_str());
+         tell(0, "Error: Connecting writer to '%s' failed", hassMqttUrl);
          return fail;
       }
-      tell(0, "Connecting to '%s' succeeded", hassMqttUrl.c_str());
+      tell(0, "Connecting to '%s' succeeded", hassMqttUrl);
    }
 
    if (!mqttReader->isConnected())
    {
       if (mqttReader->connect() != success)
       {
-         tell(0, "Error: Connecting subscriber to '%s' failed", hassMqttUrl.c_str());
+         tell(0, "Error: Connecting subscriber to '%s' failed", hassMqttUrl);
          return fail;
       }
    }

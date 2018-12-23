@@ -29,6 +29,7 @@
 
 extern char dbHost[];
 extern int  dbPort;
+extern char hassMqttUrl[];
 extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
@@ -164,8 +165,6 @@ class P4d : public FroelingService
       string mailBodyHtml;
 
       // Home Assistant stuff
-
-      string hassMqttUrl;
 
 #ifdef MQTT_HASS
 
