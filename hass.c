@@ -70,7 +70,7 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 
       // topic don't exists -> create sensor
 
-      if (strcpm(unit, "°") == 0)
+      if (strcmp(unit, "°") == 0)
          unit = "°C";
 
       tell(1, "Info: Sensor '%s' not found at home assistants MQTT, sendig config message", name);
