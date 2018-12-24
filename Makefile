@@ -72,7 +72,7 @@ inst_rest: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	/etc/init.d/p4d start
 
-inst-sysV:
+install-sysV:
 	install --mode=755 -D ./contrib/p4d /etc/init.d/
 	install --mode=755 -D ./contrib/runp4d /usr/local/bin/
 	update-rc.d p4d defaults
