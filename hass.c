@@ -112,7 +112,7 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 
 #else
 
-int P4d::hassPush(time_t now, const char* type, int address, double value,
+int P4d::hassPush(const char* name, const char* title, const char* unit, double value, const char* text)
                   unsigned int factor, const char* text)
 {
    return success;
