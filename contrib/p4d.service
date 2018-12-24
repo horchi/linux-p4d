@@ -1,0 +1,14 @@
+[Unit]
+
+Description = Deamon to capture data of the P4 pellet heatin
+After = network.target <AFTER>
+
+[Service]
+
+Type = forking
+ExecStart = <BINDEST>/p4d
+Restart = always
+
+[Install]
+
+WantedBy = multi-user.target

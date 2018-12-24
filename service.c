@@ -12,7 +12,7 @@
 // Const
 //***************************************************************************
 
-const char* FroelingService::nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789äöüÄÖÜ_-";
+const char* FroelingService::nameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789äöüÄÖÜß_-";
 
 //***************************************************************************
 // Working States

@@ -65,16 +65,26 @@ $(CMDTARGET) : $(CMDOBJS)
 
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
+	make install-$(INIT_SYSTEM)
 
 inst_rest: $(TARGET) $(CMDTARGET) install-config install-scripts
 	/etc/init.d/p4d stop
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	/etc/init.d/p4d start
 
-inst-sysv-init:
+inst-sysV:
 	install --mode=755 -D ./contrib/p4d /etc/init.d/
 	install --mode=755 -D ./contrib/runp4d /usr/local/bin/
 	update-rc.d p4d defaults
+
+install-systemd:
+	cat contrib/p4d.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service
+	chmod a+r $(SYSTEMDDEST)/p4d.service
+   ifeq ($(DESTDIR),)
+		systemctl daemon-reload
+   endif
+
+install-none:
 
 install-config:
 	if ! test -d $(CONFDEST); then \
