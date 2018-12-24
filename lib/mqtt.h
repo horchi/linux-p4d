@@ -62,8 +62,8 @@ class MqTTClient
 
       virtual int connect();
       virtual int disconnect();
-      virtual void yield() { MQTTClient_yield(); };
-      bool isConnected() { return connected; }
+      virtual void yield()      { MQTTClient_yield(); };
+      bool isConnected()        { return connected; }
 
       void setTimeout(int aTimeout){ timeout = aTimeout; }
       void setUsername(const char* username);
@@ -71,7 +71,7 @@ class MqTTClient
       void setConnectTimeout(int timeout) { options.connectTimeout = timeout; }
       void setRetryInterval(int interval) { options.retryInterval = interval; }
 
-      int getLastResult() const { return lastResult; }
+      int getLastResult() const           { return lastResult; }
 
    protected:
 

@@ -652,8 +652,8 @@ int P4d::updateValueFacts()
       if (status != success)
          continue;
 
-      tell(eloDebug, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
-           count, v.address, v.factor, v.unit, v.unknown, v.description);
+      tell(eloDebug, "%3d) 0x%04x '%s' %d '%s' (%04d) '%s'",
+           count, v.address, v.name, v.factor, v.unit, v.unknown, v.description);
 
       // update table
 

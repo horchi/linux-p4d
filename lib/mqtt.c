@@ -64,9 +64,7 @@ int MqTTClient::disconnect()
    connected = false;
 
    if (lastResult)
-   {
       return fail;
-   }
 
    return success;
 }
@@ -100,6 +98,7 @@ int MqTTPublishClient::write(const char* topic, const char* msg, size_t size)
    if (lastResult != MQTTCLIENT_SUCCESS)
    {
       tell(0, "Error: Writing to topic '%s' failed", topic);
+      disconnect();
       return fail;
    }
 
@@ -107,6 +106,8 @@ int MqTTPublishClient::write(const char* topic, const char* msg, size_t size)
 
    if (lastResult != MQTTCLIENT_SUCCESS)
    {
+      tell(0, "Error: Writing not completed");
+      disconnect();
       return fail;
    }
 
@@ -136,7 +137,7 @@ int MqTTSubscribeClient::subscribe(const char* aTopic)
 {
    if (!connected || !aTopic)
    {
-      tell(0, "Error: Can't subscribe, parameter missing");
+      tell(0, "Error: Can't subscribe, not connected or topic missing");
       return fail;
    }
 
@@ -149,6 +150,7 @@ int MqTTSubscribeClient::subscribe(const char* aTopic)
    if (lastResult != MQTTCLIENT_SUCCESS)
    {
       tell(0, "Error: Subscribing to '%s' failed", topic.c_str());
+      disconnect();
       return fail;
    }
 
@@ -195,9 +197,13 @@ int MqTTSubscribeClient::read(std::string* message)
 
    if (lastResult != MQTTCLIENT_SUCCESS && lastResult != MQTTCLIENT_TOPICNAME_TRUNCATED)
    {
-      tell(0, "Error: Reading topic '%s' failed, result was (%d)",
-           topic.c_str(), lastResult);
-      if (_message) MQTTClient_freeMessage(&_message);
+      tell(0, "Error: Reading topic '%s' failed, result was (%d)", topic.c_str(), lastResult);
+
+      if (_message)
+         MQTTClient_freeMessage(&_message);
+
+      disconnect();
+
       return fail;
    }
 

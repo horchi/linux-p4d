@@ -55,13 +55,13 @@ endif
 all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+	$(CPP) $(CFLAGS) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
-	$(CC) $(CFLAGS) $(CHARTOBJS) $(LIBS) -o $@
+	$(CPP) $(CFLAGS) $(CHARTOBJS) $(LIBS) -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
-	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
+	$(CPP) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
 
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
@@ -148,7 +148,7 @@ cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
 
 com2: $(LOBJS) c2tst.c p4io.c service.c
-	$(CC) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
+	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
 
 #***************************************************************************
 # dependencies
