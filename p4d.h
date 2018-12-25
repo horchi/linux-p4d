@@ -87,6 +87,10 @@ class P4d : public FroelingService
 
       int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0);
 
+#ifdef MQTT_HASS
+      int hassCheckConnection();
+#endif
+
       void addParameter2Mail(const char* name, const char* value);
 
       void afterUpdate();

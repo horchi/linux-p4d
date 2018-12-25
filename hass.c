@@ -18,39 +18,10 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 {
    int status = success;
 
-   // prepare reader/writer connection
+   // check/prepare reader/writer connection
 
-   if (!mqttWriter)
-   {
-      mqttWriter = new MqTTPublishClient(hassMqttUrl, "p4d_publisher");
-      mqttWriter->setConnectTimeout(15); // seconds
-   }
-
-   if (!mqttReader)
-   {
-      mqttReader = new MqTTSubscribeClient(hassMqttUrl, "p4d_subscriber");
-      mqttReader->setConnectTimeout(15); // seconds
-      mqttReader->setTimeout(100);       // milli seconds
-   }
-
-   if (!mqttWriter->isConnected())
-   {
-      if (mqttWriter->connect() != success)
-      {
-         tell(0, "Error: Connecting writer to '%s' failed", hassMqttUrl);
-         return fail;
-      }
-      tell(0, "Connecting to '%s' succeeded", hassMqttUrl);
-   }
-
-   if (!mqttReader->isConnected())
-   {
-      if (mqttReader->connect() != success)
-      {
-         tell(0, "Error: Connecting subscriber to '%s' failed", hassMqttUrl);
-         return fail;
-      }
-   }
+   if (hassCheckConnection() != success)
+      return fail;
 
    // check if state topic already exists
 
@@ -73,7 +44,8 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
       if (strcmp(unit, "°") == 0)
          unit = "°C";
 
-      tell(1, "Info: Sensor '%s' not found at home assistants MQTT, sendig config message", name);
+      tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
+           "sendig config message", name);
 
       asprintf(&configTopic, "homeassistant/sensor/%s/config", name);
       asprintf(&configJson, "{"
@@ -106,6 +78,50 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 
    free(valueJson);
    free(stateTopic);
+
+   return success;
+}
+
+//***************************************************************************
+// Check MQTT Connection
+//***************************************************************************
+
+int P4d::hassCheckConnection()
+{
+   if (!mqttWriter)
+   {
+      mqttWriter = new MqTTPublishClient(hassMqttUrl, "p4d_publisher");
+      mqttWriter->setConnectTimeout(15); // seconds
+   }
+
+   if (!mqttReader)
+   {
+      mqttReader = new MqTTSubscribeClient(hassMqttUrl, "p4d_subscriber");
+      mqttReader->setConnectTimeout(15); // seconds
+      mqttReader->setTimeout(100);       // milli seconds
+   }
+
+   if (!mqttWriter->isConnected())
+   {
+      if (mqttWriter->connect() != success)
+      {
+         tell(0, "Error: MQTT: Connecting publisher to '%s' failed", hassMqttUrl);
+         return fail;
+      }
+
+      tell(0, "MQTT: Connecting publisher to '%s' succeeded", hassMqttUrl);
+   }
+
+   if (!mqttReader->isConnected())
+   {
+      if (mqttReader->connect() != success)
+      {
+         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", hassMqttUrl);
+         return fail;
+      }
+
+      tell(0, "MQTT: Connecting subscriber to '%s' succeeded", hassMqttUrl);
+   }
 
    return success;
 }

@@ -40,7 +40,7 @@ CFLAGS    += $(shell xml2-config --cflags)
 DEFINES   += -DDEAMON=P4d -DUSEMD5
 OBJS      += p4d.o
 
-ifdef MQTTINTERFACE
+ifdef HASSMQTT
    OBJS    += $(MQTTBJS)
    LIBS    += -lpaho-mqtt3cs
 	DEFINES += -DMQTT_HASS
