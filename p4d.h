@@ -85,9 +85,8 @@ class P4d : public FroelingService
       int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
                 unsigned int factor, const char* text = 0);
 
-      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0);
-
 #ifdef MQTT_HASS
+      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0);
       int hassCheckConnection();
 #endif
 

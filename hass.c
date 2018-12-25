@@ -126,11 +126,4 @@ int P4d::hassCheckConnection()
    return success;
 }
 
-#else
-
-int P4d::hassPush(const char* name, const char* title, const char* unit, double value, const char* text)
-{
-   return success;
-}
-
 #endif

@@ -55,13 +55,13 @@ endif
 all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
-	$(CPP) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+	$(doLink) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
-	$(CPP) $(CFLAGS) $(CHARTOBJS) $(LIBS) -o $@
+	$(doLink) $(CHARTOBJS) $(LIBS) -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
-	$(CPP) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
+	$(doLink) $(CMDOBJS) $(LIBS) -o $@
 
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)

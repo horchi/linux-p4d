@@ -24,7 +24,7 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
-char hassMqttUrl[255+TB] = "tcp://127.0.0.1:1883";
+char hassMqttUrl[255+TB] = ""; // "tcp://127.0.0.1:1883";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 int  stateCheckInterval = 10;
