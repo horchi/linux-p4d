@@ -43,6 +43,10 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
 
       if (strcmp(unit, "°") == 0)
          unit = "°C";
+      else if (strcmp(unit, "Heizungsstatus") == 0 ||
+               strcmp(unit, "zst") == 0 ||
+               strcmp(unit, "T") == 0)
+         unit = "";
 
       tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
            "sendig config message", name);
