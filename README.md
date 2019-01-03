@@ -31,18 +31,20 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 
 
 ### Prerequisits:
-- USB-Serial Converter based on FTDI chip
+- USB-Serial Converter based on FTDI chip (other may cause connection problems)
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - A Linux based host is required
   e.g. a Raspberry Pi with a default OS setup (e.g. raspbian stretch) is a good option for the p4d
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
-### Installation MySQL Database:
+### Installation MySQL Database und client library:
 It's not required to host the database on the Raspberry. A remote database is as well supported.
 
-`apt-get install mysql-server-5.5 libmysqlclient-dev`
-(set database password for root user during installation)
+`apt install mysql-server libmysqlclient-dev`
+some distributions like raspbian stretch switched to mariadb, in this case:
+`apt install mariadb-server libmariadbclient-dev `
 
+(set database password for root user during installation)
 
 ### P4 database setup:
 If database isn't located on the Raspberry check the chapter remote database setup at the end of the Readme.
