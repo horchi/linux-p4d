@@ -14,7 +14,8 @@
 
 #ifdef MQTT_HASS
 
-int P4d::hassPush(const char* name, const char* title, const char* unit, double value, const char* text)
+int P4d::hassPush(const char* name, const char* title, const char* unit,
+                  double value, const char* text)
 {
    int status = success;
 

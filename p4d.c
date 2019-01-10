@@ -1037,7 +1037,8 @@ int P4d::initMenu()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
+int P4d::store(time_t now, const char* name, const char* title, const char* unit,
+               const char* type, int address, double value,
                unsigned int factor, const char* text)
 {
    static time_t lastHmFailAt = 0;
@@ -1943,7 +1944,7 @@ int P4d::updateErrors()
          timeOne = 0;
    }
 
-   tell(eloAlways, "Updating error list done");
+   tell(eloDetail, "Updating error list done");
 
    // count pending (not 'quittiert' AND not mailed) errors
 

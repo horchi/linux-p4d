@@ -38,11 +38,13 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 ### Installation MySQL Database:
-It's not required to host the database on the Raspberry. A remote database is as well supported.
+It's not required to host the database on the Raspberry. A remote database is as well supported!
 
-`apt-get install mysql-server-5.5 libmysqlclient-dev`
+`apt install mysql-server`
+some distributions like raspbian stretch switched to mariadb, in this case:
+`apt install mariadb-server`
+
 (set database password for root user during installation)
-
 
 ### P4 database setup:
 If database isn't located on the Raspberry check the chapter remote database setup at the end of the Readme.
@@ -59,16 +61,19 @@ If database isn't located on the Raspberry check the chapter remote database set
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
-apt install apache2 libapache2-mod-php7.2 php7.2-mysql php7.2-gd
+apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml
 ```
+Regarding xour distibution the php version may included in the package names!
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
 ## Installation the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev
+apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
 ```
+or in case of mariadb use libmariadbclient-dev instad of libmysqlclient-dev :
+
 ### get the p4d and build it
 ```
 cd /usr/src/
