@@ -72,7 +72,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ```
 apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
 ```
-or in case of mariadb use libmariadbclient-dev instad of libmysqlclient-dev :
+or in case of mariadb use 'libmariadbclient-dev' instad of 'libmysqlclient-dev'
 
 ### get the p4d and build it
 ```
