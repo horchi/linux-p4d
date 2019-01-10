@@ -38,7 +38,7 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 ### Installation MySQL Database:
-It's not required to host the database on the Raspberry. A remote database is as well supported!
+It's not required to host the database on the Raspberry. A remote database is supported as well!
 
 `apt install mysql-server`
 some distributions like raspbian stretch switched to mariadb, in this case:
@@ -63,7 +63,7 @@ Run the following commands to install the Apache webserver and required packages
 apt update
 apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml
 ```
-Regarding xour distibution the php version may included in the package names!
+Regarding the distibution the php version may included in the package names!
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
@@ -72,9 +72,9 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ```
 apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
 ```
-or in case of mariadb use 'libmariadbclient-dev' instad of 'libmysqlclient-dev'
+or in case of mariadb use ```libmariadbclient-dev``` instad of ```libmysqlclient-dev```
 
-#### if you like to use the MQTT interface to home assistant
+#### if you like to use the MQTT interface to home assistant install the paho.mqtt library:
 ```
 cd /usr/src/
 git clone https://github.com/eclipse/paho.mqtt.c.git
@@ -95,8 +95,7 @@ make clean all HASSMQTT=yes
 make install
 make inst-sysv-init
 ```
-#### or if you don't like to use the MQTT interface to home assistant
-remove 'HASSMQTT=yes' from the commond above!
+#### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
@@ -120,16 +119,10 @@ Maybe i implement it later ;)
 
 ### Enable automatic p4d startup during boot:
 If MySQL database is located on the same device as p4d is running you have to do the next steps
-- Edit file `/usr/src/linux-p4d/contrib/p4d`
-- Append the parameter `mysql` at the end of the next line
+- Edit file `/etc/init.d/p4d` after each make install call and
+append the parameter `mysql` at the end of the this line:
 ```
 # Required-Start:    hostname $local_fs $network $syslog
-```
-- enable p4d start during RPi boot, run the commands
-```
-cp contrib/p4d /etc/init.d/
-chmod 750 /etc/init.d/p4d
-update-rc.d p4d defaults
 ```
 
 ### Install the WEB interface:
