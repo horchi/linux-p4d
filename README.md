@@ -80,7 +80,7 @@ cd /usr/src/
 git clone https://github.com/eclipse/paho.mqtt.c.git
 cd paho.mqtt.c
 make
-sudo rm /usr/local/lib/libpaho*
+sudo rm -f /usr/local/lib/libpaho*
 sudo make install
 ```
 You can safely ignore this error message (may fixed once a day at paho.mqtt.c.git):
