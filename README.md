@@ -74,15 +74,29 @@ apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-d
 ```
 or in case of mariadb use 'libmariadbclient-dev' instad of 'libmysqlclient-dev'
 
+#### if you like to use the MQTT interface to home assistant
+```
+cd /usr/src/
+git clone https://github.com/eclipse/paho.mqtt.c.git
+cd paho.mqtt.c
+make
+sudo rm /usr/local/lib/libpaho*
+sudo make install
+```
+You can safely ignore this error message (may fixed once a day at paho.mqtt.c.git):
+```install: Aufruf von stat für „build/output/doc/MQTTClient/man/man3/MQTTClient.h.3“ nicht möglich: Datei oder Verzeichnis nicht gefunden```
+
 ### get the p4d and build it
 ```
 cd /usr/src/
 git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
-make clean all
+make clean all HASSMQTT=yes
 make install
 make inst-sysv-init
 ```
+#### or if you don't like to use the MQTT interface to home assistant
+remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
