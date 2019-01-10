@@ -46,15 +46,22 @@ some distributions like raspbian stretch switched to mariadb, in this case:
 
 (set database password for root user during installation)
 
-### P4 database setup:
-If database isn't located on the Raspberry check the chapter remote database setup at the end of the Readme.
+### Local database setup:
+If the database server is located localy on same host as the p4d:
 
-- login as root:
 ```
 > mysql -u root -p
   CREATE DATABASE p4 charset utf8;
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
   GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
+```
+### Remote database setup
+if the database is running remote (on a other host):
+```
+> mysql -u root -p
+ CREATE DATABASE p4 charset utf8;
+ CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
+ GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
 ```
 
 ### Installation Apache Webserver:
@@ -138,13 +145,12 @@ User: *p4*
 Pass: *p4-3200*
 
 ### PHP Settings:
-file /etc/php/7.0/apache2/php.ini
-set max_input_vars = 5000
+Modify the file /etc/php/7.0/apache2/php.ini and append (or edit) this line ```set max_input_vars = 5000```
 
 ### Fist steps to enable data logging:
 
-1. Log in
-2. Setup -> Aufzeichnung -> Init
+1. Log in to the web interface
+2. Goto Setup -> Aufzeichnung -> Init
   - Select the values you like to record and store your selection (click 'Speichern')
 3. Menu -> Init
 4. Menu -> Aktualisieren
@@ -200,14 +206,6 @@ echo "w1-gpio" >> /etc/modules
 
 
 ## Additional information
-### Remote database setup
-Login as root:
-```
-> mysql -u root -p
- CREATE DATABASE p4 charset utf8;
- CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
- GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
-```
 
 ### MySQL HINTS
 If you cannot figure out why you get Access denied, remove all entries from the user table that have Host values with wildcars contained (entries that match `%` or `_` characters). A very common error is to insert a new entry with `Host='%'` and `User='some_user'`, thinking that this allows you to specify localhost to connect from the same machine. The reason that this does not work is that the default privileges include an entry with `Host='localhost'` and `User=''`. Because that entry has a Host value `localhost` that is more specific than `%`, it is used in preference to the new entry when connecting from localhost! The correct procedure is to insert a second entry with `Host='localhost'` and `User='some_user'`, or to delete the entry with `Host='localhost'` and `User=''`. After deleting the entry, remember to issue a `FLUSH PRIVILEGES` statement to reload the grant tables.
