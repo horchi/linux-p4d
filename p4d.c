@@ -1324,6 +1324,7 @@ int P4d::loop()
          sendErrorMail();
 
       sem->v();
+      initialRun = false;
    }
 
    serial->close();

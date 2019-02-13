@@ -55,7 +55,7 @@ If the database server is located localy on same host as the p4d:
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
   GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
 ```
-### Remote database setup
+### Remote database setup:
 if the database is running remote (on a other host):
 ```
 > mysql -u root -p
