@@ -1063,7 +1063,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 
 #ifdef MQTT_HASS
    if (!isEmpty(hassMqttUrl))
-      hassPush(name, title, unit, theValue, text, initialRun);
+      hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
 
    // HomeMatic
