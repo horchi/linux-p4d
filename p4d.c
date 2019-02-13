@@ -68,6 +68,7 @@ P4d::P4d()
    tSync = no;
    maxTimeLeak = 10;
    errorsPending = 0;
+   initialRun = true;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");

@@ -166,7 +166,7 @@ class P4d : public FroelingService
       Status currentState;
       string mailBody;
       string mailBodyHtml;
-      bool initialRun = true;
+      bool initialRun;
 
       // Home Assistant stuff
 
