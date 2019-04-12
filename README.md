@@ -38,46 +38,71 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 ### Installation MySQL Database:
-It's not required to host the database on the Raspberry. A remote database is as well supported.
+It's not required to host the database on the Raspberry. A remote database is supported as well!
 
-`apt-get install mysql-server-5.5 libmysqlclient-dev`
+`apt install mysql-server`
+some distributions like raspbian stretch switched to mariadb, in this case:
+`apt install mariadb-server`
+
 (set database password for root user during installation)
 
+### Local database setup:
+If the database server is located localy on same host as the p4d:
 
-### P4 database setup:
-If database isn't located on the Raspberry check the chapter remote database setup at the end of the Readme.
-
-- login as root:
 ```
 > mysql -u root -p
   CREATE DATABASE p4 charset utf8;
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
   GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
 ```
+### Remote database setup:
+if the database is running remote (on a other host):
+```
+> mysql -u root -p
+ CREATE DATABASE p4 charset utf8;
+ CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
+ GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
+```
 
 ### Installation Apache Webserver:
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
-apt install apache2 libapache2-mod-php7.2 php7.2-mysql php7.2-gd
+apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml
 ```
+Regarding the distibution the php version may included in the package names!
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
 ## Installation the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev
+apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
 ```
+or in case of mariadb use ```libmariadbclient-dev``` instad of ```libmysqlclient-dev```
+
+#### if you like to use the MQTT interface to home assistant install the paho.mqtt library:
+```
+cd /usr/src/
+git clone https://github.com/eclipse/paho.mqtt.c.git
+cd paho.mqtt.c
+make
+sudo rm -f /usr/local/lib/libpaho*
+sudo make install
+```
+You can safely ignore this error message (may fixed once a day at paho.mqtt.c.git):
+```install: Aufruf von stat für „build/output/doc/MQTTClient/man/man3/MQTTClient.h.3“ nicht möglich: Datei oder Verzeichnis nicht gefunden```
+
 ### get the p4d and build it
 ```
 cd /usr/src/
 git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
-make clean all
+make clean all HASSMQTT=yes
 make install
 make inst-sysv-init
 ```
+#### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
@@ -101,16 +126,10 @@ Maybe i implement it later ;)
 
 ### Enable automatic p4d startup during boot:
 If MySQL database is located on the same device as p4d is running you have to do the next steps
-- Edit file `/usr/src/linux-p4d/contrib/p4d`
-- Append the parameter `mysql` at the end of the next line
+- Edit file `/etc/init.d/p4d` after each make install call and
+append the parameter `mysql` at the end of the this line:
 ```
 # Required-Start:    hostname $local_fs $network $syslog
-```
-- enable p4d start during RPi boot, run the commands
-```
-cp contrib/p4d /etc/init.d/
-chmod 750 /etc/init.d/p4d
-update-rc.d p4d defaults
 ```
 
 ### Install the WEB interface:
@@ -126,13 +145,12 @@ User: *p4*
 Pass: *p4-3200*
 
 ### PHP Settings:
-file /etc/php/7.0/apache2/php.ini
-set max_input_vars = 5000
+Modify the file /etc/php/7.0/apache2/php.ini and append (or edit) this line ```set max_input_vars = 5000```
 
 ### Fist steps to enable data logging:
 
-1. Log in
-2. Setup -> Aufzeichnung -> Init
+1. Log in to the web interface
+2. Goto Setup -> Aufzeichnung -> Init
   - Select the values you like to record and store your selection (click 'Speichern')
 3. Menu -> Init
 4. Menu -> Aktualisieren
@@ -191,14 +209,6 @@ echo "dtoverlay=w1-gpio,gpioin=4,pullup=on" >> /boot/config.txt
 
 
 ## Additional information
-### Remote database setup
-Login as root:
-```
-> mysql -u root -p
- CREATE DATABASE p4 charset utf8;
- CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
- GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
-```
 
 ### MySQL HINTS
 If you cannot figure out why you get Access denied, remove all entries from the user table that have Host values with wildcars contained (entries that match `%` or `_` characters). A very common error is to insert a new entry with `Host='%'` and `User='some_user'`, thinking that this allows you to specify localhost to connect from the same machine. The reason that this does not work is that the default privileges include an entry with `Host='localhost'` and `User=''`. Because that entry has a Host value `localhost` that is more specific than `%`, it is used in preference to the new entry when connecting from localhost! The correct procedure is to insert a second entry with `Host='localhost'` and `User='some_user'`, or to delete the entry with `Host='localhost'` and `User=''`. After deleting the entry, remember to issue a `FLUSH PRIVILEGES` statement to reload the grant tables.

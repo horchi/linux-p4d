@@ -14,7 +14,8 @@
 
 #ifdef MQTT_HASS
 
-int P4d::hassPush(const char* name, const char* title, const char* unit, double value, const char* text)
+int P4d::hassPush(const char* name, const char* title, const char* unit,
+                  double value, const char* text, bool forceConfig)
 {
    int status = success;
 
@@ -30,14 +31,15 @@ int P4d::hassPush(const char* name, const char* title, const char* unit, double 
    asprintf(&stateTopic, "p4d2mqtt/sensor/%s/state", name);
 
    mqttReader->subscribe(stateTopic);
+   status = mqttReader->read(&message);
 
-   if ((status = mqttReader->read(&message)) != success)
+   if (status != success && status != MqTTClient::wrnNoMessagePending)
+      return fail;
+
+   if (forceConfig || status == MqTTClient::wrnNoMessagePending)
    {
       char* configTopic = 0;
       char* configJson = 0;
-
-      if (status != MqTTClient::wrnNoMessagePending)
-         return fail;
 
       // topic don't exists -> create sensor
 

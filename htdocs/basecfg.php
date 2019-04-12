@@ -123,6 +123,9 @@ else if ($action == "store")
    if (isset($_POST["webUrl"]))
       $_SESSION['webUrl'] = (substr($_SESSION['webUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["webUrl"]) : htmlspecialchars("http://" . $_POST["webUrl"]);
 
+   if (isset($_POST["haUrl"]))
+      $_SESSION['haUrl'] = (substr($_SESSION['haUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["haUrl"]) : htmlspecialchars("http://" . $_POST["haUrl"]);
+
    if (isset($_POST["hmHost"]))
       $_SESSION['hmHost'] = htmlspecialchars($_POST["hmHost"]);
 
@@ -154,6 +157,7 @@ else if ($action == "store")
    writeConfigItem("heatingType", $_SESSION['heatingType']);
    writeConfigItem("stateAni", $_SESSION['stateAni']);
    writeConfigItem("webUrl", $_SESSION['webUrl']);
+   writeConfigItem("haUrl", $_SESSION['haUrl']);
    writeConfigItem("hmHost", $_SESSION['hmHost']);
 
    if ($_POST["passwd2"] != "")
@@ -240,6 +244,7 @@ configStrItem(3, "Fehler Mail Empfänger", "errorMailTo\" id=\"Mail2", $_SESSION
 configStrItem(3, "Status Mail für folgende Status", "stateMailStates\" id=\"Mail3", $_SESSION['stateMailStates'], "Komma separierte Liste der Stati", 400, $ro);
 configStrItem(3, "p4d sendet Mails über das Skript", "mailScript\" id=\"Mail4", $_SESSION['mailScript'], "", 400, $ro);
 configStrItem(3, "URL deiner Visualisierung", "webUrl\" id=\"Mail5", $_SESSION['webUrl'], "kann mit %weburl% in die Mails eingefügt werden", 350, $ro);
+configStrItem(3, "URL der Hausautomatisierung", "haUrl\" id=\"Mail5", $_SESSION['haUrl'], "", 350, $ro);
 echo "        <button class=\"rounded-border button3\" type=submit name=action value=mailtest>Test Mail</button>\n";
 echo "       </div>\n";
 

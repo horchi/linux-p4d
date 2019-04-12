@@ -86,7 +86,7 @@ class P4d : public FroelingService
                 unsigned int factor, const char* text = 0);
 
 #ifdef MQTT_HASS
-      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0);
+      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
       int hassCheckConnection();
 #endif
 
@@ -166,6 +166,7 @@ class P4d : public FroelingService
       Status currentState;
       string mailBody;
       string mailBodyHtml;
+      bool initialRun;
 
       // Home Assistant stuff
 

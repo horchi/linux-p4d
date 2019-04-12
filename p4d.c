@@ -68,6 +68,7 @@ P4d::P4d()
    tSync = no;
    maxTimeLeak = 10;
    errorsPending = 0;
+   initialRun = true;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -1037,7 +1038,8 @@ int P4d::initMenu()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
+int P4d::store(time_t now, const char* name, const char* title, const char* unit,
+               const char* type, int address, double value,
                unsigned int factor, const char* text)
 {
    static time_t lastHmFailAt = 0;
@@ -1061,7 +1063,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 
 #ifdef MQTT_HASS
    if (!isEmpty(hassMqttUrl))
-       hassPush(name, title, unit, theValue, text);
+      hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
 
    // HomeMatic
@@ -1323,6 +1325,7 @@ int P4d::loop()
          sendErrorMail();
 
       sem->v();
+      initialRun = false;
    }
 
    serial->close();
@@ -1943,7 +1946,7 @@ int P4d::updateErrors()
          timeOne = 0;
    }
 
-   tell(eloAlways, "Updating error list done");
+   tell(eloDetail, "Updating error list done");
 
    // count pending (not 'quittiert' AND not mailed) errors
 
