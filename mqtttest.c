@@ -1,16 +1,22 @@
 
+//
+// g++ -Ilib mqtttest.c lib/mqtt.c lib/common.c -lpthread  -lpaho-mqtt3cs -o mqtt
+//
+
 #include "lib/common.h"
 #include "mqtt.h"
 
 int main(int argc, const char** argv)
 {
-   MqTTPublishClient* mqttWriter;
-   MqTTSubscribeClient* mqttReader;
+   MqTTPublishClient* mqttWriter {nullptr};
+   MqTTSubscribeClient* mqttReader {nullptr};
 
    logstdout = yes;
    loglevel = 5;
 
    std::string hassMqttUrl = "tcp://127.0.0.1:1883";
+   hassMqttUrl = "tcp://172.27.100.154:1883";
+
    const char* title = "Nadine";
    const char* unit = "°C";
    const char* name = "Nadine_0x03";
