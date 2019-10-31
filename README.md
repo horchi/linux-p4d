@@ -199,6 +199,8 @@ configurable via the web interface after reading the sensor facts by clicking [i
 To make the sensors availaspble to the raspi you have to load the `w1-gpio` module, this can be done by calling `modprobe w1-gpio` or automatically at boot by registering it in `/etc/modules`:
 ```
 echo "w1-gpio" >> /etc/modules
+echo "w1_therm" >> /etc/modules
+echo "dtoverlay=w1-gpio,gpioin=4,pullup=on" >> /boot/config.txt
 ```
 
 ### Points to check
