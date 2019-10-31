@@ -100,8 +100,13 @@ git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
 make clean all HASSMQTT=yes
 make install
-make inst-sysv-init
+make install-systemd
 ```
+#### For older linux distributions which don't support the systemd init process use this instead of 'install-systemd'
+```
+make install-systemd
+```
+
 #### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
