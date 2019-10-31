@@ -30,14 +30,21 @@ GIT_REV     = $(shell git describe --always 2>/dev/null)
 # object files
 
 LOBJS      =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
-OBJS      += $(LOBJS) main.o p4io.o service.o w1.o webif.o
+OBJS       = $(LOBJS) main.o p4io.o service.o w1.o webif.o hass.o
+MQTTBJS    = lib/mqtt.c
 CHARTOBJS  = $(LOBJS) chart.o
 CMDOBJS    = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
-CFLAGS += $(shell mysql_config --include)
-CFLAGS += $(shell xml2-config --cflags)
-DEFINES += -DDEAMON=P4d -DUSEMD5
-OBJS += p4d.o
+CFLAGS    += $(shell mysql_config --include)
+CFLAGS    += $(shell xml2-config --cflags)
+DEFINES   += -DDEAMON=P4d -DUSEMD5
+OBJS      += p4d.o
+
+ifdef HASSMQTT
+   OBJS    += $(MQTTBJS)
+   LIBS    += -lpaho-mqtt3cs
+	DEFINES += -DMQTT_HASS
+endif
 
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
@@ -48,26 +55,36 @@ endif
 all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
 $(TARGET) : $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $@
+	$(doLink) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
-	$(CC) $(CFLAGS) $(CHARTOBJS) $(LIBS) -o $@
+	$(doLink) $(CHARTOBJS) $(LIBS) -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
-	$(CC) $(CFLAGS) $(CMDOBJS) $(LIBS) -o $@
+	$(doLink) $(CMDOBJS) $(LIBS) -o $@
 
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
+	make install-$(INIT_SYSTEM)
 
 inst_rest: $(TARGET) $(CMDTARGET) install-config install-scripts
 	/etc/init.d/p4d stop
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	/etc/init.d/p4d start
 
-inst-sysv-init:
+install-sysV:
 	install --mode=755 -D ./contrib/p4d /etc/init.d/
 	install --mode=755 -D ./contrib/runp4d /usr/local/bin/
 	update-rc.d p4d defaults
+
+install-systemd:
+	cat contrib/p4d.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service
+	chmod a+r $(SYSTEMDDEST)/p4d.service
+   ifeq ($(DESTDIR),)
+		systemctl daemon-reload
+   endif
+
+install-none:
 
 install-config:
 	if ! test -d $(CONFDEST); then \
@@ -141,7 +158,7 @@ cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
 
 com2: $(LOBJS) c2tst.c p4io.c service.c
-	$(CC) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
+	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
 
 #***************************************************************************
 # dependencies
@@ -154,13 +171,15 @@ lib/db.o        :  lib/db.c        $(HEADER)
 lib/dbdict.o    :  lib/dbdict.c    $(HEADER)
 lib/curl.o      :  lib/curl.c      $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
+lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h
 
 main.o			 :  main.c          $(HEADER) p4d.h
-p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h
+p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o			 :  webif.c         $(HEADER) p4d.h
 w1.o			    :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
+hass.o          :  hass.c          p4d.h
 chart.o         :  chart.c
 
 # ------------------------------------------------------

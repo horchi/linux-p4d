@@ -242,6 +242,7 @@ void removeChars(std::string& str, const char* ignore)
    {
       int skip = no;
 
+      mblen(0,0);
       csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
 
       for (int pi = 0; pi < lenIgn; pi += csIgn)
@@ -284,6 +285,7 @@ void removeCharsExcept(std::string& str, const char* except)
    {
       int skip = yes;
 
+      mblen(0,0);
       csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
 
       for (int pi = 0; pi < lenIgn; pi += csIgn)

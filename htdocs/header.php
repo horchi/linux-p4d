@@ -75,6 +75,7 @@ include("functions.php");
      readConfigItem("pumpsDO", $_SESSION['pumpsDO'], "0,1,25,26,31,32,37,38,43,44,49,50,55,56,61,62,67,68");
      readConfigItem("pumpsAO", $_SESSION['pumpsAO'], "3,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22");
      readConfigItem("webUrl",  $_SESSION['webUrl'], "http://127.0.0.1/p4");
+     readConfigItem("haUrl", $_SESSION['haUrl']);
 
      // ------------------
      // check for defaults
@@ -137,6 +138,10 @@ function printHeader($refresh = 0)
    {
       echo "      <a href=\"login.php\"><button class=\"rounded-border button1\">Login</button></a>\n";
    }
+
+   if (isset($_SESSION['haUrl']) && $_SESSION['haUrl'] != "")
+      echo "      <a href=\"" . $_SESSION['haUrl'] . "\"><button class=\"rounded-border button1\">HADashboard</button></a>\n";
+
    echo "    </nav>\n";
    /* echo "    <div class=\"menu\">\n"; */
    /* echo "    </div>\n"; */

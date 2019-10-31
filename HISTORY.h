@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.2.335"
-#define VERSION_DATE "20.12.2018"
+#define _VERSION     "0.3.1"
+#define VERSION_DATE "31.10.2019"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2019-10-31:  version 0.3.1
+   - change: Merged dev branch into master
+
+2019-01-11:  version 0.3.0
+   - added: Configurable url for menu button to a external site (e.g. a home automation=
+   - added: MQTT interface to home assistant
 
 2018-12-20:  version 0.2.335
    - added: script p4getvalue.py to query actual values from database
