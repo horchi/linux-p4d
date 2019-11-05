@@ -246,7 +246,7 @@ mysql -u p4 -pp4 -Dp4 <  NAME-dump.sql
 replace NAME with the name of the dump
 
 #### ATTENTION:
-The import deletes at first all the data and import the dump. To append the dumped data you have to modify the SQL statements inside the dump files manually.
+The import deletes at first all the data and then imports the dumped data. To append the dumped data you have to modify the SQL statements inside the dump files manually.
 
 ## Additional information
 
