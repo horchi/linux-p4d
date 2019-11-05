@@ -214,6 +214,40 @@ echo "dtoverlay=w1-gpio,gpioin=4,pullup=on" >> /boot/config.txt
 - reboot the device to check if p4d is starting automatically during startup
 
 
+### Backup
+Backup the data of the p4 database including all recorded values:
+
+```
+p4d-backup
+```
+
+This will create the following files:
+
+```
+config-dump.sql.gz
+errors-dump.sql.gz
+jobs-dump.sql.gz
+menu-dump.sql.gz
+samples-dump.sql.gz
+schemaconf-dump.sql.gz
+sensoralert-dump.sql.gz
+smartconfig-dump.sql.gz
+valuefacts-dump.sql.gz
+timeranges-dump.sql.gz
+hmsysvars-dump.sql.gz
+scripts-dump.sql.gz
+```
+
+To import the backup:
+```
+gunzip NAME-dump.sql.gz
+mysql -u p4 -pp4 -Dp4 <  NAME-dump.sql
+```
+replace NAME with the name of the dump
+
+#ATTENTION:
+This will delete all the data an import the dump. To appen the dumped data you have to modify the SQL statements inside the dump files manually
+
 ## Additional information
 
 ### MySQL HINTS
