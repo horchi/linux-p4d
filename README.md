@@ -38,7 +38,7 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
    or use different tools for the package management, other package names, ....
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
-### Preliminary
+### Preliminary:
 Update your package data:
 `sudo apt update`
 and, if you like, update your installation:
