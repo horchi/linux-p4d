@@ -44,7 +44,7 @@ Update your package data:
 and, if you like, update your installation:
 `sudo apt dist-upgrade`
 
-#Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
+Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
 ### Installation MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
