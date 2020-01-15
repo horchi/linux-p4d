@@ -38,6 +38,13 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
    or use different tools for the package management, other package names, ....
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
+### Preliminary
+Update your package data:
+`sudo apt update`
+and, if you like, update your installation:
+`sudo apt dist-upgrade`
+
+#Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
 ### Installation MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
