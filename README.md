@@ -122,7 +122,7 @@ make install-sysV
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
 
-## Time for first start of p4d
+## Time for the first start of p4d
 ```
 systemctl start p4d
 ```
@@ -137,7 +137,7 @@ it should now 'enabled' and in state 'running'!
 grep "p4d:" /var/log/syslog
 ```
 
-### Aggregation / Cleanup
+## Aggregation / Cleanup
 The samples will recorded in the configured interval (parameter interval in p4d.conf), the default is 60 Seconds.
 After a while the database will grow and the selects become slower. Therefore you can setup a automatic aggregation in the `p4d.conf` with this two parameters:
 The `aggregateHistory` is the history for aggregation in days, the default is 0 days -> aggegation turned OFF
@@ -153,15 +153,7 @@ Means that all samples older than 365 days will be aggregated to one sample per 
 If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :o ?).
 Maybe i implement it later ;)
 
-### Enable automatic p4d startup during boot:
-If MySQL database is located on the same device as p4d is running you have to do the next steps
-- Edit file `/etc/init.d/p4d` after each make install call and
-append the parameter `mysql` at the end of the this line:
-```
-# Required-Start:    hostname $local_fs $network $syslog
-```
-
-### Install the WEB interface:
+## Install the WEB interface:
 ```
  cd /usr/src/linux-p4d
  make install-web
