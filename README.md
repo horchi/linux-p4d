@@ -46,7 +46,7 @@ and, if you like, update your installation:
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
-### Installation MySQL Database:
+### Installation of the MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
 
 `apt install mysql-server`
@@ -73,7 +73,7 @@ if the database is running remote (on a other host):
  GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
 ```
 
-### Installation Apache Webserver:
+### Installation of the Apache Webserver:
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
@@ -83,7 +83,7 @@ Regarding the distibution the php version may included in the package names!
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 
-## Installation the p4d daemon:
+## Installation of the p4d daemon:
 ### install the build dependencies
 ```
 apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
