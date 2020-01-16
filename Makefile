@@ -81,7 +81,7 @@ install-systemd:
 	cat contrib/p4d.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service
 	chmod a+r $(SYSTEMDDEST)/p4d.service
 	systemctl daemon-reload
-   systemctl enable p4d
+	systemctl enable p4d
 
 install-none:
 
