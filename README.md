@@ -73,7 +73,7 @@ if the database is running remote (on a other host):
  GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
 ```
 
-### Installation of the Apache Webserver:
+## Installation of the Apache Webserver:
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
