@@ -113,7 +113,7 @@ make install-systemd
 ```
 #### For older linux distributions which don't support the systemd init process use this instead of 'install-systemd'
 ```
-make install-systemd
+make install-sysV
 ```
 
 #### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
@@ -121,6 +121,21 @@ make install-systemd
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
+
+## Time for first start of p4d
+```
+systemctl start p4d
+```
+### to check the state call
+```
+systemctl status p4d
+```
+it should now 'enabled' and in state 'running'!
+
+### also check the syslog about errors of the p4d, this will show all its current log messages
+```
+grep "p4d:" /var/log/syslog
+```
 
 ### Aggregation / Cleanup
 The samples will recorded in the configured interval (parameter interval in p4d.conf), the default is 60 Seconds.
@@ -152,6 +167,7 @@ append the parameter `mysql` at the end of the this line:
  make install-web
  make install-pcharts
  make install-apache-conf
+ systemctl restart apache2.service
 ```
 
 The default username and password for the login is
