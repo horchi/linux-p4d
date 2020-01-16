@@ -46,7 +46,7 @@ and, if you like, update your installation:
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
-### Installation of the MySQL Database:
+## Installation of the MySQL Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
 
 `apt install mysql-server`
