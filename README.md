@@ -122,11 +122,11 @@ make install-sysV
 - Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
 
-## Time for the first start of p4d
+## Time to first start of p4d
 ```
 systemctl start p4d
 ```
-### to check the state call
+### to check it's state call
 ```
 systemctl status p4d
 ```
