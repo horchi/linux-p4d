@@ -1337,11 +1337,20 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
 
    if (error == CR_SERVER_LOST ||
        error == CR_SERVER_GONE_ERROR ||
+#ifdef CR_INVALID_CONN_HANDLE
        error == CR_INVALID_CONN_HANDLE ||
+#endif
+#ifdef CR_INVALID_BUFFER_USE
+       error == CR_INVALID_BUFFER_USE ||
+#endif
+#ifdef CR_CONN_UNKNOW_PROTOCOL
+       error == CR_CONN_UNKNOW_PROTOCOL ||
+#else
+       error == CR_CONN_UNKNOWN_PROTOCOL ||
+#endif
        error == CR_COMMANDS_OUT_OF_SYNC ||
        error == CR_SERVER_LOST_EXTENDED ||
        error == CR_STMT_CLOSED ||
-       error == CR_CONN_UNKNOW_PROTOCOL ||
        error == CR_UNSUPPORTED_PARAM_TYPE ||
        error == CR_NO_PREPARE_STMT ||
        error == CR_SERVER_HANDSHAKE_ERR ||

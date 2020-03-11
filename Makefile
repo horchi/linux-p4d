@@ -12,7 +12,7 @@ CMDTARGET = p4
 CHARTTARGET = dbchart
 HISTFILE  = "HISTORY.h"
 
-LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl
+LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
 LIBS += $(shell xml2-config --libs)
 
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'

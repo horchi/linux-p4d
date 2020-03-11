@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.1"
-#define VERSION_DATE "31.10.2019"
+#define _VERSION     "0.3.2"
+#define VERSION_DATE "11.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-11:  version 0.3.2
+   - change: Compatible to buster (thx to Panzerknacker)
 
 2019-10-31:  version 0.3.1
    - change: Merged dev branch into master
