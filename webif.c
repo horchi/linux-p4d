@@ -82,7 +82,7 @@ int P4d::performWebifRequests()
             alertMailSubject = "";
 
             if (!tableSensorAlert->find())
-               tableJobs->setValue("RESULT", "fail:requested alert ID not found");
+               tableJobs->setValue("RESULT", "fail:requested alert ID '%d' not found", id);
             else if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
                tableJobs->setValue("RESULT", "fail:send failed");
             else

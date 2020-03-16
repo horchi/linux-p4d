@@ -203,7 +203,7 @@ AuthPass=MyPassword
 If the heating values are added as attachment to the mail please check the next steps.
 - Check if `heirloom-mailx` is installed (`ls -lah /etc/alternatives/mail`)
 - If output link is `/etc/alternatives/mail -> /usr/bin/mail.mailutils`
-- Remove `heirloom-mailx` (`aptitude remove heirloom-mailx`)
+- Remove `heirloom-mailx` (`apt remove heirloom-mailx`)
 
 ### Configure Time sync:
 With the next steps you can enable a time synchronization of the p4d and the heating:
