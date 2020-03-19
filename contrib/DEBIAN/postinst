@@ -1,0 +1,42 @@
+#!/bin/sh
+# postinst script for p4d
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see https://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+COMMAND="CREATE DATABASE IF NOT EXISTS p4 charset utf8;
+     CREATE USER IF NOT EXISTS 'p4'@'localhost' IDENTIFIED BY 'p4';
+     GRANT INDEX, CREATE ROUTINE, ALTER ROUTINE, TRIGGER, REFERENCES, LOCK TABLES, INDEX, CREATE VIEW, EXECUTE, CREATE TEMPORARY TABLES, ALTER, SELECT, INSERT, DELETE, CREATE, DROP, UPDATE ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
+     FLUSH PRIVILEGES;"
+
+case "$1" in
+    configure)
+        echo "postinst called for configure" >&2
+        echo ${COMMAND} | mysql -u root -Dmysql
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

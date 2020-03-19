@@ -1,16 +1,16 @@
-#!/bin/bash 
+#!/bin/bash
 
 echo "---------------------"
 echo "-- Drop all tables --"
 echo "---------------------"
-echo -n "Are you sure? [y/N] " 
+echo -n "Are you sure? [y/N] "
 
 read -n 1 c
 
 echo ""
 
-if [ "${c}" = "y" ]; then 
-   
+if [ "${c}" = "y" ]; then
+
    mysql -u p4 -pp4 -Dp4 -e 'drop table config;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table errors;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table jobs;'
@@ -25,7 +25,7 @@ fi
 echo "---------------------"
 echo "-- Drop samples --"
 echo "---------------------"
-echo -n "Are you sure? [y/N] " 
+echo -n "Are you sure? [y/N] "
 
 read -n 1 c
 

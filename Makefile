@@ -18,7 +18,6 @@ LIBS += $(shell xml2-config --libs)
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
-TMPDIR = /tmp
 ARCHIVE = $(TARGET)-$(VERSION)
 
 LASTHIST    = $(shell grep '^20[0-3][0-9]' $(HISTFILE) | head -1)
@@ -39,6 +38,10 @@ CFLAGS    += $(shell mysql_config --include)
 CFLAGS    += $(shell xml2-config --cflags)
 DEFINES   += -DDEAMON=P4d -DUSEMD5
 OBJS      += p4d.o
+
+ifdef TEST_MODE
+	DEFINES += -D__TEST
+endif
 
 ifdef HASSMQTT
    OBJS    += $(MQTTBJS)
@@ -66,22 +69,30 @@ $(CMDTARGET) : $(CMDOBJS)
 install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	make install-$(INIT_SYSTEM)
-
-inst_rest: $(TARGET) $(CMDTARGET) install-config install-scripts
-	/etc/init.d/p4d stop
+   ifneq ($(DESTDIR),)
+	   @cp -r contrib/DEBIAN $(DESTDIR)
+	   @chown root:root -R $(DESTDIR)/DEBIAN
+	   @mkdir -p $(DESTDIR)/usr/lib
+	   @mkdir -p $(DESTDIR)/usr/bin
+	   @mkdir -p $(DESTDIR)/usr/share/man/man1
+   endif
+inst_restart: $(TARGET) $(CMDTARGET) install-config install-scripts
+	systemctl stop p4d
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
-	/etc/init.d/p4d start
+	systemctl start p4d
 
 install-sysV:
-	install --mode=755 -D ./contrib/p4d /etc/init.d/
-	install --mode=755 -D ./contrib/runp4d /usr/local/bin/
+	install --mode=755 -D ./contrib/p4d $(DESTDIR)/etc/init.d/
+	install --mode=755 -D ./contrib/runp4d $(BINDEST)
 	update-rc.d p4d defaults
 
 install-systemd:
-	cat contrib/p4d.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service
+	cat contrib/p4d.service | sed s:"<BINDEST>":"$(_BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service
 	chmod a+r $(SYSTEMDDEST)/p4d.service
-	systemctl daemon-reload
-	systemctl enable p4d
+   ifeq ($(DESTDIR),)
+	   systemctl daemon-reload
+	   systemctl enable p4d
+   endif
 
 install-none:
 
@@ -127,18 +138,21 @@ install-web:
 	chown -R $(WEBOWNER):$(WEBOWNER) $(WEBDEST)
 
 install-apache-conf:
+	@mkdir -p $(APACHECFGDEST)/conf-available
+	@mkdir -p $(APACHECFGDEST)/conf-enabled
 	install --mode=644 -D apache2/p4.conf $(APACHECFGDEST)/conf-available/
 	rm -f $(APACHECFGDEST)/conf-enabled/p4.conf
-	ln -s $(APACHECFGDEST)/conf-available/p4.conf $(APACHECFGDEST)/conf-enabled/p4.conf
+	ln -s ../conf-available/p4.conf $(APACHECFGDEST)/conf-enabled/p4.conf
 
 install-pcharts:
 	if ! test -d $(PCHARTDEST); then \
 		git clone https://github.com/bozhinov/pChart2.0-for-PHP7.git $(PCHARTDEST); \
-		cd $(PCHARTDEST); \
-		git checkout 7.x-compatible; \
-		ln -s $(PCHARTDEST) $(WEBDEST)/pChart; \
-		chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
 	fi
+	cd $(PCHARTDEST); \
+	git pull; \
+	git checkout 7.x-compatible; \
+	ln -s $(_PCHARTDEST) $(WEBDEST)/pChart; \
+	chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
@@ -154,7 +168,7 @@ clean:
 	rm -f com2
 
 cppchk:
-	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
+	cppcheck --template="{file}:{line}:{severity}:{message}" --language=c++ --force *.c *.h
 
 com2: $(LOBJS) c2tst.c p4io.c service.c
 	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@

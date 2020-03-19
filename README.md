@@ -59,7 +59,7 @@ some distributions like raspbian stretch switched to mariadb, in this case:
 If the database server is located localy on same host as the p4d:
 
 ```
-> mysql -u root -p
+> mysql -u root -Dmysql -p
   CREATE DATABASE p4 charset utf8;
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
   GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
@@ -67,7 +67,7 @@ If the database server is located localy on same host as the p4d:
 ### Remote database setup:
 if the database is running remote (on a other host):
 ```
-> mysql -u root -p
+> mysql -u root -Dmysql -p
  CREATE DATABASE p4 charset utf8;
  CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
  GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
@@ -77,7 +77,7 @@ if the database is running remote (on a other host):
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
-apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml
+apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml php-mbstring
 ```
 Regarding the distibution the php version may included in the package names!
 
