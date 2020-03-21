@@ -1,5 +1,5 @@
 Package: p4d
-Version: 0.3.0
+Version: <VERSION>
 Section: base
 Priority: optional
 Architecture: armhf

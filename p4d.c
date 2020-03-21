@@ -2002,10 +2002,7 @@ int P4d::sendAlertMail(const char* to)
 
    // send mail
 
-   sendMail(to, alertMailSubject.c_str(), alertMailBody.c_str(),
-            htmlMail ? "text/html" : "text/plain");
-
-   return success;
+   return sendMail(to, alertMailSubject.c_str(), alertMailBody.c_str(), htmlMail ? "text/html" : "text/plain");
 }
 
 //***************************************************************************
@@ -2153,11 +2150,11 @@ int P4d::sendErrorMail()
             "</html>\n",
             htmlHeader.memory, webUrl, currentState.stateinfo, body.c_str());
 
-   sendMail(errorMailTo, subject, html, "text/html");
+   int result = sendMail(errorMailTo, subject, html, "text/html");
 
    free(html);
 
-   return success;
+   return result;
 }
 
 //***************************************************************************
@@ -2211,27 +2208,25 @@ int P4d::sendStateMail()
             "</html>\n",
             htmlHeader.memory, webUrl, mailBodyHtml.c_str());
 
-   sendMail(stateMailTo, subject.c_str(), html, "text/html");
+   int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
 
    free(html);
 
-   return success;
+   return result;
 }
 
 int P4d::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
 {
-   char* command = 0;
+   char* command = {nullptr};
+   int result {0};
 
-   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
-            subject, body, mimeType, receiver);
-
-   system(command);
+   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, subject, body, mimeType, receiver);
+   result = system(command);
    free(command);
 
-   tell(eloAlways, "Send mail '%s' with [%s] to '%s'",
-        subject, body, receiver);
+   tell(eloAlways, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
 
-   return done;
+   return result;
 }
 
 //***************************************************************************

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.4"
-#define VERSION_DATE "18.03.2020"
+#define _VERSION     "0.3.5"
+#define VERSION_DATE "21.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-21:  version 0.3.5
+   - added: build-deb make target to create debian package
 
 2020-03-18:  version 0.3.4
    - change: Code cleanup and minor makefile fixes

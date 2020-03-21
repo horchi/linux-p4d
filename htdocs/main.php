@@ -60,7 +60,7 @@ printHeader(60);
      $script = substr($action, 7);
 
      if (requestAction("call-script", 5, 0, "$script", $resonse) != 0)
-        echo "      <div class=\"infoError\"><b><center>Calling Skript failed '$resonse' - p4d log for further details</center></div></br>\n";
+        echo "      <div class=\"infoError\"><b><center>Calling Skript failed '$resonse' - p4d/syslog log for further details</center></div></br>\n";
   }
 
   if (haveLogin())

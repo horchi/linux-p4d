@@ -17,8 +17,10 @@ LIBS += $(shell xml2-config --libs)
 
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
-VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
-ARCHIVE = $(TARGET)-$(VERSION)
+VERSION      = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
+ARCHIVE      = $(TARGET)-$(VERSION)
+DEB_BASE_DIR = "/root/debs"
+DEB_DEST     = "$(DEB_BASE_DIR)/p4d-$(VERSION)"
 
 LASTHIST    = $(shell grep '^20[0-3][0-9]' $(HISTFILE) | head -1)
 LASTCOMMENT = $(subst |,\n,$(shell sed -n '/$(LASTHIST)/,/^ *$$/p' $(HISTFILE) | tr '\n' '|'))
@@ -57,7 +59,7 @@ endif
 
 all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
-$(TARGET) : $(OBJS)
+$(TARGET) : paho-mqtt $(OBJS)
 	$(doLink) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
@@ -72,6 +74,8 @@ install: $(TARGET) $(CMDTARGET) install-config install-scripts
    ifneq ($(DESTDIR),)
 	   @cp -r contrib/DEBIAN $(DESTDIR)
 	   @chown root:root -R $(DESTDIR)/DEBIAN
+		cat $(DESTDIR)/DEBIAN/control | sed s:"<VERSION>":"$(VERSION)":g
+		$(DESTDIR)/DEBIAN
 	   @mkdir -p $(DESTDIR)/usr/lib
 	   @mkdir -p $(DESTDIR)/usr/bin
 	   @mkdir -p $(DESTDIR)/usr/share/man/man1
@@ -117,7 +121,7 @@ install-scripts:
 install-web:
 	if ! test -d $(WEBDEST); then \
 		mkdir -p "$(WEBDEST)"; \
-		chmod a+rx $(WEBDEST); \
+		chmod a+rx "$(WEBDEST)"; \
 	fi
 	if test -f "$(WEBDEST)/stylesheet.css"; then \
 		cp -Pp "$(WEBDEST)/stylesheet.css" "$(WEBDEST)/stylesheet.css.save"; \
@@ -133,9 +137,9 @@ install-web:
 	if test -f "$(WEBDEST)/stylesheet.css.save"; then \
 		cp -Pp "$(WEBDEST)/stylesheet.css.save" "$(WEBDEST)/stylesheet.css"; \
 	fi
-	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > $(WEBDEST)/header.php; \
-	chmod -R a+r $(WEBDEST); \
-	chown -R $(WEBOWNER):$(WEBOWNER) $(WEBDEST)
+	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDEST)/header.php"; \
+	chmod -R a+r "$(WEBDEST)"; \
+	chown -R $(WEBOWNER):$(WEBOWNER) "$(WEBDEST)"
 
 install-apache-conf:
 	@mkdir -p $(APACHECFGDEST)/conf-available
@@ -172,6 +176,37 @@ cppchk:
 
 com2: $(LOBJS) c2tst.c p4io.c service.c
 	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
+
+paho-mqtt:
+	if [ ! -d ~/build/paho.mqtt.c ]; then \
+		mkdir -p ~/build; \
+		cd ~/build; \
+		git clone https://github.com/eclipse/paho.mqtt.c.git; \
+		cd ~/build/paho.mqtt.c; \
+		sed -i '/@if test ! -f $(DESTDIR)${blddir}.lib$(MQTTLIB_C).so.${MAJOR_VERSION}; then ln /d' Makefile
+		sed -i '/- $(INSTALL_DATA) ${blddir}.doc.MQTTClient.man.man3.MQTTClient.h.3 $(DESTDIR)${man3dir}/d' Makefile
+		sed -i '/- $(INSTALL_DATA) ${blddir}.doc.MQTTAsync.man.man3.MQTTAsync.h.3 $(DESTDIR)${man3dir}/d' Makefile
+	fi
+	cd ~/build/paho.mqtt.c; \
+	make -s; \
+	sudo rm -f /usr/local/lib/libpaho*; \
+	sudo make -s install prefix=/usr
+
+build-deb: all
+	rm -rf $(DEB_DEST)
+	make -s clean all HASSMQTT=yes
+	make -s install DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
+	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
+	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
+	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
+	cd ~/build/paho.mqtt.c; \
+	make -s install DESTDIR=$(DEB_DEST) prefix=/usr
+	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
+
+publish-deb: build-deb
+	echo 'put $(DEB_BASE_DIR)/p4d-0.3.4.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'rm p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'ln -s p4d-${VERSION} p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 
 #***************************************************************************
 # dependencies

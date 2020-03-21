@@ -40,7 +40,7 @@ if ($action == "mailtest")
    if (sendTestMail("Test Mail", "test", $resonse))
       echo "      <br/><div class=\"info\"><b><center>Mail Test succeeded</center></div><br/>\n";
    else
-      echo "      <br/><div class=\"infoError\"><b><center>Sending Mail failed '$resonse' - p4d log for further details</center></div><br/>\n";
+      echo "      <br/><div class=\"infoError\"><b><center>Sending Mail failed '$resonse' - p4d/syslog log for further details</center></div><br/>\n";
 }
 
 else if ($action == "store")
