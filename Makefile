@@ -204,10 +204,12 @@ build-deb: all
 	make -s install DESTDIR=$(DEB_DEST) prefix=/usr
 	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
 
-publish-deb: build-deb
-	echo 'put $(DEB_BASE_DIR)/p4d-0.3.4.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+publish-deb:
+	echo 'put $(DEB_BASE_DIR)/p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'put contrib/install-deb.sh' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 	echo 'rm p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
-	echo 'ln -s p4d-${VERSION} p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'ln -s p4d-${VERSION}.deb p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'chmod 644 p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 
 #***************************************************************************
 # dependencies
@@ -222,11 +224,11 @@ lib/curl.o      :  lib/curl.c      $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
 lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h
 
-main.o			 :  main.c          $(HEADER) p4d.h
+main.o          :  main.c          $(HEADER) p4d.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
-webif.o			 :  webif.c         $(HEADER) p4d.h
-w1.o			    :  w1.c            $(HEADER) w1.h
+webif.o         :  webif.c         $(HEADER) p4d.h
+w1.o            :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 hass.o          :  hass.c          p4d.h
 chart.o         :  chart.c
