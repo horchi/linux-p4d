@@ -210,6 +210,7 @@ publish-deb:
 	echo 'rm p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 	echo 'ln -s p4d-${VERSION}.deb p4d-latest.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 	echo 'chmod 644 p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
+	echo 'chmod 755 install-deb.sh' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
 
 #***************************************************************************
 # dependencies

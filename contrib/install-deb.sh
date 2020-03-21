@@ -29,10 +29,8 @@ IP=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 
 apt update || exit 1
 apt -y dist-upgrade || exit 1
-apt -y install libssl1.1 libcurl4  libxml2 openssl libmariadb3 || exit 1
+apt -y install libssl1.1 libcurl4  libxml2 openssl libmariadb3 mailutils ssmtp mariadb-server || exit 1
 apt -y install apache2 libapache2-mod-php php7.2-mysql python-mysql.connector php-gd php-mysql php-mbstring || exit 1
-apt -y install mailutils ssmtp
-apt -y install mariadb-server || exit 1
 
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 dpkg --install /tmp/p4d-latest.deb || exit 1
@@ -50,7 +48,8 @@ echo "alias va='tail -f /var/log/apache2/error.log'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- Installation completed, you can reach the web interface at http://<raspi-ip>/p4${NC}"
-echo -e "${BLUE}- I guess youre IP is ${IP}, then use:{NC} ${BBLUE}http://${IP}/p4${NC}"
+echo -e "${BLUE}- Guess your IP is ${IP}, then use:{NC} ${BWHITE}http://${IP}/p4${NC}"
+echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
 echo -e ""
 echo -e "${BLUE}- Added aliases for convenience:${NC}"
 echo -e "${BLUE}- p4dp  - go to the SQL prompt${NC}"
