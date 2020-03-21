@@ -74,8 +74,7 @@ install: $(TARGET) $(CMDTARGET) install-config install-scripts
    ifneq ($(DESTDIR),)
 	   @cp -r contrib/DEBIAN $(DESTDIR)
 	   @chown root:root -R $(DESTDIR)/DEBIAN
-		cat $(DESTDIR)/DEBIAN/control | sed s:"<VERSION>":"$(VERSION)":g
-		$(DESTDIR)/DEBIAN
+		sed -i s:"<VERSION>":"$(VERSION)":g $(DESTDIR)/DEBIAN/control
 	   @mkdir -p $(DESTDIR)/usr/lib
 	   @mkdir -p $(DESTDIR)/usr/bin
 	   @mkdir -p $(DESTDIR)/usr/share/man/man1
@@ -182,19 +181,21 @@ paho-mqtt:
 		mkdir -p ~/build; \
 		cd ~/build; \
 		git clone https://github.com/eclipse/paho.mqtt.c.git; \
-		cd ~/build/paho.mqtt.c; \
-		sed -i '/@if test ! -f $(DESTDIR)${blddir}.lib$(MQTTLIB_C).so.${MAJOR_VERSION}; then ln /d' Makefile
-		sed -i '/- $(INSTALL_DATA) ${blddir}.doc.MQTTClient.man.man3.MQTTClient.h.3 $(DESTDIR)${man3dir}/d' Makefile
-		sed -i '/- $(INSTALL_DATA) ${blddir}.doc.MQTTAsync.man.man3.MQTTAsync.h.3 $(DESTDIR)${man3dir}/d' Makefile
+		sed -i '/if test ! -f ..DESTDIR..{libdir}.lib..MQTTLIB_C..so..{MAJOR_VERSION.; then ln -s/d' ~/build/paho.mqtt.c/Makefile; \
+		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTClient.man.man3.MQTTClient.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
+		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTAsync.man.man3.MQTTAsync.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
+		sed -i s/'int rc1 = sem_getvalue.sem, .val.;.*'/'sem_getvalue(sem, \&val);'/ ~/build/paho.mqtt.c/src/Thread.c; \
+		sed -i s/'rm [$$]'/'rm -f $$'/g ~/build/paho.mqtt.c/Makefile; \
 	fi
 	cd ~/build/paho.mqtt.c; \
 	make -s; \
 	sudo rm -f /usr/local/lib/libpaho*; \
+	sudo make -s uninstall prefix=/usr; \
 	sudo make -s install prefix=/usr
 
 build-deb: all
 	rm -rf $(DEB_DEST)
-	make -s clean all HASSMQTT=yes
+	make -s all
 	make -s install DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.5"
+#define _VERSION     "0.3.6"
 #define VERSION_DATE "21.03.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-21:  version 0.3.6
+   - added: patches for libpaho
 
 2020-03-21:  version 0.3.5
    - added: build-deb make target to create debian package
