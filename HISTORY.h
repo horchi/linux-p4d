@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.6"
-#define VERSION_DATE "21.03.2020"
+#define _VERSION     "0.3.7"
+#define VERSION_DATE "22.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-22:  version 0.3.7
+   - added: user confirmation to post purge script
 
 2020-03-21:  version 0.3.6
    - added: patches for libpaho
