@@ -16,8 +16,7 @@ Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der
 GPLv2 veröffentlicht.
 
 Es ist kein fertiges Produkt, die Software entstand als Studie was hinsichtlich der Kommunikation
-mit der s3200 Steuerung möglich ist und kann Bastlern als Basis und Anregung für eigene
-Projekte dienen.
+mit der s3200 Steuerung möglich ist und kann Bastlern als Basis und Anregung für eigene Projekte dienen.
 
 Es besteht kein Anspruch auf Funktion, jeder der sie einsetzen möchte
 muss das Risiko selbst abschätzen können und wissen was er tut, insbesondere auch in
@@ -29,16 +28,34 @@ Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalt
 auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder
 weniger kritischen Fehlfunktionen derselben kommen kann!
 
-
-### Prerequisits:
+## Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - A Linux based operating system isrequired
--  the described installation is tested with Raspbian stretch, the p4d should work also with other Linux distributions and versions but the installation process should adapted to them, for example they use other init processes
+
+
+# Installation by package (actually available for Raspian Buster)
+
+## install
+```
+wget  www.jwendel.de/p4d/install-deb.sh -O /tmp/install-deb.sh
+sudo bash /tmp/install-deb.sh
+```
+
+## uninstall
+`dpkg --remove p4d`
+
+## remove all configurations, data and p4d database
+`dpkg --purge p4d`
+
+# Installation by source (working for most linux plattforms)
+
+## Prerequisits:
+-  the described installation is tested with Raspbian buster, the p4d should work also with other Linux distributions and versions but the installation process should adapted to them, for example they use other init processes
    or use different tools for the package management, other package names, ....
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
-### Preliminary:
+## Preliminary:
 Update your package data:
 `sudo apt update`
 and, if you like, update your installation:
@@ -50,7 +67,7 @@ Perform all the following steps as root user! Either by getting root or by prefi
 It's not required to host the database on the Raspberry. A remote database is supported as well!
 
 `apt install mysql-server`
-some distributions like raspbian stretch switched to mariadb, in this case:
+some distributions like raspbian buster switched to mariadb, in this case:
 `apt install mariadb-server`
 
 (set database password for root user during installation)
@@ -86,9 +103,8 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmysqlclient-dev
+apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
 ```
-or in case of mariadb use ```libmariadbclient-dev``` instad of ```libmysqlclient-dev```
 
 #### if you like to use the MQTT interface to home assistant install the paho.mqtt library:
 ```

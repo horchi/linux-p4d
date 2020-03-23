@@ -25,6 +25,7 @@ case "$1" in
     configure)
         echo "postinst called for configure" >&2
         echo ${COMMAND} | mysql -u root -Dmysql
+        systemctl daemon-reload && systemctl enable p4d
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.7"
+#define _VERSION     "0.3.8"
 #define VERSION_DATE "22.03.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-22:  version 0.3.8
+   - change: improved package build
 
 2020-03-22:  version 0.3.7
    - added: user confirmation to post purge script

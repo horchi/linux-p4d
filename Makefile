@@ -7,39 +7,39 @@
 
 include Make.config
 
-TARGET = p4d
-CMDTARGET = p4
+TARGET      = p4d
+CMDTARGET   = p4
 CHARTTARGET = dbchart
-HISTFILE  = "HISTORY.h"
+HISTFILE    = "HISTORY.h"
 
-LIBS = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
+LIBS  = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
 LIBS += $(shell xml2-config --libs)
 
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
 VERSION      = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
 ARCHIVE      = $(TARGET)-$(VERSION)
-DEB_BASE_DIR = "/root/debs"
-DEB_DEST     = "$(DEB_BASE_DIR)/p4d-$(VERSION)"
+DEB_BASE_DIR = /root/debs
+DEB_DEST     = $(DEB_BASE_DIR)/p4d-$(VERSION)
 
-LASTHIST    = $(shell grep '^20[0-3][0-9]' $(HISTFILE) | head -1)
-LASTCOMMENT = $(subst |,\n,$(shell sed -n '/$(LASTHIST)/,/^ *$$/p' $(HISTFILE) | tr '\n' '|'))
-LASTTAG     = $(shell git describe --tags --abbrev=0)
-BRANCH      = $(shell git rev-parse --abbrev-ref HEAD)
-GIT_REV     = $(shell git describe --always 2>/dev/null)
+LASTHIST     = $(shell grep '^20[0-3][0-9]' $(HISTFILE) | head -1)
+LASTCOMMENT  = $(subst |,\n,$(shell sed -n '/$(LASTHIST)/,/^ *$$/p' $(HISTFILE) | tr '\n' '|'))
+LASTTAG      = $(shell git describe --tags --abbrev=0)
+BRANCH       = $(shell git rev-parse --abbrev-ref HEAD)
+GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS      =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
-OBJS       = $(LOBJS) main.o p4io.o service.o w1.o webif.o hass.o
-MQTTBJS    = lib/mqtt.c
-CHARTOBJS  = $(LOBJS) chart.o
-CMDOBJS    = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
+LOBJS        =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
+OBJS         = $(LOBJS) main.o p4io.o service.o w1.o webif.o hass.o
+MQTTBJS      = lib/mqtt.c
+CHARTOBJS    = $(LOBJS) chart.o
+CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
-CFLAGS    += $(shell mysql_config --include)
-CFLAGS    += $(shell xml2-config --cflags)
-DEFINES   += -DDEAMON=P4d -DUSEMD5
-OBJS      += p4d.o
+CFLAGS    	+= $(shell mysql_config --include)
+CFLAGS    	+= $(shell xml2-config --cflags)
+DEFINES   	+= -DDEAMON=P4d -DUSEMD5
+OBJS      	+= p4d.o
 
 ifdef TEST_MODE
 	DEFINES += -D__TEST
@@ -68,7 +68,9 @@ $(CHARTTARGET): $(CHARTOBJS)
 $(CMDTARGET) : $(CMDOBJS)
 	$(doLink) $(CMDOBJS) $(LIBS) -o $@
 
-install: $(TARGET) $(CMDTARGET) install-config install-scripts
+install: $(TARGET) $(CMDTARGET) install-p4d
+
+install-p4d: install-config install-scripts
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	make install-$(INIT_SYSTEM)
    ifneq ($(DESTDIR),)
@@ -79,6 +81,7 @@ install: $(TARGET) $(CMDTARGET) install-config install-scripts
 	   @mkdir -p $(DESTDIR)/usr/bin
 	   @mkdir -p $(DESTDIR)/usr/share/man/man1
    endif
+
 inst_restart: $(TARGET) $(CMDTARGET) install-config install-scripts
 	systemctl stop p4d
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
@@ -193,10 +196,9 @@ paho-mqtt:
 	sudo make -s uninstall prefix=/usr; \
 	sudo make -s install prefix=/usr
 
-build-deb: all
+build-deb:
 	rm -rf $(DEB_DEST)
-	make -s all
-	make -s install DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
+	make -s install-p4d DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
