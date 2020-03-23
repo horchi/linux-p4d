@@ -31,7 +31,7 @@ weniger kritischen Fehlfunktionen derselben kommen kann!
 ## Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
-- A Linux based operating system isrequired
+- A Linux based operating system is required
 
 
 # Installation by package (actually available for Raspian Buster)
@@ -45,7 +45,7 @@ sudo bash /tmp/install-deb.sh
 ## uninstall
 `dpkg --remove p4d`
 
-## remove all configurations, data and p4d database
+## uninstall (with remove of all configurations, data and the p4d database)
 `dpkg --purge p4d`
 
 # Installation by source (working for most linux plattforms)
