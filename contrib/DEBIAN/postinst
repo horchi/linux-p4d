@@ -24,6 +24,7 @@ COMMAND="CREATE DATABASE IF NOT EXISTS p4 charset utf8;
 case "$1" in
     configure)
         echo "postinst called for configure" >&2
+        sed -nri '/.*max_input_vars/!p;$amax_input_vars = 5000' /etc/php/7.3/apache2/php.ini
         echo ${COMMAND} | mysql -u root -Dmysql
         systemctl daemon-reload && systemctl enable p4d
         ;;

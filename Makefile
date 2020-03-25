@@ -202,6 +202,8 @@ build-deb:
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
+#	cat contrib/p4d.service | sed s:"<BINDEST>":"$(_BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(DEB_DEST)/DEBIAN/p4d.service
+#	chmod a+r $(DEB_DEST)/DEBIAN/p4d.service
 	cd ~/build/paho.mqtt.c; \
 	make -s install DESTDIR=$(DEB_DEST) prefix=/usr
 	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)

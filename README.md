@@ -94,9 +94,8 @@ if the database is running remote (on a other host):
 Run the following commands to install the Apache webserver and required packages
 ```
 apt update
-apt install apache2 libapache2-mod-php php-mysql php-gd php7.0-xml php-mbstring
+apt install apache2 libapache2-mod-php php-mysql php-gd php-mbstring
 ```
-Regarding the distibution the php version may included in the package names!
 
 Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
 

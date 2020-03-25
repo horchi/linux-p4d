@@ -45,7 +45,7 @@ echo -e "${BLUE}----------------------------------------------------------------
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"
 echo -e "${BLUE}- ${NC}"
 echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>/p4${NC}"
-echo -e "${BLUE}- Guess your IP is ${IP}, then use:${NC} ${BWHITE}http://${IP}/p4${NC}"
+echo -e "${BLUE}- Guess your IP is ${IP} use:${NC} ${BWHITE}http://${IP}/p4${NC}"
 echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
 echo -e "${BLUE}- ${NC}"
 echo -e "${BLUE}- Added aliases for convenience:${NC}"
