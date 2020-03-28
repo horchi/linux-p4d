@@ -123,45 +123,46 @@ class P4d : public FroelingService
 
       // data
 
-      cDbConnection* connection;
+      cDbConnection* connection {nullptr};
 
-      cDbTable* tableSamples;
-      cDbTable* tableValueFacts;
-      cDbTable* tableMenu;
-      cDbTable* tableErrors;
-      cDbTable* tableJobs;
-      cDbTable* tableSensorAlert;
-      cDbTable* tableSchemaConf;
-      cDbTable* tableSmartConf;
-      cDbTable* tableConfig;
-      cDbTable* tableTimeRanges;
-      cDbTable* tableHmSysVars;
-      cDbTable* tableScripts;
+      cDbTable* tableSamples {nullptr};
+      cDbTable* tablePeaks {nullptr};
+      cDbTable* tableValueFacts {nullptr};
+      cDbTable* tableMenu {nullptr};
+      cDbTable* tableErrors {nullptr};
+      cDbTable* tableJobs {nullptr};
+      cDbTable* tableSensorAlert {nullptr};
+      cDbTable* tableSchemaConf {nullptr};
+      cDbTable* tableSmartConf {nullptr};
+      cDbTable* tableConfig {nullptr};
+      cDbTable* tableTimeRanges {nullptr};
+      cDbTable* tableHmSysVars {nullptr};
+      cDbTable* tableScripts {nullptr};
 
-      cDbStatement* selectActiveValueFacts;
-      cDbStatement* selectAllValueFacts;
-      cDbStatement* selectPendingJobs;
-      cDbStatement* selectAllMenuItems;
-      cDbStatement* selectSensorAlerts;
-      cDbStatement* selectSampleInRange;
-      cDbStatement* selectPendingErrors;
-      cDbStatement* selectMaxTime;
-      cDbStatement* selectHmSysVarByAddr;
-      cDbStatement* selectScriptByName;
-      cDbStatement* selectScript;
-      cDbStatement* cleanupJobs;
+      cDbStatement* selectActiveValueFacts {nullptr};
+      cDbStatement* selectAllValueFacts {nullptr};
+      cDbStatement* selectPendingJobs {nullptr};
+      cDbStatement* selectAllMenuItems {nullptr};
+      cDbStatement* selectSensorAlerts {nullptr};
+      cDbStatement* selectSampleInRange {nullptr};
+      cDbStatement* selectPendingErrors {nullptr};
+      cDbStatement* selectMaxTime {nullptr};
+      cDbStatement* selectHmSysVarByAddr {nullptr};
+      cDbStatement* selectScriptByName {nullptr};
+      cDbStatement* selectScript {nullptr};
+      cDbStatement* cleanupJobs {nullptr};
 
       cDbValue rangeEnd;
 
       time_t nextAt;
       time_t startedAt;
-      Sem* sem;
+      Sem* sem {nullptr};
 
-      P4Request* request;
-      Serial* serial;
+      P4Request* request {nullptr};
+      Serial* serial {nullptr};
 
       W1 w1;                       // for one wire sensors
-      cCurl* curl;
+      cCurl* curl {nullptr};
 
       Status currentState;
       string mailBody;
@@ -172,8 +173,8 @@ class P4d : public FroelingService
 
 #ifdef MQTT_HASS
 
-      MqTTPublishClient* mqttWriter;
-      MqTTSubscribeClient* mqttReader;
+      MqTTPublishClient* mqttWriter {nullptr};
+      MqTTSubscribeClient* mqttReader {nullptr};
 
 #endif // HASS
 
@@ -181,10 +182,10 @@ class P4d : public FroelingService
 
       int mail;
       int htmlMail;
-      char* mailScript;
-      char* stateMailAtStates;
-      char* stateMailTo;
-      char* errorMailTo;
+      char* mailScript {nullptr};
+      char* stateMailAtStates {nullptr};
+      char* stateMailTo {nullptr};
+      char* errorMailTo {nullptr};
       int errorsPending;
       int tSync;
       time_t nextTimeSyncAt;

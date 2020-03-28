@@ -25,10 +25,20 @@ if [ "${c}" != "y" ]; then
     exit 0
 fi
 
+SET_LANG=de_DE.UTF-8
 IP=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 
 apt update || exit 1
 apt -y dist-upgrade || exit 1
+apt -y install ntpd ssmtp || exit 1
+apt-get -y install locales || exit 1
+
+timedatectl set-timezone 'Europe/Berlin'
+dpkg-reconfigure --frontend noninteractive tzdata
+
+sed -i -e "s/# $SET_LANG.*/$SET_LANG UTF-8/" /etc/locale.gen
+dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=$SET_LANG
 
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 apt -y install /tmp/p4d-latest.deb || exit 1

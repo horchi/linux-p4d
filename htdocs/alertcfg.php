@@ -121,15 +121,13 @@ seperator("Bedingungen<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe
 echo "        <div class=\"rounded-border inputTable\" id=\"hlp\" style=\"display:none;\">\n";
 echo "          <span class=\"inputComment\">
                 Hier werden die die Bedingungen für die Alarmwerte der einzelnen Sensoren definiert. Dabei gilt wieder: Sensor-ID und -Typ aus der Tabelle <br/>
-                'Aufzeichnung' entnehmen und hier eintragen.<br/><br/>
+                'Aufzeichnung' entnehmen und hier eintragen. Mit 'aktiv' wird die Benachrichtig aktiviert bzw. deaktiviert.<br/><br/>\n
                 <b>Beispiel:</b> Nachricht wenn die Kesselstellgröße unter 50% sinkt, oder sich mehr als 10% in 1min ändert, aber nicht öfter als alle 5min.<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>ID:18&nbsp;&nbsp; Typ:VA&nbsp;&nbsp; min:50&nbsp;&nbsp;
-                max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br/>
-                <b>Zulässige Werte:</b><br/><b>ID:</b> Zahl (auch Hex) | <b>min, max, Änderung:</b> Zahl | <b>
-                Intervall, Zeitraum:</b> Zahl (Minuten)<br/><br/>
-                für Betreff und Text können folgende Platzhalter verwendet werden:<br/>
-                %sensorid% %title% %value% %unit% %min% %max% %repeat% %delta% %range% %time% %weburl%<br/>
-                mit 'aktiv' aktivierst oder deaktivierst du nur die Benachrichtigung, auf die Steuerung hat dies keinen Einfluss\n
+                max:100&nbsp;&nbsp; Intervall:5&nbsp;&nbsp; Änderung:10&nbsp;&nbsp; Zeitraum:1</b><br/><br/>
+                <b>Templates:</b><br/>\n
+                Für Betreff und Inhalt können folgende Templates verwendet werden:<br/>\n
+                %sensorid%<br/> %title%<br/> %value%<br/> %minv%<br/> %maxv%<br/> %unit%<br/> %min%<br/> %max%<br/> %repeat%<br/> %delta%<br/> %range%<br/> %time%<br/> %weburl%<br/>\n
                </span>\n";
 echo "        </div>\n";
 

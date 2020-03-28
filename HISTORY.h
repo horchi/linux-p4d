@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.9"
-#define VERSION_DATE "24.03.2020"
+#define _VERSION     "0.3.10"
+#define VERSION_DATE "28.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2020-03-28:  version 0.3.10
+   - added:  storage of min and max peaks values
+   - bugfix: Fixed scripts config path
 
 2020-03-24:  version 0.3.9
    - added: modification of php max_input_vars to deb package

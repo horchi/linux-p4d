@@ -180,6 +180,7 @@ com2: $(LOBJS) c2tst.c p4io.c service.c
 	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
 
 paho-mqtt:
+ifdef HASSMQTT
 	if [ ! -d ~/build/paho.mqtt.c ]; then \
 		mkdir -p ~/build; \
 		cd ~/build; \
@@ -195,6 +196,7 @@ paho-mqtt:
 	sudo rm -f /usr/local/lib/libpaho*; \
 	sudo make -s uninstall prefix=/usr; \
 	sudo make -s install prefix=/usr
+endif
 
 build-deb:
 	rm -rf $(DEB_DEST)

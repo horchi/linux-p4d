@@ -55,7 +55,14 @@ printHeader(60);
   if (isset($_POST["action"]))
      $action = htmlspecialchars($_POST["action"]);
 
-  if (substr($action, 0, 6) == "script")
+  if ($action == "clearpeaks")
+  {
+      $mysqli->query("truncate table peaks")
+          or die("<br/>Error" . $mysqli->error);
+
+      echo "      <br/><div class=\"info\"><b><center>Peaks cleared</center></b></div><br/>\n";
+  }
+  else if (substr($action, 0, 6) == "script")
   {
      $script = substr($action, 7);
 
@@ -182,56 +189,67 @@ printHeader(60);
   {
      $addresses = !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'];
 
+     // select s.address as s_address, s.type as s_type, s.time as s_time, f.title from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type where f.state = 'A' and s.time = '2020-03-27 12:19:00'
+
+     $strQueryBase = sprintf("select p.minv as p_min, p.maxv as p_max, s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type");
+
      if ($addresses == "")
-        $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.time = '%s';", $max);
+         $strQuery = sprintf("%s where s.time = '%s';", $strQueryBase, $max);
      else
-        $strQuery = sprintf("select s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
-                from samples s, valuefacts f where f.state = 'A' and f.address = s.address and f.type = s.type and s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s';", $addresses, $max);
+         $strQuery = sprintf("%s where s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s';", $strQueryBase, $addresses, $max);
 
      // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
      $result = $mysqli->query($strQuery)
-        or die("Error" . $mysqli->error);
+         or die("Error" . $mysqli->error);
 
      echo "      <div class=\"rounded-border table2Col\">\n";
      echo "        <center>Messwerte vom $maxPretty</center>\n";
 
      while ($row = $result->fetch_assoc())
      {
-        $value = $row['s_value'];
-        $text = $row['s_text'];
-        $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
-        $unit = prettyUnit($row['f_unit']);
-        $address = $row['s_address'];
-        $type = $row['s_type'];
-        $txtaddr = sprintf("0x%x", $address);
+         $peak = "";
+         $value = $row['s_value'];
+         $text = $row['s_text'];
+         $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
+         $unit = prettyUnit($row['f_unit']);
+         $address = $row['s_address'];
+         $type = $row['s_type'];
+         $min = $row['p_min'];
+         $max = $row['p_max'];
 
-        if ($type == 'DI' || $type == 'DO')
-           $value = $value == "1.00" ? "an" : "aus";
+         $txtaddr = sprintf("0x%x", $address);
 
-        if ($row['f_unit'] == 'T')
-           $value = str_replace($wd_value, $wd_disp, $text);
+         if ($type != 'DI' && $type != 'DO' && $row['f_unit'] != 'T' && $unit != '')
+             $peak = sprintf("(%s/%s)", $min, $max);
 
-        $url = "<a class=\"tableButton\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
-           . $from . "&range=" . $srange . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
-           . $_SESSION['chartDiv'] . " ','_blank',"
-           . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
+         if ($type == 'DI' || $type == 'DO')
+             $value = $value == "1.00" ? "an" : "aus";
 
-        echo "         <div class=\"mainrow\">\n";
-        echo "           <span>$url $title</a></span>\n";
-        echo "           <span>$value$unit</span>\n";
-        echo "         </div>\n";
+         if ($row['f_unit'] == 'T')
+             $value = str_replace($wd_value, $wd_disp, $text);
+
+         $url = "<a class=\"tableButton\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
+             . $from . "&range=" . $srange . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="
+             . $_SESSION['chartDiv'] . " ','_blank',"
+             . "'scrollbars=yes,width=1200,height=600,resizable=yes,left=120,top=120')\">";
+
+         echo "         <div class=\"mainrow\">\n";
+         echo "           <span>$url $title</a></span>\n";
+         echo "           <span>$value&nbsp;$unit &nbsp; <p style = \"display:inline;font-size:12px;font-style:italic;\">$peak</p></span>\n";
+         echo "         </div>\n";
      }
 
      echo "      </div>\n";  // table2Col
   }
 
-  // ----------------
-  // Date Picker
   {
      echo "      <div class=\"rounded-border\" id=\"aSelect\">\n";
      echo "        <form name='navigation' method='get'>\n";
+
+     // ----------------
+     // Date Picker
+
      echo "          Zeitraum der Charts<br/>\n";
      echo datePicker("", "s", $syear, $sday, $smonth);
 
@@ -241,6 +259,13 @@ printHeader(60);
      echo "            <option value='31' " . ($srange == 31 ? "SELECTED" : "") . ">Monat</option>\n";
      echo "          </select>\n";
      echo "          <input type=submit value=\"Go\">";
+     echo "        </form>\n";
+
+     // -------
+
+     echo "        <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
+     echo "          <br/>\n";
+     echo "          <button class=\"rounded-border button3\" type=submit name=action value=clearpeaks>Peaks löschen</button>\n";
      echo "        </form>\n";
      echo "      </div>\n";
   }

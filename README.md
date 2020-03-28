@@ -124,12 +124,12 @@ git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
 make clean all HASSMQTT=yes
 make install
-make install-systemd
 ```
-#### For older linux distributions which don't support the systemd init process use this instead of 'install-systemd'
+#### For older linux distributions which don't support the systemd init process use this instead of 'make install'
 ```
-make install-sysV
+make install INIT_SYSTEM=sysV
 ```
+#### If you like a other destination than '/usr/local' append PREFIX=your-destination (e.g. PREFIX=/usr) to all make calls above
 
 #### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 

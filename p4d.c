@@ -25,33 +25,6 @@ int P4d::shutdown = no;
 
 P4d::P4d()
 {
-   connection = 0;
-   tableSamples = 0;
-   tableJobs = 0;
-   tableSensorAlert = 0;
-   tableSchemaConf = 0;
-   tableSmartConf = 0;
-   tableValueFacts = 0;
-   tableMenu = 0;
-   tableConfig = 0;
-   tableErrors = 0;
-   tableTimeRanges = 0;
-   tableHmSysVars = 0;
-   tableScripts = 0;
-
-   selectActiveValueFacts = 0;
-   selectAllValueFacts = 0;
-   selectPendingJobs = 0;
-   selectAllMenuItems = 0;
-   selectSensorAlerts = 0;
-   selectSampleInRange = 0;
-   selectPendingErrors = 0;
-   selectMaxTime = 0;
-   selectHmSysVarByAddr = 0;
-   selectScriptByName = 0;
-   selectScript = 0;
-   cleanupJobs = 0;
-
    nextAt = time(0);           // intervall for 'reading values'
    startedAt = time(0);
    nextAggregateAt = 0;
@@ -61,10 +34,6 @@ P4d::P4d()
    mailBodyHtml = "";
    mail = no;
    htmlMail = no;
-   mailScript = 0;
-   stateMailAtStates = 0;
-   stateMailTo = 0;
-   errorMailTo = 0;
    tSync = no;
    maxTimeLeak = 10;
    errorsPending = 0;
@@ -82,11 +51,6 @@ P4d::P4d()
    serial = new Serial;
    request = new P4Request(serial);
    curl = new cCurl();
-
-#ifdef MQTT_HASS
-   mqttWriter = 0;
-   mqttReader = 0;
-#endif
 }
 
 P4d::~P4d()
@@ -230,6 +194,9 @@ int P4d::initDb()
 
    tableSamples = new cDbTable(connection, "samples");
    if (tableSamples->open() != success) return fail;
+
+   tablePeaks = new cDbTable(connection, "peaks");
+   if (tablePeaks->open() != success) return fail;
 
    tableJobs = new cDbTable(connection, "jobs");
    if (tableJobs->open() != success) return fail;
@@ -418,6 +385,7 @@ int P4d::initDb()
 int P4d::exitDb()
 {
    delete tableSamples;            tableSamples = 0;
+   delete tablePeaks;              tablePeaks = 0;
    delete tableValueFacts;         tableValueFacts = 0;
    delete tableMenu;               tableMenu = 0;
    delete tableJobs;               tableJobs = 0;
@@ -470,7 +438,7 @@ int P4d::readConfiguration()
 
    getConfigItem("mail", mail, no);
    getConfigItem("htmlMail", htmlMail, no);
-   getConfigItem("mailScript", mailScript, "/usr/local/bin/p4d-mail.sh");
+   getConfigItem("mailScript", mailScript, BIN_PATH "/p4d-mail.sh");
    getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
@@ -1058,6 +1026,30 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    tableSamples->setValue("SAMPLES", 1);
 
    tableSamples->store();
+
+   // peaks
+
+   tablePeaks->clear();
+
+   tablePeaks->setValue("ADDRESS", address);
+   tablePeaks->setValue("TYPE", type);
+
+   if (!tablePeaks->find())
+   {
+      tablePeaks->setValue("MIN", theValue);
+      tablePeaks->setValue("MAX", theValue);
+      tablePeaks->store();
+   }
+   else
+   {
+      if (theValue > tablePeaks->getFloatValue("MAX"))
+         tablePeaks->setValue("MAX", theValue);
+
+      if (theValue < tablePeaks->getFloatValue("MIN"))
+         tablePeaks->setValue("MIN", theValue);
+
+      tablePeaks->store();
+   }
 
    // Home Assistant
 
@@ -2009,8 +2001,7 @@ int P4d::sendAlertMail(const char* to)
 // Send Mail
 //***************************************************************************
 
-int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
-                           double value, const char* unit)
+int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
 {
    char* webUrl = 0;
    char* sensor = 0;
@@ -2025,6 +2016,20 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
    int range = alertRow->getIntValue("RANGEM");
    int delta = alertRow->getIntValue("DELTA");
    int maxRepeat = alertRow->getIntValue("MAXREPEAT");
+   double minv {0};
+   double maxv {0};
+
+   tablePeaks->clear();
+   tablePeaks->setValue("ADDRESS", alertRow->getIntValue("ADDRESS"));
+   tablePeaks->setValue("TYPE", alertRow->getStrValue("TYPE"));
+
+   if (tablePeaks->find())
+   {
+      minv = tablePeaks->getFloatValue("MIN");
+      maxv = tablePeaks->getFloatValue("MAX");
+   }
+
+   tablePeaks->reset();
 
    if (!body.length())
       body = "- undefined -";
@@ -2048,6 +2053,8 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
    subject = strReplace("%time%", l2pTime(time(0)).c_str(), subject);
    subject = strReplace("%repeat%", (long)maxRepeat, subject);
    subject = strReplace("%weburl%", webUrl, subject);
+   subject = strReplace("%minv%", minv, subject);
+   subject = strReplace("%maxv%", maxv, subject);
 
    body = strReplace("%sensorid%", sensor, body);
    body = strReplace("%value%", value, body);
@@ -2060,6 +2067,8 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title,
    body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
    body = strReplace("%repeat%", (long)maxRepeat, body);
    body = strReplace("%weburl%", webUrl, body);
+   body = strReplace("%minv%", minv, body);
+   body = strReplace("%maxv%", maxv, body);
 
    alertMailSubject += string(" ") + subject;
    alertMailBody += string("\n") + body;
