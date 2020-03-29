@@ -30,7 +30,7 @@ IP=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 
 apt update || exit 1
 apt -y dist-upgrade || exit 1
-apt -y install ntpd ssmtp || exit 1
+apt -y install ntp ssmtp || exit 1
 apt-get -y install locales || exit 1
 
 timedatectl set-timezone 'Europe/Berlin'

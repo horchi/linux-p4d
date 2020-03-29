@@ -298,3 +298,8 @@ wget http://hungerphilipp.de/files/p4d/install.sh
 chmod +x install.sh
 ./install.sh" or "sudo ./install.sh/
 ```
+
+## Donation
+If this project help you, you can give me a cup of coffee :)
+
+[![paypal](https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id&KUF9ZAQ5UTHUN)

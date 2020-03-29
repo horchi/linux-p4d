@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.10"
-#define VERSION_DATE "28.03.2020"
+#define _VERSION     "0.3.11"
+#define VERSION_DATE "29.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-29:  version 0.3.11
+   - bugfix: Minor install fix
 
 2020-03-28:  version 0.3.10
    - added:  storage of min and max peaks values
