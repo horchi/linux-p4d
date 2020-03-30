@@ -617,7 +617,6 @@ int P4Request::readText(char*& s, int size)
       if (readByte(b) != success)
       {
          free(tmp);
-
          return fail;
       }
 
@@ -1190,6 +1189,8 @@ int P4Request::getError(ErrorInfo* e, int first)
 // Get Value Spec
 //***************************************************************************
 
+#include <locale>
+
 int P4Request::getValueSpec(ValueSpec* v, int first)
 {
    RequestClean clean(this);
@@ -1252,9 +1253,15 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    // patch unit
 
+   /*
+   tell(eloDebug, "unit is '%s'", v->unit);
+
+   std::locale l("de_DE.UTF-8");
+
    for (int i = 0; v->unit[i]; i++)
-      if (!isprint(v->unit[i]))
+      if (!std::isprint(v->unit[i], l))
          v->unit[i] = ' ';
+   */
 
    allTrim(v->unit);
 

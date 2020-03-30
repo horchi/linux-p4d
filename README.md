@@ -222,9 +222,9 @@ If the heating values are added as attachment to the mail please check the next 
 
 ### Configure Time sync:
 With the next steps you can enable a time synchronization of the p4d and the heating:
-If you enable this feature you can set the max time difference between the p4d systemtime and the time of the heating. The p4d will set the time of the heating (once a day) to his the systemtime. Therefore it is recommended to hold your system time in sync, e.g. by running the `ntp` daemon.
+If you enable this feature you can set the max time difference between the p4d systemtime and the time of the heating. The p4d will set the time of the heating (once a day) to his the systemtime. Therefore it is recommended to hold your system time in sync, e.g. by running the `ntp` daemon or systemd-timesyncd.
 
-- Check if ntpd (openntpd, ...) is running `/etc/init.d/ntp status`. If not you have to install it.
+- Check if ntpd (openntpd, systemd-timesyncd, ...) is active and running. If not you have to install one of it.
 - Start the WEBIF and login, go to the Setup page
 - Enable "Tägliche Zeitsynchronisation" and set the max time difference in seconds in the line "Maximale Abweichung"
 - Save configuration
