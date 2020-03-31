@@ -594,11 +594,11 @@ int P4d::updateSchemaConfTable()
 
 int P4d::updateValueFacts()
 {
-   int status;
+   int status {success};
    Fs::ValueSpec v;
-   int count;
-   int added;
-   int modified;
+   int count {0};
+   int added {0};
+   int modified {0};
 
    // check serial communication
 
@@ -611,12 +611,7 @@ int P4d::updateValueFacts()
    // ---------------------------------
    // Add the sensor definitions delivered by the S 3200
 
-   count = 0;
-   added = 0;
-   modified = 0;
-
-   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast;
-        status = request->getNextValueSpec(&v))
+   for (status = request->getFirstValueSpec(&v); status != Fs::wrnLast; status = request->getNextValueSpec(&v))
    {
       if (status != success)
          continue;
@@ -642,11 +637,26 @@ int P4d::updateValueFacts()
          tableValueFacts->store();
          added++;
       }
+      else
+      {
+         tableValueFacts->clearChanged();
+         tableValueFacts->setValue("NAME", v.name);
+         tableValueFacts->setValue("UNIT", v.unit);
+         tableValueFacts->setValue("FACTOR", v.factor);
+         tableValueFacts->setValue("TITLE", v.description);
+         tableValueFacts->setValue("RES1", v.unknown);
+
+         if (tableValueFacts->getChanges())
+         {
+            tableValueFacts->store();
+            modified++;
+         }
+      }
 
       count++;
    }
 
-   tell(eloAlways, "Read %d value facts, added %d", count, added);
+   tell(eloAlways, "Read %d value facts, modified %d and added %d", count, modified, added);
 
    // ---------------------------------
    // add default for digital outputs

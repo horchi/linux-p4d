@@ -220,7 +220,7 @@ printHeader(60);
 
          $txtaddr = sprintf("0x%x", $address);
 
-         if ($type != 'DI' && $type != 'DO' && $row['f_unit'] != 'T' && $unit != '')
+         if ($type != 'DI' && $type != 'DO' && $unit != '' && $unit != 'h')
              $peak = sprintf("(%s/%s)", $min, $max);
 
          if ($type == 'DI' || $type == 'DO')

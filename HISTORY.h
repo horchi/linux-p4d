@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.12"
-#define VERSION_DATE "29.03.2020"
+#define _VERSION     "0.3.13"
+#define VERSION_DATE "31.03.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-03-31:  version 0.3.13
+   - change: int valuefacts now update existing rows
 
 2020-03-29:  version 0.3.12
    - change: removed ntp from install script

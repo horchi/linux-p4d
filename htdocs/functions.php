@@ -445,6 +445,8 @@ function prettyUnit($u)
       $unit = "°C";
    else if ($u == "T")
       $unit = "";
+   else
+      $unit = $u;
 
    return $unit;
 }
