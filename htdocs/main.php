@@ -138,35 +138,36 @@ printHeader(60);
   // -----------------
   // State 'flex' Box
 
-  echo "      <div class=\"rounded-border stateInfo\">\n";
+  echo "      <div class=\"stateInfo\">\n";
 
   // -----------------
   // Heating State
   {
-     echo "        <div class=\"heatingState\">\n";
-     echo "          <div><span id=\"" . $stateStyle . "\">$status</span></div>\n";
-     echo "          <div><span>" . $day . "</span><span>" . $time . "</span></div>\n";
-     echo "          <div><span>Betriebsmodus:</span><span>" . $mode ."</span></div>\n";
-
-     echo "        </div>\n";
+      echo "        <div class=\"rounded-border heatingState\">\n";
+      echo "          <div><span id=\"" . $stateStyle . "\">$status</span></div>\n";
+      echo "          <div><span>" . $day . "</span><span>" . $time . "</span></div>\n";
+      echo "          <div><span>Betriebsmodus:</span><span>" . $mode ."</span></div>\n";
+      echo "        </div>\n";
   }
 
   // -----------------
   // State Image
   {
-     echo "        <a href=\"\" onclick=\"javascript:showHide('divP4dState'); return false\">\n";
-     echo "          <img class=\"centerImage\" src=\"$stateImg\">\n";
-     echo "        </a>\n";
+      echo "        <div class=\"imageState\">\n";
+      echo "          <a href=\"\" onclick=\"javascript:showHide('divP4dState'); return false\">\n";
+      echo "            <img class=\"centerImage\" src=\"$stateImg\">\n";
+      echo "          </a>\n";
+      echo "        </div>\n";
   }
 
   // -----------------
   // p4d State
   {
-     echo "        <div class=\"P4dInfo\" id=\"divP4dState\">\n";
+     echo "        <div class=\"rounded-border P4dInfo\" id=\"divP4dState\">\n";
 
      if ($p4dstate == 0)
      {
-        echo  "              <div id=\"aStateOk\"><span>Fröling $heatingType ONLINE</span>   </div>\n";
+        echo  "              <div id=\"aStateOk\"><span>$heatingType Daemon ONLINE</span>   </div>\n";
         echo  "              <div><span>Läuft seit:</span>            <span>$p4dSince</span>       </div>\n";
         echo  "              <div><span>Messungen heute:</span>       <span>$p4dCountDay</span>    </div>\n";
         echo  "              <div><span>Letzte Messung:</span>        <span>$maxPrettyShort</span> </div>\n";
@@ -194,9 +195,9 @@ printHeader(60);
      $strQueryBase = sprintf("select p.minv as p_min, p.maxv as p_max, s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type");
 
      if ($addresses == "")
-         $strQuery = sprintf("%s where s.time = '%s';", $strQueryBase, $max);
+         $strQuery = sprintf("%s where s.time = '%s' order by f.ord, f.address", $strQueryBase, $max);
      else
-         $strQuery = sprintf("%s where s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s';", $strQueryBase, $addresses, $max);
+         $strQuery = sprintf("%s where s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s' order by f.ord, f.address", $strQueryBase, $addresses, $max);
 
      // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
@@ -208,26 +209,31 @@ printHeader(60);
 
      while ($row = $result->fetch_assoc())
      {
-         $peak = "";
          $value = $row['s_value'];
          $text = $row['s_text'];
          $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
          $unit = prettyUnit($row['f_unit']);
          $address = $row['s_address'];
          $type = $row['s_type'];
+
+         $peak = "";
          $min = $row['p_min'];
          $max = $row['p_max'];
 
          $txtaddr = sprintf("0x%x", $address);
 
-         if ($type != 'DI' && $type != 'DO' && $unit != '' && $unit != 'h')
+         if ($type != 'DI' && $type != 'DO' && $unit != '' && $unit != 'h' && $unit != 'Stunden')
              $peak = sprintf("(%s/%s)", $min, $max);
 
          if ($type == 'DI' || $type == 'DO')
              $value = $value == "1.00" ? "an" : "aus";
+         else if ($row['f_unit'] == 'h' || $row['f_unit'] == 'U')
+             $value = round($value, 0);
 
          if ($row['f_unit'] == 'T')
              $value = str_replace($wd_value, $wd_disp, $text);
+         else if ($row['f_unit'] == 'zst')
+             $value = $text;
 
          $url = "<a class=\"tableButton\" href=\"#\" onclick=\"window.open('detail.php?width=1200&height=600&address=$address&type=$type&from="
              . $from . "&range=" . $srange . "&chartXLines=" . $_SESSION['chartXLines'] . "&chartDiv="

@@ -603,6 +603,10 @@ int P4Request::readTimeDateExt(time_t& t)
 // Read Text
 //***************************************************************************
 
+#define SOH 0x01
+#define XX1 0x02
+#define XX2 0x03
+
 int P4Request::readText(char*& s, int size)
 {
    byte b;
@@ -620,7 +624,7 @@ int P4Request::readText(char*& s, int size)
          return fail;
       }
 
-      if (b)
+      if (b && b != SOH && b != XX1 && b != XX2)
          tmp[p++] = b;
    }
 

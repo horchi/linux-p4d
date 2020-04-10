@@ -62,6 +62,8 @@ Table valuefacts
    NAME                 ""  name                 Ascii      100 Data,
    TITLE                ""  title                Ascii      100 Data,
    USRTITLE             ""  usrtitle             Ascii      100 Data,
+   MAXSCALE             ""  maxscale             Int          4 Data,
+   ORDER                ""  ord                  Int          4 Data,
    RES1                 ""  res1                 Int          4 Data,
 }
 

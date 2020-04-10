@@ -599,6 +599,7 @@ int P4d::updateValueFacts()
    int count {0};
    int added {0};
    int modified {0};
+   int order {4};
 
    // check serial communication
 
@@ -633,6 +634,8 @@ int P4d::updateValueFacts()
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
+         tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
+         tableValueFacts->setValue("ORDER", order++);
 
          tableValueFacts->store();
          added++;
@@ -645,6 +648,12 @@ int P4d::updateValueFacts()
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
+
+         if (tableValueFacts->getValue("ORDER")->isNull())
+            tableValueFacts->setValue("ORDER", order++);
+
+         if (tableValueFacts->getValue("MAXSCALE")->isNull())
+            tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
 
          if (tableValueFacts->getChanges())
          {
@@ -696,13 +705,24 @@ int P4d::updateValueFacts()
          modified--;
       }
 
+      const char* unit = tableMenu->getStrValue("UNIT");
+
+      if (isEmpty(unit) && strcmp(type, "AO") == 0)
+         unit = "%";
+
       removeCharsExcept(sname, nameChars);
       asprintf(&name, "%s_0x%x", sname.c_str(), (int)tableMenu->getIntValue("ADDRESS"));
 
       tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("UNIT", tableMenu->getStrValue("UNIT"));
+      tableValueFacts->setValue("UNIT", unit);
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
+
+      if (tableValueFacts->getValue("ORDER")->isNull())
+         tableValueFacts->setValue("ORDER", order++);
+
+      if (tableValueFacts->getValue("MAXSCALE")->isNull())
+         tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
 
       if (tableValueFacts->getChanges())
       {
@@ -735,9 +755,19 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Heizungsstatus");
+      tableValueFacts->setValue("ORDER", 1);
 
       tableValueFacts->store();
       added++;
+   }
+   else
+   {
+      if (tableValueFacts->getValue("ORDER")->isNull())
+      {
+         tableValueFacts->setValue("ORDER", 1);
+         tableValueFacts->store();
+         modified++;
+      }
    }
 
    tableValueFacts->clear();
@@ -751,9 +781,19 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Betriebsmodus");
+      tableValueFacts->setValue("ORDER", 2);
 
       tableValueFacts->store();
       added++;
+   }
+   else
+   {
+      if (tableValueFacts->getValue("ORDER")->isNull())
+      {
+         tableValueFacts->setValue("ORDER", 2);
+         tableValueFacts->store();
+      }
+      modified++;
    }
 
    tableValueFacts->clear();
@@ -767,9 +807,19 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "T");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
+      tableValueFacts->setValue("ORDER", 3);
 
       tableValueFacts->store();
       added++;
+   }
+   else
+   {
+      if (tableValueFacts->getValue("ORDER")->isNull())
+      {
+         tableValueFacts->setValue("ORDER", 3);
+         tableValueFacts->store();
+         modified++;
+      }
    }
 
    tell(eloAlways, "Added %d user defined values", added);
@@ -802,15 +852,27 @@ int P4d::updateValueFacts()
             tableValueFacts->setValue("UNIT", "°");
             tableValueFacts->setValue("FACTOR", 1);
             tableValueFacts->setValue("TITLE", it->first.c_str());
+            tableValueFacts->setValue("ORDER", order++);
+            tableValueFacts->setValue("MAXSCALE", 300);
 
             tableValueFacts->store();
             added++;
          }
+         else
+         {
+            if (tableValueFacts->getValue("ORDER")->isNull())
+               tableValueFacts->setValue("ORDER", order++);
 
+            if (tableValueFacts->getValue("MAXSCALE")->isNull())
+               tableValueFacts->setValue("MAXSCALE", 300);
+
+            tableValueFacts->store();
+            modified++;
+         }
          count++;
       }
 
-      tell(eloAlways, "Found %d one wire sensors, added %d", count, added);
+      tell(eloAlways, "Found %d one wire sensors, added %d, modified %d", count, added, modified);
    }
 
    return success;

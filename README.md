@@ -182,7 +182,7 @@ User: *p4*
 Pass: *p4-3200*
 
 ### PHP Settings:
-Modify the file /etc/php/7.0/apache2/php.ini and append (or edit) this line ```set max_input_vars = 5000```
+Modify the php.ini (/etc/php/*.*/apache2/php.ini) and append (or edit) this line ```set max_input_vars = 5000```
 
 ### Fist steps to enable data logging:
 

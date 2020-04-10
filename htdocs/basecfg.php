@@ -62,6 +62,9 @@ else if ($action == "store")
    if (isset($_POST["addrsMainMobile"]))
       $_SESSION['addrsMainMobile'] = htmlspecialchars($_POST["addrsMainMobile"]);
 
+   if (isset($_POST["addrsDashboard"]))
+       $_SESSION['addrsDashboard'] = htmlspecialchars($_POST["addrsDashboard"]);
+
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
 
@@ -136,6 +139,7 @@ else if ($action == "store")
 
    writeConfigItem("addrsMain", $_SESSION['addrsMain']);
    writeConfigItem("addrsMainMobile", $_SESSION['addrsMainMobile']);
+   writeConfigItem("addrsDashboard", $_SESSION['addrsDashboard']);
 
    writeConfigItem("chartStart", $_SESSION['chartStart']);
    writeConfigItem("chartDiv", $_SESSION['chartDiv']);
@@ -198,7 +202,9 @@ echo "       </div>\n";
 echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Ansicht 'Aktuell'", 0, "seperatorTitle2");
 configStrItem(3, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
-configStrItem(3, "Sensoren (mobil)", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
+configStrItem(3, "Sensoren Mobile Device", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
+configStrItem(3, "Sensoren Dashboard", "addrsDashboard", $_SESSION['addrsDashboard'], "", 250);
+
 echo "       </div>\n";
 
 echo "      <div class=\"rounded-border inputTableConfig\">\n";

@@ -336,7 +336,7 @@ int main(int argc, char** argv)
          if ((status = request.getValue(&v)) == success)
             tell(eloAlways, "value 0x%x is %d", v.address, v.value);
          else
-            tell(eloAlways, "Getting value failed, error %d", status);
+            tell(eloAlways, "Getting value '%d' failed, error %d", v.address, status);
 
          break;
       }

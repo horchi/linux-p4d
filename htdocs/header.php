@@ -35,6 +35,7 @@ include("functions.php");
 
      readConfigItem("addrsMain", $_SESSION['addrsMain'], "");
      readConfigItem("addrsMainMobile", $_SESSION['addrsMainMobile'], "0,1,4,118,119,120");
+     readConfigItem("addrsDashboard", $_SESSION['addrsDashboard'], "");
 
      readConfigItem("chartStart", $_SESSION['chartStart'], "7");
      readConfigItem("chartDiv", $_SESSION['chartDiv'], "25");
@@ -110,6 +111,8 @@ function printHeader($refresh = 0)
    echo "    <link rel=\"icon\" href=\"img/type/heating-" . $_SESSION['heatingType'] . ".png\" type=\"image/png\"/>\n";
    echo "    <link rel=\"apple-touch-icon-precomposed\" sizes=\"144x144\" href=\"img/type/heating-" . $_SESSION['heatingType'] . ".png\" type=\"image/png\"/>\n";
    echo "    <link rel=\"stylesheet\" type=\"text/css\" href=\"stylesheet.css\"/>\n";
+   echo "    <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js\"></script>\n";
+   echo "    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js\"></script>\n";
    echo "    <script type=\"text/JavaScript\" src=\"jfunctions.js\"></script>\n";
    echo "    <title>Fröling " . $_SESSION['heatingType'] . "</title>\n";
    echo "  </head>\n";
@@ -120,6 +123,7 @@ function printHeader($refresh = 0)
 //   echo "    <nav class=\"menu\" style=\"position: fixed; top=0px;\">\n";
    echo "    <nav class=\"fixed-menu1\">\n";
    echo "      <a href=\"main.php\"><button class=\"rounded-border button1\">Aktuell</button></a>\n";
+   echo "      <a href=\"dashboard.php\"><button class=\"rounded-border button1\">Dashboard</button></a>\n";
    echo "      <a href=\"chart.php\"><button class=\"rounded-border button1\">Charts</button></a>\n";
 
    if ($_SESSION['chart34'] == "1")

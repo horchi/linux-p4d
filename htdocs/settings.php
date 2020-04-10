@@ -34,46 +34,40 @@ if ($action == "init")
 
 else if ($action == "store")
 {
-   foreach ($_POST['usrtitle'] as $key => $value)
-   {
-      $value = htmlspecialchars($value);
-      $addr = htmlspecialchars($_POST["addr"][$key]);
-      list ($addr, $type) = explode(":", $addr);
+    $nextOrder = 1;
 
-      $addr = $mysqli->real_escape_string($addr);
-      $type = $mysqli->real_escape_string($type);
+    $sAddr = count($_POST["addr"]);
+    $sMax = count($_POST["maxscale"]);
+    echo "<br/><br/><div>$sAddr / $sMax</div>";
 
-      $sql = "UPDATE valuefacts set usrtitle = '$value' where address = '$addr' and type = '$type'";
-      $mysqli->query($sql)
-         or die("<br/>Error" . $mysqli->error);
-   }
+    foreach ($_POST['addr'] as $key => $value)
+    {
+        $value = htmlspecialchars($value);
+        list($addr, $type) = explode(":", $value);
+        $addr = $mysqli->real_escape_string($addr);
+        $type = $mysqli->real_escape_string($type);
 
-   if (isset($_POST["selected"]))
-   {
-      $result = $mysqli->query("update valuefacts set state = 'D'")
-         or die("<br/>Error" . $mysqli->error);
+        $usrtitle = htmlspecialchars($_POST["usrtitle"][$key]);
+        $order = htmlspecialchars($_POST["order"][$key]);
+        $state = in_array($value, $_POST["selected"]) || $type == 'UD' ? 'A' : 'D';
+        $maxscale = htmlspecialchars($_POST["maxscale"][$key]);
 
-      foreach ($_POST['selected'] as $key => $value)
-      {
-         $value = htmlspecialchars($value);
-         list($addr, $type) = explode(":", $value);
+        if ($order <= 0)
+            $order = $nextOrder++;
 
-         $addr = $mysqli->real_escape_string($addr);
-         $type = $mysqli->real_escape_string($type);
+        if ($order >= $nextOrder)
+            $nextOrder = $order + 1;
 
-         $sql = "update valuefacts set state = 'A' where address = '$addr' and type = '$type'";
+        // echo "<div>$key / $value / $addr / $type / $usrtitle / $maxscale / $state</div>";
 
-         $mysqli->query($sql)
+        $sql = "UPDATE valuefacts set ord = $order, usrtitle = '$usrtitle', maxscale = '$maxscale', state = '$state' where address = '$addr' and type = '$type'";
+
+        $mysqli->query($sql)
             or die("<br/>Error" . $mysqli->error);
+    }
 
-         $mysqli->query("update valuefacts set state = 'A' where type = 'UD'")
-            or die("<br/>Error" . $mysqli->error);
-      }
-
-      requestAction("update-schemacfg", 2, 0, "", $resonse);
-
-      echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
-   }
+    // requestAction("update-schemacfg", 2, 0, "", $resonse);  // ist das noch nötig?
+    echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
 }
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
@@ -113,44 +107,66 @@ function showTable($type, $tableTitle)
    seperator($tableTitle, 0);
 
    echo "        <table class=\"tableMultiCol\">\n";
-   echo "          <tbody>\n";
+//   echo "          <tbody>\n";
    echo "            <tr>\n";
    echo "              <td>Name</td>\n";
-   echo "              <td>Bezeichnung</td>\n";
-   echo "              <td>Einheit</td>\n";
-   echo "              <td>Aufzeichnen</td>\n";
-   echo "              <td>ID / Typ</td>\n";
+   echo "              <td style=\"width:4%;\">Pos</td>\n";
+   echo "              <td style=\"width:32%;\">Bezeichnung</td>\n";
+   if ($type == "VA" || $type == "W1")
+       echo "              <td style=\"width:6%;\">Skala max</td>\n";
+   else
+       echo "              <td style=\"width:6%;\"></td>\n";
+   echo "              <td style=\"width:3%;\">Einheit</td>\n";
+   echo "              <td style=\"width:3%;\">Aufzeichnen</td>\n";
+   echo "              <td style=\"width:6%;\">ID / Typ</td>\n";
    echo "            </tr>\n";
 
-   $result = $mysqli->query("select * from valuefacts where type = '$type'")
+   $result = $mysqli->query("select * from valuefacts where type = '$type' order by ord")
       or die("<br/>Error" . $mysqli->error);
 
    for ($i = 0; $i < $result->num_rows; $i++)
    {
-      $address = mysqli_result($result, $i, "address");
-      $type    = mysqli_result($result, $i, "type");
-      $title   = mysqli_result($result, $i, "title");
-      $unit    = mysqli_result($result, $i, "unit");
-      $state   = mysqli_result($result, $i, "state");
-      $usrtitle= mysqli_result($result, $i, "usrtitle");
-      $txtaddr = sprintf("0x%04x", $address);
-      $checked = ($state == "A") ? " checked" : "";
+      $address  = mysqli_result($result, $i, "address");
+      $title    = mysqli_result($result, $i, "title");
+      $unit     = mysqli_result($result, $i, "unit");
+      $state    = mysqli_result($result, $i, "state");
+      $usrtitle = mysqli_result($result, $i, "usrtitle");
+      $maxscale = mysqli_result($result, $i, "maxscale");
+      $order    = mysqli_result($result, $i, "ord");
+      $txtaddr  = sprintf("0x%04x", $address);
+      $checked  = ($state == "A") ? " checked" : "";
 
       echo "            <tr>\n";
-      echo "              <td> $title </td>\n";
-      echo "              <td><input class=\"rounded-border input\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
-      echo "              <td> $unit </td>\n";
+      echo "              <td>$title</td>\n";
+      echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"order[]\" type=\"number\" value=\"$order\"/></td>\n";
+      echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
+
+      if (($type == "VA" || $type == "W1") && $unit == '°')
+      {
+          echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"maxscale[]\" type=\"number\" value=\"$maxscale\"/></td>\n";
+      }
+      else
+      {
+          echo "              <td class=\"tableMultiColCell\" style=\"display:none;\"><input class=\"rounded-border inputSetting\" name=\"maxscale[]\" type=\"number\" value=\"$maxscale\"/></td>\n";
+          echo "              <td></td>\n";
+      }
+
+      // das geht nicht (mit 'disabled' fehlt es im array!):
+      // echo "              <td><input disabled=\"disabled\" style=\"visibility:hidden;\" class=\"rounded-border inputSetting\" name=\"maxscale[]\" type=\"number\" value=\"$maxscale\"/></td>\n";
+
+      echo "              <td style=\"text-align:center;\">$unit</td>\n";
 
       if ($type != "UD")
-         echo "              <td><input type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked/></td>\n";
+          echo "              <td><input class=\"rounded-border inputSetting\" type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked /></td>\n";
       else
-         echo "              <td>[x]</td>\n";
+          echo "              <td><input class=\"rounded-border inputSetting\" type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked disabled=\"disabled\"/></td>\n";
 
-      echo "              <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"/> $address / $type </td>\n";
+      $hexaddr = dechex($address);
+      echo "              <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"/> 0x$hexaddr / $type </td>\n";
       echo "            </tr>\n";
    }
 
-   echo "          </tbody>\n";
+//   echo "          </tbody>\n";
    echo "        </table>\n";
 }
 

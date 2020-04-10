@@ -435,20 +435,24 @@ function getStateImage($state, $p4dstate)
 
 function prettyUnit($u)
 {
-   $unit = "";
+    $unit = "";
 
-   if ($u == "zst" || $u == "dig")
-      $unit = "";
-   else if ($u == "U")
-      $unit = " U/min";
-   else if ($u == "°")
-      $unit = "°C";
-   else if ($u == "T")
-      $unit = "";
-   else
-      $unit = $u;
+    if ($u == "zst" || $u == "dig")      // Zustand
+        $unit = "";
+    else if ($u == "U")                  // Umdrehungen/Minute
+        $unit = " U/min";
+    else if ($u == "°")                  // Temperatur
+        $unit = "°C";
+    else if ($u == "T")                  // Datum /Urzeit
+        $unit = "";
+    else if ($u == "h")                  // Stunden
+        $unit = "Stunden";
+    else if ($u == "R")                  // Ohmscher Widerstand
+        $unit = "Ohm";
+    else
+        $unit = $u;                      // all other
 
-   return $unit;
+    return $unit;
 }
 
 }  // "functions_once"

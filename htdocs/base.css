@@ -71,7 +71,7 @@
     color: var(--buttonFont);
     padding: 2px;
     text-decoration: none;
-/*    background-color: var(--colorTableButton); */
+    background-color: var(--colorTableButton);
     border-radius: var(--borderRadiusTableButton);
     border-color: var(--borderColorTableButton);
     border-style: none;
@@ -161,6 +161,16 @@
     margin-top: 2px;
     color: black;
     padding: 3px;
+}
+
+.inputSetting
+{
+    width: 100%;
+    background-color: var(--edit);
+    margin-top: 2px;
+    color: black;
+    padding: 4px;
+    margin: 1px;
 }
 
 span > input
@@ -317,7 +327,7 @@ span > input
     width: 100%;
     background-color: var(--light1);
     color: var(--buttonFont);
-    margin-top: 10px;
+    margin-top: 5px;
     padding: 0;
     font-size: 17px;
 }
@@ -334,6 +344,11 @@ span > input
     background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
 }
 
+.tableMultiColCell
+{
+    padding-right: 12px;
+}
+
 table.tableMultiCol tr:nth-child(even)
 {
     background-color: var(--light3);
@@ -348,7 +363,7 @@ table.tableMultiCol tr:nth-child(odd)
 
 .tableMultiCol > div > span
 {
-    width: 25%;
+/*    width: 25%;*/
     padding: 5px 10px 5px 10px;
     display: inline-block;
     text-align: left;
@@ -356,22 +371,27 @@ table.tableMultiCol tr:nth-child(odd)
 
 .stateInfo
 {
-    background-color: var(--light1);
     display: flex;
     flex-wrap: wrap;
-    padding: 10px;
+    justify-content: center;
+}
+
+.imageState
+{
+    margin: 12px;
 }
 
 .centerImage
 {
-    float: right;
-    margin: 0px 0px 0px 0px;
-    border-radius: 10px;
+    width: 100%;
+    background-color: var(--light1);
 }
 
 .heatingState
 {
-    width: 36%;
+    background-color: var(--light1);
+    width: 40%;
+    padding: 15px;
 }
 
 .heatingState > div > span
@@ -381,9 +401,10 @@ table.tableMultiCol tr:nth-child(odd)
 
 .P4dInfo
 {
+    background-color: var(--light1);
     float: right;
-    margin-left: 40px;
-    width: 30%;
+    width: 42%;
+    padding: 15px;
 }
 
 .P4dInfo > div > span
@@ -397,36 +418,6 @@ table.tableMultiCol tr:nth-child(odd)
 #divP4dState
 {
     display: block;
-}
-
-@media only screen and (max-width: 500px)
-{
-}
-
-@media only screen and (max-width: 740px)
-{
-    .content                   { padding: 0px; }
-    #divP4dState               { display: none; }
-    .table2Col > div > span    { padding: 3px 10px 3px 10px; }
-    .P4dInfo                   { font-size: 15px; margin-left: 0px; min-width: 95%; }
-    .P4dInfo > div > span      { min-width: 110px; }
-    .heatingState              { width: 56%; }
-    .centerImage               { margin: 0px 0px 0px 0px; }
-
-    .inputTableConfig > div > span:nth-child(3) { width: 95%; }
-    .inputTableConfig > div > span              { width: 95%; }
-}
-
-@media only screen and (min-width: 768px) and (max-width:1139px)
-{
-}
-
-@media only screen and (min-width: 900px)
-{
-}
-
-@media only screen and (min-width: 1140px)
-{
 }
 
 #aStateOk
@@ -521,16 +512,160 @@ table.tableMultiCol tr:nth-child(odd)
 
 div.redCircle
 {
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: red;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: red;
 }
 
 div.greenCircle
 {
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: green;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: green;
+}
+
+/* Dashboard Widgets */
+
+.widget-row
+{
+    padding: 1%;
+}
+
+/*
+.widget-row text
+{
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.widget-row.participation text
+{
+    fill: var(--buttonFont);
+}
+.widget-row.completion text
+{
+    fill: #27ae60;
+}
+.widget-row.blocked text
+{
+    fill: #e74c3c;
+}
+*/
+
+.widget-row path
+{
+    stroke-width: 75;
+    stroke: #ecf0f1;
+    fill: none;
+}
+
+.widget-row.participation path.data-peak
+{
+    stroke: red;
+}
+
+.widget-row.participation path.data-arc
+{
+    stroke: #3498db;
+}
+
+.widget-row.completion path.data-arc
+{
+    stroke: #27ae60;
+}
+
+.widget-row.blocked path.data-arc
+{
+    stroke: #e74c3c;
+}
+
+.container
+{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.container > div
+{
+    justify-content: center;
+    display: grid;
+    overflow: hidden;
+    width: 330px;
+    height: 212px;
+    margin: 3px;
+    background-color: var(--light1);
+}
+
+.svg
+{
+    width: 100%;
+}
+
+.widget-title
+{
+    padding: 2px;
+    text-align: center;
+    font-size: 1.4em;
+}
+
+.widget-scale
+{
+    text-align: center;
+    font-size: 3.0em;
+}
+
+.widget-value
+{
+    padding: 8px;
+    text-align: center;
+    font-size: 2.1em;
+    font-weight: bold;
+    height: 82%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+}
+
+.widget-image
+{
+    max-width: 100%;
+    max-height: 100%;
+    /*min-height: 100%;*/   /*  geht solange die widgets in bezug auf die höhe und das IMG breit genug sind */
+    display: block;
+    background-color: var(--light1);
+    justify-self: center;
+}
+
+/* -------------- */
+/* Media specials*/
+
+@media only screen and (min-width: 900px)
+{
+}
+
+@media only screen and (min-width: 768px) and (max-width:1139px)
+{
+}
+
+@media only screen and (max-width: 740px)
+{
+    .content                   { padding: 0px; }
+    #divP4dState               { display: none; }
+    .table2Col > div > span    { padding: 3px 10px 3px 10px; }
+    .P4dInfo                   { font-size: 15px; margin-top: 3px; min-width: 91%; }
+    .P4dInfo > div > span      { min-width: 110px; }
+    .heatingState              { width: 52%; }
+    .centerImage               { margin: 0px 0px 0px 0px; }
+
+    .inputTableConfig > div > span:nth-child(3) { width: 95%; }
+    .inputTableConfig > div > span              { width: 95%; }
+
+    .container > div           { width: 185px; }
+}
+
+@media only screen and (max-width: 380px)
+{
+    .container > div           { width: 165px; }
 }

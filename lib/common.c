@@ -380,7 +380,7 @@ char* lTrim(char* buf)
 {
    if (buf)
    {
-      char *tp = buf;
+      char* tp = buf;
 
       while (*tp && strchr("\n\r\t ",*tp))
          tp++;
@@ -888,11 +888,11 @@ int toUTF8(char* out, int outMax, const char* in, const char* from_code)
 
    if (ret == (size_t)-1)
    {
-      tell(0, "Converting [%s] from '%s' to '%s' failed",
-           fromPtr, from_code, to_code);
-
+      tell(0, "Converting [%s] from '%s' to '%s' failed", fromPtr, from_code, to_code);
 		return fail;
    }
+
+   // printf("------------- converting (%d) '%s' [0x%x0x%x] to '%s'\n", fromLen, in, in[0], in [1], out);
 
    return success;
 }
