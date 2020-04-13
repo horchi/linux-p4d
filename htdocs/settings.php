@@ -38,7 +38,7 @@ else if ($action == "store")
 
     $sAddr = count($_POST["addr"]);
     $sMax = count($_POST["maxscale"]);
-    echo "<br/><br/><div>$sAddr / $sMax</div>";
+    // echo "<br/><br/><div>$sAddr / $sMax</div>";
 
     foreach ($_POST['addr'] as $key => $value)
     {
@@ -48,9 +48,9 @@ else if ($action == "store")
         $type = $mysqli->real_escape_string($type);
 
         $usrtitle = htmlspecialchars($_POST["usrtitle"][$key]);
-        $order = htmlspecialchars($_POST["order"][$key]);
+        $order = intval(htmlspecialchars($_POST["order"][$key]));
         $state = in_array($value, $_POST["selected"]) || $type == 'UD' ? 'A' : 'D';
-        $maxscale = htmlspecialchars($_POST["maxscale"][$key]);
+        $maxscale = intval(htmlspecialchars($_POST["maxscale"][$key]));
 
         if ($order <= 0)
             $order = $nextOrder++;
