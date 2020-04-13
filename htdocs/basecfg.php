@@ -203,7 +203,7 @@ echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("Ansicht 'Aktuell'", 0, "seperatorTitle2");
 configStrItem(3, "Sensoren", "addrsMain", $_SESSION['addrsMain'], "", 250);
 configStrItem(3, "Sensoren Mobile Device", "addrsMainMobile", $_SESSION['addrsMainMobile'], "", 250);
-configStrItem(3, "Sensoren Dashboard", "addrsDashboard", $_SESSION['addrsDashboard'], "Werte-IDs, siehe 'Aufzeichnung'", 250);
+configStrItem(3, "Sensoren Dashboard", "addrsDashboard", $_SESSION['addrsDashboard'], "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'", 250);
 
 echo "       </div>\n";
 
@@ -219,7 +219,7 @@ configStrItem(3, "Chart 2", "chart2", $_SESSION['chart2'], "", 250);
 if ($_SESSION['chart34'] == "1")
 {
    configStrItem(3, "Chart 3", "chart3", $_SESSION['chart3'], "", 250);
-   configStrItem(3, "Chart 4", "chart4", $_SESSION['chart4'], "Werte-IDs siehe 'Aufzeichnung'", 250);
+   configStrItem(3, "Chart 4", "chart4", $_SESSION['chart4'], "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'", 250);
 }
 echo "       </div>\n";
 

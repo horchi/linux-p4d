@@ -92,7 +92,7 @@ function showButtons()
 {
    echo "        <div class=\"menu\">\n";
    echo "          <button class=\"rounded-border button3\" type=submit name=action value=init onclick=\"return confirmSubmit('Stammdaten der Messwerte initialisieren/aktualisieren')\">Init</button>\n";
-   echo "          <button class=\"rounded-border button3\" type=submit name=action value=store onclick=\"return confirmSubmit('Einstellungen speichern?')\">Speichern</button>\n";
+   echo "          <button class=\"rounded-border button3\" type=submit name=action value=store>Speichern</button>\n";
    echo "        </div>\n";
 }
 
@@ -118,7 +118,7 @@ function showTable($type, $tableTitle)
        echo "              <td style=\"width:6%;\"></td>\n";
    echo "              <td style=\"width:3%;\">Einheit</td>\n";
    echo "              <td style=\"width:3%;\">Aufzeichnen</td>\n";
-   echo "              <td style=\"width:6%;\">ID / Typ</td>\n";
+   echo "              <td style=\"width:6%;\">ID:Typ</td>\n";
    echo "            </tr>\n";
 
    $result = $mysqli->query("select * from valuefacts where type = '$type' order by ord")
@@ -141,7 +141,7 @@ function showTable($type, $tableTitle)
       echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"order[]\" type=\"number\" value=\"$order\"/></td>\n";
       echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
 
-      if (($type == "VA" || $type == "W1") && $unit == '°')
+      if (($type == "VA" || $type == "W1") && ($unit == '°' || $unit == '%'))
       {
           echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"maxscale[]\" type=\"number\" value=\"$maxscale\"/></td>\n";
       }
@@ -162,7 +162,7 @@ function showTable($type, $tableTitle)
           echo "              <td><input class=\"rounded-border inputSetting\" type=\"checkbox\" name=\"selected[]\" value=\"$address:$type\"$checked disabled=\"disabled\"/></td>\n";
 
       $hexaddr = dechex($address);
-      echo "              <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"/> 0x$hexaddr / $type </td>\n";
+      echo "              <td><input type=\"hidden\" name=\"addr[]\" value=\"$address:$type\"/> 0x$hexaddr:$type </td>\n";
       echo "            </tr>\n";
    }
 

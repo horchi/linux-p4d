@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.15"
+#define _VERSION     "0.3.16"
 #define VERSION_DATE "13.04.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-04-13:  version 0.3.16
+   - added: maxsacle for '%' values
+   - change: removed confirm for store of settinges
+   - added: type to value selection
 
 2020-04-13:  version 0.3.15
    - change: Minor change of parameter setup

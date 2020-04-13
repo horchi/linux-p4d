@@ -125,17 +125,35 @@ printHeader(60);
   {
       // select s.address as s_address, s.type as s_type, s.time as s_time, f.title from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type where f.state = 'A' and s.time = '2020-03-27 12:19:00'
 
-      $addresses = $_SESSION['addrsDashboard'];
+      $addrWhere = "";
+      $sensors = preg_split("/[\s,]+/", $_SESSION['addrsDashboard'], -1, PREG_SPLIT_NO_EMPTY);
+
+      if (count($sensors) > 0)
+      {
+          for ($i = 0; $i < count($sensors); $i++)
+          {
+              $sensor = preg_split("/:/", $sensors[$i]);
+
+              if ($i > 0)
+                  $addrWhere = $addrWhere." or ";
+
+              if ($sensor[1] == "")
+                  $sensor[1] = "VA";
+
+              $addrWhere = $addrWhere."(s.address = $sensor[0] and s.type = '$sensor[1]')";
+          }
+      }
+
       $strQueryBase = sprintf("select p.minv as p_min, p.maxv as p_max,
                               s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text,
                               f.usrtitle as f_usrtitle, f.name as f_name, f.title as f_title, f.unit as f_unit, f.maxscale as f_maxscale
                               from samples s left join peaks p on p.address = s.address and p.type = s.type
                               join valuefacts f on f.address = s.address and f.type = s.type");
 
-      if ($addresses == "")
+      if ($addrWhere == "")
           $strQuery = sprintf("%s where s.time = '%s' order by f.ord, f.address", $strQueryBase, $max);
       else
-          $strQuery = sprintf("%s where s.address in (%s) and (s.type = 'VA' or s.type = 'W1') and s.time = '%s' order by f.ord, f.address", $strQueryBase, $addresses, $max);
+          $strQuery = sprintf("%s where (%s) and s.time = '%s' order by f.ord, f.address", $strQueryBase, $addrWhere, $max);
 
       // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
