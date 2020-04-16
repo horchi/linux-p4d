@@ -2,10 +2,9 @@
 
 if (!function_exists("functions_once"))
 {
-
-function functions_once()
-{
-}
+    function functions_once()
+    {
+    }
 
 // ---------------------------------------------------------------------------
 // Check for mobile browser
@@ -230,16 +229,6 @@ function readConfigItem($name, &$value, $default = "")
    else
      $value = $default;
 
-//  old version - request config via p4d - it is some slower
-//  did we need this?
-
-//   if (requestAction("read-config", 3, 0, "$name:$default", $value) != 0)
-//   {
-//      $value = $default;
-//      echo " <br/>failed to read config item $name\n";
-//      return -1;
-//   }
-
    return 0;
 }
 
@@ -455,6 +444,34 @@ function prettyUnit($u)
     return $unit;
 }
 
-}  // "functions_once"
+// ---------------------------------------------------------------------------
+// build Id List
+// ---------------------------------------------------------------------------
 
+function buildIdList($tuples, &$sensors, &$addrWhere, &$ids)
+{
+    $addrWhere = "";
+    $sensors = preg_split("/[\s,]+/", $tuples, -1, PREG_SPLIT_NO_EMPTY);
+
+    if (count($sensors) > 0)
+    {
+        for ($i = 0; $i < count($sensors); $i++)
+        {
+            $sensor = preg_split("/:/", $sensors[$i]);
+
+            if ($i > 0)
+                $addrWhere = $addrWhere." or ";
+
+            if (count($sensor) < 2)
+                $sensor[1] = "VA";
+
+            $addrWhere = $addrWhere."(s.address = $sensor[0] and s.type = '$sensor[1]')";
+            $ids[$i] = $sensor[0].":".$sensor[1];
+        }
+    }
+
+    return 0;
+}
+
+}  // "functions_once"
 ?>

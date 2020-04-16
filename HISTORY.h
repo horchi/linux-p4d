@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.16"
-#define VERSION_DATE "13.04.2020"
+#define _VERSION     "0.3.17"
+#define VERSION_DATE "16.04.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2020-04-16:  version 0.3.17
+   - change: The display order now configured by the order of the
+             sensor IDs instead of 'Pos' at the settings page
 
 2020-04-13:  version 0.3.16
    - added: maxsacle for '%' values

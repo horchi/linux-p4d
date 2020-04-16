@@ -34,8 +34,6 @@ if ($action == "init")
 
 else if ($action == "store")
 {
-    $nextOrder = 1;
-
     $sAddr = count($_POST["addr"]);
     $sMax = count($_POST["maxscale"]);
     // echo "<br/><br/><div>$sAddr / $sMax</div>";
@@ -48,19 +46,12 @@ else if ($action == "store")
         $type = $mysqli->real_escape_string($type);
 
         $usrtitle = htmlspecialchars($_POST["usrtitle"][$key]);
-        $order = intval(htmlspecialchars($_POST["order"][$key]));
         $state = in_array($value, $_POST["selected"]) || $type == 'UD' ? 'A' : 'D';
         $maxscale = intval(htmlspecialchars($_POST["maxscale"][$key]));
 
-        if ($order <= 0)
-            $order = $nextOrder++;
-
-        if ($order >= $nextOrder)
-            $nextOrder = $order + 1;
-
         // echo "<div>$key / $value / $addr / $type / $usrtitle / $maxscale / $state</div>";
 
-        $sql = "UPDATE valuefacts set ord = $order, usrtitle = '$usrtitle', maxscale = '$maxscale', state = '$state' where address = '$addr' and type = '$type'";
+        $sql = "UPDATE valuefacts set usrtitle = '$usrtitle', maxscale = '$maxscale', state = '$state' where address = '$addr' and type = '$type'";
 
         $mysqli->query($sql)
             or die("<br/>Error" . $mysqli->error);
@@ -107,10 +98,9 @@ function showTable($type, $tableTitle)
    seperator($tableTitle, 0);
 
    echo "        <table class=\"tableMultiCol\">\n";
-//   echo "          <tbody>\n";
+   echo "          <tbody>\n";
    echo "            <tr>\n";
    echo "              <td>Name</td>\n";
-   echo "              <td style=\"width:4%;\">Pos</td>\n";
    echo "              <td style=\"width:32%;\">Bezeichnung</td>\n";
    if ($type == "VA" || $type == "W1")
        echo "              <td style=\"width:6%;\">Skala max</td>\n";
@@ -121,7 +111,7 @@ function showTable($type, $tableTitle)
    echo "              <td style=\"width:6%;\">ID:Typ</td>\n";
    echo "            </tr>\n";
 
-   $result = $mysqli->query("select * from valuefacts where type = '$type' order by ord")
+   $result = $mysqli->query("select * from valuefacts where type = '$type'")
       or die("<br/>Error" . $mysqli->error);
 
    for ($i = 0; $i < $result->num_rows; $i++)
@@ -132,13 +122,11 @@ function showTable($type, $tableTitle)
       $state    = mysqli_result($result, $i, "state");
       $usrtitle = mysqli_result($result, $i, "usrtitle");
       $maxscale = mysqli_result($result, $i, "maxscale");
-      $order    = mysqli_result($result, $i, "ord");
       $txtaddr  = sprintf("0x%04x", $address);
       $checked  = ($state == "A") ? " checked" : "";
 
       echo "            <tr>\n";
       echo "              <td>$title</td>\n";
-      echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"order[]\" type=\"number\" value=\"$order\"/></td>\n";
       echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
 
       if (($type == "VA" || $type == "W1") && ($unit == '°' || $unit == '%'))
@@ -166,7 +154,7 @@ function showTable($type, $tableTitle)
       echo "            </tr>\n";
    }
 
-//   echo "          </tbody>\n";
+   echo "          </tbody>\n";
    echo "        </table>\n";
 }
 

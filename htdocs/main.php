@@ -188,33 +188,20 @@ printHeader(60);
   // ------------------
   // Sensor List
   {
-      $addrWhere = "";
-      $sensors = preg_split("/[\s,]+/", !isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'], -1, PREG_SPLIT_NO_EMPTY);
-
-      if (count($sensors) > 0)
-      {
-          for ($i = 0; $i < count($sensors); $i++)
-          {
-              $sensor = preg_split("/:/", $sensors[$i]);
-
-              if ($i > 0)
-                  $addrWhere = $addrWhere." or ";
-
-              if ($sensor[1] == "")
-                  $sensor[1] = "VA";
-
-              $addrWhere = $addrWhere."(s.address = $sensor[0] and s.type = '$sensor[1]')";
-          }
-      }
+     buildIdList(!isMobile() ? $_SESSION['addrsMain'] : $_SESSION['addrsMainMobile'], $sensors, $addrWhere, $ids);
 
      // select s.address as s_address, s.type as s_type, s.time as s_time, f.title from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type where f.state = 'A' and s.time = '2020-03-27 12:19:00'
 
-     $strQueryBase = sprintf("select p.minv as p_min, p.maxv as p_max, s.address as s_address, s.type as s_type, s.time as s_time, s.value as s_value, s.text as s_text, f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit from samples s left join peaks p on p.address = s.address and p.type = s.type join valuefacts f on f.address = s.address and f.type = s.type");
+     $strQueryBase = sprintf("select p.minv as p_min, p.maxv as p_max, s.address as s_address, s.type as s_type,
+                             s.time as s_time, s.value as s_value, s.text as s_text,
+                             f.usrtitle as f_usrtitle, f.title as f_title, f.unit as f_unit
+                             from samples s left join peaks p on p.address = s.address and p.type = s.type
+                             join valuefacts f on f.address = s.address and f.type = s.type");
 
      if ($addrWhere == "")
-         $strQuery = sprintf("%s where s.time = '%s' order by f.ord, f.address", $strQueryBase, $max);
+         $strQuery = sprintf("%s where s.time = '%s'", $strQueryBase, $max);
      else
-         $strQuery = sprintf("%s where (%s) and s.time = '%s' order by f.ord, f.address", $strQueryBase, $addrWhere, $max);
+         $strQuery = sprintf("%s where (%s) and s.time = '%s'", $strQueryBase, $addrWhere, $max);
 
      // syslog(LOG_DEBUG, "p4: selecting " . " '" . $strQuery . "'");
 
@@ -224,8 +211,22 @@ printHeader(60);
      echo "      <div class=\"rounded-border table2Col\">\n";
      echo "        <center>Messwerte vom $maxPretty</center>\n";
 
+     $map = new \Ds\Map();
+     $i = 0;
+
      while ($row = $result->fetch_assoc())
      {
+         $id = "0x".dechex($row['s_address']).":".$row['s_type'];
+         $map->put($id, $row);
+
+         if ($addrWhere == "")
+             $ids[$i++] = $id;
+     }
+
+     for ($i = 0; $i < count($ids); $i++)
+     {
+         $row = $map[$ids[$i]];
+
          $value = $row['s_value'];
          $text = $row['s_text'];
          $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
