@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.17"
+#define _VERSION     "0.3.18"
 #define VERSION_DATE "16.04.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-04-16:  version 0.3.18
+   - bugfix: Fixed handling of hex IDs
 
 2020-04-16:  version 0.3.17
    - change: The display order now configured by the order of the

@@ -466,7 +466,8 @@ function buildIdList($tuples, &$sensors, &$addrWhere, &$ids)
                 $sensor[1] = "VA";
 
             $addrWhere = $addrWhere."(s.address = $sensor[0] and s.type = '$sensor[1]')";
-            $ids[$i] = $sensor[0].":".$sensor[1];
+            $hex = dechex(intval($sensor[0], 0));
+            $ids[$i] = "0x".$hex.":".$sensor[1];
         }
     }
 

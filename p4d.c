@@ -2447,7 +2447,10 @@ int P4d::getConfigItem(const char* name, int& value, int def)
    if (!isEmpty(txt))
       value = atoi(txt);
    else if (isEmpty(txt) && def != na)
+   {
       value = def;
+      setConfigItem(name, value);
+   }
    else
       value = 0;
 

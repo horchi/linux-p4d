@@ -225,7 +225,14 @@ printHeader(60);
 
      for ($i = 0; $i < count($ids); $i++)
      {
-         $row = $map[$ids[$i]];
+         try
+         {
+             $row = $map[$ids[$i]];
+         }
+         catch (Exception $e)
+         {
+             echo "ID '".$ids[$i]."' not found, ignoring!";
+         }
 
          $value = $row['s_value'];
          $text = $row['s_text'];

@@ -159,72 +159,79 @@ printHeader(60);
 
       for ($i = 0; $i < count($ids); $i++)
       {
-          $row = $map[$ids[$i]];
+         try
+         {
+             $row = $map[$ids[$i]];
+         }
+         catch (Exception $e)
+         {
+             echo "ID '".$ids[$i]."' not found, ignoring!";
+         }
 
-          $name = $row['f_name'];
-          $value = $row['s_value'];
-          $text = $row['s_text'];
-          $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
-          $unit = prettyUnit($row['f_unit']);
-          $u = $row['f_unit'];
-          $scaleMax = $row['f_maxscale'];
-          $address = $row['s_address'];
-          $type = $row['s_type'];
-          $peak = $row['p_max'];
+         $name = $row['f_name'];
+         $value = $row['s_value'];
+         $text = $row['s_text'];
+         $title = (preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) != "") ? preg_replace("/($pumpDir)/i","",$row['f_usrtitle']) : $row['f_title'];
+         $unit = prettyUnit($row['f_unit']);
+         $u = $row['f_unit'];
+         $scaleMax = $row['f_maxscale'];
+         $address = $row['s_address'];
+         $type = $row['s_type'];
+         $peak = $row['p_max'];
 
-          if ($type == "UD" && $address == 1)                                      // 'Heating State' als Symbol anzeigen
-          {
-              echo "        <div class=\"widget-row rounded-border\">\n";
-              echo "          <div class=\"widget-title\">$title</div>";
-              echo "          <img class=\"widget-image\" src=\"$stateImg\">\n";
+         if ($type == "UD" && $address == 1)                                      // 'Heating State' als Symbol anzeigen
+         {
+             echo "        <div class=\"widget-row rounded-border\">\n";
+             echo "          <div class=\"widget-title\">$title</div>";
+             echo "          <img class=\"widget-image\" src=\"$stateImg\">\n";
+             echo "        </div>\n";
+         }
+         else if ($u == '°' || $unit == '%'|| $unit == 'V' || $unit == 'A')       // 'Volt/Ampere/Prozent/°C' als  Gauge
+         {
+             $scaleMax = $unit == '%' ? 100 : $scaleMax;
+             $ratio = $value / $scaleMax;
+             $peak = $peak / $scaleMax;
+
+             echo "        <div class=\"widget-row rounded-border participation\" data-y=\"500\" data-unit=\"$unit\" data-value=\"$value\" data-peak=\"$peak\" data-ratio=\"$ratio\">\n";
+             echo "          <div class=\"widget-title\">$title</div>";
+             echo "          <svg class=\"svg\" viewBox=\"0 0 1000 600\" preserveAspectRatio=\"xMidYMin slice\">\n";
+             echo "            <path d=\"M 950 500 A 450 450 0 0 0 50 500\"></path>\n";
+             echo "            <text class='_content' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"500\" y=\"450\" font-size=\"140\" font-weight=\"bold\">$unit</text>\n";
+             echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"50\" y=\"550\">0</text>\n";
+             echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"950\" y=\"550\">$scaleMax</text>\n";
+             echo "          </svg>\n";
               echo "        </div>\n";
-          }
-          else if ($u == '°' || $unit == '%'|| $unit == 'V' || $unit == 'A')       // 'Volt/Ampere/Prozent/°C' als  Gauge
-          {
-              $scaleMax = $unit == '%' ? 100 : $scaleMax;
-              $ratio = $value / $scaleMax;
-              $peak = $peak / $scaleMax;
+         }
+         else if ($text != '')                                                    // 'text' als Text anzeigen
+         {
+             $value = str_replace($wd_value, $wd_disp, $text);
 
-              echo "        <div class=\"widget-row rounded-border participation\" data-y=\"500\" data-unit=\"$unit\" data-value=\"$value\" data-peak=\"$peak\" data-ratio=\"$ratio\">\n";
-              echo "          <div class=\"widget-title\">$title</div>";
-              echo "          <svg class=\"svg\" viewBox=\"0 0 1000 600\" preserveAspectRatio=\"xMidYMin slice\">\n";
-              echo "            <path d=\"M 950 500 A 450 450 0 0 0 50 500\"></path>\n";
-              echo "            <text class='_content' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"500\" y=\"450\" font-size=\"140\" font-weight=\"bold\">$unit</text>\n";
-              echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"50\" y=\"550\">0</text>\n";
-              echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"950\" y=\"550\">$scaleMax</text>\n";
-              echo "          </svg>\n";
-              echo "        </div>\n";
-          }
-          else if ($text != '')                                                    // 'text' als Text anzeigen
-          {
-              $value = str_replace($wd_value, $wd_disp, $text);
+             echo "        <div class=\"widget-row rounded-border\">\n";
+             echo "          <div class=\"widget-title\">$title</div>";
+             echo "          <div class=\"widget-value\">$value</div>";
+             echo "        </div>\n";
+         }
+         else if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u')  // 'value' als Text anzeigen
+         {
+             $value = round($value, 0);
 
-              echo "        <div class=\"widget-row rounded-border\">\n";
-              echo "          <div class=\"widget-title\">$title</div>";
-              echo "          <div class=\"widget-value\">$value</div>";
-              echo "        </div>\n";
-          }
-          else if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u')  // 'value' als Text anzeigen
-          {
-              $value = round($value, 0);
+             echo "        <div class=\"widget-row rounded-border\">\n";
+             echo "          <div class=\"widget-title\">$title</div>";
+             echo "          <div class=\"widget-value\">$value $unit</div>";
+             echo "        </div>\n";
+         }
+         else if ($type == 'DI' || $type == 'DO' || $u == '')                     // 'boolean' als symbol anzeigen
+         {
+             if (strpos($name, "umpe") != FALSE)
+                 $imagePath = $value == "1.00" ? "img/icon/pump-on-1.gif" : $imagePath = "img/icon/pump-off-1.png";
+             else
+                 $imagePath = $value == "1.00" ? "img/icon/boolean-on.png" : $imagePath = "img/icon/boolean-off.png";
 
-              echo "        <div class=\"widget-row rounded-border\">\n";
-              echo "          <div class=\"widget-title\">$title</div>";
-              echo "          <div class=\"widget-value\">$value $unit</div>";
-              echo "        </div>\n";
-          }
-          else if ($type == 'DI' || $type == 'DO' || $u == '')                     // 'boolean' als symbol anzeigen
-          {
-              if (strpos($name, "umpe") != FALSE)
-                  $imagePath = $value == "1.00" ? "img/icon/pump-on-1.gif" : $imagePath = "img/icon/pump-off-1.png";
-              else
-                  $imagePath = $value == "1.00" ? "img/icon/boolean-on.png" : $imagePath = "img/icon/boolean-off.png";
-
-              echo "        <div class=\"widget-row rounded-border\">\n";
-              echo "          <div class=\"widget-title\">$title</div>";
-              echo "          <img class=\"widget-image\" src=\"$imagePath\">\n";
-              echo "        </div>\n";
-          }
+             echo "        <div class=\"widget-row rounded-border\">\n";
+             echo "          <div class=\"widget-title\">$title</div>";
+             echo "          <img class=\"widget-image\" src=\"$imagePath\">\n";
+             echo "        </div>\n";
+         }
       }
 
       echo "      </div>\n";
