@@ -28,11 +28,15 @@ Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalt
 auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder
 weniger kritischen Fehlfunktionen derselben kommen kann!
 
+## Donation
+If this project help you, you can give me a cup of coffee :)
+
+[![paypal](https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KUF9ZAQ5UTHUN)
+
 ## Prerequisits:
 - USB-Serial Converter based on FTDI chip
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - A Linux based operating system is required
-
 
 # Installation by package (actually available for Raspian Buster)
 
@@ -298,8 +302,3 @@ wget http://hungerphilipp.de/files/p4d/install.sh
 chmod +x install.sh
 ./install.sh" or "sudo ./install.sh/
 ```
-
-## Donation
-If this project help you, you can give me a cup of coffee :)
-
-[![paypal](https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=KUF9ZAQ5UTHUN)
