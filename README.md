@@ -84,14 +84,16 @@ If the database server is located localy on same host as the p4d:
   CREATE DATABASE p4 charset utf8;
   CREATE USER 'p4'@'localhost' IDENTIFIED BY 'p4';
   GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'localhost' IDENTIFIED BY 'p4';
+  flush privileges;
 ```
 ### Remote database setup:
-if the database is running remote (on a other host):
+if the database is running remote (on a other host or you like to habe remote access):
 ```
 > mysql -u root -Dmysql -p
  CREATE DATABASE p4 charset utf8;
  CREATE USER 'p4'@'%' IDENTIFIED BY 'p4';
- GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%';
+ GRANT ALL PRIVILEGES ON p4.* TO 'p4'@'%' IDENTIFIED BY 'p4';
+ flush privileges;
 ```
 
 ## Installation of the Apache Webserver:
