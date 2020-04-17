@@ -42,7 +42,7 @@ If this project help you, you can give me a cup of coffee :)
 
 ## install
 ```
-wget  www.jwendel.de/p4d/install-deb.sh -O /tmp/install-deb.sh
+wget www.jwendel.de/p4d/install-deb.sh -O /tmp/install-deb.sh
 sudo bash /tmp/install-deb.sh
 ```
 
