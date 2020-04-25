@@ -24,7 +24,6 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
-char hassMqttUrl[255+TB] = ""; // "tcp://127.0.0.1:1883";
 char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
 int  interval = 120;
 int  stateCheckInterval = 10;
@@ -52,7 +51,6 @@ int atConfigItem(const char* Name, const char* Value)
 
    else if (!strcasecmp(Name, "aggregateInterval"))  aggregateInterval = atoi(Value);
    else if (!strcasecmp(Name, "aggregateHistory"))   aggregateHistory = atoi(Value);
-   else if (!strcasecmp(Name, "hassMqttUrl"))        sstrcpy(hassMqttUrl, Value, sizeof(hassMqttUrl));
 
    return success;
 }

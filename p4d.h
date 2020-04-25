@@ -3,7 +3,7 @@
 // File p4d.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 01.03.2018  Jörg Wendel
+// Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
 #ifndef _P4D_H_
@@ -29,7 +29,6 @@
 
 extern char dbHost[];
 extern int  dbPort;
-extern char hassMqttUrl[];
 extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
@@ -170,6 +169,10 @@ class P4d : public FroelingService
       bool initialRun;
 
       // Home Assistant stuff
+
+      char* mqttUrl {nullptr};
+      char* mqttDataTopic {nullptr};
+      int mqttHaveConfigTopic {yes};
 
 #ifdef MQTT_HASS
 

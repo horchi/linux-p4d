@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.18"
-#define VERSION_DATE "16.04.2020"
+#define _VERSION     "0.3.19"
+#define VERSION_DATE "25.04.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2020-04-25:  version 0.3.19
+   - added: MQTT Config topic now optional
+   - added: added MQTT data topic name to config
+   - change: removed ßäüö from MQTT data
+   - change: improved make install
+   - bugfix: fixed p4d-backup script
 
 2020-04-16:  version 0.3.18
    - bugfix: Fixed handling of hex IDs

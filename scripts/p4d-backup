@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export MYSQL_PWD=p4
 

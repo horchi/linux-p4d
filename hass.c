@@ -3,7 +3,7 @@
 // File hass.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 01.03.2018  Jörg Wendel
+// Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
 #include "p4d.h"
@@ -28,48 +28,58 @@ int P4d::hassPush(const char* name, const char* title, const char* unit,
 
    std::string message;
    char* stateTopic = 0;
-   asprintf(&stateTopic, "p4d2mqtt/sensor/%s/state", name);
 
-   mqttReader->subscribe(stateTopic);
-   status = mqttReader->read(&message);
+   std::string sName = name;
+   sName = strReplace("ß", "ss", sName);
+   sName = strReplace("ü", "ue", sName);
+   sName = strReplace("ö", "oe", sName);
+   sName = strReplace("ä", "ae", sName);
 
-   if (status != success && status != MqTTClient::wrnNoMessagePending)
-      return fail;
+   asprintf(&stateTopic, "%s/%s/state", mqttDataTopic, sName.c_str());
 
-   if (forceConfig || status == MqTTClient::wrnNoMessagePending)
+   if (mqttHaveConfigTopic)
    {
-      char* configTopic = 0;
-      char* configJson = 0;
+      mqttReader->subscribe(stateTopic);
+      status = mqttReader->read(&message);
 
-      // topic don't exists -> create sensor
+      if (status != success && status != MqTTClient::wrnNoMessagePending)
+         return fail;
 
-      if (strcmp(unit, "°") == 0)
-         unit = "°C";
-      else if (strcmp(unit, "Heizungsstatus") == 0 ||
-               strcmp(unit, "zst") == 0 ||
-               strcmp(unit, "T") == 0)
-         unit = "";
+      if (forceConfig || status == MqTTClient::wrnNoMessagePending)
+      {
+         char* configTopic = 0;
+         char* configJson = 0;
 
-      tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
-           "sendig config message", name);
+         // topic don't exists -> create sensor
 
-      asprintf(&configTopic, "homeassistant/sensor/%s/config", name);
-      asprintf(&configJson, "{"
-               "\"unit_of_measurement\" : \"%s\","
-               "\"value_template\"      : \"{{ value_json.value }}\","
-               "\"state_topic\"         : \"p4d2mqtt/sensor/%s/state\","
-               "\"name\"                : \"%s\","
-               "\"unique_id\"           : \"%s_p4d2mqtt\""
-               "}",
-               unit, name, title, name);
+         if (strcmp(unit, "°") == 0)
+            unit = "°C";
+         else if (strcmp(unit, "Heizungsstatus") == 0 ||
+                  strcmp(unit, "zst") == 0 ||
+                  strcmp(unit, "T") == 0)
+            unit = "";
 
-      mqttWriter->write(configTopic, configJson);
+         tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
+              "sendig config message", sName.c_str());
 
-      free(configTopic);
-      free(configJson);
+         asprintf(&configTopic, "homeassistant/sensor/%s/config", sName.c_str());
+         asprintf(&configJson, "{"
+                  "\"unit_of_measurement\" : \"%s\","
+                  "\"value_template\"      : \"{{ value_json.value }}\","
+                  "\"state_topic\"         : \"p4d2mqtt/sensor/%s/state\","
+                  "\"name\"                : \"%s\","
+                  "\"unique_id\"           : \"%s_p4d2mqtt\""
+                  "}",
+                  unit, sName.c_str(), title, sName.c_str());
+
+         mqttWriter->write(configTopic, configJson);
+
+         free(configTopic);
+         free(configJson);
+      }
+
+      mqttReader->unsubscribe();
    }
-
-   mqttReader->unsubscribe();
 
    // publish actual value
 
@@ -96,37 +106,40 @@ int P4d::hassCheckConnection()
 {
    if (!mqttWriter)
    {
-      mqttWriter = new MqTTPublishClient(hassMqttUrl, "p4d_publisher");
-      mqttWriter->setConnectTimeout(15); // seconds
-   }
-
-   if (!mqttReader)
-   {
-      mqttReader = new MqTTSubscribeClient(hassMqttUrl, "p4d_subscriber");
-      mqttReader->setConnectTimeout(15); // seconds
-      mqttReader->setTimeout(100);       // milli seconds
+      mqttWriter = new MqTTPublishClient(mqttUrl, "p4d_publisher");
+      mqttWriter->setConnectTimeout(15);   // seconds
    }
 
    if (!mqttWriter->isConnected())
    {
       if (mqttWriter->connect() != success)
       {
-         tell(0, "Error: MQTT: Connecting publisher to '%s' failed", hassMqttUrl);
+         tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
          return fail;
       }
 
-      tell(0, "MQTT: Connecting publisher to '%s' succeeded", hassMqttUrl);
+      tell(0, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
    }
 
-   if (!mqttReader->isConnected())
+   if (mqttHaveConfigTopic)
    {
-      if (mqttReader->connect() != success)
+      if (!mqttReader)
       {
-         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", hassMqttUrl);
-         return fail;
+         mqttReader = new MqTTSubscribeClient(mqttUrl, "p4d_subscriber");
+         mqttReader->setConnectTimeout(15); // seconds
+         mqttReader->setTimeout(100);       // milli seconds
       }
 
-      tell(0, "MQTT: Connecting subscriber to '%s' succeeded", hassMqttUrl);
+      if (!mqttReader->isConnected())
+      {
+         if (mqttReader->connect() != success)
+         {
+            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
+            return fail;
+         }
+
+         tell(0, "MQTT: Connecting subscriber to '%s' succeeded", mqttUrl);
+      }
    }
 
    return success;

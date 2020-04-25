@@ -3,7 +3,7 @@
 // File p4d.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2018  Jörg Wendel
+// Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
 //***************************************************************************
@@ -445,6 +445,10 @@ int P4d::readConfiguration()
 
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
+
+   getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
+   getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/");
+   getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
 
    return done;
 }
@@ -1126,7 +1130,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    // Home Assistant
 
 #ifdef MQTT_HASS
-   if (!isEmpty(hassMqttUrl))
+   if (!isEmpty(mqttUrl))
       hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
 

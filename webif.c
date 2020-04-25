@@ -154,17 +154,17 @@ int P4d::performWebifRequests()
          if ((value = strchr(name, ':')))
          {
             *value = 0; value++;
-
             setConfigItem(name, value);
-
             tableJobs->setValue("RESULT", "success:stored");
          }
 
          free(name);
+      }
 
-         // read the config from table to apply changes
-
+      else if (strcasecmp(command, "apply-config") == 0)
+      {
          readConfiguration();
+         tableJobs->setValue("RESULT", "success:apply-config");
       }
 
       else if (strcasecmp(command, "read-config") == 0)

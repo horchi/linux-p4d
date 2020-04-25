@@ -40,16 +40,16 @@ printHeader();
   echo "    </form>\n";
   echo "  </div>\n";
 
-  echo "  <div class=\"rounded-border chart\">\n";
+  echo "  <div id=\"imgDiv\" class=\"rounded-border chart\">\n";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range
      . "&condition=" . $_SESSION['chart3'] . "&chartXLines=" . $_SESSION['chartXLines']
-     . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+     . "&chartDiv=" . $_SESSION['chartDiv'] . "'/>\n";
   echo "  </div>\n";
 
   echo "  <div class=\"rounded-border chart\">\n";
   echo "    <img src='detail.php?from=" . $from . "&range=" . $range
      . "&condition=" . $_SESSION['chart4'] . "&chartXLines=" . $_SESSION['chartXLines']
-     . "&chartDiv=" . $_SESSION['chartDiv'] . "'></img>\n";
+     . "&chartDiv=" . $_SESSION['chartDiv'] . "'/>\n";
   echo "  </div>\n";
 
 include("footer.php");

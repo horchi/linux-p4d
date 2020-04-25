@@ -12,8 +12,7 @@ CMDTARGET   = p4
 CHARTTARGET = dbchart
 HISTFILE    = "HISTORY.h"
 
-LIBS  = $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
-LIBS += $(shell xml2-config --libs)
+LIBS += $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
 
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
@@ -37,8 +36,7 @@ CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
 CFLAGS    	+= $(shell mysql_config --include)
-CFLAGS    	+= $(shell xml2-config --cflags)
-DEFINES   	+= -DDEAMON=P4d -DUSEMD5
+DEFINES   	+= -DDEAMON=P4d
 OBJS      	+= p4d.o
 
 ifdef TEST_MODE
@@ -71,7 +69,8 @@ $(CMDTARGET) : $(CMDOBJS)
 install: $(TARGET) $(CMDTARGET) install-p4d
 
 install-p4d: install-config install-scripts
-	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
+	install --mode=755 -D $(TARGET) $(BINDEST)
+	install --mode=755 -D $(CMDTARGET) $(BINDEST)
 	make install-$(INIT_SYSTEM)
    ifneq ($(DESTDIR),)
 	   @cp -r contrib/DEBIAN $(DESTDIR)
