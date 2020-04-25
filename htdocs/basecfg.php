@@ -129,6 +129,11 @@ else if ($action == "store")
    if (isset($_POST["haUrl"]))
       $_SESSION['haUrl'] = (substr($_SESSION['haUrl'],0,7) == "http://") ?  htmlspecialchars($_POST["haUrl"]) : htmlspecialchars("http://" . $_POST["haUrl"]);
 
+   if (isset($_POST["mqttUrl"]))
+      $_SESSION['mqttUrl'] = htmlspecialchars($_POST["mqttUrl"]);
+
+   $_SESSION['mqttHaveConfigTopic'] = isset($_POST['mqttHaveConfigTopic']);
+
    if (isset($_POST["hmHost"]))
       $_SESSION['hmHost'] = htmlspecialchars($_POST["hmHost"]);
 
@@ -163,6 +168,9 @@ else if ($action == "store")
    writeConfigItem("webUrl", $_SESSION['webUrl']);
    writeConfigItem("haUrl", $_SESSION['haUrl']);
    writeConfigItem("hmHost", $_SESSION['hmHost']);
+   writeConfigItem("mqttUrl", $_SESSION['mqttUrl']);
+   writeConfigItem("mqttDataTopic", $_SESSION['mqttDataTopic']);
+   writeConfigItem("mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic']);
 
    if ($_POST["passwd2"] != "")
    {
@@ -237,6 +245,9 @@ echo "       </div>\n";
 echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("HomeMatic Interface", 0);
 configStrItem(3, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
+configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
+configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "Beispiel: p4d2mqtt/sensor/");
+configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
 echo "       </div>\n";
 
 // --------------------

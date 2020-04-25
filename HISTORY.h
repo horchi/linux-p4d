@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.19"
+#define _VERSION     "0.3.20"
 #define VERSION_DATE "25.04.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-04-25:  version 0.3.20
+   - added: MQTT config parameter to WEBIF
 
 2020-04-25:  version 0.3.19
    - added: MQTT Config topic now optional

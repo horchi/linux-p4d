@@ -77,6 +77,9 @@ include("functions.php");
      readConfigItem("pumpsAO", $_SESSION['pumpsAO'], "3,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22");
      readConfigItem("webUrl",  $_SESSION['webUrl'], "http://127.0.0.1/p4");
      readConfigItem("haUrl", $_SESSION['haUrl']);
+     readConfigItem("mqttUrl", $_SESSION['mqttUrl']);
+     readConfigItem("mqttDataTopic", $_SESSION['mqttDataTopic']);
+     readConfigItem("mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic']);
 
      // ------------------
      // check for defaults
