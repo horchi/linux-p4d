@@ -23,7 +23,7 @@
 2020-04-25:  version 0.3.19
    - added: MQTT Config topic now optional
    - added: added MQTT data topic name to config
-   - change: removed ßäüö from MQTT data
+   - change: removed ßäüö from the MQTT topic Names and IDs
    - change: improved make install
    - bugfix: fixed p4d-backup script
 
