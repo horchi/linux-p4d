@@ -51,7 +51,7 @@ else if ($action == "store")
    if (isset($_POST["heatingType"]))
       $_SESSION['heatingType'] = htmlspecialchars($_POST["heatingType"]);
 
-   $_SESSION['stateAni'] = isset($_POST['stateAni']);
+   $_SESSION['stateAni'] = isset($_POST['stateAni']) ? "1" : "0";
 
    if (isset($_POST["style"]))
       $style = htmlspecialchars($_POST["style"]);
@@ -68,7 +68,7 @@ else if ($action == "store")
    if (isset($_POST["chartStart"]))
       $_SESSION['chartStart'] = htmlspecialchars($_POST["chartStart"]);
 
-   $_SESSION['chartXLines'] = isset($_POST["chartXLines"]);
+   $_SESSION['chartXLines'] = isset($_POST["chartXLines"]) ? "1" : "0";
 
    if (isset($_POST["chartDiv"]))
       $_SESSION['chartDiv'] = htmlspecialchars($_POST["chartDiv"]);
@@ -81,7 +81,7 @@ else if ($action == "store")
 
    // optional charts for HK2
 
-   $_SESSION['chart34'] = isset($_POST["chart34"]);
+   $_SESSION['chart34'] = isset($_POST["chart34"]) ? "1" : "0";
 
    if (isset($_POST["chart3"]))
       $_SESSION['chart3'] = htmlspecialchars($_POST["chart3"]);
@@ -91,8 +91,8 @@ else if ($action == "store")
 
    // ---
 
-   $_SESSION['mail'] = isset($_POST["mail"]);
-   $_SESSION['htmlMail'] = isset($_POST["htmlMail"]);
+   $_SESSION['mail'] = isset($_POST["mail"]) ? "1" : "0";
+   $_SESSION['htmlMail'] = isset($_POST["htmlMail"]) ? "1" : "0";
 
    if (isset($_POST["stateMailTo"]))
       $_SESSION['stateMailTo'] = htmlspecialchars($_POST["stateMailTo"]);
@@ -132,7 +132,10 @@ else if ($action == "store")
    if (isset($_POST["mqttUrl"]))
       $_SESSION['mqttUrl'] = htmlspecialchars($_POST["mqttUrl"]);
 
-   $_SESSION['mqttHaveConfigTopic'] = isset($_POST['mqttHaveConfigTopic']);
+   if (isset($_POST["mqttDataTopic"]))
+      $_SESSION['mqttDataTopic'] = htmlspecialchars($_POST["mqttDataTopic"]);
+
+   $_SESSION['mqttHaveConfigTopic'] = isset($_POST['mqttHaveConfigTopic']) ? "1" : "0";
 
    if (isset($_POST["hmHost"]))
       $_SESSION['hmHost'] = htmlspecialchars($_POST["hmHost"]);
@@ -240,14 +243,18 @@ configStrItem(3, "Passwort", "passwd1", "", "", 350, "", true);
 configStrItem(3, "Wiederholen", "passwd2", "", "", 350, "", true);
 echo "       </div>\n";
 
+echo "      <div class=\"rounded-border inputTableConfig\">\n";
+seperator("MQTT Interface", 0);
+configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
+configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "Beispiel: p4d2mqtt/sensor/");
+configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
+echo "       </div>\n";
+
 // --------------------
 
 echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("HomeMatic Interface", 0);
 configStrItem(3, "HomeMatic Host/IP", "hmHost", $_SESSION['hmHost'], "", 150);
-configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
-configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "Beispiel: p4d2mqtt/sensor/");
-configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
 echo "       </div>\n";
 
 // --------------------

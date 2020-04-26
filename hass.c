@@ -19,6 +19,9 @@ int P4d::hassPush(const char* name, const char* title, const char* unit,
 {
    int status = success;
 
+   if (isEmpty(mqttDataTopic))
+      return done;
+
    // check/prepare reader/writer connection
 
    if (hassCheckConnection() != success)
@@ -35,7 +38,9 @@ int P4d::hassPush(const char* name, const char* title, const char* unit,
    sName = strReplace("ö", "oe", sName);
    sName = strReplace("ä", "ae", sName);
 
-   asprintf(&stateTopic, "%s/%s/state", mqttDataTopic, sName.c_str());
+   asprintf(&stateTopic, "%s%s%s/state",
+            mqttDataTopic[strlen(mqttDataTopic)-1] == '/' ? "" : "/",
+            mqttDataTopic, sName.c_str());
 
    if (mqttHaveConfigTopic)
    {

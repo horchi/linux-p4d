@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.20"
-#define VERSION_DATE "25.04.2020"
+#define _VERSION     "0.3.21"
+#define VERSION_DATE "26.04.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-04-26:  version 0.3.21
+   - bugfix: Fixed tore of MQTT config parameters
 
 2020-04-25:  version 0.3.20
    - added: MQTT config parameter to WEBIF
