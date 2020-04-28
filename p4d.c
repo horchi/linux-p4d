@@ -447,8 +447,18 @@ int P4d::readConfiguration()
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
-   getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/");
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
+   getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
+
+   if (mqttDataTopic[strlen(mqttDataTopic)-1] == '/')
+      mqttDataTopic[strlen(mqttDataTopic)-1] = '\0';
+
+   if (isEmpty(mqttDataTopic) || isEmpty(mqttUrl))
+      mqttInterfaceStyle = misNone;
+   else if (strstr(mqttDataTopic, "<NAME>"))
+      mqttInterfaceStyle = misMultiTopic;
+   else
+      mqttInterfaceStyle = misSingleTopic;
 
    return done;
 }
@@ -1130,7 +1140,9 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    // Home Assistant
 
 #ifdef MQTT_HASS
-   if (!isEmpty(mqttUrl))
+   if (mqttInterfaceStyle == misSingleTopic)
+      jsonAddValue(oJson, name, title, unit, theValue, text, initialRun /*forceConfig*/);
+   else if (mqttInterfaceStyle == misMultiTopic)
       hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
 
@@ -1487,6 +1499,17 @@ int P4d::update()
 
    connection->startTransaction();
 
+   if (mqttInterfaceStyle == misSingleTopic)
+   {
+      if (oJson)
+      {
+         json_decref(oJson);
+         oJson = nullptr;
+      }
+
+       oJson = json_object();
+   }
+
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       int addr = tableValueFacts->getIntValue("ADDRESS");
@@ -1620,6 +1643,13 @@ int P4d::update()
    connection->commit();
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
+
+   if (mqttInterfaceStyle == misSingleTopic)
+   {
+      mqttWrite(oJson);
+      json_decref(oJson);
+      oJson = nullptr;
+   }
 
    sensorAlertCheck(now);
 

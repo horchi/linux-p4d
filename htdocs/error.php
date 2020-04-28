@@ -45,7 +45,7 @@ $mysqli->query("SET lc_time_names = 'de_DE'");
       $duration = mysqli_result($result, $i, "duration");
       $time = max(max($time1, $time4), $time2);
 
-      $style = $state == "quittiert" ? "greenCircle" : "redCircle";
+      $style = $state == "quittiert" || $state == "gegangen" ? "greenCircle" : "redCircle";
 
       echo "         <div>\n";
       echo "           <span style=\"width:10px;\"><div class=\"$style\"></div></span>\n";

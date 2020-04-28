@@ -13,6 +13,8 @@
 // Includes
 //***************************************************************************
 
+#include <jansson.h>
+
 #include "lib/db.h"
 
 #include "service.h"
@@ -86,7 +88,9 @@ class P4d : public FroelingService
 
 #ifdef MQTT_HASS
       int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
+      int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
       int hassCheckConnection();
+      int mqttWrite(json_t* obj);
 #endif
 
       void addParameter2Mail(const char* name, const char* value);
@@ -168,11 +172,20 @@ class P4d : public FroelingService
       string mailBodyHtml;
       bool initialRun;
 
-      // Home Assistant stuff
+      // MQTT Interface stuff
 
+      enum MqttInterfaceStyle
+      {
+         misNone,
+         misSingleTopic,     // one topic for all sensors
+         misMultiTopic       // separate topic for each sensors
+      };
+
+      MqttInterfaceStyle mqttInterfaceStyle {misNone};
       char* mqttUrl {nullptr};
       char* mqttDataTopic {nullptr};
       int mqttHaveConfigTopic {yes};
+      json_t* oJson {nullptr};
 
 #ifdef MQTT_HASS
 

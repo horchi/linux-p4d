@@ -3,7 +3,7 @@
 This daemon is fetching data from the S 3200 and store it in a MySQL database. The data that should be fetched can be configured with a WEBIF or daemon. The collected data of the S 3200 will be displayed with the WEBIF, too.
 
 Written by: *Jörg Wendel (linux at jwendel dot de)*
-Documentation and Testing: *Thomas Unsin*
+
 Homepage: https://github.com/horchi/linux-p4d
 
 ## License
@@ -108,7 +108,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential libssl-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
+apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
 ```
 
 #### if you like to use the MQTT interface to home assistant install the paho.mqtt library:

@@ -133,7 +133,7 @@ else if ($action == "store")
       $_SESSION['mqttUrl'] = htmlspecialchars($_POST["mqttUrl"]);
 
    if (isset($_POST["mqttDataTopic"]))
-      $_SESSION['mqttDataTopic'] = htmlspecialchars($_POST["mqttDataTopic"]);
+      $_SESSION['mqttDataTopic'] = $_POST["mqttDataTopic"];
 
    $_SESSION['mqttHaveConfigTopic'] = isset($_POST['mqttHaveConfigTopic']) ? "1" : "0";
 
@@ -246,7 +246,7 @@ echo "       </div>\n";
 echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("MQTT Interface", 0);
 configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
-configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "Beispiel: p4d2mqtt/sensor/");
+configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "&lt;NAME&gt; wird gegen den Messwertnamen ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state");
 configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
 echo "       </div>\n";
 

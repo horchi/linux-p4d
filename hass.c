@@ -8,6 +8,8 @@
 
 #include "p4d.h"
 
+#include <jansson.h>
+
 //***************************************************************************
 // Push Value to Home Assistant
 //***************************************************************************
@@ -17,34 +19,30 @@
 int P4d::hassPush(const char* name, const char* title, const char* unit,
                   double value, const char* text, bool forceConfig)
 {
-   int status = success;
-
-   if (isEmpty(mqttDataTopic))
-      return done;
-
-   // check/prepare reader/writer connection
+   // check/prepare connection
 
    if (hassCheckConnection() != success)
       return fail;
 
-   // check if state topic already exists
-
+   int status = success;
    std::string message;
-   char* stateTopic = 0;
-
    std::string sName = name;
+
    sName = strReplace("ß", "ss", sName);
    sName = strReplace("ü", "ue", sName);
    sName = strReplace("ö", "oe", sName);
    sName = strReplace("ä", "ae", sName);
 
-   asprintf(&stateTopic, "%s%s%s/state",
-            mqttDataTopic[strlen(mqttDataTopic)-1] == '/' ? "" : "/",
-            mqttDataTopic, sName.c_str());
+   // mqttDataTopic like "p4d2mqtt/sensor/<NAME>/state"
+
+   std::string sDataTopic = mqttDataTopic;
+   sDataTopic = strReplace("<NAME>", sName, sDataTopic);
 
    if (mqttHaveConfigTopic)
    {
-      mqttReader->subscribe(stateTopic);
+      // check if state topic already exists
+
+      mqttReader->subscribe(sDataTopic.c_str());
       status = mqttReader->read(&message);
 
       if (status != success && status != MqTTClient::wrnNoMessagePending)
@@ -89,18 +87,81 @@ int P4d::hassPush(const char* name, const char* title, const char* unit,
    // publish actual value
 
    char* valueJson = 0;
+   json_t* oValue = json_object();
 
    if (!isEmpty(text))
-      asprintf(&valueJson, "{ \"value\" : \"%s\" }", text);
+      asprintf(&valueJson, "%s", text);
    else
-      asprintf(&valueJson, "{ \"value\" : \"%.2f\" }", value);
+      asprintf(&valueJson, "%.2f", value);
 
-   mqttWriter->write(stateTopic, valueJson);
+   json_object_set_new(oValue, "value", json_string(valueJson));
 
+   char* j = json_dumps(oValue, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(2));
+
+   mqttWriter->write(sDataTopic.c_str(), j);
+
+   json_decref(oValue);
    free(valueJson);
-   free(stateTopic);
 
    return success;
+}
+
+//***************************************************************************
+// Json Add Value
+//***************************************************************************
+
+int P4d::jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit,
+                      double theValue, const char* text, bool forceConfig)
+{
+   char* value = 0;
+   json_t* oSensor = json_object();
+
+   std::string sName = name;
+   sName = strReplace("ß", "ss", sName);
+   sName = strReplace("ü", "ue", sName);
+   sName = strReplace("ö", "oe", sName);
+   sName = strReplace("ä", "ae", sName);
+
+   if (!isEmpty(text))
+      asprintf(&value, "%s", text);
+   else
+      asprintf(&value, "%.2f", theValue);
+
+   if (strcmp(unit, "°") == 0)
+      unit = "°C";
+
+   // create json
+
+   json_object_set_new(oSensor, "value", json_string(value));
+
+   if (forceConfig)
+   {
+      json_object_set_new(oSensor, "unit", json_string(unit));
+      json_object_set_new(oSensor, "description", json_string(title));
+   }
+
+   json_object_set_new(obj, sName.c_str(), oSensor);
+
+   free(value);
+
+   return success;
+}
+
+//***************************************************************************
+// MQTT Write
+//***************************************************************************
+
+int P4d::mqttWrite(json_t* obj)
+{
+   // check/prepare connection
+
+   if (hassCheckConnection() != success)
+      return fail;
+
+   char* message = json_dumps(oJson, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(2));
+   tell(2, "Debug: JSON: [%s]", message);
+
+   return mqttWriter->write(mqttDataTopic, message);
 }
 
 //***************************************************************************

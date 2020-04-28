@@ -3,7 +3,7 @@ Version: <VERSION>
 Section: base
 Priority: optional
 Architecture: armhf
-Depends: libssl1.1, libcurl4, libxml2, openssl, libmariadb3, mailutils, ssmtp, mariadb-server,
+Depends: libssl1.1, libcurl4, libjansson-dev, libxml2, openssl, libmariadb3, mailutils, ssmtp, mariadb-server,
  apache2, libapache2-mod-php, php-mysql, python-mysql.connector, php-gd, php-mysql, php-ds, php-mbstring
 Maintainer: Jörg Wendel <linux@jwendel.de>
 Description: p4 deamon

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.21"
-#define VERSION_DATE "26.04.2020"
+#define _VERSION     "0.3.22"
+#define VERSION_DATE "27.04.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-04-27:  version 0.3.22
+   - added: MQTT interface for FHEM and Openhab
 
 2020-04-26:  version 0.3.21
    - bugfix: Fixed tore of MQTT config parameters
