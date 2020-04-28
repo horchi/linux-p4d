@@ -239,7 +239,7 @@ If you enable this feature you can set the max time difference between the p4d s
 
 Configure the parameters at the WEBIF
 - 'MQTT Url' : The URL of your MQTT broker
-- 'MQTT Data Topic Name' : The name of the topic which should be written. You can use the '&lt;<NAME>&gt;' template here, this will be replaced by the name of the sensor, therefore one topic for each sensor will be created and used (as needed by the homeassistant). If you (e.g.) using Openhab or FHEM omit '&lt;<NAME>&gt;' and all data is written to one topic.
+- 'MQTT Data Topic Name' : The name of the topic which should be written. You can use the '&lt;NAME&gt;' template here, this will be replaced by the name of the sensor, therefore one topic for each sensor will be created and used (as needed by the homeassistant). If you (e.g.) using Openhab or FHEM omit '&lt;NAME&gt;' and all data is written to one topic.
 - 'Config Topic:' : Check box to write the sensor defaults to a config topic and register the separate config topics there (as used by the homeassistant).
 
 ### One Wire Sensors:
