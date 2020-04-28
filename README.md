@@ -111,7 +111,7 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
 ```
 
-#### if you like to use the MQTT interface to home assistant install the paho.mqtt library:
+#### if you like to use the MQTT interface to the homeassistant, openhab or FHEM install the paho.mqtt library:
 ```
 cd /usr/src/
 git clone https://github.com/eclipse/paho.mqtt.c.git
@@ -234,6 +234,13 @@ If you enable this feature you can set the max time difference between the p4d s
 - Start the WEBIF and login, go to the Setup page
 - Enable "Tägliche Zeitsynchronisation" and set the max time difference in seconds in the line "Maximale Abweichung"
 - Save configuration
+
+### MQTT Interface
+
+Configure the parameters at the WEBIF
+- 'MQTT Url' : The URL of your MQTT broker
+- 'MQTT Data Topic Name' : The name of the topic which should be written. You can use the <NAME> template here, this will be replaced by the name of the sensor, therefore one topic for each sensor will be created and used (as needed by the homeassistant). If you (e.g.) using Openhab or FHEM omit <NAME> and all data is written to one topic.
+- 'Config Topic:' : Check box to write the sensor defaults to a config topic and register the separate config topics there (as used by the homeassistant).
 
 ### One Wire Sensors:
 The p4d checks automatically if there are 'One Wire Sensors' connected, each detected sensor will be
