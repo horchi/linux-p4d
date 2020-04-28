@@ -84,11 +84,11 @@ class P4d : public FroelingService
       int cleanupWebifRequests();
 
       int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
-                unsigned int factor, const char* text = 0);
+                uint factor, uint groupid, const char* text = 0);
 
 #ifdef MQTT_HASS
       int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
-      int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
+      int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
       int hassCheckConnection();
       int mqttWrite(json_t* obj);
 #endif
@@ -131,6 +131,7 @@ class P4d : public FroelingService
       cDbTable* tableSamples {nullptr};
       cDbTable* tablePeaks {nullptr};
       cDbTable* tableValueFacts {nullptr};
+      cDbTable* tableGroups {nullptr};
       cDbTable* tableMenu {nullptr};
       cDbTable* tableErrors {nullptr};
       cDbTable* tableJobs {nullptr};
@@ -144,6 +145,7 @@ class P4d : public FroelingService
 
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
+      cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectPendingJobs {nullptr};
       cDbStatement* selectAllMenuItems {nullptr};
       cDbStatement* selectSensorAlerts {nullptr};
@@ -186,6 +188,7 @@ class P4d : public FroelingService
       char* mqttDataTopic {nullptr};
       int mqttHaveConfigTopic {yes};
       json_t* oJson {nullptr};
+      std::map<int,std::string> groups;
 
 #ifdef MQTT_HASS
 

@@ -111,12 +111,22 @@ int P4d::hassPush(const char* name, const char* title, const char* unit,
 //***************************************************************************
 
 int P4d::jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit,
-                      double theValue, const char* text, bool forceConfig)
+                      double theValue, uint groupid, const char* text, bool forceConfig)
 {
    char* value = 0;
-   json_t* oSensor = json_object();
-
+   std::string group = groups[groupid];
    std::string sName = name;
+   bool newGroup {false};
+
+   json_t* oSensor = json_object();
+   json_t* oGroup = json_object_get(obj, group.c_str());
+
+   if (!oGroup)
+   {
+      oGroup = json_object();
+      newGroup = true;
+   }
+
    sName = strReplace("ß", "ss", sName);
    sName = strReplace("ü", "ue", sName);
    sName = strReplace("ö", "oe", sName);
@@ -140,7 +150,10 @@ int P4d::jsonAddValue(json_t* obj, const char* name, const char* title, const ch
       json_object_set_new(oSensor, "description", json_string(title));
    }
 
-   json_object_set_new(obj, sName.c_str(), oSensor);
+   json_object_set_new(oGroup, sName.c_str(), oSensor);
+
+   if (newGroup)
+      json_object_set_new(obj, group.c_str(), oGroup);
 
    free(value);
 
@@ -159,7 +172,7 @@ int P4d::mqttWrite(json_t* obj)
       return fail;
 
    char* message = json_dumps(oJson, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(2));
-   tell(2, "Debug: JSON: [%s]", message);
+   tell(3, "Debug: JSON: [%s]", message);
 
    return mqttWriter->write(mqttDataTopic, message);
 }

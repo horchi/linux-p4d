@@ -186,6 +186,9 @@ int P4d::initDb()
    tableValueFacts = new cDbTable(connection, "valuefacts");
    if (tableValueFacts->open() != success) return fail;
 
+   tableGroups = new cDbTable(connection, "groups");
+   if (tableGroups->open() != success) return fail;
+
    tableErrors = new cDbTable(connection, "errors");
    if (tableErrors->open() != success) return fail;
 
@@ -242,6 +245,16 @@ int P4d::initDb()
    selectAllValueFacts->build(" from %s", tableValueFacts->TableName());
 
    status += selectAllValueFacts->prepare();
+
+      // ------------------
+
+   selectAllGroups = new cDbStatement(tableGroups);
+
+   selectAllGroups->build("select ");
+   selectAllGroups->bindAllOut();
+   selectAllGroups->build(" from %s", tableGroups->TableName());
+
+   status += selectAllGroups->prepare();
 
    // ----------------
 
@@ -376,6 +389,18 @@ int P4d::initDb()
    if (status == success)
       tell(eloAlways, "Connection to database established");
 
+
+   int gCount {0};
+
+   if (connection->query(gCount, "select * from groups") == success)
+   {
+      if (!gCount)
+      {
+         connection->query("insert into groups set name='Heizung'");
+         connection->query("update valuefacts set groupid = 1 where groupid is null or groupid = 0");
+      }
+   }
+
    readConfiguration();
    updateScripts();
 
@@ -387,6 +412,7 @@ int P4d::exitDb()
    delete tableSamples;            tableSamples = 0;
    delete tablePeaks;              tablePeaks = 0;
    delete tableValueFacts;         tableValueFacts = 0;
+   delete tableGroups;             tableGroups = 0;
    delete tableMenu;               tableMenu = 0;
    delete tableJobs;               tableJobs = 0;
    delete tableSensorAlert;        tableSensorAlert = 0;
@@ -400,6 +426,7 @@ int P4d::exitDb()
 
    delete selectActiveValueFacts;  selectActiveValueFacts = 0;
    delete selectAllValueFacts;     selectAllValueFacts = 0;
+   delete selectAllGroups;         selectAllGroups = 0;
    delete selectPendingJobs;       selectPendingJobs = 0;
    delete selectAllMenuItems;      selectAllMenuItems = 0;
    delete selectSensorAlerts;      selectSensorAlerts = 0;
@@ -459,6 +486,11 @@ int P4d::readConfiguration()
       mqttInterfaceStyle = misMultiTopic;
    else
       mqttInterfaceStyle = misSingleTopic;
+
+   for (int f = selectAllGroups->find(); f; f = selectAllGroups->fetch())
+      groups[tableGroups->getIntValue("ID")] = tableGroups->getStrValue("NAME");
+
+   selectAllGroups->freeResult();
 
    return done;
 }
@@ -613,7 +645,6 @@ int P4d::updateValueFacts()
    int count {0};
    int added {0};
    int modified {0};
-   int order {4};
 
    // check serial communication
 
@@ -649,7 +680,6 @@ int P4d::updateValueFacts()
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
          tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
-         tableValueFacts->setValue("ORDER", order++);
 
          tableValueFacts->store();
          added++;
@@ -662,9 +692,6 @@ int P4d::updateValueFacts()
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
-
-         if (tableValueFacts->getValue("ORDER")->isNull())
-            tableValueFacts->setValue("ORDER", order++);
 
          if (tableValueFacts->getValue("MAXSCALE")->isNull())
             tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
@@ -732,9 +759,6 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
 
-      if (tableValueFacts->getValue("ORDER")->isNull())
-         tableValueFacts->setValue("ORDER", order++);
-
       if (tableValueFacts->getValue("MAXSCALE")->isNull())
          tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
 
@@ -769,19 +793,9 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Heizungsstatus");
-      tableValueFacts->setValue("ORDER", 1);
 
       tableValueFacts->store();
       added++;
-   }
-   else
-   {
-      if (tableValueFacts->getValue("ORDER")->isNull())
-      {
-         tableValueFacts->setValue("ORDER", 1);
-         tableValueFacts->store();
-         modified++;
-      }
    }
 
    tableValueFacts->clear();
@@ -795,19 +809,9 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "zst");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Betriebsmodus");
-      tableValueFacts->setValue("ORDER", 2);
 
       tableValueFacts->store();
       added++;
-   }
-   else
-   {
-      if (tableValueFacts->getValue("ORDER")->isNull())
-      {
-         tableValueFacts->setValue("ORDER", 2);
-         tableValueFacts->store();
-      }
-      modified++;
    }
 
    tableValueFacts->clear();
@@ -821,19 +825,9 @@ int P4d::updateValueFacts()
       tableValueFacts->setValue("UNIT", "T");
       tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
-      tableValueFacts->setValue("ORDER", 3);
 
       tableValueFacts->store();
       added++;
-   }
-   else
-   {
-      if (tableValueFacts->getValue("ORDER")->isNull())
-      {
-         tableValueFacts->setValue("ORDER", 3);
-         tableValueFacts->store();
-         modified++;
-      }
    }
 
    tell(eloAlways, "Added %d user defined values", added);
@@ -866,7 +860,6 @@ int P4d::updateValueFacts()
             tableValueFacts->setValue("UNIT", "°");
             tableValueFacts->setValue("FACTOR", 1);
             tableValueFacts->setValue("TITLE", it->first.c_str());
-            tableValueFacts->setValue("ORDER", order++);
             tableValueFacts->setValue("MAXSCALE", 300);
 
             tableValueFacts->store();
@@ -874,9 +867,6 @@ int P4d::updateValueFacts()
          }
          else
          {
-            if (tableValueFacts->getValue("ORDER")->isNull())
-               tableValueFacts->setValue("ORDER", order++);
-
             if (tableValueFacts->getValue("MAXSCALE")->isNull())
                tableValueFacts->setValue("MAXSCALE", 300);
 
@@ -1094,7 +1084,7 @@ int P4d::initMenu()
 
 int P4d::store(time_t now, const char* name, const char* title, const char* unit,
                const char* type, int address, double value,
-               unsigned int factor, const char* text)
+               uint factor, uint groupid, const char* text)
 {
    static time_t lastHmFailAt = 0;
 
@@ -1141,7 +1131,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 
 #ifdef MQTT_HASS
    if (mqttInterfaceStyle == misSingleTopic)
-      jsonAddValue(oJson, name, title, unit, theValue, text, initialRun /*forceConfig*/);
+      jsonAddValue(oJson, name, title, unit, theValue, groupid, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
       hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
@@ -1518,6 +1508,7 @@ int P4d::update()
       const char* type = tableValueFacts->getStrValue("TYPE");
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
+      uint groupid = tableValueFacts->getIntValue("GROUPID");
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
@@ -1532,7 +1523,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, name, title, unit, type, v.address, v.value, factor);
+         store(now, name, title, unit, type, v.address, v.value, factor, groupid);
          sprintf(num, "%.2f", v.value / factor);
 
          if (strcmp(unit, "°") == 0)
@@ -1553,7 +1544,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, name, title, unit, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor, groupid);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1568,7 +1559,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, name, title, unit, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor, groupid);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1583,7 +1574,7 @@ int P4d::update()
             continue;
          }
 
-         store(now, name, title, unit, type, v.address, v.state, factor);
+         store(now, name, title, unit, type, v.address, v.state, factor, groupid);
          sprintf(num, "%d", v.state);
          addParameter2Mail(title, num);
       }
@@ -1592,7 +1583,7 @@ int P4d::update()
       {
          double value = w1.valueOf(name);
 
-         store(now, name, title, unit, type, addr, value, factor);
+         store(now, name, title, unit, type, addr, value, factor, groupid);
          sprintf(num, "%.2f", value / factor);
 
          if (strcmp(unit, "°") == 0)
@@ -1609,14 +1600,14 @@ int P4d::update()
          {
             case udState:
             {
-               store(now, name, unit, title, type, udState, currentState.state, factor, currentState.stateinfo);
+               store(now, name, unit, title, type, udState, currentState.state, factor, groupid, currentState.stateinfo);
                addParameter2Mail(title, currentState.stateinfo);
 
                break;
             }
             case udMode:
             {
-               store(now, name, title, unit, type, udMode, currentState.mode, factor, currentState.modeinfo);
+               store(now, name, title, unit, type, udMode, currentState.mode, factor, groupid, currentState.modeinfo);
                addParameter2Mail(title, currentState.modeinfo);
 
                break;
@@ -1629,7 +1620,7 @@ int P4d::update()
                localtime_r(&currentState.time, &tim);
                strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
 
-               store(now, name, title, unit, type, udTime, currentState.time, factor, date);
+               store(now, name, title, unit, type, udTime, currentState.time, factor, groupid, date);
                addParameter2Mail(title, date);
 
                break;

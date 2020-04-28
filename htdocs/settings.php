@@ -34,31 +34,32 @@ if ($action == "init")
 
 else if ($action == "store")
 {
-    $sAddr = count($_POST["addr"]);
-    $sMax = count($_POST["maxscale"]);
-    // echo "<br/><br/><div>$sAddr / $sMax</div>";
+   // $sAddr = count($_POST["addr"]);
+   // $sMax = count($_POST["maxscale"]);
+   // echo "<br/><br/><div>$sAddr / $sMax</div>";
 
-    foreach ($_POST['addr'] as $key => $value)
-    {
-        $value = htmlspecialchars($value);
-        list($addr, $type) = explode(":", $value);
-        $addr = $mysqli->real_escape_string($addr);
-        $type = $mysqli->real_escape_string($type);
+   foreach ($_POST['addr'] as $key => $value)
+   {
+      $value = htmlspecialchars($value);
+      list($addr, $type) = explode(":", $value);
+      $addr = $mysqli->real_escape_string($addr);
+      $type = $mysqli->real_escape_string($type);
 
-        $usrtitle = htmlspecialchars($_POST["usrtitle"][$key]);
-        $state = in_array($value, $_POST["selected"]) || $type == 'UD' ? 'A' : 'D';
-        $maxscale = intval(htmlspecialchars($_POST["maxscale"][$key]));
+      $usrtitle = htmlspecialchars($_POST["usrtitle"][$key]);
+      $state = in_array($value, $_POST["selected"]) || $type == 'UD' ? 'A' : 'D';
+      $maxscale = intval(htmlspecialchars($_POST["maxscale"][$key]));
+      $groupid = intval(htmlspecialchars($_POST["groupid"][$key]));
 
-        // echo "<div>$key / $value / $addr / $type / $usrtitle / $maxscale / $state</div>";
+      // echo "<div>$key / $value / $addr / $type / $usrtitle / $maxscale / $state / $groupid</div>";
 
-        $sql = "UPDATE valuefacts set usrtitle = '$usrtitle', maxscale = '$maxscale', state = '$state' where address = '$addr' and type = '$type'";
+      $sql = "UPDATE valuefacts set usrtitle = '$usrtitle', maxscale = '$maxscale', state = '$state', groupid = '$groupid' where address = '$addr' and type = '$type'";
 
-        $mysqli->query($sql)
-            or die("<br/>Error" . $mysqli->error);
-    }
+      $mysqli->query($sql)
+         or die("<br/>Error" . $mysqli->error);
+   }
 
-    // requestAction("update-schemacfg", 2, 0, "", $resonse);  // ist das noch nötig?
-    echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
+   // requestAction("update-schemacfg", 2, 0, "", $resonse);  // ist das noch nötig?
+   echo "<div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
 }
 
 echo "      <form action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method=post>\n";
@@ -102,6 +103,7 @@ function showTable($type, $tableTitle)
    echo "            <tr>\n";
    echo "              <td>Name</td>\n";
    echo "              <td style=\"width:32%;\">Bezeichnung</td>\n";
+   echo "              <td>Baugruppe</td>\n";
    if ($type == "VA" || $type == "W1")
        echo "              <td style=\"width:6%;\">Skala max</td>\n";
    else
@@ -122,12 +124,29 @@ function showTable($type, $tableTitle)
       $state    = mysqli_result($result, $i, "state");
       $usrtitle = mysqli_result($result, $i, "usrtitle");
       $maxscale = mysqli_result($result, $i, "maxscale");
+      $groupid  = mysqli_result($result, $i, "groupid");
       $txtaddr  = sprintf("0x%04x", $address);
       $checked  = ($state == "A") ? " checked" : "";
 
       echo "            <tr>\n";
       echo "              <td>$title</td>\n";
       echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"usrtitle[]\" type=\"text\" value=\"$usrtitle\"/></td>\n";
+
+      echo "            <td><select class=\"rounded-border input\" name=\"groupid[]\">\n";
+
+      $grpResult = $mysqli->query("select id, name from groups")
+         or die("<br/>Error" . $mysqli->error);
+
+      for ($n = 0; $n < $grpResult->num_rows; $n++)
+      {
+         $bgId = mysqli_result($grpResult, $n, "id");
+         $bgName = mysqli_result($grpResult, $n, "name");
+         $sel = $groupid == $bgId ? "SELECTED" : "";
+
+         echo "              <option value='$bgId' " . $sel . ">$bgName</option>\n";
+      }
+
+      echo "            </select></td>\n";
 
       if (($type == "VA" || $type == "W1") && ($unit == '°' || $unit == '%'))
       {
