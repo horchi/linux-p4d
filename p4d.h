@@ -90,7 +90,7 @@ class P4d : public FroelingService
       int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
       int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
       int hassCheckConnection();
-      int mqttWrite(json_t* obj);
+      int mqttWrite(json_t* obj, uint groupid);
 #endif
 
       void addParameter2Mail(const char* name, const char* value);
@@ -180,7 +180,14 @@ class P4d : public FroelingService
       {
          misNone,
          misSingleTopic,     // one topic for all sensors
-         misMultiTopic       // separate topic for each sensors
+         misMultiTopic,      // separate topic for each sensors
+         misGroupedTopic     // one topic for each group (Baugruppe)
+      };
+
+      struct Group
+      {
+         std::string name;
+         json_t* oJson {nullptr};
       };
 
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
@@ -188,7 +195,7 @@ class P4d : public FroelingService
       char* mqttDataTopic {nullptr};
       int mqttHaveConfigTopic {yes};
       json_t* oJson {nullptr};
-      std::map<int,std::string> groups;
+      std::map<int,Group> groups;
 
 #ifdef MQTT_HASS
 

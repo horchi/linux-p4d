@@ -484,11 +484,13 @@ int P4d::readConfiguration()
       mqttInterfaceStyle = misNone;
    else if (strstr(mqttDataTopic, "<NAME>"))
       mqttInterfaceStyle = misMultiTopic;
+   else if (strstr(mqttDataTopic, "<GROUP>"))
+      mqttInterfaceStyle = misGroupedTopic;
    else
       mqttInterfaceStyle = misSingleTopic;
 
    for (int f = selectAllGroups->find(); f; f = selectAllGroups->fetch())
-      groups[tableGroups->getIntValue("ID")] = tableGroups->getStrValue("NAME");
+      groups[tableGroups->getIntValue("ID")].name = tableGroups->getStrValue("NAME");
 
    selectAllGroups->freeResult();
 
@@ -1132,6 +1134,8 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 #ifdef MQTT_HASS
    if (mqttInterfaceStyle == misSingleTopic)
       jsonAddValue(oJson, name, title, unit, theValue, groupid, text, initialRun /*forceConfig*/);
+   else if (mqttInterfaceStyle == misGroupedTopic)
+      jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
       hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
@@ -1490,15 +1494,7 @@ int P4d::update()
    connection->startTransaction();
 
    if (mqttInterfaceStyle == misSingleTopic)
-   {
-      if (oJson)
-      {
-         json_decref(oJson);
-         oJson = nullptr;
-      }
-
        oJson = json_object();
-   }
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -1509,6 +1505,9 @@ int P4d::update()
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
+
+      if (mqttInterfaceStyle == misGroupedTopic && !groups[groupid].oJson)
+         groups[groupid].oJson = json_object();
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
@@ -1637,9 +1636,19 @@ int P4d::update()
 
    if (mqttInterfaceStyle == misSingleTopic)
    {
-      mqttWrite(oJson);
+      mqttWrite(oJson, 0);
       json_decref(oJson);
       oJson = nullptr;
+   }
+
+   else if (mqttInterfaceStyle == misGroupedTopic)
+   {
+      for (auto it : groups)
+      {
+         mqttWrite(it.second.oJson, it.first);
+         json_decref(it.second.oJson);
+         it.second.oJson = nullptr;
+      }
    }
 
    sensorAlertCheck(now);

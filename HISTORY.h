@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.23"
-#define VERSION_DATE "28.04.2020"
+#define _VERSION     "0.3.24"
+#define VERSION_DATE "29.04.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-04-29:  version 0.3.24
+   - change: option to store each group in seperate toping (FHEM special instead of structures JSON object)
 
 2020-04-28:  version 0.3.23
    - added: 'Baugruppen' to MQTT interface for FHEM and Openhab
