@@ -1506,8 +1506,11 @@ int P4d::update()
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
 
-      if (mqttInterfaceStyle == misGroupedTopic && !groups[groupid].oJson)
-         groups[groupid].oJson = json_object();
+      if (mqttInterfaceStyle == misGroupedTopic)
+      {
+         if (!groups[groupid].oJson)
+            groups[groupid].oJson = json_object();
+      }
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
@@ -1645,9 +1648,12 @@ int P4d::update()
    {
       for (auto it : groups)
       {
-         mqttWrite(it.second.oJson, it.first);
-         json_decref(it.second.oJson);
-         it.second.oJson = nullptr;
+         if (it.second.oJson)
+         {
+            mqttWrite(it.second.oJson, it.first);
+            json_decref(groups[it.first].oJson);
+            groups[it.first].oJson = nullptr;
+         }
       }
    }
 
