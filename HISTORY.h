@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.26"
+#define _VERSION     "0.3.27"
 #define VERSION_DATE "01.05.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-05-01:  version 0.3.27
+   - bugfix: Fixed possible crash with empty mqtt user
 
 2020-05-01:  version 0.3.26
    - change: Moved many config options fron p4d.conf to WEBIF

@@ -479,8 +479,8 @@ int P4d::readConfiguration()
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
-   getConfigItem("mqttUser", mqttUser, 0);
-   getConfigItem("mqttPassword", mqttPassword, 0);
+   getConfigItem("mqttUser", mqttUser, "");
+   getConfigItem("mqttPassword", mqttPassword, "");
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
 
