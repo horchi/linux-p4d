@@ -24,12 +24,6 @@ char dbName[100+TB] = "p4";
 char dbUser[100+TB] = "p4";
 char dbPass[100+TB] = "p4";
 
-char ttyDeviceSvc[100+TB] = "/dev/ttyUSB1";
-int  interval = 120;
-int  stateCheckInterval = 10;
-int  aggregateInterval = 15;     // aggregate interval in minutes
-int  aggregateHistory = 0;       // history in days
-
 //***************************************************************************
 // Configuration
 //***************************************************************************
@@ -43,14 +37,6 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
-
-   else if (!strcasecmp(Name, "logLevel"))            loglevel = atoi(Value);
-   else if (!strcasecmp(Name, "interval"))            interval = atoi(Value);
-   else if (!strcasecmp(Name, "stateCheckInterval"))  stateCheckInterval = atoi(Value);
-   else if (!strcasecmp(Name, "ttyDeviceSvc"))        sstrcpy(ttyDeviceSvc, Value, sizeof(ttyDeviceSvc));
-
-   else if (!strcasecmp(Name, "aggregateInterval"))  aggregateInterval = atoi(Value);
-   else if (!strcasecmp(Name, "aggregateHistory"))   aggregateHistory = atoi(Value);
 
    return success;
 }
@@ -147,7 +133,7 @@ void showUsage(const char* bin)
 
 int main(int argc, char** argv)
 {
-   P4d* job;
+   DEAMON* job;
    int nofork = no;
    int pid;
    int setup = no;
@@ -196,7 +182,8 @@ int main(int argc, char** argv)
    if (readConfig() != success)
       return 1;
 
-   if (_level != na)  loglevel = _level;
+   if (_level != na)
+      loglevel = _level;
 
    job = new DEAMON();
 

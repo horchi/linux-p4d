@@ -2,7 +2,7 @@
 
 include("header.php");
 
-printHeader(60);
+printHeader($_SESSION['refreshWeb']);
 
   // -------------------------
   // establish db connection

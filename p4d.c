@@ -25,19 +25,8 @@ int P4d::shutdown = no;
 
 P4d::P4d()
 {
-   nextAt = time(0);           // intervall for 'reading values'
+   nextAt = time(0);
    startedAt = time(0);
-   nextAggregateAt = 0;
-   nextTimeSyncAt = 0;
-
-   mailBody = "";
-   mailBodyHtml = "";
-   mail = no;
-   htmlMail = no;
-   tSync = no;
-   maxTimeLeak = 10;
-   errorsPending = 0;
-   initialRun = true;
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -81,6 +70,7 @@ P4d::~P4d()
 
 int P4d::init()
 {
+   int status {success};
    char* dictPath = 0;
 
    curl->init();
@@ -98,9 +88,17 @@ int P4d::init()
    tell(0, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
+   if ((status = initDb()) != success)
+   {
+      exitDb();
+      return status;
+   }
+
    // prepare one wire sensors
 
    w1.scan();
+
+   initialized = true;
 
    return success;
 }
@@ -123,7 +121,7 @@ cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 int P4d::initDb()
 {
    static int initial = yes;
-   int status = success;
+   int status {success};
 
    if (connection)
       exitDb();
@@ -146,11 +144,9 @@ int P4d::initDb()
          return fail;
       }
 
-      std::map<std::string, cDbTableDef*>::iterator t;
-
       tell(0, "Checking table structure and indices ...");
 
-      for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+      for (auto t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
       {
          cDbTable* table = new cDbTable(connection, t->first.c_str());
 
@@ -402,6 +398,7 @@ int P4d::initDb()
    }
 
    readConfiguration();
+   connection->query("%s", "truncate table jobs");
    updateScripts();
 
    return status;
@@ -448,11 +445,11 @@ int P4d::exitDb()
 
 int P4d::readConfiguration()
 {
-   char* webUser = 0;
-   char* webPass = 0;
+   char* webUser {nullptr};
+   char* webPass {nullptr};
    md5Buf defaultPwd;
 
-   // init default user and password
+   // init default web user and password
 
    createMd5("p4-3200", defaultPwd);
    getConfigItem("user", webUser, "p4");
@@ -463,6 +460,11 @@ int P4d::readConfiguration()
 
    // init configuration
 
+   getConfigItem("loglevel", loglevel, 1);
+   getConfigItem("interval", interval, 60);
+   getConfigItem("stateCheckInterval", stateCheckInterval, 10);
+   getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
+
    getConfigItem("mail", mail, no);
    getConfigItem("htmlMail", htmlMail, no);
    getConfigItem("mailScript", mailScript, BIN_PATH "/p4d-mail.sh");
@@ -470,10 +472,15 @@ int P4d::readConfiguration()
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
 
+   getConfigItem("aggregateInterval", aggregateInterval, 15);
+   getConfigItem("aggregateHistory", aggregateHistory, 0);
+
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
+   getConfigItem("mqttUser", mqttUser, 0);
+   getConfigItem("mqttPassword", mqttPassword, 0);
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
 
@@ -520,7 +527,7 @@ int P4d::initialize(int truncate)
 
    sem->p();
 
-   if (serial->open(ttyDeviceSvc) != success)
+   if (serial->open(ttyDevice) != success)
    {
       sem->v();
       return fail;
@@ -1137,7 +1144,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
-      hassPush(name, title, unit, theValue, text, initialRun /*forceConfig*/);
+      mqttPublishSensor(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 #endif
 
    // HomeMatic
@@ -1251,6 +1258,9 @@ int P4d::meanwhile()
 {
    static time_t lastCleanup = time(0);
 
+   if (!initialized)
+      return done;
+
    if (!connection || !connection->isConnected())
       return fail;
 
@@ -1293,7 +1303,7 @@ int P4d::loop()
    scheduleAggregate();
 
    sem->p();
-   serial->open(ttyDeviceSvc);
+   serial->open(ttyDevice);
    sem->v();
 
    while (!doShutDown())
@@ -1333,7 +1343,7 @@ int P4d::loop()
          sem->p();
          serial->close();
          tell(eloAlways, "Error reading serial interface, reopen now!");
-         status = serial->open(ttyDeviceSvc);
+         status = serial->open(ttyDevice);
          sem->v();
 
          if (status != success)
@@ -1372,7 +1382,7 @@ int P4d::loop()
       {
          serial->close();
          tell(eloAlways, "Error reading serial interface, reopen now");
-         serial->open(ttyDeviceSvc);
+         serial->open(ttyDevice);
 
          continue;
       }
@@ -1893,7 +1903,10 @@ int P4d::scheduleAggregate()
    time_t now;
 
    if (!aggregateHistory)
+   {
+      tell(0, "NO aggregateHistory configured!");
       return done;
+   }
 
    // calc today at 01:00:00
 

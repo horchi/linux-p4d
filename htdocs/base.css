@@ -163,6 +163,35 @@
     padding: 3px;
 }
 
+.inputTime
+{
+    background-color: var(--edit);
+    margin-top: 2px;
+    color: black;
+    padding: 3px;
+    width: 45px;
+}
+
+.inputNum
+{
+    background-color: var(--edit);
+    margin-top: 2px;
+    color: black;
+    padding: 3px;
+    width: 45px;
+    height: 21px;
+}
+
+.inputFloat
+{
+    background-color: var(--edit);
+    margin-top: 2px;
+    color: black;
+    padding: 3px;
+    width: 65px;
+    height: 21px;
+}
+
 .inputSetting
 {
     width: 100%;
@@ -272,7 +301,7 @@ span > input
     text-align: left;
 }
 
-.inputTableConfig > div > span:nth-child(3)
+.inputTableConfig > div > span:nth-child(3n)
 {
     width: 50%;
     min-width: 100px;
@@ -282,7 +311,7 @@ span > input
 
 .inputTableConfig > div > span > input
 {
-    width: 96%;
+/*    width: 96%;*/
 }
 
 .table2Col
@@ -405,6 +434,7 @@ table.tableMultiCol tr:nth-child(odd)
     float: right;
     width: 42%;
     padding: 15px;
+    margin: 3px;
 }
 
 .P4dInfo > div > span

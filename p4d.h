@@ -6,8 +6,7 @@
 // Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
-#ifndef _P4D_H_
-#define _P4D_H_
+#pragma once
 
 //***************************************************************************
 // Includes
@@ -16,6 +15,7 @@
 #include <jansson.h>
 
 #include "lib/db.h"
+#include "lib/mqtt.h"
 
 #include "service.h"
 #include "p4io.h"
@@ -35,11 +35,6 @@ extern char dbName[];
 extern char dbUser[];
 extern char dbPass[];
 
-extern char ttyDeviceSvc[];
-extern int interval;
-extern int stateCheckInterval;
-extern int aggregateInterval;        // aggregate interval in minutes
-extern int aggregateHistory;         // history in days
 extern char* confDir;
 
 //***************************************************************************
@@ -87,9 +82,9 @@ class P4d : public FroelingService
                 uint factor, uint groupid, const char* text = 0);
 
 #ifdef MQTT_HASS
-      int hassPush(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
+      int mqttPublishSensor(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
       int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
-      int hassCheckConnection();
+      int mqttCheckConnection();
       int mqttWrite(json_t* obj, uint groupid);
 #endif
 
@@ -126,6 +121,7 @@ class P4d : public FroelingService
 
       // data
 
+      bool initialized {false};
       cDbConnection* connection {nullptr};
 
       cDbTable* tableSamples {nullptr};
@@ -161,6 +157,8 @@ class P4d : public FroelingService
 
       time_t nextAt;
       time_t startedAt;
+      time_t nextAggregateAt {0};
+
       Sem* sem {nullptr};
 
       P4Request* request {nullptr};
@@ -172,7 +170,7 @@ class P4d : public FroelingService
       Status currentState;
       string mailBody;
       string mailBodyHtml;
-      bool initialRun;
+      bool initialRun {true};
 
       // MQTT Interface stuff
 
@@ -192,6 +190,8 @@ class P4d : public FroelingService
 
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
       char* mqttUrl {nullptr};
+      char* mqttUser {nullptr};
+      char* mqttPassword {nullptr};
       char* mqttDataTopic {nullptr};
       int mqttHaveConfigTopic {yes};
       json_t* oJson {nullptr};
@@ -206,27 +206,28 @@ class P4d : public FroelingService
 
       // config
 
-      int mail;
-      int htmlMail;
+      int interval {60};
+      int stateCheckInterval {10};
+      char* ttyDevice {nullptr};
+      int aggregateInterval {15};         // aggregate interval in minutes
+      int aggregateHistory {0};           // history in days
+
+      int mail {no};
+      int htmlMail {no};
       char* mailScript {nullptr};
       char* stateMailAtStates {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
-      int errorsPending;
-      int tSync;
-      time_t nextTimeSyncAt;
-      int maxTimeLeak;
+      int errorsPending {0};
+      int tSync {no};
+      time_t nextTimeSyncAt {0};
+      int maxTimeLeak {10};
       MemoryStruct htmlHeader;
 
       string alertMailBody;
       string alertMailSubject;
 
-      time_t nextAggregateAt;
-
       //
 
       static int shutdown;
 };
-
-//***************************************************************************
-#endif // _P4D_H_

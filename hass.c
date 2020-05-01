@@ -16,12 +16,12 @@
 
 #ifdef MQTT_HASS
 
-int P4d::hassPush(const char* name, const char* title, const char* unit,
-                  double value, const char* text, bool forceConfig)
+int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit,
+                           double value, const char* text, bool forceConfig)
 {
    // check/prepare connection
 
-   if (hassCheckConnection() != success)
+   if (mqttCheckConnection() != success)
       return fail;
 
    int status = success;
@@ -180,7 +180,7 @@ int P4d::mqttWrite(json_t* obj, uint groupid)
 
    // check/prepare connection
 
-   if (hassCheckConnection() != success)
+   if (mqttCheckConnection() != success)
       return fail;
 
    char* message = json_dumps(obj, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(2));
@@ -196,12 +196,14 @@ int P4d::mqttWrite(json_t* obj, uint groupid)
 // Check MQTT Connection
 //***************************************************************************
 
-int P4d::hassCheckConnection()
+int P4d::mqttCheckConnection()
 {
    if (!mqttWriter)
    {
       mqttWriter = new MqTTPublishClient(mqttUrl, "p4d_publisher");
       mqttWriter->setConnectTimeout(15);   // seconds
+      mqttWriter->setUsername(mqttUser);
+      mqttWriter->setPassword(mqttPassword);
    }
 
    if (!mqttWriter->isConnected())
@@ -222,6 +224,8 @@ int P4d::hassCheckConnection()
          mqttReader = new MqTTSubscribeClient(mqttUrl, "p4d_subscriber");
          mqttReader->setConnectTimeout(15); // seconds
          mqttReader->setTimeout(100);       // milli seconds
+         mqttReader->setUsername(mqttUser);
+         mqttReader->setPassword(mqttPassword);
       }
 
       if (!mqttReader->isConnected())

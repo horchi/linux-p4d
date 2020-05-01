@@ -6,6 +6,8 @@
 // Date 04.11.2010 - 10.02.2014  Jörg Wendel
 //***************************************************************************
 
+#include <inttypes.h>
+
 #include "p4d.h"
 
 //***************************************************************************
@@ -18,7 +20,7 @@ int P4d::performWebifRequests()
 
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
    {
-      int start = time(0);
+      uint64_t start = cTimeMs::Now();
       int addr = tableJobs->getIntValue("ADDRESS");
       const char* command = tableJobs->getStrValue("COMMAND");
       const char* data = tableJobs->getStrValue("DATA");
@@ -620,9 +622,8 @@ int P4d::performWebifRequests()
 
       tableJobs->store();
 
-      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %ld seconds",
-           jobId, tableJobs->getStrValue("RESULT"),
-           time(0) - start);
+      tell(eloAlways, "Processing WEBIF job %d done with '%s' after %" PRIu64 " ms",
+           jobId, tableJobs->getStrValue("RESULT"), cTimeMs::Now() - start);
    }
 
    selectPendingJobs->freeResult();

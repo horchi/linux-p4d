@@ -3,7 +3,7 @@
 // File mqtt.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2018  Jörg Wendel
+// Date 04.11.2010 - 05.03.2020  Jörg Wendel
 //***************************************************************************
 
 #include <unistd.h>
@@ -18,13 +18,13 @@
 void MqTTClient::setUsername(const char* username)
 {
    free((void*)options.username);
-   options.username = username ? strdup(username) : 0;
+   options.username = !isEmpty(username) ? strdup(username) : 0;
 }
 
 void MqTTClient::setPassword(const char* password)
 {
    free((void*)options.password);
-   options.password = password ? strdup(password) : 0;
+   options.password = !isEmpty(password) ? strdup(password) : 0;
 }
 
 int MqTTClient::connect()

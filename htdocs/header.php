@@ -33,6 +33,8 @@ include("functions.php");
      // ------------------
      // get configuration
 
+     readConfigItem("refreshWeb", $_SESSION['refreshWeb'], 60);
+
      readConfigItem("addrsMain", $_SESSION['addrsMain'], "");
      readConfigItem("addrsMainMobile", $_SESSION['addrsMainMobile'], "0,1,4,118,119,120");
      readConfigItem("addrsDashboard", $_SESSION['addrsDashboard'], "");
@@ -52,7 +54,10 @@ include("functions.php");
      readConfigItem("user", $_SESSION['user']);
      readConfigItem("passwd", $_SESSION['passwd']);
 
-     readConfigItem("hmHost", $_SESSION['hmHost']);
+     readConfigItem("loglevel", $_SESSION['loglevel']);
+     readConfigItem("interval", $_SESSION['interval']);
+     readConfigItem("stateCheckInterval", $_SESSION['stateCheckInterval']);
+     readConfigItem("ttyDevice", $_SESSION['ttyDevice']);
 
      readConfigItem("mail", $_SESSION['mail']);
      readConfigItem("htmlMail", $_SESSION['htmlMail']);
@@ -78,8 +83,13 @@ include("functions.php");
      readConfigItem("webUrl",  $_SESSION['webUrl'], "http://127.0.0.1/p4");
      readConfigItem("haUrl", $_SESSION['haUrl']);
      readConfigItem("mqttUrl", $_SESSION['mqttUrl']);
+     readConfigItem("mqttUser", $_SESSION['mqttUser']);
+     readConfigItem("mqttPassword", $_SESSION['mqttPassword']);
      readConfigItem("mqttDataTopic", $_SESSION['mqttDataTopic']);
      readConfigItem("mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic']);
+
+     readConfigItem("aggregateHistory", $_SESSION['aggregateHistory'], "365");
+     readConfigItem("aggregateInterval", $_SESSION['aggregateInterval'], "15");
 
      // ------------------
      // check for defaults

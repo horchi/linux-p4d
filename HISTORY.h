@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.25"
-#define VERSION_DATE "30.04.2020"
+#define _VERSION     "0.3.26"
+#define VERSION_DATE "01.05.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-05-01:  version 0.3.26
+   - change: Moved many config options fron p4d.conf to WEBIF
+   - change: Minor rework of config page
+   - added:  optional user/password for MQTT
 
 2020-04-30:  version 0.3.25
    - bugfix: Fixed crash in 'GROUP' mode for mqtt topics
