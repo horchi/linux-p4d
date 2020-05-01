@@ -15,7 +15,6 @@
 #include <jansson.h>
 
 #include "lib/db.h"
-#include "lib/mqtt.h"
 
 #include "service.h"
 #include "p4io.h"
