@@ -285,14 +285,17 @@ configStrItem(3, "Passwort", "passwd1", "", "", 350, "", true);
 configStrItem(3, "Wiederholen", "passwd2", "", "", 350, "", true);
 echo "       </div>\n";
 
-echo "      <div class=\"rounded-border inputTableConfig\">\n";
-seperator("MQTT Interface", 0);
-configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
-configStrItem(3, "MQTT User ", "mqttUser", $_SESSION['mqttUser'], "Optional");
-configStrItem(3, "MQTT Passwort", "mqttPassword", $_SESSION['mqttUser'], "Optional", 350, "", true);
-configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "&lt;NAME&gt; wird gegen den Messwertnamen ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state");
-configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
-echo "       </div>\n";
+if (isset($_SESSION["mqtt"]) && $_SESSION["mqtt"] == "1")
+{
+   echo "      <div class=\"rounded-border inputTableConfig\">\n";
+   seperator("MQTT Interface", 0);
+   configStrItem(3, "MQTT Url ", "mqttUrl", $_SESSION['mqttUrl'], "Optional. Beispiel: 'tcp://127.0.0.1:1883'");
+   configStrItem(3, "MQTT User ", "mqttUser", $_SESSION['mqttUser'], "Optional");
+   configStrItem(3, "MQTT Passwort", "mqttPassword", $_SESSION['mqttUser'], "Optional", 350, "", true);
+   configStrItem(3, "MQTT Data Topic Name", "mqttDataTopic", $_SESSION['mqttDataTopic'], "&lt;NAME&gt; wird gegen den Messwertnamen ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state");
+   configBoolItem(3, "Config Topic", "mqttHaveConfigTopic", $_SESSION['mqttHaveConfigTopic'], "");
+   echo "       </div>\n";
+}
 
 // --------------------
 

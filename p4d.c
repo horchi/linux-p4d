@@ -478,6 +478,13 @@ int P4d::readConfiguration()
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
+#ifdef MQTT_HASS
+   setConfigItem("mqtt", yes);
+#else
+   setConfigItem("mqtt", no);
+#endif
+
+   getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
    getConfigItem("mqttUser", mqttUser, "");
    getConfigItem("mqttPassword", mqttPassword, "");
@@ -1503,8 +1510,10 @@ int P4d::update()
 
    connection->startTransaction();
 
+#ifdef MQTT_HASS
    if (mqttInterfaceStyle == misSingleTopic)
        oJson = json_object();
+#endif
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -1516,11 +1525,13 @@ int P4d::update()
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
 
+#ifdef MQTT_HASS
       if (mqttInterfaceStyle == misGroupedTopic)
       {
          if (!groups[groupid].oJson)
             groups[groupid].oJson = json_object();
       }
+#endif
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
@@ -1647,6 +1658,8 @@ int P4d::update()
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 
+#ifdef MQTT_HASS
+
    if (mqttInterfaceStyle == misSingleTopic)
    {
       mqttWrite(oJson, 0);
@@ -1666,6 +1679,8 @@ int P4d::update()
          }
       }
    }
+
+#endif
 
    sensorAlertCheck(now);
 

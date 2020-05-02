@@ -80,8 +80,11 @@ include("functions.php");
      readConfigItem("pumpsVA", $_SESSION['pumpsVA'], "(15),140,141,142,143,144,145,146,147,148,149,150,151,152,200,201,240,241,242");
      readConfigItem("pumpsDO", $_SESSION['pumpsDO'], "0,1,25,26,31,32,37,38,43,44,49,50,55,56,61,62,67,68");
      readConfigItem("pumpsAO", $_SESSION['pumpsAO'], "3,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22");
+
      readConfigItem("webUrl",  $_SESSION['webUrl'], "http://127.0.0.1/p4");
      readConfigItem("haUrl", $_SESSION['haUrl']);
+
+     readConfigItem("mqtt", $_SESSION['mqtt']);
      readConfigItem("mqttUrl", $_SESSION['mqttUrl']);
      readConfigItem("mqttUser", $_SESSION['mqttUser']);
      readConfigItem("mqttPassword", $_SESSION['mqttPassword']);
