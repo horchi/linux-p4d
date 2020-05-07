@@ -55,6 +55,7 @@ P4d::~P4d()
    free(stateMailAtStates);
    free(stateMailTo);
    free(errorMailTo);
+   free(sensorScript);
 
    delete serial;
    delete request;
@@ -92,6 +93,21 @@ int P4d::init()
    {
       exitDb();
       return status;
+   }
+
+   // Sensor Script
+
+   asprintf(&sensorScript, "%s/script-sensor.sh", confDir);
+
+   if (!fileExists(sensorScript))
+   {
+      tell(0, "Sensor script '%s' not found!", sensorScript);
+      free(sensorScript);
+      sensorScript = nullptr;
+   }
+   else
+   {
+      tell(0, "Found sensor script '%s'", sensorScript);
    }
 
    // prepare one wire sensors
@@ -1557,6 +1573,21 @@ int P4d::update()
          addParameter2Mail(title, num);
       }
 
+      else if (sensorScript && tableValueFacts->hasValue("TYPE", "SC"))
+      {
+         std::string txt = getScriptSensor(addr).c_str();
+
+         if (!txt.empty())
+         {
+            double value = strtod(txt.c_str(), 0);
+
+            tell(eloDebug, "Debug: Got '%s' (%.2f) for (%d) from script", txt.c_str(), value, addr);
+            store(now, name, title, unit, type, addr, value, factor, groupid);
+            sprintf(num, "%.2f", value / factor);
+            addParameter2Mail(title, num);
+         }
+      }
+
       else if (tableValueFacts->hasValue("TYPE", "DO"))
       {
          Fs::IoValue v(addr);
@@ -1685,6 +1716,27 @@ int P4d::update()
    sensorAlertCheck(now);
 
    return success;
+}
+
+//***************************************************************************
+// Get Script Sensor
+//***************************************************************************
+
+std::string P4d::getScriptSensor(int address)
+{
+   char* cmd {nullptr};
+
+   if (!sensorScript)
+      return "";
+
+   asprintf(&cmd, "%s %d", sensorScript, address);
+
+   tell(0, "Calling '%s'", cmd);
+   std::string s = executeCommand(cmd);
+
+   free(cmd);
+
+   return s;
 }
 
 //***************************************************************************

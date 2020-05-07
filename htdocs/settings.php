@@ -70,6 +70,7 @@ showTable("DI", "Digitale Eingänge");
 showTable("DO", "Digitale Ausgänge");
 showTable("AO", "Analoge Ausgänge");
 showTable("W1", "One Wire Sensoren");
+showTable("SC", "Skript Sensoren");
 echo "      </form>\n";
 
 $mysqli->close();
@@ -104,7 +105,7 @@ function showTable($type, $tableTitle)
    echo "              <td>Name</td>\n";
    echo "              <td style=\"width:32%;\">Bezeichnung</td>\n";
    echo "              <td>Baugruppe</td>\n";
-   if ($type == "VA" || $type == "W1")
+   if ($type == "VA" || $type == "W1" || $type == "SC")
        echo "              <td style=\"width:6%;\">Skala max</td>\n";
    else
        echo "              <td style=\"width:6%;\"></td>\n";
@@ -148,7 +149,7 @@ function showTable($type, $tableTitle)
 
       echo "            </select></td>\n";
 
-      if (($type == "VA" || $type == "W1") && ($unit == '°' || $unit == '%'))
+      if (($type == "VA" || $type == "W1" || $type == "SC") && ($unit == '°' || $unit == '%'))
       {
           echo "              <td class=\"tableMultiColCell\"><input class=\"rounded-border inputSetting\" name=\"maxscale[]\" type=\"number\" value=\"$maxscale\"/></td>\n";
       }

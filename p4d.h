@@ -89,6 +89,7 @@ class P4d : public FroelingService
 
       void addParameter2Mail(const char* name, const char* value);
 
+      std::string getScriptSensor(int address);
       void afterUpdate();
       void sensorAlertCheck(time_t now);
       int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
@@ -222,6 +223,7 @@ class P4d : public FroelingService
       time_t nextTimeSyncAt {0};
       int maxTimeLeak {10};
       MemoryStruct htmlHeader;
+      char* sensorScript {nullptr};
 
       string alertMailBody;
       string alertMailSubject;

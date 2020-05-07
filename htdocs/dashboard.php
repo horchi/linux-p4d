@@ -189,7 +189,9 @@ printHeader($_SESSION['refreshWeb']);
          else if ($u == '°' || $unit == '%'|| $unit == 'V' || $unit == 'A')       // 'Volt/Ampere/Prozent/°C' als  Gauge
          {
              $scaleMax = $unit == '%' ? 100 : $scaleMax;
-             $ratio = $value / $scaleMax;
+             $scaleMin = $value >= 0 ? "0" : ceil( $initial_number / 5 ) * 5 -10;
+
+             $ratio = ($value - $scaleMin) / ($scaleMax - $scaleMin);
              $peak = $peak / $scaleMax;
 
              echo "        <div class=\"widget-row rounded-border participation\" data-y=\"500\" data-unit=\"$unit\" data-value=\"$value\" data-peak=\"$peak\" data-ratio=\"$ratio\">\n";
@@ -197,7 +199,7 @@ printHeader($_SESSION['refreshWeb']);
              echo "          <svg class=\"svg\" viewBox=\"0 0 1000 600\" preserveAspectRatio=\"xMidYMin slice\">\n";
              echo "            <path d=\"M 950 500 A 450 450 0 0 0 50 500\"></path>\n";
              echo "            <text class='_content' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"500\" y=\"450\" font-size=\"140\" font-weight=\"bold\">$unit</text>\n";
-             echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"50\" y=\"550\">0</text>\n";
+             echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"50\" y=\"550\">$scaleMin</text>\n";
              echo "            <text class='widget-scale' text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"950\" y=\"550\">$scaleMax</text>\n";
              echo "          </svg>\n";
               echo "        </div>\n";

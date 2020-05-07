@@ -196,6 +196,8 @@ class cMyMutex
 // Tools
 //***************************************************************************
 
+std::string executeCommand(const char* cmd);
+
 double usNow();
 unsigned int getHostId();
 byte crc(const byte* data, int size);

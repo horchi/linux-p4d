@@ -83,6 +83,25 @@ void tell(int eloquence, const char* format, ...)
 }
 
 //***************************************************************************
+// Execute Command
+//***************************************************************************
+
+std::string executeCommand(const char* cmd)
+{
+   char buffer[128] {'\0'};
+   std::string result {""};
+
+   FILE* pipe = popen(cmd, "r");
+
+   while (fgets(buffer, sizeof(buffer), pipe))
+      result += buffer;
+
+   pclose(pipe);
+
+   return result;
+}
+
+//***************************************************************************
 // Save Realloc
 //***************************************************************************
 
