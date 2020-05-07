@@ -207,6 +207,9 @@ function requestAction($cmd, $timeout, $address, $data, &$response)
          if ($state == "fail")
             return -2;
 
+         if ($response == "BDATA")
+            $response = mysqli_result($result, 0, "bdata");
+
          return 0;
       }
    }

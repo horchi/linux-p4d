@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.28"
-#define VERSION_DATE "02.05.2020"
+#define _VERSION     "0.3.29"
+#define VERSION_DATE "05.05.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-05-05:  version 0.3.29
+   - added: Syslog to WEBIF
 
 2020-05-02:  version 0.3.28
    - bugfix: Fixed compile without MQTT

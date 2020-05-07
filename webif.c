@@ -614,6 +614,37 @@ int P4d::performWebifRequests()
          tableJobs->setValue("RESULT", "success:done");
       }
 
+      else if (strcasecmp(command, "syslog") == 0)
+      {
+         const char* name = "/var/log/syslog";
+         std::vector<std::string> lines;
+
+         if (loadLinesFromFile(name, lines, false) == success)
+         {
+            const int maxLines {150};
+            int count {0};
+            std::string result;
+
+            for (auto it = lines.rbegin(); it != lines.rend(); ++it)
+            {
+               if (count++ >= maxLines)
+               {
+                  result += "...\n...\n";
+                  break;
+               }
+
+               result += *it;
+            }
+
+            tableJobs->setValue("BDATA", result.c_str());
+            tableJobs->setValue("RESULT", "success:BDATA");
+         }
+         else
+         {
+            tableJobs->setValue("RESULT", "fail:syslog");
+         }
+      }
+
       else
       {
          tell(eloAlways, "Warning: Ignoring unknown job '%s'", command);

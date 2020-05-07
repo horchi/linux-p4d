@@ -674,6 +674,40 @@ int loadFromFile(const char* infile, MemoryStruct* data)
    return success;
 }
 
+int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF)
+{
+   FILE* fp;
+
+   if (!fileExists(infile))
+   {
+      tell(0, "File '%s' not found'", infile);
+      return fail;
+   }
+
+   if (!(fp = fopen(infile, "r")))
+   {
+      tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
+      return fail;
+   }
+
+   char* line {nullptr};
+   size_t len {0};
+
+   while (getline(&line, &len, fp) != -1)
+   {
+      if (removeLF)
+         line[strlen(line)-1] = 0;
+
+      lines.push_back(line);
+      line[0] = '\0';
+   }
+
+   fclose(fp);
+   free(line);
+
+   return success;
+}
+
 #ifdef WITH_GUNZIP
 
 //***************************************************************************
