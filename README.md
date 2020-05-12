@@ -253,6 +253,17 @@ echo "w1_therm" >> /etc/modules
 echo "dtoverlay=w1-gpio,gpioin=4,pullup=on" >> /boot/config.txt
 ```
 
+### Script Sensors:
+To use other additional sensors which are not supported by the p4d directly you can use the script-sensor interface of p4d.
+To activate the script-sensor interface copy the example script scripts/script-sensor.sh from the git to /etc/p4d (don't rename it).
+Now you can add script sensors with this command:
+```
+insert into valuefacts set type = 'SC', address = 1, inssp = UNIX_TIMESTAMP(), updsp = UNIX_TIMESTAMP(), groupid = 1, state = 'D', unit = '%', factor = 1, name = 'TestScriptSensor0x01', title = 'Test Script Sensor', maxscale = 100; | mysql -u p4 -pp4 -Dp4
+```
+Change address to a uniq one, name, title, unit as you like. maxscale and state can set later on in the WEBIF.
+After this restart the p4d!
+Now edit the script /etc/p4/script-sensor.sh that it output the actual value of this sensors using it's address.
+
 ### Points to check
 - reboot the device to check if p4d is starting automatically during startup
 
