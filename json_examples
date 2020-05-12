@@ -1,0 +1,46 @@
+
+{
+   "Betriebsmodus" : {
+      "value" : "Heizen",
+      "was noch sinn macht" : "Wert dazu",
+      "Einheit" : "",
+      "Beschreibung" : "Aussentemperatur Haus"
+   },
+   "Aussentemperatur" : {
+      "Einheit" : "C",
+      "Beschreibung" : "Aussentemperatur Haus",
+      "was_noch_sinnmacht" : "Wert dazu",
+      "value" : "16"
+   }
+}
+
+{
+   "Gruppe 1" : {
+      "Betriebsmodus" : {
+         "value" : "Heizen",
+         "was noch sinn macht" : "Wert dazu",
+         "Einheit" : "",
+         "Beschreibung" : "Aussentemperatur Haus"
+      },
+      "Aussentemperatur" : {
+         "Einheit" : "C",
+         "Beschreibung" : "Aussentemperatur Haus",
+         "was_noch_sinnmacht" : "Wert dazu",
+         "value" : "16"
+      }
+   }
+   "Gruppe 2" : {
+      "Bar" : {
+         "value" : "foo",
+         "was noch sinn macht" : "Wert dazu",
+         "Einheit" : "",
+         "Beschreibung" : "Aussentemperatur Haus"
+      },
+      "test" : {
+         "Einheit" : "C",
+         "Beschreibung" : "Aussentemperatur Haus",
+         "was_noch_sinnmacht" : "Wert dazu",
+         "value" : "16"
+      }
+   }
+}
