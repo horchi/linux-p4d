@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.30"
-#define VERSION_DATE "07.05.2020"
+#define _VERSION     "0.3.31"
+#define VERSION_DATE "11.05.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,11 +17,15 @@
 /*
  * ------------------------------------
 
+2020-05-11:  version 0.3.31
+   - bugfix: fixed compile of lib paho.mqtt.c
+
 2020-05-07:  version 0.3.30
-   - added: Script sensors
+   - added:  Script sensors
+   - bugfix: fixed compile of lib paho.mqtt.c
 
 2020-05-05:  version 0.3.29
-   - added: Syslog to WEBIF
+   - added:  Syslog to WEBIF
 
 2020-05-02:  version 0.3.28
    - bugfix: Fixed compile without MQTT

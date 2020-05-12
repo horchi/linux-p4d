@@ -1584,6 +1584,12 @@ int P4d::update()
             tell(eloDebug, "Debug: Got '%s' (%.2f) for (%d) from script", txt.c_str(), value, addr);
             store(now, name, title, unit, type, addr, value, factor, groupid);
             sprintf(num, "%.2f", value / factor);
+
+            if (strcmp(unit, "°") == 0)
+               strcat(num, "°C");
+            else
+               strcat(num, unit);
+
             addParameter2Mail(title, num);
          }
       }

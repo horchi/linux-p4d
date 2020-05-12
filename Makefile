@@ -187,7 +187,6 @@ ifdef HASSMQTT
 		sed -i '/if test ! -f ..DESTDIR..{libdir}.lib..MQTTLIB_C..so..{MAJOR_VERSION.; then ln -s/d' ~/build/paho.mqtt.c/Makefile; \
 		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTClient.man.man3.MQTTClient.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
 		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTAsync.man.man3.MQTTAsync.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
-		sed -i s/'int rc1 = sem_getvalue.sem, .val.;.*'/'sem_getvalue(sem, \&val);'/ ~/build/paho.mqtt.c/src/Thread.c; \
 		sed -i s/'rm [$$]'/'rm -f $$'/g ~/build/paho.mqtt.c/Makefile; \
 	fi
 	cd ~/build/paho.mqtt.c; \
