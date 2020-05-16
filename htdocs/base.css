@@ -439,7 +439,7 @@ table.tableMultiCol tr:nth-child(odd)
     display: block;
 }
 
-.P4dInfo
+.daemonInfo
 {
     background-color: var(--light1);
     float: right;
@@ -448,7 +448,7 @@ table.tableMultiCol tr:nth-child(odd)
     margin: 3px;
 }
 
-.P4dInfo > div > span
+.daemonInfo > div > span
 {
     width: 10%;
     min-width: 215px;
@@ -456,7 +456,7 @@ table.tableMultiCol tr:nth-child(odd)
     text-align: left;
 }
 
-#divP4dState
+#divDaemondState
 {
     display: block;
 }
@@ -567,116 +567,184 @@ div.greenCircle
     background-color: green;
 }
 
+/* ----------------------- */
 /* Dashboard Widgets */
 
-.widget-row
-{
-    padding: 1%;
-}
-
-/*
-.widget-row text
-{
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-.widget-row.participation text
-{
-    fill: var(--buttonFont);
-}
-.widget-row.completion text
-{
-    fill: #27ae60;
-}
-.widget-row.blocked text
-{
-    fill: #e74c3c;
-}
-*/
-
-.widget-row path
-{
-    stroke-width: 75;
-    stroke: #ecf0f1;
-    fill: none;
-}
-
-.widget-row.participation path.data-peak
-{
-    stroke: red;
-}
-
-.widget-row.participation path.data-arc
-{
-    stroke: #3498db;
-}
-
-.widget-row.completion path.data-arc
-{
-    stroke: #27ae60;
-}
-
-.widget-row.blocked path.data-arc
-{
-    stroke: #e74c3c;
-}
-
-.container
+.widgetContainer
 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.container > div
+.widgetContainer > div
 {
     justify-content: center;
-    display: grid;
     overflow: hidden;
     width: 330px;
     height: 212px;
-    margin: 3px;
+    margin: 2px;
     background-color: var(--light1);
+    padding: 1%;
 }
 
-.svg
+.widget
 {
-    width: 100%;
+  display: grid;
+  grid-template-areas:
+      'title'
+      'main';
+  grid-template-rows: 25% 69%;
+  grid-gap: 5px;
+}
+
+.widgetManuel
+{
+    background-color: #a27373 !important;
+}
+
+.widgetGauge
+{
+  display: grid;
+  grid-template-areas:
+      'title'
+      'main';
+/*  grid-template-rows: 17% 80%;*/
+  grid-gap: 5px;
+}
+
+.widgetCtrl
+{
+    display: grid;
+    grid-template-areas:
+      'title title'
+      'main main'
+      'ctrl1 ctrl2';
+    grid-template-rows: 17% 50% 25%;
+    grid-gap: 5px;
 }
 
 .widget-title
 {
-    padding: 2px;
+    grid-area: title;
+/*    padding: 14px; */
     text-align: center;
     font-size: 1.4em;
+    overflow: hidden;
+    background-color: Transparent;
+    cursor: pointer;
+    border: none;
+    width: inherit;
+    color: var(--buttonFont);
 }
 
-.widget-scale
+.widget-mode
 {
-    text-align: center;
-    font-size: 3.0em;
+    font-size: 0.6em;
+}
+
+.widget-main
+{
+    grid-area: main;
+    background-color: Transparent;
+    border: none;
+    overflow: hidden;
+    outline: none;
+/*    cursor: pointer; */
 }
 
 .widget-value
 {
+    grid-area: main;
     padding: 8px;
     text-align: center;
     font-size: 2.1em;
     font-weight: bold;
     height: 82%;
-    display: flex;
     align-items: center;
     justify-content: center;
     word-break: break-word;
 }
 
-.widget-image
+.widget-ctrl1 { grid-area: ctrl1; }
+.widget-ctrl2 { grid-area: ctrl2; }
+
+.widgetCtrl > div > button > img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.widgetCtrl > div > button
+{
+    height: 100%;
+    background-color: Transparent;
+    border: none;
+    overflow: hidden;
+    outline: none;
+    cursor: pointer;
+}
+
+.widget-svg
+{
+    grid-area: main;
+    width: 100%;
+}
+
+.widget > button > img
 {
     max-width: 100%;
     max-height: 100%;
-    /*min-height: 100%;*/   /*  geht solange die widgets in bezug auf die höhe und das IMG breit genug sind */
-    display: block;
+    justify-self: center;
+}
+
+.widget > div > img
+{
+    max-width: 100%;
+    max-height: 100%;
+    justify-self: center;
+}
+
+.widgetGauge > button > img
+{
+    max-width: 100%;
+    max-height: 100%;
     background-color: var(--light1);
     justify-self: center;
+}
+
+.scale-text
+{
+    text-align: center;
+    font-size: 3.0em;
+}
+
+.widgetGauge path
+{
+    stroke-width: 55;
+    stroke: #ecf0f1;
+    fill: none;
+}
+
+.widgetGauge.participation path.data-peak
+{
+    stroke: red;
+}
+
+.widgetGauge.participation path.data-arc
+{
+    stroke: #3498db;
+}
+
+.widgetGauge.completion path.data-arc
+{
+    stroke: #27ae60;
+}
+
+.widgetGauge.blocked path.data-arc
+{
+    stroke: #e74c3c;
 }
 
 /* -------------- */
@@ -693,10 +761,10 @@ div.greenCircle
 @media only screen and (max-width: 740px)
 {
     .content                   { padding: 0px; }
-    #divP4dState               { display: none; }
+    #divDaemondState           { display: none; }
     .table2Col > div > span    { padding: 3px 10px 3px 10px; }
-    .P4dInfo                   { font-size: 15px; margin-top: 3px; min-width: 91%; }
-    .P4dInfo > div > span      { min-width: 110px; }
+    .daemonInfo                { font-size: 15px; margin-top: 3px; min-width: 91%; }
+    .daemonInfo > div > span   { min-width: 110px; }
     .heatingState              { width: 52%; }
     .centerImage               { margin: 0px 0px 0px 0px; }
 

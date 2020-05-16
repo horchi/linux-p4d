@@ -115,6 +115,129 @@ function datePicker($title, $name, $year, $day, $month)
 }
 
 // ---------------------------------------------------------------------------
+// HTML report of State
+// ---------------------------------------------------------------------------
+
+function printState()
+{
+   global $wd_value;
+   global $wd_disp;
+
+   // ------------------
+   // State of S 3200
+
+   $status = "";
+   $mode = "";
+   $time = "";
+
+   $state = requestAction("s3200-state", 3, 0, "", $response);
+
+   if ($state == 0)
+      list($time, $state, $status, $mode) = explode("#", $response, 4);
+
+   $time = str_replace($wd_value, $wd_disp, $time);
+   list($day, $time) = explode(",", $time, 2);
+   $heatingType = $_SESSION['heatingType'];
+   $stateImg = getStateImage($state);
+
+   if ($state == 19)
+      $stateStyle = "aStateOk";
+   elseif ($state == 0)
+      $stateStyle = "aStateFail";
+   elseif ($state == 3)
+      $stateStyle = "aStateHeating";
+   else
+      $stateStyle = "aStateOther";
+
+   // -----------------
+   // State 'flex' Box
+
+   echo "      <div class=\"stateInfo\">\n";
+
+   // -----------------
+   // Heating State
+   {
+      echo "        <div class=\"rounded-border heatingState\">\n";
+      echo "          <div><span id=\"" . $stateStyle . "\">$status</span></div>\n";
+      echo "          <br/>\n";
+      echo "          <div><span>" . $day . "</span><span>" . $time . "</span></div>\n";
+      echo "          <div><span>Betriebsmodus:</span><span>" . $mode ."</span></div>\n";
+      echo "        </div>\n";
+   }
+
+   // -----------------
+   // State Image
+   {
+      echo "        <div class=\"imageState\">\n";
+      echo "          <a href=\"\" onclick=\"javascript:showHide('divDaemondState'); return false\">\n";
+      echo "            <img class=\"centerImage\" src=\"$stateImg\">\n";
+      echo "          </a>\n";
+      echo "        </div>\n";
+   }
+
+   // -----------------
+   // Daemon State
+
+   printDaemonState();
+
+   echo "      </div>\n";   // stateInfo
+}
+
+// ---------------------------------------------------------------------------
+// HTML report of Daemon State
+// ---------------------------------------------------------------------------
+
+function printDaemonState()
+{
+   global $webVersion;
+   global $mysqli;
+   global $daemonTitle;
+
+   // -------------------------
+   // get last time stamp
+
+   $result = $mysqli->query("select DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty, " .
+                            "DATE_FORMAT(max(time),'%H:%i:%S') as maxPrettyShort from samples;")
+      or die("Error" . $mysqli->error);
+
+   $row = $result->fetch_assoc();
+   $maxPretty = $row['maxPretty'];
+   $maxPrettyShort = $row['maxPrettyShort'];
+
+   // ------------------
+   // State of Daemon
+
+   $daemonState = requestAction("daemon-state", 3, 0, "", $response);
+   $load = "";
+
+   if ($daemonState == 0)
+      list($dNext, $dVersion, $dSince, $load) = explode("#", $response, 4);
+
+   $result = $mysqli->query("select * from samples where time >= CURDATE()")
+      or die("Error" . $mysqli->error);
+   $dCountDay = $result->num_rows;
+
+   echo "        <div class=\"rounded-border daemonInfo\" id=\"divDaemondState\">\n";
+
+   if ($daemonState == 0)
+   {
+      echo  "              <div id=\"aStateOk\"><span>$daemonTitle ONLINE</span>   </div>\n";
+      echo  "              <div><span>Läuft seit:</span>            <span>$dSince</span>       </div>\n";
+      echo  "              <div><span>Messungen heute:</span>       <span>$dCountDay</span>    </div>\n";
+      echo  "              <div><span>Letzte Messung:</span>        <span>$maxPrettyShort</span> </div>\n";
+      echo  "              <div><span>Nächste Messung:</span>       <span>$dNext</span>        </div>\n";
+      echo  "              <div><span>Version (poold / webif):</span> <span>$dVersion / $webVersion</span></div>\n";
+      echo  "              <div><span>CPU-Last:</span>              <span>$load</span>           </div>\n";
+   }
+   else
+   {
+      echo  "          <div id=\"aStateFail\">ACHTUNG:<br/>$daemonTitle OFFLINE</div>\n";
+   }
+
+   echo "        </div>\n";
+}
+
+// ---------------------------------------------------------------------------
 // Check/Create Folder
 // ---------------------------------------------------------------------------
 
@@ -500,9 +623,9 @@ function htmTags($flow)
 // Get State Image
 // ---------------------------------------------------------------------------
 
-function getStateImage($state, $p4dstate)
+function getStateImage($state)
 {
-  if ($state == 0 || $p4dstate != 0)
+  if ($state <= 0)
      $img = "img/state/state-error.gif";
   else if ($state == 1)
      $img = ($_SESSION['stateAni'] && file_exists("img/state/ani/state-fireoff.gif")) ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";

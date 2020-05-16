@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.31"
-#define VERSION_DATE "11.05.2020"
+#define _VERSION     "0.3.32"
+#define VERSION_DATE "14.05.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2020-05-14:  version 0.3.32
+   - change: Code review
+   - change: WEBIF - changed main view to dashboard
+   - change: WEBIF - removed status display from dashboard view
+   - added:  imagaes for PE1-25kW, PE1c, PE1, and PT4e
 
 2020-05-11:  version 0.3.31
    - bugfix: fixed compile of lib paho.mqtt.c

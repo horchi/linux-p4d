@@ -4,7 +4,9 @@ session_start();
 
 $mysqlport = 3306;
 
-$p4WebVersion = "<VERSION>";
+$webVersion  = "<VERSION>";
+$daemonTitle = $_SESSION['heatingType'] . " Daemon";
+$daemonName  = "p4d";
 
 include("config.php");
 include("functions.php");
@@ -138,8 +140,8 @@ function printHeader($refresh = 0)
 
 //   echo "    <nav class=\"menu\" style=\"position: fixed; top=0px;\">\n";
    echo "    <nav class=\"fixed-menu1\">\n";
-   echo "      <a href=\"main.php\"><button class=\"rounded-border button1\">Aktuell</button></a>\n";
    echo "      <a href=\"dashboard.php\"><button class=\"rounded-border button1\">Dashboard</button></a>\n";
+   echo "      <a href=\"main.php\"><button class=\"rounded-border button1\">Liste</button></a>\n";
    echo "      <a href=\"chart.php\"><button class=\"rounded-border button1\">Charts</button></a>\n";
 
    if ($_SESSION['chart34'] == "1")

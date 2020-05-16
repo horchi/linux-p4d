@@ -443,7 +443,7 @@ int P4d::performWebifRequests()
             tableJobs->setValue("RESULT", "fail:error");
       }
 
-      else if (strcasecmp(command, "p4d-state") == 0)
+      else if (strcasecmp(command, "daemon-state") == 0)
       {
          struct tm tim = {0};
 
