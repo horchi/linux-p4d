@@ -325,3 +325,8 @@ wget http://hungerphilipp.de/files/p4d/install.sh
 chmod +x install.sh
 ./install.sh" or "sudo ./install.sh/
 ```
+
+## Problems - anything is not working
+ - check the syslog about errors of the p4d
+ - for the WEBIF check also the error.log of the Apache web server
+If you post any problem at at git-hub or the forum please post the errors also!
