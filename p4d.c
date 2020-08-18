@@ -622,6 +622,9 @@ int P4d::updateSchemaConfTable()
    int y = 50;
    int added = 0;
 
+   tableValueFacts->clear();
+   tableValueFacts->setValue("STATE", "A");
+
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
       int addr = tableValueFacts->getIntValue("ADDRESS");
