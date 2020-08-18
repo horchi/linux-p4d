@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.3.34"
+#define _VERSION     "0.3.35"
 #define VERSION_DATE "20.08.2020"
 
 #ifdef GIT_REV
@@ -17,7 +17,10 @@
 /*
  * ------------------------------------
 
-2020-08-20:  version 0.3.34
+2020-08-18:  version 0.3.35
+   - bugfix: Fixed init of schema configuration
+
+2020-08-18:  version 0.3.34
    - change: Increased 'data' field for webif communication
 
 2020-05-19:  version 0.3.33
