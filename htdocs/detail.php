@@ -5,12 +5,10 @@ include("pChart/class/pDraw.class.php");
 include("pChart/class/pImage.class.php");
 include("pChart/class/pCache.class.php");
 
-$mysqlport = 3306;
-
 include("config.php");
 include("functions.php");
 
-$fontText = $chart_fontpath . "/Forgotte.ttf";
+$fontText  = $chart_fontpath . "/Forgotte.ttf";
 $fontScale = $chart_fontpath . "/Forgotte.ttf";
 // date_default_timezone_set('Europe/Berlin');
 

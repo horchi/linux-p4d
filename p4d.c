@@ -2382,11 +2382,6 @@ int P4d::sendStateMail()
 
    getConfigItem("webUrl", webUrl, "http://to-be-configured");
 
-   // send mail ...
-
-   if (!htmlMail)
-      return sendMail(stateMailTo, subject.c_str(), mailBody.c_str(), "text/plain");
-
    // HTML mail
 
    char* html = 0;

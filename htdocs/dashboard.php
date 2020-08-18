@@ -163,7 +163,7 @@ $stateImg = getStateImage($state);
          echo "        </div>\n";
       }
 
-      else if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u')  // 'value' als Text anzeigen
+      else if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u' || $u == 'l')  // 'value' als Text anzeigen
       {
          $value = round($value, 0);
 

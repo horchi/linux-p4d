@@ -140,8 +140,10 @@ make install INIT_SYSTEM=sysV
 #### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
-- Check `/etc/p4d.conf` file for setting db-login, ttyDeviceSvc device (change device if required),
+- Check `/etc/p4d.conf` file for setting db connection papameters, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
+
+- The db connection parameters for the WEBIF are located in config.php
 
 ## Time to first start of p4d
 ```

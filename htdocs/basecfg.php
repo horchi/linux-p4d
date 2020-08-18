@@ -309,7 +309,7 @@ echo "       </div>\n";
 echo "      <div class=\"rounded-border inputTableConfig\">\n";
 seperator("p4d Konfiguration", 0);
 configNumItem(3, "Log Level", "loglevel", $_SESSION['loglevel'], "(0-4) 0 only errors and basic log massages are created", 0, 4);
-configNumItem(3, "Intervall der Aufzeichung", "interval", $_SESSION['interval'], "Datenbank Aufzeichung [s]");
+configNumItem(3, "Intervall der Aufzeichnung", "interval", $_SESSION['interval'], "Datenbank Aufzeichnung [s]", 0, 300);
 configNumItem(3, "Intervall der Status Prüfung", "stateCheckInterval", $_SESSION['stateCheckInterval'], "Status Check [s]");
 configStrItem(3, "TTY Device", "ttyDevice", $_SESSION['ttyDevice'], "");
 $ro = ($_SESSION['tsync']) ? "\"" : "; background-color:#ddd;\" readOnly=\"true\"";

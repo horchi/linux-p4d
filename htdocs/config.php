@@ -4,6 +4,7 @@
 // user settings
 
 $mysqlhost       = "localhost";
+$mysqlport       = 3306;
 $mysqluser       = "p4";
 $mysqlpass       = "p4";
 $mysqldb         = "p4";

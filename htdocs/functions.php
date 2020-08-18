@@ -677,6 +677,8 @@ function prettyUnit($u)
         $unit = "Stunden";
     else if ($u == "R")                  // Ohmscher Widerstand
         $unit = "Ohm";
+    else if ($u == "l")                  // Liter / Stunde
+        $unit = "l/h";
     else
         $unit = $u;                      // all other
 

@@ -498,8 +498,8 @@ int P4d::performWebifRequests()
             int type = tableMenu->getIntValue("TYPE");
             int paddr = tableMenu->getIntValue("ADDRESS");
 
-            if (type == 0x07 || type == 0x08 || type == 0x0a ||
-                type == 0x40 || type == 0x39 || type == 0x32)
+            if (type == mstPar || type == mstParDig || type == mstParZeit ||
+                type == mstParSet2 || type == mstParSet1 || type == mstParSet)
             {
                Fs::ConfigParameter p(paddr);
 

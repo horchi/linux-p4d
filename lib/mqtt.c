@@ -184,7 +184,7 @@ int MqTTSubscribeClient::unsubscribe()
 // Read
 //***************************************************************************
 
-int MqTTSubscribeClient::read(std::string* message)
+int MqTTSubscribeClient::read(std::string* message, std::string* rtopic)
 {
    MQTTClient_message* _message = 0;
    char* receivedTopic = 0;
@@ -193,7 +193,6 @@ int MqTTSubscribeClient::read(std::string* message)
    message->clear();
 
    int lastResult = MQTTClient_receive(client, &receivedTopic, &receivedTopicLen, &_message, timeout);
-   MQTTClient_free(receivedTopic);
 
    if (lastResult != MQTTCLIENT_SUCCESS && lastResult != MQTTCLIENT_TOPICNAME_TRUNCATED)
    {
@@ -211,7 +210,11 @@ int MqTTSubscribeClient::read(std::string* message)
       return wrnNoMessagePending;
 
    *message = (const char*)_message->payload;
+   message->resize(_message->payloadlen);
    MQTTClient_freeMessage(&_message);
+
+   *rtopic = receivedTopic;
+   MQTTClient_free(receivedTopic);
 
    return success;
 }

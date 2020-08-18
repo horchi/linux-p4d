@@ -2,8 +2,6 @@
 
 session_start();
 
-$mysqlport = 3306;
-
 $webVersion  = "<VERSION>";
 $daemonTitle = $_SESSION['heatingType'] . " Daemon";
 $daemonName  = "p4d";

@@ -113,7 +113,7 @@ class MqTTSubscribeClient: public MqTTClient
       int disconnect();
       int subscribe(const char* aTopic);
       int unsubscribe();
-      int read(std::string* message);
+      int read(std::string* message, std::string* rtopic);
 
    private:
 

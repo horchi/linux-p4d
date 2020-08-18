@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.32"
-#define VERSION_DATE "14.05.2020"
+#define _VERSION     "0.3.34"
+#define VERSION_DATE "20.08.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,11 +17,17 @@
 /*
  * ------------------------------------
 
+2020-08-20:  version 0.3.34
+   - change: Inceased 'data' field for webif communication
+
+2020-05-19:  version 0.3.33
+   - bugfix: Fixed problem with error address
+
 2020-05-14:  version 0.3.32
    - change: Code review
    - change: WEBIF - changed main view to dashboard
    - change: WEBIF - removed status display from dashboard view
-   - added:  imagaes for PE1-25kW, PE1c, PE1, and PT4e
+   - added:  images for PE1-25kW, PE1c, PE1, and PT4e
 
 2020-05-11:  version 0.3.31
    - bugfix: fixed compile of lib paho.mqtt.c
