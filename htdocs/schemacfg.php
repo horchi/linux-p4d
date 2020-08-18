@@ -136,8 +136,10 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "      <button class=\"rounded-border button3\" type=\"submit\" name=\"cfg\" value=\"Hide\">Hide</button>\n";
    echo "      <button class=\"rounded-border button3\" type=\"submit\" name=\"cfg\" value=\"Back\">Back</button>\n";
    echo "      <span class=\"checkbox\">\n";
+   echo "        </br>";
    echo "        <input type=\"checkbox\" name=\"unit\" value=\"unit\" checked/>Einheit\n";
    echo "        <input type=\"radio\" name=\"showtext\" value=\"Value\" checked/>Wert\n";
+   echo "        </br>";
    echo "        <input type=\"radio\" name=\"showtext\" value=\"Text\"/>Text\n";
    echo "      </span>\n";
    echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br/> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
@@ -218,10 +220,12 @@ echo "        <div style=\"z-index:2;\">\n";
 
 seperator("Grund-Einstellungen", 0);
 schemaItem(1, "Schema", $_SESSION['schema']);
-
-configBoolItem(5, "Sensor-Bezeichnungen", "schemaBez", $_SESSION['schemaBez']);
+echo "   </br>";
+echo " <span>Sensor-Bezeichnungen:</span>";
+echo " <input type=\"checkbox\" class=\"rounded-border input\" name=\"schemaBez\" />";
+echo "   </br>";
 configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24:24 48:48 60:60 72:72", "Stunden");
-
+echo "   </br>";
 echo "        <button class=\"rounded-border button3\" type=\"submit\" name=\"action\" value=\"store\">Einstellungen Speichern</button>\n";
 
 seperator("Piktogramme<span class=\"help\" onClick=\"showContent('hlp')\">[Hilfe]</span>", 0, "seperatorTitle2");

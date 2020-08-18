@@ -66,6 +66,11 @@
     border-width: 1px;
 }
 
+.checkbox
+{
+    display: inline-flex;
+}
+
 .tableButton
 {
     color: var(--buttonFont);
@@ -206,6 +211,8 @@ span > input
 {
     display: inline-block;
     width: 98%;
+    margin-right: 10px;
+    margin-left: 10px;
 }
 
 .inputComment
