@@ -40,10 +40,12 @@ int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit
 
    if (mqttHaveConfigTopic)
    {
+      std::string rtopic;
+
       // check if state topic already exists
 
       mqttReader->subscribe(sDataTopic.c_str());
-      status = mqttReader->read(&message);
+      status = mqttReader->read(&message, &rtopic);
 
       if (status != success && status != MqTTClient::wrnNoMessagePending)
          return fail;

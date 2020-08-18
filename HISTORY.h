@@ -18,7 +18,7 @@
  * ------------------------------------
 
 2020-08-20:  version 0.3.34
-   - change: Inceased 'data' field for webif communication
+   - change: Increased 'data' field for webif communication
 
 2020-05-19:  version 0.3.33
    - bugfix: Fixed problem with error address
