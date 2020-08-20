@@ -6,15 +6,14 @@
 // Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
-#include "p4d.h"
-
 #include <jansson.h>
+
+// #include "lib/json.h"
+#include "p4d.h"
 
 //***************************************************************************
 // Push Value to Home Assistant
 //***************************************************************************
-
-#ifdef MQTT_HASS
 
 int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit,
                            double value, const char* text, bool forceConfig)
@@ -24,14 +23,16 @@ int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit
    if (mqttCheckConnection() != success)
       return fail;
 
-   int status = success;
-   std::string message;
+   int status {success};
+   MemoryStruct message;
+   std::string tp;
    std::string sName = name;
 
    sName = strReplace("ß", "ss", sName);
    sName = strReplace("ü", "ue", sName);
    sName = strReplace("ö", "oe", sName);
    sName = strReplace("ä", "ae", sName);
+   sName = strReplace(" ", "_", sName);
 
    // mqttDataTopic like "p4d2mqtt/sensor/<NAME>/state"
 
@@ -40,20 +41,20 @@ int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit
 
    if (mqttHaveConfigTopic)
    {
-      std::string rtopic;
-
-      // check if state topic already exists
+      // Interface description:
+      //   https://www.home-assistant.io/docs/mqtt/discovery/
 
       mqttReader->subscribe(sDataTopic.c_str());
-      status = mqttReader->read(&message, &rtopic);
+      status = mqttReader->read(&message, 100);
+      tp = mqttReader->getLastReadTopic();
 
-      if (status != success && status != MqTTClient::wrnNoMessagePending)
+      if (status != success && status != Mqtt::wrnTimeout)
          return fail;
 
-      if (forceConfig || status == MqTTClient::wrnNoMessagePending)
+      if (forceConfig || status == Mqtt::wrnTimeout)
       {
-         char* configTopic = 0;
-         char* configJson = 0;
+         char* configTopic {0};
+         char* configJson {0};
 
          // topic don't exists -> create sensor
 
@@ -64,8 +65,7 @@ int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit
                   strcmp(unit, "T") == 0)
             unit = "";
 
-         tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
-              "sendig config message", sName.c_str());
+         tell(1, "Info: Sensor '%s' not found at home assistants MQTT, sendig config message", sName.c_str());
 
          asprintf(&configTopic, "homeassistant/sensor/%s/config", sName.c_str());
          asprintf(&configJson, "{"
@@ -83,7 +83,7 @@ int P4d::mqttPublishSensor(const char* name, const char* title, const char* unit
          free(configJson);
       }
 
-      mqttReader->unsubscribe();
+      mqttReader->unsubscribe(sDataTopic.c_str());
    }
 
    // publish actual value
@@ -201,16 +201,11 @@ int P4d::mqttWrite(json_t* obj, uint groupid)
 int P4d::mqttCheckConnection()
 {
    if (!mqttWriter)
-   {
-      mqttWriter = new MqTTPublishClient(mqttUrl, "p4d_publisher");
-      mqttWriter->setConnectTimeout(15);   // seconds
-      mqttWriter->setUsername(mqttUser);
-      mqttWriter->setPassword(mqttPassword);
-   }
+      mqttWriter = new Mqtt();
 
    if (!mqttWriter->isConnected())
    {
-      if (mqttWriter->connect() != success)
+      if (mqttWriter->connect(mqttUrl, mqttUser, mqttPassword) != success)
       {
          tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
          return fail;
@@ -222,17 +217,11 @@ int P4d::mqttCheckConnection()
    if (mqttHaveConfigTopic)
    {
       if (!mqttReader)
-      {
-         mqttReader = new MqTTSubscribeClient(mqttUrl, "p4d_subscriber");
-         mqttReader->setConnectTimeout(15); // seconds
-         mqttReader->setTimeout(100);       // milli seconds
-         mqttReader->setUsername(mqttUser);
-         mqttReader->setPassword(mqttPassword);
-      }
+         mqttReader = new Mqtt();
 
       if (!mqttReader->isConnected())
       {
-         if (mqttReader->connect() != success)
+         if (mqttReader->connect(mqttUrl, mqttUser, mqttPassword) != success)
          {
             tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
             return fail;
@@ -244,5 +233,3 @@ int P4d::mqttCheckConnection()
 
    return success;
 }
-
-#endif

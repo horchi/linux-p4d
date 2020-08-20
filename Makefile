@@ -29,9 +29,9 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS        =  lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o
-OBJS         = $(LOBJS) main.o p4io.o service.o w1.o webif.o hass.o
-MQTTBJS      = lib/mqtt.c
+LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/thread.o lib/curl.o
+MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
+OBJS         = $(LOBJS) $(MQTTOBJS) main.o p4io.o service.o w1.o webif.o hass.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
@@ -43,12 +43,6 @@ ifdef TEST_MODE
 	DEFINES += -D__TEST
 endif
 
-ifdef HASSMQTT
-   OBJS    += $(MQTTBJS)
-   LIBS    += -lpaho-mqtt3cs
-	DEFINES += -DMQTT_HASS
-endif
-
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
 endif
@@ -57,7 +51,7 @@ endif
 
 all: $(TARGET) $(CMDTARGET) $(CHARTTARGET)
 
-$(TARGET) : paho-mqtt $(OBJS)
+$(TARGET) : $(OBJS)
 	$(doLink) $(OBJS) $(LIBS) -o $@
 
 $(CHARTTARGET): $(CHARTOBJS)
@@ -178,35 +172,12 @@ cppchk:
 com2: $(LOBJS) c2tst.c p4io.c service.c
 	$(CPP) $(CFLAGS) c2tst.c p4io.c service.c $(LOBJS) $(LIBS) -o $@
 
-paho-mqtt:
-ifdef HASSMQTT
-	if [ ! -d ~/build/paho.mqtt.c ]; then \
-		mkdir -p ~/build; \
-		cd ~/build; \
-		git clone https://github.com/eclipse/paho.mqtt.c.git; \
-		sed -i '/if test ! -f ..DESTDIR..{libdir}.lib..MQTTLIB_C..so..{MAJOR_VERSION.; then ln -s/d' ~/build/paho.mqtt.c/Makefile; \
-		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTClient.man.man3.MQTTClient.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
-		sed -i '/\- ..INSTALL_DATA. .{blddir}.doc.MQTTAsync.man.man3.MQTTAsync.h.3 ..DESTDIR..{man3dir}/d' ~/build/paho.mqtt.c/Makefile; \
-		sed -i s/'rm [$$]'/'rm -f $$'/g ~/build/paho.mqtt.c/Makefile; \
-	fi
-	cd ~/build/paho.mqtt.c; \
-	make -s; \
-	sudo rm -f /usr/local/lib/libpaho*; \
-	sudo make -s uninstall prefix=/usr; \
-	sudo make -s install prefix=/usr
-endif
-
 build-deb:
 	rm -rf $(DEB_DEST)
 	make -s install-p4d DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
-#	cat contrib/p4d.service | sed s:"<BINDEST>":"$(_BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(DEB_DEST)/DEBIAN/p4d.service
-#	chmod a+r $(DEB_DEST)/DEBIAN/p4d.service
-	cd ~/build/paho.mqtt.c; \
-	make -s install DESTDIR=$(DEB_DEST) prefix=/usr
-	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
 
 publish-deb:
 	echo 'put $(DEB_BASE_DIR)/p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
@@ -227,7 +198,9 @@ lib/db.o        :  lib/db.c        $(HEADER)
 lib/dbdict.o    :  lib/dbdict.c    $(HEADER)
 lib/curl.o      :  lib/curl.c      $(HEADER)
 lib/serial.o    :  lib/serial.c    $(HEADER) lib/serial.h
-lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h
+lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h lib/mqtt_c.h
+lib/mqtt_c.o    :  lib/mqtt_c.c    lib/mqtt_c.h
+lib/mqtt_pal.o  :  lib/mqtt_pal.c  lib/mqtt_c.h
 
 main.o          :  main.c          $(HEADER) p4d.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h

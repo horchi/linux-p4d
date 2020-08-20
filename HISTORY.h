@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.35"
-#define VERSION_DATE "20.08.2020"
+#define _VERSION     "0.3.36"
+#define VERSION_DATE "19.08.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-08-19:  version 0.3.36
+   - change: removed dependencies to libpaho,
+             replaced with a more lightweight implementaion
+   - added:  auto refresh of schema view
 
 2020-08-18:  version 0.3.35
    - bugfix: Fixed init of schema configuration

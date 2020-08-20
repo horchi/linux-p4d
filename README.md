@@ -111,18 +111,6 @@ Check from a remote PC if connection works a webpage with the content `It Works!
 apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
 ```
 
-#### if you like to use the MQTT interface to the homeassistant, openhab or FHEM install the paho.mqtt library:
-```
-cd /usr/src/
-git clone https://github.com/eclipse/paho.mqtt.c.git
-cd paho.mqtt.c
-make
-sudo rm -f /usr/local/lib/libpaho*
-sudo make install
-```
-You can safely ignore this error message (may fixed once a day at paho.mqtt.c.git):
-```install: Aufruf von stat für „build/output/doc/MQTTClient/man/man3/MQTTClient.h.3“ nicht möglich: Datei oder Verzeichnis nicht gefunden```
-
 ### get the p4d and build it
 ```
 cd /usr/src/

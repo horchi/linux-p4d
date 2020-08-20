@@ -46,10 +46,8 @@ P4d::~P4d()
 {
    exit();
 
-#ifdef MQTT_HASS
    delete mqttWriter;
    delete mqttReader;
-#endif
 
    free(mailScript);
    free(stateMailAtStates);
@@ -494,16 +492,12 @@ int P4d::readConfiguration()
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
-#ifdef MQTT_HASS
    setConfigItem("mqtt", yes);
-#else
-   setConfigItem("mqtt", no);
-#endif
 
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
-   getConfigItem("mqttUser", mqttUser, "");
-   getConfigItem("mqttPassword", mqttPassword, "");
+   getConfigItem("mqttUser", mqttUser, nullptr);
+   getConfigItem("mqttPassword", mqttPassword, nullptr);
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
 
@@ -1164,14 +1158,12 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 
    // Home Assistant
 
-#ifdef MQTT_HASS
    if (mqttInterfaceStyle == misSingleTopic)
       jsonAddValue(oJson, name, title, unit, theValue, groupid, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
       mqttPublishSensor(name, title, unit, theValue, text, initialRun /*forceConfig*/);
-#endif
 
    // HomeMatic
 
@@ -1290,10 +1282,10 @@ int P4d::meanwhile()
    if (!connection || !connection->isConnected())
       return fail;
 
-#ifdef MQTT_HASS
-   if (mqttReader && mqttReader->isConnected()) mqttReader->yield();
-   if (mqttWriter && mqttWriter->isConnected()) mqttWriter->yield();
-#endif
+   // if (mqttReader && mqttReader->isConnected()) mqttReader->yield();
+   // if (mqttWriter && mqttWriter->isConnected()) mqttWriter->yield();
+
+   tell(2, "loop ...");
 
    performWebifRequests();
 
@@ -1529,10 +1521,8 @@ int P4d::update()
 
    connection->startTransaction();
 
-#ifdef MQTT_HASS
    if (mqttInterfaceStyle == misSingleTopic)
        oJson = json_object();
-#endif
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -1544,13 +1534,11 @@ int P4d::update()
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
 
-#ifdef MQTT_HASS
       if (mqttInterfaceStyle == misGroupedTopic)
       {
          if (!groups[groupid].oJson)
             groups[groupid].oJson = json_object();
       }
-#endif
 
       if (!tableValueFacts->getValue("USRTITLE")->isEmpty())
          title = tableValueFacts->getStrValue("USRTITLE");
@@ -1698,8 +1686,6 @@ int P4d::update()
    selectActiveValueFacts->freeResult();
    tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
 
-#ifdef MQTT_HASS
-
    if (mqttInterfaceStyle == misSingleTopic)
    {
       mqttWrite(oJson, 0);
@@ -1719,8 +1705,6 @@ int P4d::update()
          }
       }
    }
-
-#endif
 
    sensorAlertCheck(now);
 
@@ -2540,10 +2524,10 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
 
    if (tableConfig->find())
       value = strdup(tableConfig->getStrValue("VALUE"));
-   else
+   else if (def)  // only if it is not a nullptr
    {
       value = strdup(def);
-      setConfigItem(name, value);  // store the default
+      setConfigItem(name, value);  // store the default (may be an empty string)
    }
 
    tableConfig->reset();
