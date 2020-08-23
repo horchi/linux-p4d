@@ -1039,6 +1039,35 @@ void cMyMutex::Unlock(void)
     pthread_mutex_unlock(&mutex);
 }
 
+//***************************************************************************
+// cMyMutexLock
+//***************************************************************************
+
+cMyMutexLock::cMyMutexLock(cMyMutex* Mutex)
+{
+   mutex = NULL;
+   locked = false;
+   Lock(Mutex);
+}
+
+cMyMutexLock::~cMyMutexLock()
+{
+   if (mutex && locked)
+      mutex->Unlock();
+}
+
+bool cMyMutexLock::Lock(cMyMutex* Mutex)
+{
+   if (Mutex && !mutex)
+   {
+      mutex = Mutex;
+      Mutex->Lock();
+      locked = true;
+      return true;
+   }
+
+   return false;
+}
 
 //***************************************************************************
 // cTimeMs

@@ -229,7 +229,7 @@ echo "        <div style=\"z-index:2;\">\n";
 seperator("Grund-Einstellungen", 0);
 schemaItem(1, "Schema", $_SESSION['schema']);
 echo "   </br>";
-echo " <span>Sensor-Bezeichnungen:</span>";
+echo " <span>Sensor Bezeichnungen anzeigen:</span>";
 echo " <input type=\"checkbox\" class=\"rounded-border input\" name=\"schemaBez\" />";
 echo "   </br>";
 configOptionItem(7, "Zeitraum für Chart-Anzeige", "schemaRange", $_SESSION['schemaRange'], "24:24 48:48 60:60 72:72", "Stunden");

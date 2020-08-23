@@ -1,123 +1,109 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
+// MQTT / Linux
 // File mqtt.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2018  Jörg Wendel
+// Date 05.04.2020  Jörg Wendel
 //***************************************************************************
 
-#ifndef __MQTT_H__
-#define __MQTT_H__
+#ifndef _MQTT_CLIENT_H
+#define _MQTT_CLIENT_H
 
-#include <stdlib.h>
-#include <string.h>
-
-extern "C" {
-   #include "MQTTClient.h"
-   #include "MQTTClientPersistence.h"
-}
+#include <queue>
 
 #include "common.h"
+#include "thread.h"
+
+struct mqtt_response_publish;
+struct mqtt_client;
 
 //***************************************************************************
-// Class MqTTClient
+// MQTT Client
 //***************************************************************************
 
-class MqTTClient
+class Mqtt
 {
    public:
-
-      enum ClientType
-      {
-         MQTT_PUBLISHER,
-         MQTT_SUBSCRIBER
-      };
 
       enum Error
       {
-         wrnNoMessagePending = -100
+         wrnTimeout = -10000,
+         wrnEmptyMessage
       };
 
-      MqTTClient(const char* aUri, const char* aClientId)
-         : options(MQTTClient_connectOptions_initializer),
-           connected(false),
-           uri(strdup(aUri)),
-           clientId(strdup(aClientId)),
-           timeout(2000),
-           lastResult(MQTTCLIENT_SUCCESS)
-      {
-         options.keepAliveInterval = 20;
-         options.cleansession = true;
-         options.reliable = true;
-      }
+      Mqtt(int aHeartBeat = 400);
+      virtual ~Mqtt();
 
-      virtual ~MqTTClient()
-      {
-         disconnect();
-         free(uri);
-         free(clientId);
-         free((void*)options.username);
-         free((void*)options.password);
-      }
+      const char* nameOf()  { return "Mqtt"; }
 
-      virtual int connect();
+      // connect / disconnect
+
+      virtual int connect(const char* aUrl, const char* user = 0, const char* password = 0);
       virtual int disconnect();
-      virtual void yield()      { MQTTClient_yield(); };
-      bool isConnected()        { return connected; }
+      virtual int isConnected() { return connected; }
 
-      void setTimeout(int aTimeout){ timeout = aTimeout; }
-      void setUsername(const char* username);
-      void setPassword(const char* password);
-      void setConnectTimeout(int timeout) { options.connectTimeout = timeout; }
-      void setRetryInterval(int interval) { options.retryInterval = interval; }
+      // subscribe
 
-      int getLastResult() const           { return lastResult; }
+      virtual int subscribe(const char* topic);
+      virtual int unsubscribe(const char* topic);
+
+      // read / write
+
+      virtual int read(MemoryStruct* message, int aTimeout = 0);
+      virtual int write(const char* topic, const char* message, int len = 0);
+      virtual int writeRetained(const char* topic, const char* message);
+
+      // ...
+
+      virtual const char* getLastReadTopic()           { return lastReadTopic.c_str(); }
+      virtual bool isRetained()                        { return retained; }
+
+      void appendMessage(mqtt_response_publish* theMessage);
+      size_t getCount()   { return receivedMessages.size(); }
 
    protected:
 
-      MQTTClient client;
-      MQTTClient_connectOptions options;
+      struct Message
+      {
+         Message() {};
+         virtual ~Message() {}
 
-      bool connected;
-      char* uri;
-      char* clientId;
-      int timeout;
-      int lastResult;
+         bool duplicate {false};
+         uint8_t qos {0};
+         uint8_t retained {0};
+         std::string topic;
+         uint16_t packetId {0};
+         MemoryStruct payload;
+      };
+
+      int write(const char* topic, const char* message, size_t len, uint8_t flags);
+      int openSocket(const char* addr, int port);
+
+      static void* refreshFct(void* client);
+      static void publishCallback(void** user, mqtt_response_publish* published);
+
+      std::string lastReadTopic;
+      std::string theTopic;
+      bool connected {false};
+      ulong lastResult {0};
+      mqtt_client* mqttClient {nullptr};
+      int sockfd {-1};
+      bool retained {false};                      // retained flag of last read
+      pthread_t refreshThread {0};
+
+      std::queue<Message*> receivedMessages;
+      cMyMutex readMutex;
+      cCondVar readCond;
+      uint heartBeat {400};
+      cMyMutex connectMutex;
+
+      // the message buffers for the mqtt lib
+
+      size_t sizeSendBuf {0};
+      size_t sizeReceiveBuf {0};
+      uint8_t* sendbuf {nullptr};   // sendbuf should be large enough to hold multiple whole mqtt messages
+      uint8_t* recvbuf {nullptr};   // recvbuf should be large enough any whole mqtt message expected to be received
 };
 
 //***************************************************************************
-// Class
-//***************************************************************************
-
-class MqTTPublishClient : public MqTTClient
-{
-   public:
-
-      MqTTPublishClient(const char* aUri, const char* aClientId)
-         : MqTTClient(aUri, aClientId) {}
-
-      int write(const char* topic, const char* msg, size_t sz = 0);
-};
-
-//***************************************************************************
-// Class
-//***************************************************************************
-
-class MqTTSubscribeClient: public MqTTClient
-{
-   public:
-
-      MqTTSubscribeClient(const char* aUri, const char* aClientId)
-         : MqTTClient(aUri, aClientId) {}
-
-      int disconnect();
-      int subscribe(const char* aTopic);
-      int unsubscribe();
-      int read(std::string* message, std::string* rtopic);
-
-   private:
-
-      std::string topic;
-};
-
-#endif
+#endif //  _MQTT_CLIENT_H

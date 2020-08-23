@@ -1,51 +1,176 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
-// File mqtt.c
+// MQTT / Linux
+// File mqtt.cc
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 05.03.2020  Jörg Wendel
+// Date 05.04.2020  Jörg Wendel
 //***************************************************************************
 
+#include <sys/syscall.h>
+#include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
-#include <time.h>
+
+#include <iostream>
 
 #include "mqtt.h"
 
-//***************************************************************************
-// MQTT Client
-//***************************************************************************
-
-void MqTTClient::setUsername(const char* username)
+extern "C"
 {
-   free((void*)options.username);
-   options.username = !isEmpty(username) ? strdup(username) : 0;
+   #include "mqtt_c.h"
 }
 
-void MqTTClient::setPassword(const char* password)
+//***************************************************************************
+// Object
+//***************************************************************************
+
+Mqtt::Mqtt(int aHeartBeat)
 {
-   free((void*)options.password);
-   options.password = !isEmpty(password) ? strdup(password) : 0;
+   heartBeat = aHeartBeat;
+   lastResult = MQTT_OK;
+   mqttClient = new mqtt_client;
+   memset(mqttClient, 0, sizeof(mqtt_client));
 }
 
-int MqTTClient::connect()
+Mqtt::~Mqtt()
+{
+   delete sendbuf;
+   delete recvbuf;
+   delete mqttClient;
+}
+
+//***************************************************************************
+// Called if message was received
+//***************************************************************************
+
+void Mqtt::publishCallback(void** user, mqtt_response_publish* published)
+{
+   ((Mqtt*)*user)->appendMessage(published);
+
+#ifdef __MQTT_DEBUG
+   std::sting topic;
+   topic.assign((const char*)published->topic_name, published->topic_name_size);
+   tell(0, "Received at '%s' (%d) %.*s\n", topic.c_str(), published->dup_flag,
+        (int)published->application_message_size, (const char*)published->application_message);
+#endif
+}
+
+void* Mqtt::refreshFct(void* client)
+{
+   int result;
+   Mqtt* mqtt = (Mqtt*)client;
+   mqtt_client* cl = mqtt->mqttClient; //(mqtt_client*)client;
+
+   while (!cl->close_now)
+   {
+      if ((result = mqtt_sync(cl)) != MQTT_OK)
+      {
+         tell(0, "Error: mqtt_sync for connection '%s' failed, result was %d '%s'",
+              mqtt->theTopic.c_str(), result, mqtt_error_str((MQTTErrors)result));
+         mqtt->disconnect();
+      }
+
+      cCondWait::SleepMs(10);
+      // tell(0, "refreshFct '%s' tid: %ld", mqtt->theTopic.c_str(), syscall(__NR_gettid));
+   }
+
+   cl->close_now = 2;
+
+   return nullptr;
+}
+
+void Mqtt::appendMessage(mqtt_response_publish* published)
+{
+   Mqtt::Message* msg = new Mqtt::Message();
+
+   msg->duplicate = published->dup_flag;
+   msg->qos = published->qos_level;
+   msg->retained = published->retain_flag;
+   msg->topic.assign((const char*)published->topic_name, published->topic_name_size);
+   msg->packetId = published->packet_id;
+   msg->payload.clear();
+   msg->payload.append((const char*)published->application_message, published->application_message_size);
+
+   {
+      cMyMutexLock lock(&readMutex);
+      receivedMessages.push(msg);
+   }
+
+   readCond.Broadcast();
+}
+
+//***************************************************************************
+// Connect
+//***************************************************************************
+
+int Mqtt::connect(const char* aUrl, const char* user, const char* password)
 {
    disconnect();
 
-   connected = false;
-   lastResult = MQTTClient_create(&client, uri, clientId, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+   char url[512+TB];
+   strcpy(url, aUrl);
+   int port = 1883;
+   char* hostname = url;
+   char* p;
 
-   if (lastResult != MQTTCLIENT_SUCCESS)
+   if ((p = strrchr(hostname, '/')))
+      hostname = p+1;
+
+   if ((p = strchr(hostname, ':')))
    {
-      tell(0, "Error: Creating client for '%s' failed", uri);
+      *p++ = '\0';
+      port = atoi(p);
+   }
+
+   cMyMutexLock lock(&connectMutex);
+
+   sockfd = openSocket(hostname, port);
+
+   if (sockfd == -1)
+   {
+      tell(0, "Error: Failed to open socket '%s'", strerror(errno));
       return fail;
    }
 
-   lastResult = MQTTClient_connect(client, &options);
+   delete sendbuf;
+   delete recvbuf;
 
-   if (lastResult != MQTTCLIENT_SUCCESS)
+   sizeSendBuf = 1024 * 1024;
+   sendbuf = new uint8_t[sizeSendBuf];
+   sizeReceiveBuf = 1024 * 1024;
+   recvbuf = new uint8_t[sizeReceiveBuf];
+
+   // refresh thread
+
+   if (pthread_create(&refreshThread, NULL, refreshFct, this))
    {
-      tell(0, "Error: Connecting to '%s' failed", uri);
-      MQTTClient_destroy(&client);
+      tell(0, "Error: Failed to start client daemon thread");
+      close(sockfd);
+      sockfd = -1;
+      return fail;
+   }
+
+   pthread_detach(refreshThread);
+
+   //
+
+   mqttClient->publish_response_callback_state = this;
+   lastResult = mqtt_init(mqttClient, sockfd, sendbuf, sizeSendBuf, recvbuf, sizeReceiveBuf, publishCallback, refreshThread, SIGUSR2);
+
+   if (lastResult != MQTT_OK)
+   {
+      tell(0, "Error: Initializing client failed");
+      return fail;
+   }
+
+   // #TODO - some connecting options needed?
+
+   lastResult = mqtt_connect(mqttClient, "", NULL, NULL, 0, user, password, MQTT_CONNECT_RESERVED | MQTT_CONNECT_CLEAN_SESSION, 400);
+
+   if (lastResult != MQTT_OK)
+   {
+      tell(0, "Error: Connecting to '%s:%d' failed with code (%ld)", hostname, port, lastResult);
+      close(sockfd);
       return fail;
    }
 
@@ -54,128 +179,94 @@ int MqTTClient::connect()
    return success;
 }
 
-int MqTTClient::disconnect()
-{
-   if (!connected)
-      return success;
-
-   lastResult = MQTTClient_disconnect(client, 10000);
-   MQTTClient_destroy(&client);
-   connected = false;
-
-   if (lastResult)
-      return fail;
-
-   return success;
-}
-
-//***************************************************************************
-// Publish Client
-//***************************************************************************
-//***************************************************************************
-// Write
-//***************************************************************************
-
-int MqTTPublishClient::write(const char* topic, const char* msg, size_t size)
-{
-   MQTTClient_message message = MQTTClient_message_initializer;
-   MQTTClient_deliveryToken token;
-
-   if (!msg || !topic)
-      return success;
-
-   if (!size)
-      size = strlen(msg); // + 1;
-
-   message.payload = (void*)msg;
-   message.payloadlen = size;
-   message.qos = 0;
-   message.retained = 1;
-
-   // lastResult = MQTTCLIENT_SUCCESS;
-   lastResult = MQTTClient_publishMessage(client, topic, &message, &token);
-
-   if (lastResult != MQTTCLIENT_SUCCESS)
-   {
-      tell(0, "Error: Writing to topic '%s' failed", topic);
-      disconnect();
-      return fail;
-   }
-
-   lastResult = MQTTClient_waitForCompletion(client, token, 10000L);
-
-   if (lastResult != MQTTCLIENT_SUCCESS)
-   {
-      tell(0, "Error: Writing not completed");
-      disconnect();
-      return fail;
-   }
-
-   tell(1, "-> (%s)[%s]", topic, msg);
-
-   return success;
-}
-
-//***************************************************************************
-// Subscribe Client
-//***************************************************************************
 //***************************************************************************
 // Disconnect
 //***************************************************************************
 
-int MqTTSubscribeClient::disconnect()
+int Mqtt::disconnect()
 {
-   unsubscribe();
-   return MqTTClient::disconnect();
-}
+   cMyMutexLock lock(&connectMutex);
 
-//***************************************************************************
-// Subscribe
-//***************************************************************************
+   if (!isConnected())
+      return success;
 
-int MqTTSubscribeClient::subscribe(const char* aTopic)
-{
-   if (!connected || !aTopic)
-   {
-      tell(0, "Error: Can't subscribe, not connected or topic missing");
-      return fail;
-   }
+   connected = false;
+   tell(0, "Info: Disconnecting '%s'", theTopic.c_str());
+   mqttClient->close_now = 1;
 
-   if (topic.length())
-      unsubscribe();
+   time_t endWait = time(0) + 10;
 
-   topic = aTopic;
-   lastResult = MQTTClient_subscribe(client, topic.c_str(), 2);
+   while (mqttClient->close_now != 2 && time(0) < endWait)
+      usleep(100000);
 
-   if (lastResult != MQTTCLIENT_SUCCESS)
-   {
-      tell(0, "Error: Subscribing to '%s' failed", topic.c_str());
-      disconnect();
-      return fail;
-   }
+   // stop the refresh thread
 
-   tell(3, "Subscribing to topic '%s' succeeded", topic.c_str());
+   tell(2, "Info: Stopping refresh thread for '%s'", theTopic.c_str());
+
+   if (mqttClient->close_now == 2)
+      pthread_join(refreshThread, 0);
+   else if (refreshThread)
+      pthread_cancel(refreshThread);
+
+   refreshThread = 0;
+
+   // disconnect and close socket
+
+   mqtt_disconnect(mqttClient);
+
+   if (sockfd != -1)
+      close(sockfd);
+
+   sockfd = -1;
 
    return success;
 }
 
 //***************************************************************************
-// Unsubscribe
+// Subscribe / Unsubscribe
 //***************************************************************************
 
-int MqTTSubscribeClient::unsubscribe()
+int Mqtt::subscribe(const char* topic)
 {
-   if (!connected || !topic.length())
-      return success;
+   theTopic.clear();
 
-   lastResult = MQTTClient_unsubscribe(client, topic.c_str());
-   topic.clear();
-
-   if (lastResult != MQTTCLIENT_SUCCESS)
+   if (!isConnected() || isEmpty(topic))
    {
-      tell(0, "Error: Unsubscribing to '%s' failed", topic.c_str());
+      tell(0, "Error: Can't subscribe, not connected or topic '%s' missing", topic);
       return fail;
    }
+
+   lastResult = mqtt_subscribe(mqttClient, topic, 0);
+
+   if (lastResult != MQTT_OK)
+   {
+      tell(0, "Error: Subscribing to '%s' failed", topic);
+      disconnect();
+      return fail;
+   }
+
+   theTopic = topic;
+   tell(4, "Debug: Subscribing to topic '%s' succeeded", topic);
+
+   return success;
+}
+
+int Mqtt::unsubscribe(const char* topic)
+{
+   theTopic.clear();
+
+   if (!isConnected() || isEmpty(topic))
+      return success;
+
+   lastResult = mqtt_unsubscribe(mqttClient, topic);
+
+   if (lastResult != MQTT_OK)
+   {
+      tell(0, "Error: Unsubscribing to '%s' failed", topic);
+      return fail;
+   }
+
+   tell(4, "Debug: Unsubscribing from topic '%s' succeeded", topic);
 
    return success;
 }
@@ -184,37 +275,138 @@ int MqTTSubscribeClient::unsubscribe()
 // Read
 //***************************************************************************
 
-int MqTTSubscribeClient::read(std::string* message, std::string* rtopic)
+int Mqtt::read(MemoryStruct* message, int timeoutMs)
 {
-   MQTTClient_message* _message = 0;
-   char* receivedTopic = 0;
-   int receivedTopicLen = 0;
+   uint64_t endAt = cTimeMs::Now() + timeoutMs;
+   int tmoMs;
+   Message* msg {nullptr};
 
    message->clear();
+   lastReadTopic.clear();
 
-   int lastResult = MQTTClient_receive(client, &receivedTopic, &receivedTopicLen, &_message, timeout);
-
-   if (lastResult != MQTTCLIENT_SUCCESS && lastResult != MQTTCLIENT_TOPICNAME_TRUNCATED)
+   while (receivedMessages.empty())
    {
-      tell(0, "Error: Reading topic '%s' failed, result was (%d)", topic.c_str(), lastResult);
+      if (timeoutMs && cTimeMs::Now() >= endAt)
+         return wrnTimeout;
 
-      if (_message)
-         MQTTClient_freeMessage(&_message);
+      if (!timeoutMs)
+         tmoMs = 10000;
+      else
+         tmoMs = max((int)(endAt-cTimeMs::Now()), 1);
 
+      readMutex.Lock();
+      readCond.TimedWait(readMutex, tmoMs);
+      readMutex.Unlock();
+   }
+
+   {
+      cMyMutexLock lock(&readMutex);
+      msg = receivedMessages.front();
+      receivedMessages.pop();
+   }
+
+   message->append(msg->payload.memory, msg->payload.size);
+   message->append('\0');
+
+   lastReadTopic = msg->topic.c_str();
+   retained = msg->retained;
+
+   delete msg;
+
+   return success;
+}
+
+//***************************************************************************
+// Write
+//***************************************************************************
+
+int Mqtt::write(const char* topic, const char* message, int len)
+{
+   if (isEmpty(topic))
+      return wrnEmptyMessage;
+
+   if (!len && message)
+      len = strlen(message) + TB;
+
+   return write(topic, message, len, MQTT_PUBLISH_QOS_0);
+}
+
+int Mqtt::writeRetained(const char* topic, const char* message)
+{
+   if (isEmpty(topic))
+      return wrnEmptyMessage;
+
+   // we can also write NULL messages !!
+
+   return write(topic, message, message ? strlen(message) : 0, MQTT_PUBLISH_RETAIN | MQTT_PUBLISH_QOS_0);
+}
+
+int Mqtt::write(const char* topic, const char* message, size_t len, uint8_t flags)
+{
+   theTopic.clear();
+
+   lastResult = mqtt_publish(mqttClient, topic, message, len, flags);
+
+   if (lastResult != MQTT_OK)
+   {
+      tell(0, "Error: Writing '%.*s' (%zd) to topic '%s' failed, result was %lu '%s'", (int)len,
+           message, len, topic, lastResult, mqtt_error_str((MQTTErrors)lastResult));
       disconnect();
-
       return fail;
    }
 
-   if (!_message)
-      return wrnNoMessagePending;
-
-   *message = (const char*)_message->payload;
-   message->resize(_message->payloadlen);
-   MQTTClient_freeMessage(&_message);
-
-   *rtopic = receivedTopic;
-   MQTTClient_free(receivedTopic);
+   theTopic = topic;
+   tell(1, "-> (%s)[%s]", topic, message);
 
    return success;
+}
+
+#include <sys/socket.h>
+#include <netdb.h>
+#include <fcntl.h>
+
+int Mqtt::openSocket(const char* addr, int port)
+{
+   struct addrinfo hints = {0};
+   int sockfd = -1;
+   int rv;
+   struct addrinfo *p, *servinfo;
+   char service[100];
+
+   hints.ai_family = AF_UNSPEC;      // IPv4 or IPv6
+   hints.ai_socktype = SOCK_STREAM;  // Must be TCP
+   sprintf(service, "%d", port);
+
+   // get address information
+
+   rv = getaddrinfo(addr, service, &hints, &servinfo);
+
+   if (rv != 0)
+      return -1;
+
+   //  open first possible socket
+
+   for (p = servinfo; p != NULL; p = p->ai_next)
+   {
+      sockfd = ::socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+
+      if (sockfd == -1)
+         continue;
+
+      rv = ::connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+
+      if (rv == -1)
+         continue;
+
+      break;
+   }
+
+   freeaddrinfo(servinfo);
+
+   // #TODO don't set O_NONBLOCK
+
+   if (sockfd != -1)
+      fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL) | O_NONBLOCK);
+
+   return sockfd;
 }

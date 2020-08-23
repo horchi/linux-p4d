@@ -1,6 +1,6 @@
 
 //
-// g++ -Ilib mqtttest.c lib/mqtt.c lib/common.c -lpthread  -lpaho-mqtt3cs -o mqtt
+// g++ -Ilib mqtttest.c lib/mqtt.c lib/common.c -lpthread -o mqtt
 //
 
 #include "lib/common.h"

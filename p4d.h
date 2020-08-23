@@ -20,11 +20,9 @@
 #include "p4io.h"
 #include "w1.h"
 #include "lib/curl.h"
-#include "HISTORY.h"
+#include "lib/mqtt.h"
 
-#ifdef MQTT_HASS
-#  include "lib/mqtt.h"
-#endif
+#include "HISTORY.h"
 
 #define confDirDefault "/etc/p4d"
 
@@ -80,12 +78,10 @@ class P4d : public FroelingService
       int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
                 uint factor, uint groupid, const char* text = 0);
 
-#ifdef MQTT_HASS
       int mqttPublishSensor(const char* name, const char* title, const char* unit, double theValue, const char* text = 0, bool forceConfig = false);
       int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
       int mqttCheckConnection();
       int mqttWrite(json_t* obj, uint groupid);
-#endif
 
       void addParameter2Mail(const char* name, const char* value);
 
@@ -197,12 +193,8 @@ class P4d : public FroelingService
       json_t* oJson {nullptr};
       std::map<int,Group> groups;
 
-#ifdef MQTT_HASS
-
-      MqTTPublishClient* mqttWriter {nullptr};
-      MqTTSubscribeClient* mqttReader {nullptr};
-
-#endif // HASS
+      Mqtt* mqttWriter {nullptr};
+      Mqtt* mqttReader {nullptr};
 
       // config
 
