@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.35"
-#define VERSION_DATE "20.08.2020"
+#define _VERSION     "0.3.36"
+#define VERSION_DATE "23.08.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-08-23:  version 0.3.36
+   - added: Support configurable texts for boolean values in schema view
 
 2020-08-18:  version 0.3.35
    - bugfix: Fixed init of schema configuration

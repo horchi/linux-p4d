@@ -135,6 +135,8 @@ Table schemaconf
    COLOR                ""  color                Ascii       10 Data,
    SHOWUNIT             ""  showunit             Int          1 Data,
    SHOWTEXT             ""  showtext             Int          1 Data,
+   TEXT1                ""  text1                Ascii       10 Data,
+   TEXT2                ""  text2                Ascii       10 Data,
    BG                   ""  bg                   Int          2 Data,
    FONTSIZE             ""  fontsize             Int          2 Data,
    ALEFT                ""  aleft                Int          2 Data,

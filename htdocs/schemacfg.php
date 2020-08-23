@@ -135,13 +135,11 @@ if ($started == 1 && $_SESSION["cur"] != $_SESSION["num"] - 1) // Fix für letzt
    echo "      <button class=\"rounded-border button3\" type=\"submit\" name=\"cfg\" value=\"Skip\">Skip</button>\n";
    echo "      <button class=\"rounded-border button3\" type=\"submit\" name=\"cfg\" value=\"Hide\">Hide</button>\n";
    echo "      <button class=\"rounded-border button3\" type=\"submit\" name=\"cfg\" value=\"Back\">Back</button>\n";
-   echo "      <span class=\"checkbox\">\n";
-   echo "        </br>";
-   echo "        <input type=\"checkbox\" name=\"unit\" value=\"unit\" checked/>Einheit\n";
-   echo "        <input type=\"radio\" name=\"showtext\" value=\"Value\" checked/>Wert\n";
-   echo "        </br>";
-   echo "        <input type=\"radio\" name=\"showtext\" value=\"Text\"/>Text\n";
-   echo "      </span>\n";
+   echo "      <div style=\"margin: 8px;\">\n";
+   echo "         <input type=\"checkbox\" name=\"unit\" value=\"unit\" checked/>Einheit\n";
+   echo "         <input type=\"radio\" name=\"showtext\" value=\"Value\" checked/>Wert\n";
+   echo "         <input type=\"radio\" name=\"showtext\" value=\"Text\"/>Text\n";
+   echo "      </div>\n";
    echo "      <div class=\"rounded-border seperatorTitle1\">Einheit und Wert/Text wählen und mit der Maus auf dem Schema positionieren,<br/> mit 'Hide' verbergen oder mit 'Skip' unverändert beibehalten</div>\n";
 }
 else
@@ -186,6 +184,16 @@ if ($started == 1)
          nextConf(1);
          $result->close();
       }
+   }
+
+   if (isset($_SESSION["unit"]) && $_SESSION["unit"] == "")
+   {
+      $text1 = $_SESSION["text1"];
+      $text2 = $_SESSION["text2"];
+      echo "        <div>\n";
+      echo "           Text for 'active':  <input class=\"rounded-border input\" type=\"text\" name=\"text1\" value=\"$text1\"/>\n";
+      echo "           'passive':  <input class=\"rounded-border input\" type=\"text\" name=\"text2\" value=\"$text2\"/>\n";
+      echo "         </div>\n";
    }
 }
 
@@ -280,13 +288,6 @@ function nextConf($dir)
       return;
    }
 
-   // get last time stamp
-
-   $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
-   $row = $result->fetch_array(MYSQLI_ASSOC);
-   $max = $row['max(time)'];
-   $result->close();
-
    // select conf item
 
    $result = $mysqli->query($selectAllSchemaConf)
@@ -301,6 +302,8 @@ function nextConf($dir)
          $_SESSION["num"] = $result->num_rows;
          $_SESSION["addr"] = $row['address'];
          $_SESSION["type"] = $row['type'];
+         $_SESSION["text1"] = $row['text1'];
+         $_SESSION["text2"] = $row['text2'];
          $title = ($row['usrtitle'] != "") ? $row['usrtitle']: $row['title'];
 
          break;
@@ -309,6 +312,13 @@ function nextConf($dir)
       $i++;
    }
 
+   $result->close();
+
+   // get last time stamp
+
+   $result = $mysqli->query("select max(time), DATE_FORMAT(max(time),'%d. %M %Y   %H:%i') as maxPretty from samples;");
+   $row = $result->fetch_array(MYSQLI_ASSOC);
+   $max = $row['max(time)'];
    $result->close();
 
    // get coresponding value/text and unit
@@ -328,6 +338,8 @@ function nextConf($dir)
       $value = $row['s_value'];
       $unit = $row['f_unit'];
       $text = $row['s_text'];
+
+      $_SESSION["unit"] = $row['f_unit'];
    }
 
    $result->close();
@@ -351,26 +363,36 @@ function store($state, $xpos, $ypos, $color)
 
    $showUnit = 0;
    $showText = 0;
+   $text1 = htmlspecialchars($_POST["text1"]);
+   $text2 = htmlspecialchars($_POST["text2"]);
 
    if (isset($_POST["unit"]))
       $showUnit = 1;
 
    if (htmlspecialchars($_POST["showtext"]) == "Text")
       $showText = 1;
-      syslog(LOG_DEBUG, "p4: schema-cfg store position: " . $xpos . "/" . $ypos . " with unit: " . $showUnit);
 
    if ($_SESSION["cur"] < $_SESSION["num"] && $_SESSION["addr"] >= 0)
    {
+      syslog(LOG_DEBUG, "p4: schema-cfg addr " . $_SESSION["addr"] . " store position: " . $xpos . "/" . $ypos . " with unit: " . $showUnit .
+         " and text1: " . $text1);
+
       if ($state == "D")
          $mysqli->query("update schemaconf set state = '" . $state . "'" .
-                     " where address = '" . $_SESSION["addr"] . "' and type = '" .
-                     $_SESSION["type"] . "'");
+                        " where address = '" . $_SESSION["addr"] . "' and type = '" .
+                        $_SESSION["type"] . "'");
       else
-         $mysqli->query("update schemaconf set xpos = '" . $xpos .
-                     "', ypos = '" . $ypos . "', state = '" . $state .
-                     "', showunit = " . $showUnit . ", showtext = " . $showText .
-                     " where address = '" . $_SESSION["addr"] . "' and type = '" .
-                     $_SESSION["type"] . "'");
+      {
+         $q = "update schemaconf set xpos = '" . $xpos .
+            "', ypos = '" . $ypos . "', state = '" . $state .
+            "', showunit = " . $showUnit . ", showtext = " . $showText .
+            ", text1 = '" . $text1 . "', text2 = '" . $text2 . "'" .
+            " where address = '" . $_SESSION["addr"] . "' and type = '" .
+            $_SESSION["type"] . "'";
+
+         // syslog(LOG_DEBUG, "p4: schema-cfg '" . $q . "'");
+         $mysqli->query($q);
+      }
    }
 }
 

@@ -20,7 +20,7 @@ $pumpsAO = "|," . $_SESSION['pumpsAO'] . ",";
 // -------------------------
 // show values
 
-$resultConf = $mysqli->query("select address, type, kind, color, showunit, showtext, xpos, ypos from schemaconf where state = 'A'")
+$resultConf = $mysqli->query("select address, type, kind, color, showunit, showtext, xpos, ypos, text1, text2 from schemaconf where state = 'A'")
    or die("Error" . $mysqli->error);
 
 while ($rowConf = $resultConf->fetch_assoc())
@@ -32,7 +32,8 @@ while ($rowConf = $resultConf->fetch_assoc())
    $color = $rowConf['color'];
    $showUnit = $rowConf['showunit'];
    $showText = $rowConf['showtext'];
-
+   $text1 = $rowConf['text1'];
+   $text2 = $rowConf['text2'];
    $strQuery = sprintf("select s.value as s_value, s.text as s_text, f.title as f_title, f.usrtitle as f_usrtitle, f.unit as f_unit from samples s, valuefacts f where f.address = s.address and f.type = s.type and s.time = '%s' and f.address = %s and f.type = '%s';", $max, $addr, $type);
    $result = $mysqli->query($strQuery)
       or die("Error" . $mysqli->error);
@@ -72,6 +73,8 @@ while ($rowConf = $resultConf->fetch_assoc())
 
       if ($showText)
          echo $urlStart . $text . $urlEnd;
+      else if ($text1 != "" || $text2 != "")
+         echo $urlStart . $bez . ($value != 0 && $value != "0" ? $text1 : $text2) . $urlEnd;
       else if ($showUnit && !preg_match("/[a-zA-Z]/", $value)) // Unit nur anzeigen, wenn Wert eine Zahl ist
          echo $urlStart . $bez . $value . ($unit == "°" ? "°C" : $unit) . $urlEnd;
       else
