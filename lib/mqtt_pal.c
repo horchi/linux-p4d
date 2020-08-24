@@ -115,7 +115,7 @@ ssize_t mqtt_pal_sendall(mqtt_pal_socket_handle fd, const char* buf, size_t len,
             // timeout occurred
          }
 
-         printf("::send() result was (%d) '%s'\n", tmp, strerror(errno));
+         printf("::send() result was (%zu) '%s'\n", tmp, strerror(errno));
          return MQTT_ERROR_SOCKET_ERROR;
       }
 
@@ -153,7 +153,7 @@ ssize_t mqtt_pal_recvall(mqtt_pal_socket_handle fd, char* buf, size_t bufsz, int
 
       else if (rv < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
       {
-         printf("::recv() result was (%d) '%s'\n", rv, strerror(errno));
+         printf("::recv() result was (%zu) '%s'\n", rv, strerror(errno));
          return MQTT_ERROR_SOCKET_ERROR;
       }
 

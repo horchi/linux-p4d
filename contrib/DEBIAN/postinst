@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # postinst script for p4d
 
@@ -25,7 +25,12 @@ case "$1" in
     configure)
         echo "postinst called for configure" >&2
         sed -nri '/.*max_input_vars/!p;$amax_input_vars = 5000' /etc/php/7.3/apache2/php.ini
-        echo ${COMMAND} | mysql -u root -Dmysql
+        if pgrep mysqld; then
+           echo "Enter your database root password:" >&2
+           echo ${COMMAND} | mysql -u root -Dmysql -p
+        else
+           echo "No local databse found, skipping db setup" >&2
+        fi
         systemctl daemon-reload && systemctl enable p4d
         ;;
 

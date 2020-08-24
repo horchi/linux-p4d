@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.37"
-#define VERSION_DATE "23.08.2020"
+#define _VERSION     "0.3.38"
+#define VERSION_DATE "24.08.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-08-24:  version 0.3.38
+   - bugfix: Fixed packet install with non empyt db root password
+   - bugfix: Fixed packet install with remote db
+   - change: Added support of 'unkown' units by parsing the description
 
 2020-08-23:  version 0.3.37
    - added: Support configurable texts for boolean values in schema view

@@ -178,6 +178,7 @@ build-deb:
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
+	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
 
 publish-deb:
 	echo 'put $(DEB_BASE_DIR)/p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d

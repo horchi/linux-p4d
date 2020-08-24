@@ -7,8 +7,8 @@ unkown1:
 11 00 - Digitaler Ausgang
 12 00 - Analoger Ausgang
 13 00 - Digitaler Eingang
-18 00 - 
-19 00 - 
+18 00 -
+19 00 -
 0a 00 - Parameter einstellbar Tageszeit in Minuten von 00:00
 
 -----------------------------------------
@@ -92,3 +92,42 @@ Unbekannte Kommandos
 ## 0x5B
 -----------------------------------------
 
+
+
+## values:
+<- 02 FD 00 1F 31 01 00 0A 00 02 00 01 25 00 03 52 65 73 74 73 61 75 65 72 73 74 6F 66 66 67 65 68 61 6C 74 00 4C    ....1.......%..Restsauerstoffgehalt.L
+ 38) 0x0003   10 '%' (0002) 'Restsauerstoffgehalt'
+
+Header:
+02 FD 00 1F 31
+ -> 2 byte "ID"
+ -> 2 byte "size"
+ -> 1 byte "command"
+
+01
+  -> 1 byte "more to get"
+
+00 0A
+ -> 2 byte "factor"
+
+00 02
+ -> 2 byte "unknown"
+
+00 01
+ -> 2 byte "unit" as text  (byte 11,12)
+
+25 00
+ -> 2 byte "address"
+
+03 52 65 73 74 73 61 75 65 72 73 74 6F 66 66 67 65 68 61 6C 74
+ ->  size-sizeCrc-1 bytes (Rest) "description"
+
+00
+  -> 1 byte "termination byte"
+
+4C
+ -> 1 byte "crc"
+
+
+51) 0x0115    1 '' (0001) 'Tagesertrag [kWh]'
+02 FD 00 1C 31 01 00 01 00 01 00 20 01 15 54 61 67 65 73 65 72 74 72 61 67 20 5B 6B 57 68 5D 00 4A    ....1...... ..Tagesertrag [kWh].J

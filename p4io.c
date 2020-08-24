@@ -1269,6 +1269,21 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    allTrim(v->unit);
 
+   if (isEmpty(v->unit))
+   {
+      // try to prse unit from description
+
+      const char* s = strchr(v->description, '[');
+      const char* e = strchr(v->description, ']');
+
+      if (s && e && e > s)
+      {
+         free(v->unit);
+         asprintf(&v->unit, "%.*s", (int)(e-s)-1, s+1);
+         tell(2, "Using unit '%s' from description", v->unit);
+      }
+   }
+
    return status;
 }
 

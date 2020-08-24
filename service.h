@@ -301,14 +301,14 @@ class FroelingService
 
       struct ValueSpec
       {
-         ValueSpec()  { unit = 0; description = 0; name = 0; }
+         ValueSpec()  {}
          ~ValueSpec() { free(unit); free(description); free(name); }
 
          word address;
-         char* unit;
+         char* unit {nullptr};
          word factor;
-         char* name;
-         char* description;
+         char* name {nullptr};
+         char* description {nullptr};
          word unknown;
       };
 
