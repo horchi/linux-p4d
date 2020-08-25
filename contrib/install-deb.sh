@@ -43,13 +43,12 @@ dpkg-reconfigure --frontend=noninteractive locales && \
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 apt -y install /tmp/p4d-latest.deb || exit 1
 
-echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
-echo "alias vs='tail -f /var/log/syslog'" >> ~/.bashrc
-echo "alias va='tail -f /var/log/apache2/error.log'" >> ~/.bashrc
-
-echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
-echo "alias vs='tail -f /var/log/syslog'" >> ~pi/.bashrc
-echo "alias va='tail -f /var/log/apache2/error.log'" >> ~pi/.bashrc
+grep -q '^alias p4db=' ~/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
+grep -q '^alias vs=' ~/.bashrc || echo "alias vs='tail -f /var/log/syslog'" >> ~/.bashrc
+grep -q '^alias va=' ~/.bashrc || echo "alias va='tail -f /var/log/apache2/error.log'" >> ~/.bashrc
+grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
+grep -q '^alias vs=' ~pi/.bashrc || echo "alias vs='tail -f /var/log/syslog'" >> ~pi/.bashrc
+grep -q '^alias va=' ~pi/.bashrc || echo "alias va='tail -f /var/log/apache2/error.log'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"

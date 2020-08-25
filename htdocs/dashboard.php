@@ -163,16 +163,6 @@ $stateImg = getStateImage($state);
          echo "        </div>\n";
       }
 
-      else if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u' || $u == 'l')  // 'value' als Text anzeigen
-      {
-         $value = round($value, 0);
-
-         echo "        <div class=\"widget rounded-border\">\n";
-         echo "          <div class=\"widget-title\">$title</div>";
-         echo "          <div class=\"widget-value\">$value $unit</div>";
-         echo "        </div>\n";
-      }
-
       else if ($type == 'DI' || $type == 'DO' || $u == '')                     // 'boolean' als symbol anzeigen
       {
          if (strpos($name, "umpe") != FALSE)
@@ -185,6 +175,15 @@ $stateImg = getStateImage($state);
          echo "          <button class=\"widget-main\" type=submit name=action value=\"_switch:$address\">\n";
          echo "             <img src=\"$imagePath\">\n";
          echo "          </button>\n";
+         echo "        </div>\n";
+      }
+      else // if ($u == 'h' || $u == 'U' || $u == 'R' || $u == 'm' || $u == 'u' || $u == 'l')  // 'value' als Text anzeigen
+      {
+         $value = round($value, 0);
+
+         echo "        <div class=\"widget rounded-border\">\n";
+         echo "          <div class=\"widget-title\">$title</div>";
+         echo "          <div class=\"widget-value\">$value $unit</div>";
          echo "        </div>\n";
       }
    }

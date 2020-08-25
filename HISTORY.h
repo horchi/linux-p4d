@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.3.38"
-#define VERSION_DATE "24.08.2020"
+#define _VERSION     "0.3.39"
+#define VERSION_DATE "25.08.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-08-25:  version 0.3.39
+   - change: Changed the value display default for dashbord to text
 
 2020-08-24:  version 0.3.38
    - bugfix: Fixed packet install with non empyt db root password
