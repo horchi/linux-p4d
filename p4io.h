@@ -181,7 +181,7 @@ class P4Request : public FroelingService
          return s->write(buffer, sizeBufferContent);
       }
 
-      void show(const char* prefix = "", int elo = eloDebug)
+      void show(const char* prefix = "", int elo = eloDebug2)
       {
          char tmp[1000];
          *tmp = 0;

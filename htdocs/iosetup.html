@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="author" content="Jörg Wendel"/>
+    <meta name="copyright" content="Jörg Wendel"/>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <link rel="shortcut icon" href="img/logo.png" type="image/png"/>
+    <link rel="icon" href="img/logo.png" type="image/png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/logo.png" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="jquery.browser.min.js"></script>
+    <script type="text/javascript" src="websocket.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script>
+      $(document).ready(function() { documentReady("iosetup"); });
+    </script>
+
+    <title>Heating Control</title>
+  </head>
+  <body>
+
+    <div class="menu">
+      <nav id="navMenu" data-setup="yes" data-iosetup="yes"></nav>
+    </div>
+
+    <div class="content">
+      <div id="ioSetupContainer">
+        <div class="rounded-border seperatorTitle1">Messwerte</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioValues">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">Digitale Ausgänge</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioDigitalOut">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">Digitale Eingänge</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioDigitalIn">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">Analoge Ausgänge</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioAnalogOut">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">One Wire Sensoren</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioOneWire">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">Skripte</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioScripts">
+          </tbody>
+        </table>
+
+        <div class="rounded-border seperatorTitle1">Weitere Sensoren</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:30%;">Name</td>
+              <td style="width:32%;">Bezeichnung</td>
+              <td style="width:6%;">Skala max</td>
+              <td style="width:3%;">Einheit</td>
+              <td style="width:3%;">Aufzeichnen</td>
+              <td style="width:8%;">ID:Typ</td>
+            </tr>
+          </thead>
+          <tbody id="ioOther">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

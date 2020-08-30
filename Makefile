@@ -3,7 +3,6 @@
 #
 # See the README file for copyright information and how to reach the author.
 #
-#
 
 include Make.config
 
@@ -12,7 +11,7 @@ CMDTARGET   = p4
 CHARTTARGET = dbchart
 HISTFILE    = "HISTORY.h"
 
-LIBS += $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread
+LIBS += $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid
 
 DEFINES += -D_GNU_SOURCE -DTARGET='"$(TARGET)"'
 
@@ -29,9 +28,9 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/thread.o lib/curl.o
+LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/thread.o lib/curl.o lib/json.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
-OBJS         = $(LOBJS) $(MQTTOBJS) main.o p4io.o service.o w1.o webif.o hass.o
+OBJS         = $(LOBJS) $(MQTTOBJS) main.o p4io.o service.o w1.o webif.o hass.o websock.o wsactions.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
@@ -113,6 +112,8 @@ install-scripts:
 	fi
 	install -D ./scripts/p4d-* $(BINDEST)/
 
+iw: install-web
+
 install-web:
 	if ! test -d $(WEBDEST); then \
 		mkdir -p "$(WEBDEST)"; \
@@ -132,9 +133,9 @@ install-web:
 	if test -f "$(WEBDEST)/stylesheet.css.save"; then \
 		cp -Pp "$(WEBDEST)/stylesheet.css.save" "$(WEBDEST)/stylesheet.css"; \
 	fi
-	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDEST)/header.php"; \
 	chmod -R a+r "$(WEBDEST)"; \
 	chown -R $(WEBOWNER):$(WEBOWNER) "$(WEBDEST)"
+#	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDEST)/header.php"; \
 
 install-apache-conf:
 	@mkdir -p $(APACHECFGDEST)/conf-available
@@ -210,6 +211,8 @@ webif.o         :  webif.c         $(HEADER) p4d.h
 w1.o            :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 hass.o          :  hass.c          p4d.h
+websock.o       :  websock.c       $(HEADER) p4d.h
+wsactions.o     :  wsactions.c     $(HEADER) p4d.h
 chart.o         :  chart.c
 
 # ------------------------------------------------------

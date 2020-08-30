@@ -355,8 +355,7 @@ int cDbStatement::bindCmp(const char* ctable, const char* fname, cDbValue* value
    return success;
 }
 
-int cDbStatement::bindText(const char* text, cDbValue* value,
-                           const char* comp, const char* delim)
+int cDbStatement::bindText(const char* text, cDbValue* value, const char* comp, const char* delim)
 {
    if (!value)
    {
@@ -578,7 +577,7 @@ int cDbStatement::prepare()
          return connection->errorSql(connection, "buildPrimarySelect(bind_param)", stmt);
    }
 
-   tell(2, "Statement '%s' with (%ld) in parameters and (%d) out bindings prepared",
+   tell(3, "Statement '%s' with (%ld) in parameters and (%d) out bindings prepared",
         stmtTxt.c_str(), mysql_stmt_param_count(stmt), outCount);
 
    return success;

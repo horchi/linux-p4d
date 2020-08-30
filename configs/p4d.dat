@@ -66,6 +66,7 @@ Table valuefacts
    MAXSCALE             ""  maxscale             Int          4 Data,
    ORDER                ""  ord                  Int          4 Data,
    RES1                 ""  res1                 Int          4 Data,
+   RIGHTS   "needed control rights" rights       Int          0 Data,
 }
 
 
@@ -179,6 +180,20 @@ Table config
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
    VALUE                ""  value                Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Users
+// ----------------------------------------------------------------
+
+Table users
+{
+   USER                 ""               user      Ascii      40 Primary,
+   INSSP                ""               inssp     Int         0 Meta,
+   UPDSP                ""               updsp     Int         0 Meta,
+   PASSWD               "md5 sum"        passwd    Ascii      40 Data,
+   TOKEN                ""               token     Ascii     200 Data,
+   RIGHTS               "Rights Bitmask" rights    INT       200 Data,
 }
 
 // ----------------------------------------------------------------

@@ -6,8 +6,7 @@
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 //***************************************************************************
 
-#ifndef _IO_SERIAL_H_
-#define _IO_SERIAL_H_
+#pragma once
 
 //***************************************************************************
 // Include
@@ -29,7 +28,9 @@ class Serial
       {
          sizeCmdMax = 100,
 
-         wrnTimeout = -10
+         errReadFailed = -200,
+         errCountMissmatch,
+         wrnTimeout
       };
 
       // object
@@ -43,8 +44,10 @@ class Serial
       virtual int close();
       virtual int reopen(const char* dev = 0);
       virtual int isOpen()              { return fdDevice != 0 && opened; }
-      virtual int look(byte& b, int timeout = 0);
       virtual int flush();
+
+      virtual int look(byte& b, int timeoutMs = 0);
+      virtual int read(void* buf, size_t count, uint timeoutMs = 0);
       virtual int write(void* line, int size = 0);
 
       // settings
@@ -53,8 +56,6 @@ class Serial
       virtual int setWriteTimeout(int timeout);
 
    protected:
-
-      virtual int read(void* buf, unsigned int count, int timeout = 0);
 
       // data
 
@@ -66,6 +67,3 @@ class Serial
       int fdDevice;
       struct termios oldtio;
 };
-
-//***************************************************************************
-#endif // _IO_SERIAL_H_

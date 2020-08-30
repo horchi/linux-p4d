@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="author" content="Jörg Wendel"/>
+    <meta name="copyright" content="Jörg Wendel"/>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <link rel="shortcut icon" href="$img" type="image/png"/>
+    <link rel="icon" href="$img" type="image/png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="$img" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="jquery.md5.js"></script>
+    <script src="jquery.browser.min.js"></script>
+    <script src="Moment.js"></script>
+    <script src="Chart.min.js"></script>
+    <script type="text/javascript" src="websocket.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script>
+      $(document).ready(function() { documentReady("chart"); });
+    </script>
+
+    <title>Heating Control Dashboard</title>
+  </head>
+  <body>
+
+    <div class="menu">
+      <nav id="navMenu"></nav>
+    </div>
+
+    <div id="chartTitle" class="rounded-border chartTitle">
+    </div>
+
+    <canvas id="chart" class="chartCanvas" width="1600" height="600"></canvas>
+
+    <div class="chartButtons">
+      <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt;&lt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('now')">&#8659;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('next')">&gt;&gt;</button>
+      <input  class="rounded-border chartButton" onclick="chartSelect('range')" id="chartRange" type="number" min="1" value="2"></input>
+    </div>
+
+    <div id="chartSelector" class="chartSelectors">
+    </div>
+
+  </body>
+</html>

@@ -13,6 +13,9 @@
 //***************************************************************************
 
 #include <jansson.h>
+#include <libwebsockets.h>
+
+#include <unordered_map>
 
 #include "lib/db.h"
 
@@ -34,11 +37,182 @@ extern char dbPass[];
 
 extern char* confDir;
 
+class P4d;
+typedef P4d MainClass;
+
+//***************************************************************************
+// Class Web Service
+//***************************************************************************
+
+class cWebService
+{
+   public:
+
+      enum Event
+      {
+         evUnknown,
+         evLogin,
+         evLogout,
+         evToggleIo,
+         evToggleIoNext,
+         evToggleMode,
+         evStoreConfig,
+         evGetToken,
+         evStoreIoSetup,
+         evChartData,
+         evLogMessage,
+         evUserConfig,
+         evChangePasswd,
+         evResetPeaks,
+         evGroupConfig,
+
+         evCount
+      };
+
+      enum ClientType
+      {
+         ctWithLogin = 0,
+         ctActive
+      };
+
+      enum UserRights
+      {
+         urView        = 0x01,
+         urControl     = 0x02,
+         urFullControl = 0x04,
+         urSettings    = 0x08,
+         urAdmin       = 0x10
+      };
+
+      static const char* toName(Event event);
+      static Event toEvent(const char* name);
+
+      static const char* events[];
+};
+
+//***************************************************************************
+// Class cWebSock
+//***************************************************************************
+
+class cWebSock : public cWebService
+{
+   public:
+
+      enum MsgType
+      {
+         mtNone = na,
+         mtPing,    // 0
+         mtData     // 1
+      };
+
+      enum Protokoll
+      {
+         sizeLwsPreFrame  = LWS_SEND_BUFFER_PRE_PADDING,
+         sizeLwsPostFrame = LWS_SEND_BUFFER_POST_PADDING,
+         sizeLwsFrame     = sizeLwsPreFrame + sizeLwsPostFrame
+      };
+
+      struct SessionData
+      {
+         char* buffer;
+         int bufferSize;
+         int payloadSize;
+         int dataPending;
+      };
+
+      struct Client
+      {
+         ClientType type;
+         int tftprio;
+         std::queue<std::string> messagesOut;
+         cMyMutex messagesOutMutex;
+         void* wsi;
+
+         void pushMessage(const char* p)
+         {
+            cMyMutexLock lock(&messagesOutMutex);
+            messagesOut.push(p);
+         }
+
+         void cleanupMessageQueue()
+         {
+            cMyMutexLock lock(&messagesOutMutex);
+
+            // just in case client is not connected and wasted messages are pending
+
+            tell(0, "Info: Flushing (%zu) old 'wasted' messages of client (%p)", messagesOut.size(), wsi);
+
+            while (!messagesOut.empty())
+               messagesOut.pop();
+         }
+
+         std::string buffer;   // for chunked messages
+      };
+
+      cWebSock(const char* aHttpPath);
+      virtual ~cWebSock();
+
+      int init(int aPort, int aTimeout);
+      int exit();
+
+      int service();
+      int performData(MsgType type);
+
+      // status callback methods
+
+      static int wsLogLevel;
+      static int callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, void* in, size_t len);
+      static int callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void* in, size_t len);
+
+      // static interface
+
+      static void atLogin(lws* wsi, const char* message, const char* clientInfo, json_t* object);
+      static void atLogout(lws* wsi, const char* message, const char* clientInfo);
+      static int getClientCount();
+      static void pushMessage(const char* p, lws* wsi = 0);
+      static void writeLog(int level, const char* line);
+      static void setClientType(lws* wsi, ClientType type);
+
+   private:
+
+      static int serveFile(lws* wsi, const char* path);
+      static int dispatchDataRequest(lws* wsi, SessionData* sessionData, const char* url);
+
+      static const char* methodOf(const char* url);
+      static const char* getStrParameter(lws* wsi, const char* name, const char* def = 0);
+      static int getIntParameter(lws* wsi, const char* name, int def = na);
+
+      //
+
+      int port {na};
+      lws_protocols protocols[3];
+      lws_http_mount mounts[1];
+#if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
+      lws_retry_bo_t retry;
+#endif
+
+      // statics
+
+      static lws_context* context;
+
+      static char* httpPath;
+      static char* epgImagePath;
+      static int timeout;
+      static std::map<void*,Client> clients;
+      static cMyMutex clientsMutex;
+      static MsgType msgType;
+
+      // only used in callback
+
+      static char* msgBuffer;
+      static int msgBufferSize;
+};
+
 //***************************************************************************
 // Class P4d
 //***************************************************************************
 
-class P4d : public FroelingService
+class P4d : public FroelingService, public cWebService
 {
    public:
 
@@ -52,20 +226,55 @@ class P4d : public FroelingService
 	   int setup();
 	   int initialize(int truncate = no);
 
+      static const char* myName()    { return "p4d"; }
       static void downF(int aSignal) { shutdown = yes; }
 
+      // public static message interface to web thread
+
+      static int pushInMessage(const char* data);
+      static std::queue<std::string> messagesIn;
+      static cMyMutex messagesInMutex;
+
    protected:
+
+      enum WidgetType
+      {
+         wtSymbol = 0,  // == 0
+         wtGauge,       // == 1
+         wtText,        // == 2
+         wtValue        // == 3
+      };
+
+      enum ConfigItemType
+      {
+         ctInteger = 0,
+         ctNum,
+         ctString,
+         ctBool,
+         ctRange
+      };
+
+      struct ConfigItemDef
+      {
+         std::string name;
+         ConfigItemType type;
+         bool internal;
+         const char* category;
+         const char* title;
+         const char* description;
+      };
 
       int exit();
       int initDb();
       int exitDb();
       int readConfiguration();
+      int applyConfigurationSpecials();
 
       int standby(int t);
       int standbyUntil(time_t until);
       int meanwhile();
 
-      int update();
+      int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
       int updateState(Status* state);
       void scheduleTimeSyncIn(int offset = 0);
       int scheduleAggregate();
@@ -74,6 +283,8 @@ class P4d : public FroelingService
       int updateErrors();
       int performWebifRequests();
       int cleanupWebifRequests();
+      int dispatchClientRequest();
+      bool checkRights(long client, Event event, json_t* oObject);
 
       int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
                 uint factor, uint groupid, const char* text = 0);
@@ -115,6 +326,41 @@ class P4d : public FroelingService
 
       int doShutDown() { return shutdown; }
 
+      // web
+
+      int pushOutMessage(json_t* obj, const char* title, long client = 0);
+
+      int performWebSocketPing();
+      int performLogin(json_t* oObject);
+      int performLogout(json_t* oObject);
+      int performTokenRequest(json_t* oObject, long client);
+      int performSyslog(long client);
+      int performConfigDetails(long client);
+      int performUserDetails(long client);
+      int performIoSettings(long client);
+      int performGroups(long client);
+      int performChartData(json_t* oObject, long client);
+      int performUserConfig(json_t* oObject, long client);
+      int performPasswChange(json_t* oObject, long client);
+      int storeConfig(json_t* obj, long client);
+      int storeIoSetup(json_t* array, long client);
+      int storeGroups(json_t* array, long client);
+      int resetPeaks(json_t* obj, long client);
+
+      int config2Json(json_t* obj);
+      int configDetails2Json(json_t* obj);
+      int userDetails2Json(json_t* obj);
+      int valueFacts2Json(json_t* obj);
+      int groups2Json(json_t* obj);
+      int daemonState2Json(json_t* obj);
+      int sensor2Json(json_t* obj, cDbTable* table);
+      void pin2Json(json_t* ojData, int pin);
+
+      bool fileExistsAtWeb(const char* file);
+      const char* getImageOf(const char* title, const char* usrTitle, int value);
+      const char* getStateImage(int state);
+      WidgetType getWidgetTypeOf(std::string type, std::string unit, uint address);
+
       // data
 
       bool initialized {false};
@@ -134,6 +380,7 @@ class P4d : public FroelingService
       cDbTable* tableTimeRanges {nullptr};
       cDbTable* tableHmSysVars {nullptr};
       cDbTable* tableScripts {nullptr};
+      cDbTable* tableUsers {nullptr};
 
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
@@ -141,15 +388,26 @@ class P4d : public FroelingService
       cDbStatement* selectPendingJobs {nullptr};
       cDbStatement* selectAllMenuItems {nullptr};
       cDbStatement* selectSensorAlerts {nullptr};
-      cDbStatement* selectSampleInRange {nullptr};
+
+      cDbStatement* selectSampleInRange {nullptr};   // for alert check
+      cDbStatement* selectSamplesRange {nullptr};    // for chart
+      cDbStatement* selectSamplesRange60 {nullptr};  // for chart
+
       cDbStatement* selectPendingErrors {nullptr};
       cDbStatement* selectMaxTime {nullptr};
       cDbStatement* selectHmSysVarByAddr {nullptr};
       cDbStatement* selectScriptByName {nullptr};
       cDbStatement* selectScript {nullptr};
       cDbStatement* cleanupJobs {nullptr};
+      cDbStatement* selectAllConfig {nullptr};
+      cDbStatement* selectAllUser {nullptr};
 
+      cDbValue xmlTime;
+      cDbValue rangeFrom;
+      cDbValue rangeTo;
       cDbValue rangeEnd;
+      cDbValue avgValue;
+      cDbValue maxValue;
 
       time_t nextAt;
       time_t startedAt;
@@ -164,9 +422,26 @@ class P4d : public FroelingService
       cCurl* curl {nullptr};
 
       Status currentState;
-      string mailBody;
-      string mailBodyHtml;
+      std::string mailBody;
+      std::string mailBodyHtml;
       bool initialRun {true};
+
+      // WS Interface stuff
+
+      cWebSock* webSock {nullptr};
+      time_t nextWebSocketPing {0};
+      int webSocketPingTime {60};
+      const char* httpPath {"/var/lib/p4"};
+
+      struct WsClient    // Web Socket Client
+      {
+         std::string user;
+         uint rights;                  // rights mask
+         bool dataUpdates {false};     // true if interested on data update
+         ClientType type {ctActive};
+      };
+
+      std::map<void*,WsClient> wsClients;
 
       // MQTT Interface stuff
 
@@ -201,26 +476,30 @@ class P4d : public FroelingService
       int interval {60};
       int stateCheckInterval {10};
       char* ttyDevice {nullptr};
+      char* heatingType {nullptr};
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
       int mail {no};
-      int htmlMail {no};
       char* mailScript {nullptr};
       char* stateMailAtStates {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
       int errorsPending {0};
       int tSync {no};
+      int stateAni {no};
       time_t nextTimeSyncAt {0};
       int maxTimeLeak {10};
       MemoryStruct htmlHeader;
       char* sensorScript {nullptr};
+      char* chart1 {nullptr};
+      char* chart2 {nullptr};
 
-      string alertMailBody;
-      string alertMailSubject;
+      std::string alertMailBody;
+      std::string alertMailSubject;
 
       //
 
+      static std::list<ConfigItemDef> configuration;
       static int shutdown;
 };

@@ -43,8 +43,8 @@ $(LIBTARGET).a : $(LIBOBJS)
 	@echo Building Lib ...
 	$(doLib) $@ $(LIBOBJS)
 
-tst: test.o lib
-	$(doLink) test.o $(HLIB) -larchive -lcrypto $(BASELIBS) -o $@
+tst: test.o serial.o lib
+	$(doLink) test.o serial.o $(HLIB) -lcrypto $(BASELIBS) -o $@
 
 clean:
 	rm -f *.o *~ core $(TEST) $(DEMO) $(LIBTARGET).a

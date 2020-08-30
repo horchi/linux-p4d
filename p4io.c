@@ -1250,7 +1250,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    // create sensor name
 
-   string name = v->description;
+   std::string name = v->description;
 
    removeCharsExcept(name, nameChars);
    asprintf(&v->name, "%s_0x%x", name.c_str(), v->address);

@@ -5,27 +5,27 @@
  *
  */
 
-#ifndef __COMMON_H
-#define __COMMON_H
+#pragma once
+
+#include <openssl/md5.h> // MD5_*
 
 #include <stdint.h>   // uint_64_t
+#include <stdio.h>
 #include <stdlib.h>
 #include <iconv.h>
 #include <errno.h>
 #include <string.h>
+#include <zlib.h>
 
 #include <string>
 #include <map>
 #include <vector>
+#include <list>
 
-#include <openssl/md5.h> // MD5_*
-
-struct MemoryStruct;
+class MemoryStruct;
 extern int loglevel;
 extern int logstdout;
 extern int logstamp;
-
-using namespace std;
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -54,6 +54,7 @@ enum Misc
    TB      = 1,
 
    sizeMd5 = 2 * MD5_DIGEST_LENGTH,
+   sizeUuid = 36,
 
    tmeSecondsPerMinute = 60,
    tmeSecondsPerHour = 60 * tmeSecondsPerMinute,
@@ -79,10 +80,19 @@ void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* form
 char* srealloc(void* ptr, size_t size);
 
 //***************************************************************************
+// Zip
+//***************************************************************************
+
+ulong gzipBound(ulong size);
+int gzip(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen);
+void tellZipError(int errorCode, const char* op, const char* msg);
+int gunzip(MemoryStruct* zippedData, MemoryStruct* unzippedData);
+
+//***************************************************************************
 // MemoryStruct
 //***************************************************************************
 
-struct MemoryStruct
+class MemoryStruct
 {
    public:
 
@@ -117,9 +127,7 @@ struct MemoryStruct
 
       int append(const char* buf, int len = 0)
       {
-         if (!len)
-            len = strlen(buf) + TB;
-
+         if (!len) len = strlen(buf);
          memory = srealloc(memory, size+len);
          memcpy(memory+size, buf, len);
          size += len;
@@ -137,6 +145,31 @@ struct MemoryStruct
          headerOnly = o->headerOnly;
          modTime = o->modTime;
          expireAt = o->expireAt;
+      }
+
+      int toGzip()
+      {
+         free(zmemory);
+         zsize = 0;
+
+         if (isEmpty())
+            return fail;
+
+         zsize = gzipBound(size) + 512;  // the maximum calculated by the lib, will adusted at gzip() call
+         zmemory = (char*)malloc(zsize);
+
+         if (gzip((Bytef*)zmemory, &zsize, (Bytef*)memory, size) != success)
+         {
+            free(zmemory);
+            zsize = 0;
+            tell(0, "Error gzip failed!");
+
+            return fail;
+         }
+
+         sprintf(contentEncoding, "gzip");
+
+         return success;
       }
 
       void clear()
@@ -196,6 +229,8 @@ class cMyMutex
       void Lock(void);
       void Unlock(void);
 
+      bool isLocked() const { return locked; }
+
    private:
 
       pthread_mutex_t mutex;
@@ -222,7 +257,12 @@ class cMyMutexLock
 
 std::string executeCommand(const char* cmd);
 
+#ifdef USEUUID
+  const char* getUniqueId();
+#endif
+
 double usNow();
+int l2hhmm(time_t t);
 unsigned int getHostId();
 byte crc(const byte* data, int size);
 int toUTF8(char* out, int outMax, const char* in, const char* from_code = 0);
@@ -231,9 +271,9 @@ void removeChars(std::string& str, const char* ignore);
 void removeCharsExcept(std::string& str, const char* except);
 void removeWord(std::string& pattern, std::string word);
 void prepareCompressed(std::string& pattern);
-string strReplace(const string& what, const string& with, const string& subject);
-string strReplace(const string& what, long with, const string& subject);
-string strReplace(const string& what, double with, const string& subject);
+std::string strReplace(const std::string& what, const std::string& with, const std::string& subject);
+std::string strReplace(const std::string& what, long with, const std::string& subject);
+std::string strReplace(const std::string& what, double with, const std::string& subject);
 
 const char* plural(int n, const char* s = "s");
 char* rTrim(char* buf);
@@ -241,12 +281,12 @@ char* lTrim(char* buf);
 char* allTrim(char* buf);
 int isNum(const char* value);
 char* sstrcpy(char* dest, const char* src, int max);
-string num2Str(int num);
-string num2Str(double num);
-string l2pTime(time_t t, const char* fmt = "%d.%m.%Y %T");
+std::string num2Str(int num);
+std::string num2Str(double num);
+std::string l2pTime(time_t t, const char* fmt = "%d.%m.%Y %T");
 char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
-
+// #to-be-implemented: splitToInts(const char* string, char c, int& i1, int& i2);
 int fileExists(const char* path);
 const char* suffixOf(const char* path);
 int createLink(const char* link, const char* dest, int force);
@@ -255,6 +295,16 @@ int isEmpty(const char* str);
 int removeFile(const char* filename);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
+
+struct FileInfo
+{
+   std::string path;
+   std::string name;
+   uint type;
+};
+
+typedef std::list<FileInfo> FileList;
+int getFileList(const char* path, int type, const char* extensions, int recursion, FileList* dirs, int& count);
 
 const char* getHostName();
 const char* getFirstIp();
@@ -265,17 +315,6 @@ const char* getFirstIp();
   int createMd5(const char* buf, md5* md5);
   int createMd5OfFile(const char* path, const char* name, md5* md5);
 #endif
-
-#ifdef WITH_GUNZIP
-
-//***************************************************************************
-// Zip
-//***************************************************************************
-
-int gunzip(MemoryStruct* zippedData, MemoryStruct* unzippedData);
-void tellZipError(int errorCode, const char* op, const char* msg);
-
-#endif // WITH_GUNZIP
 
 //***************************************************************************
 //
@@ -320,6 +359,26 @@ class cTimeMs
 };
 
 typedef cTimeMs cMyTimeMs;
+
+//***************************************************************************
+// Log Duration
+//***************************************************************************
+
+class LogDuration
+{
+   public:
+
+      LogDuration(const char* aMessage, int aLogLevel = 2);
+      ~LogDuration();
+
+      void show(const char* label = "");
+
+   protected:
+
+      char message[1000];
+      uint64_t durationStart;
+      int logLevel;
+};
 
 //***************************************************************************
 // Semaphore
@@ -458,6 +517,3 @@ class Sem
       int id;
       int locked;
 };
-
-//***************************************************************************
-#endif // ___COMMON_H

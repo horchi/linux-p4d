@@ -8,12 +8,17 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#ifdef USEUUID
+#  include <uuid/uuid.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <zlib.h>
+#include <dirent.h>
 
 #include <algorithm>
 
@@ -77,7 +82,10 @@ void tell(int eloquence, const char* format, ...)
       printf("%s%s\n", buf, t);
    }
    else
-      syslog(LOG_ERR, "%s", t);
+   {
+      int prio = eloquence == 0 ? LOG_ERR : LOG_NOTICE;
+      syslog(prio, "%s", t);
+   }
 
    va_end(ap);
 }
@@ -130,6 +138,20 @@ double usNow()
 
    return tp.tv_sec * 1000000.0 + tp.tv_usec;
 }
+
+//***************************************************************************
+// time_t to hhmm like '2015'
+//***************************************************************************
+
+int l2hhmm(time_t t)
+{
+   struct tm tm;
+
+   localtime_r(&t, &tm);
+
+   return  tm.tm_hour * 100 + tm.tm_min;
+}
+
 
 //***************************************************************************
 // Host ID
@@ -219,7 +241,7 @@ void toUpper(std::string& str)
 
    for (int ps = 0; ps < lenSrc; ps += csSrc)
    {
-      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+      csSrc = std::max(mblen(&s[ps], lenSrc-ps), 1);
 
       if (csSrc == 1)
          *d++ = toupper(s[ps]);
@@ -262,11 +284,11 @@ void removeChars(std::string& str, const char* ignore)
       int skip = no;
 
       mblen(0,0);
-      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+      csSrc = std::max(mblen(&s[ps], lenSrc-ps), 1);
 
       for (int pi = 0; pi < lenIgn; pi += csIgn)
       {
-         csIgn = max(mblen(&ignore[pi], lenIgn-pi), 1);
+         csIgn = std::max(mblen(&ignore[pi], lenIgn-pi), 1);
 
          if (csSrc == csIgn && strncmp(&s[ps], &ignore[pi], csSrc) == 0)
          {
@@ -305,11 +327,11 @@ void removeCharsExcept(std::string& str, const char* except)
       int skip = yes;
 
       mblen(0,0);
-      csSrc = max(mblen(&s[ps], lenSrc-ps), 1);
+      csSrc = std::max(mblen(&s[ps], lenSrc-ps), 1);
 
       for (int pi = 0; pi < lenIgn; pi += csIgn)
       {
-         csIgn = max(mblen(&except[pi], lenIgn-pi), 1);
+         csIgn = std::max(mblen(&except[pi], lenIgn-pi), 1);
 
          if (csSrc == csIgn && strncmp(&s[ps], &except[pi], csSrc) == 0)
          {
@@ -331,31 +353,20 @@ void removeCharsExcept(std::string& str, const char* except)
    free(dest);
 }
 
-void removeWord(string& pattern, string word)
+void removeWord(std::string& pattern, std::string word)
 {
    size_t  pos;
 
-   if ((pos = pattern.find(word)) != string::npos)
+   if ((pos = pattern.find(word)) != std::string::npos)
       pattern.swap(pattern.erase(pos, word.length()));
 }
 
-void prepareCompressed(std::string& pattern)
+std::string strReplace(const std::string& what, const std::string& with, const std::string& subject)
 {
-   // const char* ignore = " (),.;:-_+*!#?=&%$<>§/'`´@~\"[]{}";
-   const char* notignore = "ABCDEFGHIJKLMNOPQRSTUVWXYZßÖÄÜöäü0123456789";
-
-   toUpper(pattern);
-   removeWord(pattern, " TEIL ");
-   removeWord(pattern, " FOLGE ");
-   removeCharsExcept(pattern, notignore);
-}
-
-string strReplace(const string& what, const string& with, const string& subject)
-{
-   string str = subject;
+   std::string str = subject;
    size_t pos = 0;
 
-   while((pos = str.find(what, pos)) != string::npos)
+   while ((pos = str.find(what, pos)) != std::string::npos)
    {
       str.replace(pos, what.length(), with);
       pos += with.length();
@@ -364,7 +375,7 @@ string strReplace(const string& what, const string& with, const string& subject)
    return str;
 }
 
-string strReplace(const string& what, long with, const string& subject)
+std::string strReplace(const std::string& what, long with, const std::string& subject)
 {
    char swith[100];
 
@@ -373,7 +384,7 @@ string strReplace(const string& what, long with, const string& subject)
    return strReplace(what, swith, subject);
 }
 
-string strReplace(const string& what, double with, const string& subject)
+std::string strReplace(const std::string& what, double with, const std::string& subject)
 {
    char swith[100];
 
@@ -467,22 +478,22 @@ int isNum(const char* value)
 // Number to String
 //***************************************************************************
 
-string num2Str(int num)
+std::string num2Str(int num)
 {
    char txt[16];
 
    snprintf(txt, sizeof(txt), "%d", num);
 
-   return string(txt);
+   return std::string(txt);
 }
 
-string num2Str(double num)
+std::string num2Str(double num)
 {
    char txt[16];
 
    snprintf(txt, sizeof(txt), "%.2f", num);
 
-   return string(txt);
+   return std::string(txt);
 }
 
 //***************************************************************************
@@ -501,14 +512,14 @@ char* eos(char* s)
 // Long to Pretty Time
 //***************************************************************************
 
-string l2pTime(time_t t, const char* fmt)
+std::string l2pTime(time_t t, const char* fmt)
 {
    char txt[300];
    tm* tmp = localtime(&t);
 
    strftime(txt, sizeof(txt), fmt, tmp);
 
-   return string(txt);
+   return std::string(txt);
 }
 
 const char* toElapsed(int seconds, char* buf)
@@ -727,7 +738,71 @@ int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool 
    return success;
 }
 
-#ifdef WITH_GUNZIP
+int getFileList(const char* path, int type, const char* extensions, int recursion, FileList* dirs, int& count)
+{
+   DIR* dir;
+
+   if (!(dir = opendir(path)))
+   {
+      tell(1, "Can't open directory '%s', '%s'", path, strerror(errno));
+      return fail;
+   }
+
+#ifndef HAVE_READDIR_R
+   dirent* pEntry;
+
+   while ((pEntry = readdir(dir)))
+#else
+   dirent entry;
+   dirent* pEntry = &entry;
+   dirent* res;
+
+   // deprecated but the only reentrant with old libc!
+
+   while (readdir_r(dir, pEntry, &res) == 0 && res)
+#endif
+   {
+      // if 'recursion' is set scan subfolders also
+
+      if (recursion && pEntry->d_type == DT_DIR && pEntry->d_name[0] != '.')
+      {
+         char* buf;
+         asprintf(&buf, "%s/%s", path, pEntry->d_name);
+         getFileList(buf, type, extensions, recursion, dirs, count);
+         free(buf);
+      }
+
+      // filter type and ignore '.', '..' an hidden files
+
+      if (pEntry->d_type != type || pEntry->d_name[0] == '.')
+         continue;
+
+      // filter file extensions
+
+      if (extensions)
+      {
+         const char* ext;
+
+         if ((ext = strrchr(pEntry->d_name, '.')))
+            ext++;
+
+         if (isEmpty(ext) || !strcasestr(extensions, ext))
+         {
+            tell(4, "Skipping file '%s' with extension '%s'", pEntry->d_name, ext);
+            continue;
+         }
+      }
+
+      count++;
+
+      if (dirs)
+         dirs->push_back({ path, pEntry->d_name, pEntry->d_type });
+   }
+
+   closedir(dir);
+
+   return success;
+}
 
 //***************************************************************************
 // Gnu Unzip
@@ -807,6 +882,55 @@ int gunzip(MemoryStruct* zippedData, MemoryStruct* unzippedData)
    return success;
 }
 
+//***************************************************************************
+// gzip
+//***************************************************************************
+
+int gzip(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen)
+{
+    z_stream stream;
+    int res;
+
+    stream.next_in = (Bytef *)source;
+    stream.avail_in = (uInt)sourceLen;
+    stream.next_out = dest;
+    stream.avail_out = (uInt)*destLen;
+    if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+    stream.opaque = (voidpf)0;
+
+    res = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY);
+
+    if (res == Z_OK)
+    {
+       res = deflate(&stream, Z_FINISH);
+
+       if (res != Z_STREAM_END)
+       {
+          deflateEnd(&stream);
+          res = res == Z_OK ? Z_BUF_ERROR : res;
+       }
+    }
+
+    if (res == Z_STREAM_END)
+    {
+       *destLen = stream.total_out;
+       res = deflateEnd(&stream);
+    }
+
+    if (res !=  Z_OK)
+       tellZipError(res, " during compression", "");
+
+    return res == Z_OK ? success : fail;
+}
+
+ulong gzipBound(ulong size)
+{
+   return compressBound(size);
+}
+
 //*************************************************************************
 // tellZipError
 //*************************************************************************
@@ -827,8 +951,6 @@ void tellZipError(int errorCode, const char* op, const char* msg)
       default:             tell(0, "Error: Couldn't unzip data for unknown reason (%6d)%s!\n", errorCode, op); return;
    }
 }
-
-#endif  // WITH_GUNZIP
 
 //*************************************************************************
 // Host Data
@@ -1105,3 +1227,46 @@ uint64_t cTimeMs::Elapsed(void)
 {
   return Now() - begin;
 }
+
+//***************************************************************************
+// Class LogDuration
+//***************************************************************************
+
+LogDuration::LogDuration(const char* aMessage, int aLogLevel)
+{
+   logLevel = aLogLevel;
+   strcpy(message, aMessage);
+
+   // at last !
+
+   durationStart = cMyTimeMs::Now();
+}
+
+LogDuration::~LogDuration()
+{
+   tell(logLevel, "duration '%s' was (%ldms)",
+        message, (long)(cMyTimeMs::Now() - durationStart));
+}
+
+void LogDuration::show(const char* label)
+{
+   tell(logLevel, "elapsed '%s' at '%s' was (%ldms)",
+        message, label, (long)(cMyTimeMs::Now() - durationStart));
+}
+
+//***************************************************************************
+// Get Unique ID
+//***************************************************************************
+
+#ifdef USEUUID
+const char* getUniqueId()
+{
+   static char uuid[sizeUuid+TB] = "";
+
+   uuid_t id;
+   uuid_generate(id);
+   uuid_unparse_upper(id, uuid);
+
+   return uuid;
+}
+#endif // USEUUID

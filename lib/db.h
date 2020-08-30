@@ -181,7 +181,7 @@ class cDbValue : public cDbService
                tell(0, "Warning, size of %d for '%s' exeeded (needed %ld) [%s]",
                     field->getSize(), field->getName(), (long)strlen(value), value);
 
-            if (strncmp(strValue, value, strlen(value)) != 0 || isNull())
+            if (strcmp(strValue, value) != 0 || isNull())
                modified = yes;
 
             clear();
@@ -196,7 +196,7 @@ class cDbValue : public cDbService
 
       void setCharValue(char value)
       {
-         char tmp[2];
+         char tmp[2] = "";
          tmp[0] = value;
          tmp[1] = 0;
          setValue(tmp);
@@ -463,18 +463,13 @@ class cDbStatement : public cDbService
       int bind(cDbFieldDef* field, int mode, const char* delim = 0);
       int bindAllOut(const char* delim = 0);
 
-      int bindCmp(const char* ctable, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindCmp(const char* ctable, cDbFieldDef* field, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindCmp(const char* ctable, const char* fname, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindText(const char* text, cDbValue* value,
-                   const char* comp, const char* delim = 0);
-      int bindTextFree(const char* text, cDbValue* value, const char* delim = 0, int mode = bndIn);
+      int bindCmp(const char* ctable, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindCmp(const char* ctable, cDbFieldDef* field, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindCmp(const char* ctable, const char* fname, cDbValue* value, const char* comp, const char* delim = 0);
 
-      int bindInChar(const char* ctable, const char* fname,
-                     cDbValue* value = 0, const char* delim = 0);
+      int bindText(const char* text, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindTextFree(const char* text, cDbValue* value, const char* delim = 0, int mode = bndIn);
+      int bindInChar(const char* ctable, const char* fname, cDbValue* value = 0, const char* delim = 0);
 
       // ..
 
@@ -483,7 +478,7 @@ class cDbStatement : public cDbService
       int getResultCount();
       int getLastInsertId();
       const char* asText() { return stmtTxt.c_str(); }
-
+      cDbTable* getTable() { return table; }
       void showStat();
 
       // data
@@ -552,7 +547,6 @@ class cDbStatements
 
 #define GET_FIELD(name) \
    cDbFieldDef* f = tableDef->getField(name);  \
-   if (!f) \
    if (!f) \
    { \
       tell(0, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
@@ -882,7 +876,7 @@ class cDbConnection
 
          if (!(f = fopen(file, "r")))
          {
-            tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
+            tell(0, "Fatal: Can't execute sql file '%s'; Error was '%s'", file, strerror(errno));
             return fail;
          }
 
@@ -1031,7 +1025,7 @@ class cDbConnection
 
       MYSQL* mysql;
 
-      int initialized;
+      // int initialized;
       int attached;
       int inTact;
       int connectDropped;
@@ -1277,7 +1271,7 @@ class cDbProcedure : public cDbService
       int created()
       {
          if (!connection || !connection->getMySql())
-            return fail;
+            return no;
 
          cDbStatement stmt(connection);
 

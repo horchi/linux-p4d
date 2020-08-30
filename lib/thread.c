@@ -259,7 +259,7 @@ cCondWait::~cCondWait()
 void cCondWait::SleepMs(int TimeoutMs)
 {
    cCondWait w;
-   w.Wait(max(TimeoutMs, 3)); // making sure the time is >2ms to avoid a possible busy wait
+   w.Wait(std::max(TimeoutMs, 3)); // making sure the time is >2ms to avoid a possible busy wait
 }
 
 bool cCondWait::Wait(int TimeoutMs)

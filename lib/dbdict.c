@@ -115,7 +115,7 @@ int cDbService::toType(const char* theTypes)
    int type = ftNo;
 
    // field can of more than one type -> bitmask
-   
+
    while (getToken(p, token, sizeTokenMax, '|') == success)
    {
       for (int i = 0; types[i].type != ftUnknown; i++)
@@ -136,7 +136,7 @@ const char* cDbService::toName(FieldType type, char* buf)
    *buf = 0;
 
    // field can of more than one type -> bitmask !!
-   
+
    for (int i = 0; types[i].type != ftUnknown; i++)
    {
       if (types[i].type & type)
@@ -148,7 +148,7 @@ const char* cDbService::toName(FieldType type, char* buf)
          continue;
       }
    }
-   
+
    return buf;
 }
 
@@ -186,13 +186,13 @@ cDbDict::~cDbDict()
 // Get Table
 //***************************************************************************
 
-cDbTableDef* cDbDict::getTable(const char* aName) 
-{ 
+cDbTableDef* cDbDict::getTable(const char* aName)
+{
    std::map<std::string, cDbTableDef*>::iterator t;
 
    if ((t = tables.find(aName)) != tables.end())
       return t->second;
-   
+
    return 0;
 }
 
@@ -242,12 +242,12 @@ int cDbDict::in(const char* file, int filter)
       char* p = strstr(line, "//");
 
       if (p) *p = 0;
-      
+
       allTrim(line);
-      
+
       if (isEmpty(line))
          continue;
-      
+
       if (atLine(line) != success)
       {
          tell(0, "Found unexpected definition '%s', aborting", line);
@@ -256,7 +256,7 @@ int cDbDict::in(const char* file, int filter)
       }
    }
 
-   fclose(f);   
+   fclose(f);
    free(line);
 
    return success;
@@ -279,13 +279,13 @@ void cDbDict::forget()
    }
 
    free(path);
-   
+
    curTable = 0;
    inside = no;
    path = 0;
    fieldFilter = 0;   // 0 -> filter off use all fields
    fltFromNameFct = 0;
-}    
+}
 
 //***************************************************************************
 // Show
@@ -325,7 +325,7 @@ int cDbDict::atLine(const char* line)
       p = line + strlen("Table ");
       strcpy(tableName, p);
       allTrim(tableName);
-      
+
       if (!getTable(tableName))
       {
          curTable = new cDbTableDef(tableName);
@@ -376,7 +376,7 @@ int cDbDict::toFilter(char* token)
    if (isEmpty(token))
       return 0xFFFF;
 
-   while (getToken(p, name, sizeFilterName, '|') == success)   
+   while (getToken(p, name, sizeFilterName, '|') == success)
    {
       if (isalpha(*token) && fltFromNameFct)
          filter |= fltFromNameFct(name);
@@ -413,7 +413,7 @@ int cDbDict::parseField(const char* line)
          tell(0, "Error: Can't parse line [%s]", line);
          return fail;
       }
-      
+
       if (i == dtCount-1 && strchr(token, ','))
          *(strchr(token, ',')) = 0;
 
@@ -438,12 +438,12 @@ int cDbDict::parseField(const char* line)
 
    if (f->filterMatch(fieldFilter))
    {
-      f->index = curTable->fieldCount(); 
+      f->index = curTable->fieldCount();
       curTable->addField(f);
    }
    else
    {
-      tell(0, "Info: Ignoring field '%s' due to filter configiuration", 
+      tell(0, "Info: Ignoring field '%s' due to filter configiuration",
            f->getName());
       delete f;
    }
@@ -480,7 +480,7 @@ int cDbDict::parseIndex(const char* line)
 
          break;
       }
-      
+
       if (strchr(token, ','))
       {
          done = yes;

@@ -24,7 +24,7 @@ int cCurl::curlInitialized = no;
 size_t collect_data(void *ptr, size_t size, size_t nmemb, void* stream)
 {
    std::string sTmp;
-   register size_t actualsize = size * nmemb;
+   size_t actualsize = size * nmemb;
 
    if ((FILE *)stream == NULL)
    {
@@ -297,7 +297,7 @@ void cCurl::Free(char* str)
 size_t cCurl::WriteMemoryCallback(void* ptr, size_t size, size_t nmemb, void* data)
 {
    size_t realsize = size * nmemb;
-   struct MemoryStruct* mem = (struct MemoryStruct*)data;
+   MemoryStruct* mem = (MemoryStruct*)data;
 
    // if (sysNotification)
    //    sysNotification->check();
@@ -320,7 +320,7 @@ size_t cCurl::WriteMemoryCallback(void* ptr, size_t size, size_t nmemb, void* da
 size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* data)
 {
    size_t realsize = size * nmemb;
-   struct MemoryStruct* mem = (struct MemoryStruct*)data;
+   MemoryStruct* mem = (MemoryStruct*)data;
    char* p;
 
    // if (sysNotification)

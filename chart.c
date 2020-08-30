@@ -156,7 +156,7 @@ int printActual(FILE* fp, cDbStatement* s, long lastTime)
          // 'token' like "Puffertemperatur oben:Puffer oben"
          // Syntax: "<db title>:<display title>:<min>:<max>"
 
-         for (int i = 1; p = strchr(p, ':'); i++)
+         for (int i = 1; (p = strchr(p, ':')); i++)
          {
             *p = 0;
             p++;

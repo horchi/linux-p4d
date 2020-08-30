@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="author" content="Jörg Wendel"/>
+    <meta name="copyright" content="Jörg Wendel"/>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <link rel="shortcut icon" href="img/logo.png" type="image/png"/>
+    <link rel="icon" href="img/logo.png" type="image/png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/logo.png" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="jquery.browser.min.js"></script>
+    <script type="text/javascript" src="websocket.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script>
+      $(document).ready(function() { documentReady("groups"); });
+    </script>
+
+    <title>Heating Control</title>
+  </head>
+  <body>
+
+    <div class="menu">
+      <nav id="navMenu" data-setup="yes" data-groups="yes"></nav>
+    </div>
+
+    <div class="content">
+      <div id="groupContainer">
+        <div class="rounded-border seperatorTitle1">Baugruppen</div>
+        <table class="tableMultiCol">
+          <thead>
+            <tr>
+              <td style="width:10%;">ID</td>
+              <td style="width:50%;">Baugruppe</td>
+              <td style="width:30%;"></td>
+            </tr>
+          </thead>
+          <tbody id="groups">
+          </tbody>
+        </table>
+      </div><br/>
+      <div id="addGroupDiv" class="rounded-border inputTableConfig"/>
+    </div>
+  </body>
+</html>

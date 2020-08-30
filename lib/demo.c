@@ -35,13 +35,13 @@ void initConnection()
 void exitConnection()
 {
    cDbConnection::exit();
-   
+
    if (connection)
       delete connection;
 }
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 int demoStatement()
@@ -54,15 +54,15 @@ int demoStatement()
 
    // open table (attach)
 
-   if (eventsDb->open() != success) 
+   if (eventsDb->open() != success)
       return fail;
-   
+
    tell(0, "---------------- prepare select statement -------------");
 
    // vorbereiten (prepare) eines statement, am besten einmal bei programmstart!
    // ----------
-   // select eventid, compshorttext, episodepart, episodelang 
-   //   from events 
+   // select eventid, compshorttext, episodepart, episodelang
+   //   from events
    //     where eventid > ?
 
    cDbStatement* selectByCompTitle = new cDbStatement(eventsDb);
@@ -74,14 +74,14 @@ int demoStatement()
    status += selectByCompTitle->build(" from %s where ", eventsDb->TableName());
    status += selectByCompTitle->bindCmp(0, eventsDb->getField("EventId"), 0, ">");
 
-   status += selectByCompTitle->prepare();   // prepare statement 
+   status += selectByCompTitle->prepare();   // prepare statement
 
    if (status != success)
    {
       // prepare sollte MySQL fehler ausgegeben haben!
 
       delete eventsDb;
-      delete selectByCompTitle; 
+      delete selectByCompTitle;
 
       return fail;
    }
@@ -90,7 +90,7 @@ int demoStatement()
 
    tell(0, "------------------ create some rows  ----------------------");
 
-   eventsDb->clear();     // alle values löschen   
+   eventsDb->clear();     // alle values löschen
 
    for (int i = 0; i < 10; i++)
    {
@@ -100,7 +100,7 @@ int demoStatement()
       eventsDb->setValue(eventsDb->getField("EventId"), 800 + i * 100);
       eventsDb->setValue(eventsDb->getField("ChannelId"), "xxx-yyyy-zzz");
       eventsDb->setValue(eventsDb->getField("Title"), title);
-      
+
       eventsDb->store();                // store -> select mit anschl. update oder insert je nachdem ob dier PKey bereits vorhanden ist
       // eventsDb->insert();            // sofern man schon weiß das es ein insert ist
       // eventsDb->update();            // sofern man schon weiß das der Datensatz vorhanden ist
@@ -111,7 +111,7 @@ int demoStatement()
    tell(0, "------------------ done  ----------------------");
 
    tell(0, "-------- select all where eventid > 1000 -------------");
-   
+
    eventsDb->clear();     // alle values löschen
    eventsDb->setValue(eventsDb->getField("EventId"), 1000);
 
@@ -145,7 +145,7 @@ int joinDemo()
    int status = success;
 
    // grundsätzlich genügt hier auch eine Tabelle, für die anderen sind cDbValue Instanzen außreichend
-   // so ist es etwas einfacher die cDbValues zu initialisieren. 
+   // so ist es etwas einfacher die cDbValues zu initialisieren.
    // Ich habe statische "virtual FieldDef* getFieldDef(int f)" Methode in der Tabellenklassen geplant
    // um ohne Instanz der cTable ein Feld einfach initialisieren zu können
 
@@ -158,7 +158,7 @@ int joinDemo()
    delete timerDb;
 
    // init dict fields as needed (normaly done once at programm start)
-   //   init and using the pointer improve the speed since the lookup via 
+   //   init and using the pointer improve the speed since the lookup via
    //   the name is dine only once
 
    // F_INIT(events, EventId); // ergibt: cDbFieldDef* eventsEventId; dbDict.init(eventsEventId, "events", "EventId");
@@ -167,15 +167,15 @@ int joinDemo()
 
    // open tables (attach)
 
-   if (eventsDb->open() != success) 
+   if (eventsDb->open() != success)
       return fail;
 
-   if (imageDb->open() != success) 
+   if (imageDb->open() != success)
       return fail;
 
-   if (imageRefDb->open() != success) 
+   if (imageRefDb->open() != success)
       return fail;
-   
+
    tell(0, "---------------- prepare select statement -------------");
 
    // all images
@@ -189,13 +189,13 @@ int joinDemo()
    cDbValue masterId;
 
    cDbFieldDef imageSizeDef("image", "image", cDBS::ffUInt,  999, cDBS::ftData, 0);  // eine Art ein Feld zu erzeugen
-   imageSize.setField(&imageSizeDef); 
+   imageSize.setField(&imageSizeDef);
    imageUpdSp.setField(imageDb->getField("UpdSp"));
    masterId.setField(eventsDb->getField("MasterId"));
 
    // select e.masterid, r.imagename, r.eventid, r.lfn, length(i.image)
-   //      from imagerefs r, images i, events e 
-   //      where i.imagename = r.imagename 
+   //      from imagerefs r, images i, events e
+   //      where i.imagename = r.imagename
    //         and e.eventid = r.eventid
    //         and (i.updsp > ? or r.updsp > ?)
 
@@ -211,10 +211,10 @@ int joinDemo()
    selectAllImages->bind(&imageSize, cDBS::bndOut);
    selectAllImages->build(")");
    selectAllImages->clrBindPrefix();
-   selectAllImages->build(" from %s r, %s i, %s e where ", 
+   selectAllImages->build(" from %s r, %s i, %s e where ",
                           imageRefDb->TableName(), imageDb->TableName(), eventsDb->TableName());
    selectAllImages->build("e.%s = r.%s and i.%s = r.%s and (",
-                          "EventId",        // eventsEventId->getDbName(), 
+                          "EventId",        // eventsEventId->getDbName(),
                           imageRefDb->getField("EventId")->getDbName(),
                           "imagename",      // direkt den DB Feldnamen verwenden -> nicht so schön da nicht dynamisch
                           imageRefDb->getField("ImgName")->getDbName()); // ordentlich via dictionary übersetzt -> schön ;)
@@ -232,7 +232,7 @@ int joinDemo()
       delete eventsDb;
       delete imageDb;
       delete imageRefDb;
-      delete selectAllImages; 
+      delete selectAllImages;
 
       return fail;
    }
@@ -277,7 +277,7 @@ int joinDemo()
 }
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 int insertDemo()
