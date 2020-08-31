@@ -204,14 +204,14 @@ lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h lib/mqtt_c.h
 lib/mqtt_c.o    :  lib/mqtt_c.c    lib/mqtt_c.h
 lib/mqtt_pal.o  :  lib/mqtt_pal.c  lib/mqtt_c.h
 
-main.o          :  main.c          $(HEADER) p4d.h
+main.o          :  main.c          $(HEADER) p4d.h websock.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o         :  webif.c         $(HEADER) p4d.h
 w1.o            :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 hass.o          :  hass.c          p4d.h
-websock.o       :  websock.c       $(HEADER) p4d.h
+websock.o       :  websock.c       $(HEADER) websock.h
 wsactions.o     :  wsactions.c     $(HEADER) p4d.h
 chart.o         :  chart.c
 

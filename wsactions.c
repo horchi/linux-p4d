@@ -67,7 +67,7 @@ int P4d::performLogin(json_t* oObject)
    }
 
    tell(0, "Login of client 0x%x; user '%s'; type is %d", (unsigned int)client, user, wsClients[(void*)client].type);
-   cWebSock::setClientType((lws*)client, wsClients[(void*)client].type);
+   webSock->setClientType((lws*)client, wsClients[(void*)client].type);
 
    //
 

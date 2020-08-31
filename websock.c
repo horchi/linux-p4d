@@ -13,7 +13,7 @@
 
 #include "lib/json.h"
 
-#include "p4d.h"
+#include "websock.h"
 
 int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN}; // LLL_INFO | LLL_NOTICE | LLL_WARN | LLL_ERR
 lws_context* cWebSock::context {nullptr};
@@ -25,12 +25,15 @@ std::map<void*,cWebSock::Client> cWebSock::clients;
 cMyMutex cWebSock::clientsMutex;
 char* cWebSock::httpPath {nullptr};
 
+cWebInterface* cWebSock::singleton {nullptr};
+
 //***************************************************************************
 // Init
 //***************************************************************************
 
-cWebSock::cWebSock(const char* aHttpPath)
+cWebSock::cWebSock(cWebInterface* aProcess, const char* aHttpPath)
 {
+   cWebSock::singleton = aProcess;
    httpPath = strdup(aHttpPath);
 }
 
@@ -58,7 +61,7 @@ int cWebSock::init(int aPort, int aTimeout)
    protocols[0].per_session_data_size = sizeof(SessionData);
    protocols[0].rx_buffer_size = 0;
 
-   protocols[1].name = MainClass::myName();
+   protocols[1].name = singleton->myName();
    protocols[1].callback = callbackWs;
    protocols[1].per_session_data_size = 0;
    protocols[1].rx_buffer_size = 80*1024;
@@ -522,7 +525,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          {
             addToJson(oData, "client", (long)wsi);
             char* p = json_dumps(oData, 0);
-            MainClass::pushInMessage(p);
+            singleton->pushInMessage(p);
             free(p);
          }
          else if (event == evLogMessage)                     // { "event" : "logmessage", "object" : { "message" : "....." } }
@@ -533,7 +536,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          {
             addToJson(oData, "client", (long)wsi);
             char* p = json_dumps(oData, 0);
-            MainClass::pushInMessage(p);
+            singleton->pushInMessage(p);
             free(p);
          }
 /*         else
@@ -612,7 +615,7 @@ void cWebSock::atLogin(lws* wsi, const char* message, const char* clientInfo, js
 
    char* p = json_dumps(obj, 0);
 
-   MainClass::pushInMessage(p);
+   singleton->pushInMessage(p);
    free(p);
 }
 
@@ -634,7 +637,7 @@ void cWebSock::atLogout(lws* wsi, const char* message, const char* clientInfo)
 
    char* p = json_dumps(obj, 0);
    json_decref(obj);
-   MainClass::pushInMessage(p);
+   singleton->pushInMessage(p);
    free(p);
 
    {
@@ -673,7 +676,7 @@ void cWebSock::setClientType(lws* wsi, ClientType type)
 // Push Message
 //***************************************************************************
 
-void cWebSock::pushMessage(const char* message, lws* wsi)
+void cWebSock::pushOutMessage(const char* message, lws* wsi)
 {
    cMyMutexLock lock(&clientsMutex);
 

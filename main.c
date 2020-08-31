@@ -37,6 +37,7 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
+   else if (!strcasecmp(Name, "logLevel"))    loglevel = atoi(Value);
 
    return success;
 }
@@ -185,6 +186,26 @@ int main(int argc, char** argv)
    if (_level != na)
       loglevel = _level;
 
+   // fork daemon
+
+   if (!nofork && !setup && !init)
+   {
+      if ((pid = fork()) < 0)
+      {
+         printf("Can't fork daemon, %s\n", strerror(errno));
+         return 1;
+      }
+
+      // exit parent
+
+      if (pid != 0)
+         return 0;
+
+      // i'am the child!
+   }
+
+   // int AFTER fork !!!
+
    job = new DEAMON();
 
    if (job->init() != success)
@@ -199,20 +220,6 @@ int main(int argc, char** argv)
 
    if (init)
       return job->initialize(truncOnInit);
-
-   // fork daemon
-
-   if (!nofork)
-   {
-      if ((pid = fork()) < 0)
-      {
-         printf("Can't fork daemon, %s\n", strerror(errno));
-         return 1;
-      }
-
-      if (pid != 0)
-         return 0;
-   }
 
    // register SIGINT
 

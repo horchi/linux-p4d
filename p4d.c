@@ -19,8 +19,6 @@
 #include "p4d.h"
 
 int P4d::shutdown = no;
-std::queue<std::string> P4d::messagesIn;
-cMyMutex P4d::messagesInMutex;
 
 //***************************************************************************
 // Configuration Items
@@ -147,7 +145,7 @@ P4d::P4d()
    serial = new Serial;
    request = new P4Request(serial);
    curl = new cCurl();
-   webSock = new cWebSock(httpPath);
+   webSock = new cWebSock(this, httpPath);
 }
 
 P4d::~P4d()
@@ -203,11 +201,11 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
    {
       for (const auto cl : wsClients)
          if (cl.second.dataUpdates)
-            cWebSock::pushMessage(p, (lws*)cl.first);
+            webSock->pushOutMessage(p, (lws*)cl.first);
    }
    else
    {
-      cWebSock::pushMessage(p, (lws*)client);
+      webSock->pushOutMessage(p, (lws*)client);
    }
 
    tell(4, "DEBUG: PushMessage [%s]", p);
