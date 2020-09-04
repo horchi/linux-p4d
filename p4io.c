@@ -654,6 +654,8 @@ int P4Request::check()
    char* s = 0;
    byte b;
 
+   cMyMutexLock lock(&mutex);
+
    clear();
    addText("Tescht ;-)");
    request(cmdCheck);
@@ -682,6 +684,8 @@ int P4Request::getStatus(Status* s)
 
    int status = success;
    byte b;
+
+   cMyMutexLock lock(&mutex);
 
    // cmdGetState
 
@@ -781,6 +785,7 @@ int P4Request::syncTime(int offset)
       tell(eloAlways, "Syncing time with offset of %d seconds", offset);
    }
 
+   cMyMutexLock lock(&mutex);
    clear();
 
    localtime_r(&now, &tim);
@@ -823,6 +828,7 @@ int P4Request::getParameter(ConfigParameter* p)
    if (!p || p->address == addrUnknown)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(p->address);
    request(cmdGetParameter);
@@ -891,6 +897,7 @@ int P4Request::setParameter(ConfigParameter* p)
       return wrnOutOfRange;
    }
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(p->address);
    addAddress(p->value * pActual.factor);
@@ -920,37 +927,52 @@ int P4Request::setParameter(ConfigParameter* p)
 
 int P4Request::getTimeRanges(TimeRanges* t, int first)
 {
-   static int last = no;
+   static bool last {false};
 
    RequestClean clean(this);
-   int status = fail;
-
-   if (!first && last)
-      return wrnLast;
+   int status {fail};
 
    if (!t)
       return fail;
 
-   clear();
-   request(first ? cmdGetTimesFirst : cmdGetTimesNext);
+   if (first)
+      last = false;
 
-   if (readHeader() == success)
+   if (!first && last)
+      return wrnLast;
+
+   cMyMutexLock lock(&mutex);
+   clear();
+   int cmd = first ? cmdGetTimesFirst : cmdGetTimesNext;
+   request(cmd);
+
+   if ((status = readHeader()) == success)
    {
       byte crc;
       sword w;
 
       status = readWord(w)            // what ever (always 01 00 ?)
-         + readByte(t->address);       // address  (here only a byte!!)
+         + readByte(t->address);      // address (here only a byte!!)
+
+      if (status != success)
+      {
+         tell(0, "Error: Reading address failed");
+         return fail;
+      }
 
       for (int n = 0; n < 4; n++)
       {
          // read time range 'n'
 
-         status += readByte(t->timesFrom[n]);
-         status += readByte(t->timesTo[n]);
+         status = readByte(t->timesFrom[n])
+            + readByte(t->timesTo[n]);
       }
 
-      status += readByte(crc);
+      if ((status = readByte(crc)) != success)
+      {
+         tell(0, "Error: Reading CRC failed;");
+         return fail;
+      }
 
       show("<- ");
    }
@@ -975,6 +997,7 @@ int P4Request::setTimeRanges(TimeRanges* t)
    if (!t || t->address == 0xFF)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(t->address);
 
@@ -1035,6 +1058,7 @@ int P4Request::getValue(Value* v)
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(v->address);
    request(cmdGetValue);
@@ -1063,6 +1087,7 @@ int P4Request::getDigitalOut(IoValue* v)
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(v->address);
    request(cmdGetDigOut);
@@ -1092,6 +1117,7 @@ int P4Request::getDigitalIn(IoValue* v)
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(v->address);
    request(cmdGetDigIn);
@@ -1121,6 +1147,7 @@ int P4Request::getAnalogOut(IoValue* v)
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
 
+   cMyMutexLock lock(&mutex);
    clear();
    addAddress(v->address);
    request(cmdGetAnlOut);
@@ -1152,6 +1179,7 @@ int P4Request::getError(ErrorInfo* e, int first)
    if (!e)
       return fail;
 
+   cMyMutexLock lock(&mutex);
    clear();
    request(first ? cmdGetErrorFirst : cmdGetErrorNext);
 
@@ -1203,6 +1231,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
    byte crc, tb, b;
    byte more;
 
+   cMyMutexLock lock(&mutex);
    clear();
    request(first ? cmdGetValueListFirst : cmdGetValueListNext);
 
@@ -1299,6 +1328,7 @@ int P4Request::getMenuItem(MenuItem* m, int first)
    byte crc, tb, b;
    byte more;
 
+   cMyMutexLock lock(&mutex);
    m->clear();
    clear();
    request(first ? cmdGetMenuListFirst : cmdGetMenuListNext);
@@ -1439,8 +1469,9 @@ int P4Request::getItem(int first)
 {
    RequestClean clean(this);
    byte more;
-   clear();
 
+   cMyMutexLock lock(&mutex);
+   clear();
    request(first ? cmdGetUnknownFirst : cmdGetUnknownNext);
 
    if (readHeader() != success)
@@ -1475,6 +1506,8 @@ int P4Request::getItem(int first)
 int P4Request::getUser(byte cmd)
 {
    RequestClean clean(this);
+
+   cMyMutexLock lock(&mutex);
    clear();
    request(cmd);
 

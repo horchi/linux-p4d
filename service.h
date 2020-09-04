@@ -166,7 +166,11 @@ class FroelingService
          mstReset    = 0x23,
          mstZeiten   = 0x26,
          mstAnzeigen = 0x3a,
-         mstFirmware = 0x16
+         mstFirmware = 0x16,
+         mstBus      = 0x31,  // for whatever
+
+         mstGroup1   = 0x2a,  // anything like a parameter group
+         mstGroup2   = 0x2d   // anything like a parameter group
       };
 
       // error states

@@ -104,6 +104,10 @@ const char* cWebService::events[] =
    "changepasswd",
    "resetpeaks",
    "groupconfig",
+   "errors",
+   "menu",
+   "pareditrequest",
+
    0
 };
 
@@ -208,119 +212,12 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
       webSock->pushOutMessage(p, (lws*)client);
    }
 
-   tell(4, "DEBUG: PushMessage [%s]", p);
+   tell(1, "DEBUG: PushMessage [%s]", p);
    free(p);
 
    webSock->performData(cWebSock::mtData);
 
    return done;
-}
-
-//***************************************************************************
-// Dispatch Client Requests
-//***************************************************************************
-
-int P4d::dispatchClientRequest()
-{
-   int status = fail;
-   json_error_t error;
-   json_t *oData, *oObject;
-
-   cMyMutexLock lock(&messagesInMutex);
-
-   // #TODO loop here while (!messagesIn.empty()) ?
-
-   if (messagesIn.empty())
-      return done;
-
-   // { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
-
-   tell(2, "DEBUG: Got '%s'", messagesIn.front().c_str());
-   oData = json_loads(messagesIn.front().c_str(), 0, &error);
-
-   // get the request
-
-   Event event = cWebService::toEvent(getStringFromJson(oData, "event", "<null>"));
-   long client = getLongFromJson(oData, "client");
-   oObject = json_object_get(oData, "object");
-   // int addr = getIntFromJson(oObject, "address");
-   // const char* type = getStringFromJson(oObject, "type");
-
-   // rights ...
-
-   if (checkRights(client, event, oObject))
-   {
-      // dispatch client request
-
-      tell(2, "Dispatch event %d '%s'", event, toName(event));
-
-      switch (event)
-      {
-         case evLogin:         status = performLogin(oObject);                  break;
-         case evLogout:        status = performLogout(oObject);                 break;
-         case evGetToken:      status = performTokenRequest(oObject, client);   break;
-         // case evToggleIo:      status = toggleIo(addr, type);                   break;
-         // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
-         // case evToggleMode:    status = toggleOutputMode(addr);                 break;
-         case evStoreConfig:   status = storeConfig(oObject, client);           break;
-         case evStoreIoSetup:  status = storeIoSetup(oObject, client);          break;
-         case evGroupConfig:   status = storeGroups(oObject, client);           break;
-         case evChartData:     status = performChartData(oObject, client);      break;
-         case evUserConfig:    status = performUserConfig(oObject, client);     break;
-         case evChangePasswd:  status = performPasswChange(oObject, client);    break;
-         case evResetPeaks:    status = resetPeaks(oObject, client);            break;
-
-         default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
-                       toName(event), messagesIn.front().c_str());
-      }
-   }
-   else
-   {
-      tell(0, "Insufficient right to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
-           wsClients[(void*)client].user.c_str());
-   }
-
-   json_decref(oData);      // free the json object
-   messagesIn.pop();
-
-   return status;
-}
-
-bool P4d::checkRights(long client, Event event, json_t* oObject)
-{
-   uint rights = wsClients[(void*)client].rights;
-
-   switch (event)
-   {
-      case evLogin:         return true;
-      case evLogout:        return true;
-      case evGetToken:      return true;
-      case evToggleIoNext:  return rights & urControl;
-      case evToggleMode:    return rights & urFullControl;
-      case evStoreConfig:   return rights & urSettings;
-      case evStoreIoSetup:  return rights & urSettings;
-      case evGroupConfig:   return rights & urSettings;
-      case evChartData:     return rights & urView;
-      case evUserConfig:    return rights & urAdmin;
-      case evChangePasswd:  return true;   // check will done in performPasswChange()
-      case evResetPeaks:    return rights & urAdmin;
-      default: break;
-   }
-
-   if (event == evToggleIo && rights & urControl)
-   {
-      int addr = getIntFromJson(oObject, "address");
-      const char* type = getStringFromJson(oObject, "type");
-
-      tableValueFacts->clear();
-      tableValueFacts->setValue("ADDRESS", addr);
-      tableValueFacts->setValue("TYPE", type);
-
-      if (tableValueFacts->find())
-         return rights & tableValueFacts->getIntValue("RIGHTS");
-   }
-
-   return false;
 }
 
 //***************************************************************************
@@ -577,6 +474,29 @@ int P4d::initDb()
 
    status += selectAllMenuItems->prepare();
 
+   // ----------------
+
+   selectMenuItemsByParent = new cDbStatement(tableMenu);
+
+   selectMenuItemsByParent->build("select ");
+   selectMenuItemsByParent->bindAllOut();
+   selectMenuItemsByParent->build(" from %s where ", tableMenu->TableName());
+   selectMenuItemsByParent->bind("PARENT", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectMenuItemsByParent->prepare();
+
+
+   // ----------------
+
+   selectMenuItemsByChild = new cDbStatement(tableMenu);
+
+   selectMenuItemsByChild->build("select ");
+   selectMenuItemsByChild->bindAllOut();
+   selectMenuItemsByChild->build(" from %s where ", tableMenu->TableName());
+   selectMenuItemsByChild->bind("CHILD", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectMenuItemsByChild->prepare();
+
    // ------------------
 
    selectPendingJobs = new cDbStatement(tableJobs);
@@ -672,7 +592,19 @@ int P4d::initDb()
    status += selectSamplesRange60->prepare();
 
    // ------------------
-   //
+   // all errors
+
+   selectAllErrors = new cDbStatement(tableErrors);
+
+   selectAllErrors->build("select ");
+   selectAllErrors->bindAllOut();
+   selectAllErrors->build(" from %s",  tableErrors->TableName());
+   selectAllErrors->build(" order by time1 desc");
+
+   status += selectAllErrors->prepare();
+
+   // ------------------
+   // pending errors
 
    selectPendingErrors = new cDbStatement(tableErrors);
 
@@ -685,6 +617,7 @@ int P4d::initDb()
                               tableErrors->getField("MAILCNT")->getDbName());
 
    status += selectPendingErrors->prepare();
+
 
    // --------------------
    // select max(time) from samples
@@ -790,40 +723,43 @@ int P4d::initDb()
 
 int P4d::exitDb()
 {
-   delete tableSamples;            tableSamples = 0;
-   delete tablePeaks;              tablePeaks = 0;
-   delete tableValueFacts;         tableValueFacts = 0;
-   delete tableGroups;             tableGroups = 0;
-   delete tableUsers;              tableUsers = 0;
-   delete tableMenu;               tableMenu = 0;
-   delete tableJobs;               tableJobs = 0;
-   delete tableSensorAlert;        tableSensorAlert = 0;
-   delete tableSchemaConf;         tableSchemaConf = 0;
-   delete tableSmartConf;          tableSmartConf = 0;
-   delete tableErrors;             tableErrors = 0;
-   delete tableConfig;             tableConfig = 0;
-   delete tableTimeRanges;         tableTimeRanges = 0;
-   delete tableHmSysVars;          tableHmSysVars = 0;
-   delete tableScripts;            tableScripts = 0;
+   delete tableSamples;               tableSamples = 0;
+   delete tablePeaks;                 tablePeaks = 0;
+   delete tableValueFacts;            tableValueFacts = 0;
+   delete tableGroups;                tableGroups = 0;
+   delete tableUsers;                 tableUsers = 0;
+   delete tableMenu;                  tableMenu = 0;
+   delete tableJobs;                  tableJobs = 0;
+   delete tableSensorAlert;           tableSensorAlert = 0;
+   delete tableSchemaConf;            tableSchemaConf = 0;
+   delete tableSmartConf;             tableSmartConf = 0;
+   delete tableErrors;                tableErrors = 0;
+   delete tableConfig;                tableConfig = 0;
+   delete tableTimeRanges;            tableTimeRanges = 0;
+   delete tableHmSysVars;             tableHmSysVars = 0;
+   delete tableScripts;               tableScripts = 0;
 
-   delete selectActiveValueFacts;  selectActiveValueFacts = 0;
-   delete selectAllValueFacts;     selectAllValueFacts = 0;
-   delete selectAllGroups;         selectAllGroups = 0;
-   delete selectPendingJobs;       selectPendingJobs = 0;
-   delete selectAllMenuItems;      selectAllMenuItems = 0;
-   delete selectSensorAlerts;      selectSensorAlerts = 0;
-   delete selectSampleInRange;     selectSampleInRange = 0;
-   delete selectPendingErrors;     selectPendingErrors = 0;
-   delete selectMaxTime;           selectMaxTime = 0;
-   delete selectScriptByName;      selectScriptByName = 0;
-   delete selectScript;            selectScript = 0;
-   delete cleanupJobs;             cleanupJobs = 0;
-   delete selectAllConfig;         selectAllConfig = 0;
-   delete selectAllUser;           selectAllUser = 0;
-   delete selectSamplesRange;      selectSamplesRange = 0;
-   delete selectSamplesRange60;    selectSamplesRange60 = 0;
+   delete selectActiveValueFacts;     selectActiveValueFacts = 0;
+   delete selectAllValueFacts;        selectAllValueFacts = 0;
+   delete selectAllGroups;            selectAllGroups = 0;
+   delete selectPendingJobs;          selectPendingJobs = 0;
+   delete selectAllMenuItems;         selectAllMenuItems = 0;
+   delete selectMenuItemsByParent;    selectMenuItemsByParent = 0;
+   delete selectMenuItemsByChild;     selectMenuItemsByChild = 0;
+   delete selectSensorAlerts;         selectSensorAlerts = 0;
+   delete selectSampleInRange;        selectSampleInRange = 0;
+   delete selectAllErrors;            selectAllErrors = 0;
+   delete selectPendingErrors;        selectPendingErrors = 0;
+   delete selectMaxTime;              selectMaxTime = 0;
+   delete selectScriptByName;         selectScriptByName = 0;
+   delete selectScript;               selectScript = 0;
+   delete cleanupJobs;                cleanupJobs = 0;
+   delete selectAllConfig;            selectAllConfig = 0;
+   delete selectAllUser;              selectAllUser = 0;
+   delete selectSamplesRange;         selectSamplesRange = 0;
+   delete selectSamplesRange60;       selectSamplesRange60 = 0;
 
-   delete connection;              connection = 0;
+   delete connection; connection = 0;
 
    return done;
 }
@@ -909,6 +845,30 @@ int P4d::applyConfigurationSpecials()
 
 int P4d::initialize(int truncate)
 {
+   sem->p();
+
+   tell(0, "opening %s", ttyDevice);
+
+   if (serial->open(ttyDevice) != success)
+   {
+      sem->v();
+      return fail;
+   }
+
+   if (request->check() != success)
+   {
+      tell(0, "request->check failed");
+      serial->close();
+      return fail;
+   }
+
+   updateTimeRangeData();
+   serial->close();
+
+   sem->v();
+   return done;
+
+
    if (!connection)
       return fail;
 
@@ -922,14 +882,6 @@ int P4d::initialize(int truncate)
       tableSchemaConf->truncate();
       tableSmartConf->truncate();
       tableMenu->truncate();
-   }
-
-   sem->p();
-
-   if (serial->open(ttyDevice) != success)
-   {
-      sem->v();
-      return fail;
    }
 
    tell(eloAlways, "Requesting value facts from s 3200");
@@ -1501,6 +1453,9 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 
    double theValue = value / (double)factor;
 
+   if (strcmp(type, "VA") == 0)
+      vaValues[address] = theValue;
+
    tableSamples->clear();
 
    tableSamples->setValue("TIME", now);
@@ -1782,9 +1737,11 @@ int P4d::loop()
 
       if (status != success)
       {
+         sem->p();
          serial->close();
          tell(eloAlways, "Error reading serial interface, reopen now");
          serial->open(ttyDevice);
+         sem->v();
 
          continue;
       }
@@ -2157,7 +2114,8 @@ int P4d::update(bool webOnly, long client)
       }
    }
 
-   sensorAlertCheck(now);
+   if (!webOnly)
+      sensorAlertCheck(now);
 
    return success;
 }
@@ -2852,7 +2810,10 @@ int P4d::sendMail(const char* receiver, const char* subject, const char* body, c
    result = system(command);
    free(command);
 
-   tell(eloAlways, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
+   if (loglevel >= eloDebug)
+      tell(eloAlways, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
+   else
+      tell(eloAlways, "Send mail '%s' to '%s'", subject, receiver);
 
    return result;
 }

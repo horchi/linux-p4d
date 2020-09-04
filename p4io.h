@@ -3,11 +3,10 @@
 // File p4io.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 19.11.2013  Jörg Wendel
+// Date 04.11.2010 - 04.09.2020  Jörg Wendel
 //***************************************************************************
 
-#ifndef _IO_P4_H_
-#define _IO_P4_H_
+#pragma once
 
 #include <arpa/inet.h>
 
@@ -83,7 +82,7 @@ class P4Request : public FroelingService
 {
    public:
 
-      P4Request(Serial* aSerial)    { s = aSerial; text = 0; clear(); }
+      P4Request(Serial* aSerial)    { s = aSerial; clear(); }
       virtual ~P4Request()          { clear(); }
 
       class RequestClean
@@ -118,7 +117,7 @@ class P4Request : public FroelingService
       int clear()
       {
          free(text);
-         text = 0;
+         text = nullptr;
          sizeBufferContent = 0;
          sizeDecodedContent = 0;
          memset(&header, 0, sizeof(Header));
@@ -311,7 +310,8 @@ class P4Request : public FroelingService
       // data
 
       Header header;
-      char* text;
+      cMyMutex mutex;
+      char* text {nullptr};
       word addresses[maxAddresses];
       int addressCount;
       byte bytes[maxBytes];
@@ -325,6 +325,3 @@ class P4Request : public FroelingService
 
       Serial* s;
 };
-
-//***************************************************************************
-#endif // _IO_P4_H_

@@ -3,7 +3,7 @@
 // File webif.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 10.02.2014  Jörg Wendel
+// Date 04.11.2010 - 10.02.2020  Jörg Wendel
 //***************************************************************************
 
 #include <inttypes.h>
@@ -17,6 +17,22 @@
 int P4d::performWebifRequests()
 {
    tableJobs->clear();
+
+   sem->p();
+
+   if (request->check() != success)
+   {
+      serial->close();
+      tell(eloAlways, "Error reading serial interface, reopen now");
+      serial->open(ttyDevice);
+   }
+
+   sem->v();
+
+   if (!serial->isOpen())
+      return fail;
+
+   request->check();
 
    for (int f = selectPendingJobs->find(); f; f = selectPendingJobs->fetch())
    {
@@ -204,6 +220,8 @@ int P4d::performWebifRequests()
 
             ConfigParameter p(paddr);
 
+            sem->p();
+
             if (request->getParameter(&p) == success)
             {
                char* buf = 0;
@@ -220,6 +238,8 @@ int P4d::performWebifRequests()
 
                free(buf);
             }
+
+            sem->v();
          }
       }
 
@@ -242,6 +262,8 @@ int P4d::performWebifRequests()
             if (ConfigParameter::toValue(data, type, p.value) == success)
             {
                tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", data, p.value, paddr);
+
+               sem->p();
 
                if ((status = request->setParameter(&p)) == success)
                {
@@ -272,6 +294,8 @@ int P4d::performWebifRequests()
                   else
                      tableJobs->setValue("RESULT", "fail#communication error");
                }
+
+               sem->v();
             }
             else
             {
@@ -362,6 +386,8 @@ int P4d::performWebifRequests()
             {
                tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(rangeNo), rangeNo+1, t.address);
 
+               sem->p();
+
                if ((status = request->setTimeRanges(&t)) == success)
                {
                   char* buf = 0;
@@ -391,6 +417,8 @@ int P4d::performWebifRequests()
                   else
                      tableJobs->setValue("RESULT", "fail#communication error");
                }
+
+               sem->v();
             }
             else
             {
@@ -418,6 +446,8 @@ int P4d::performWebifRequests()
             double factor = tableValueFacts->getIntValue("FACTOR");
             const char* unit = tableValueFacts->getStrValue("UNIT");
 
+            sem->p();
+
             if (request->getValue(&v) == success)
             {
                char* buf = 0;
@@ -426,6 +456,8 @@ int P4d::performWebifRequests()
                tableJobs->setValue("RESULT", buf);
                free(buf);
             }
+
+            sem->v();
          }
       }
 
@@ -491,6 +523,8 @@ int P4d::performWebifRequests()
 
       else if (strcasecmp(command, "updatemenu") == 0)
       {
+         sem->p();
+
          tableMenu->clear();
 
          for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
@@ -498,25 +532,30 @@ int P4d::performWebifRequests()
             int type = tableMenu->getIntValue("TYPE");
             int paddr = tableMenu->getIntValue("ADDRESS");
 
-            if (type == mstPar || type == mstParDig || type == mstParZeit ||
-                type == mstParSet2 || type == mstParSet1 || type == mstParSet)
-            {
-               Fs::ConfigParameter p(paddr);
+            // if (type == mstPar || type == mstParDig || type == mstParZeit ||
+            //     type == mstParSet2 || type == mstParSet1 || type == mstParSet)
+            // {
+            //    Fs::ConfigParameter p(paddr);
 
-               if (request->getParameter(&p) == success)
-               {
-                  cRetBuf value = ConfigParameter::toNice(p.value, type);
+            //    if (request->getParameter(&p) == success)
+            //    {
+            //       cRetBuf value = ConfigParameter::toNice(p.value, type);
 
-                  if (tableMenu->find())
-                  {
-                     tableMenu->setValue("VALUE", value);
-                     tableMenu->setValue("UNIT", p.unit);
-                     tableMenu->update();
-                  }
-               }
-            }
+            //       if (tableMenu->find())
+            //       {
+            //          tableMenu->setValue("VALUE", value);
+            //          tableMenu->setValue("UNIT", p.unit);
+            //          tableMenu->update();
+            //       }
+            //    }
+            // }
 
-            else if (type == mstFirmware)
+            // else
+
+            if (type == mstReset || type == mstGroup1 || type == mstGroup2)
+               continue;
+
+            if (type == mstFirmware)
             {
                Fs::Status s;
 
@@ -605,12 +644,30 @@ int P4d::performWebifRequests()
                   }
                }
             }
+            else if (paddr != 0 && paddr != 9997 && paddr != 9998 && paddr != 9999)
+            {
+               Fs::ConfigParameter p(paddr);
+
+               if (request->getParameter(&p) == success)
+               {
+                  cRetBuf value = ConfigParameter::toNice(p.value, type);
+
+                  if (tableMenu->find())
+                  {
+                     tableMenu->setValue("VALUE", value);
+                     tableMenu->setValue("UNIT", p.unit);
+                     tableMenu->update();
+                  }
+               }
+            }
          }
 
          selectAllMenuItems->freeResult();
+         tell(0, "Updating menu values done");
 
          updateTimeRangeData();
 
+         sem->v();
          tableJobs->setValue("RESULT", "success:done");
       }
 
@@ -673,9 +730,18 @@ int P4d::updateTimeRangeData()
    char fName[10+TB];
    char tName[10+TB];
 
+   tell(0, "Updating time ranges data ...");
+
+   if (request->check() != success)
+   {
+      tell(0, "request->check failed");
+      serial->close();
+      return fail;
+   }
+
    // update / insert time ranges
 
-   for (status = request->getFirstTimeRanges(&t); status != Fs::wrnLast; status = request->getNextTimeRanges(&t))
+   for (status = request->getFirstTimeRanges(&t); status == success; status = request->getNextTimeRanges(&t))
    {
       tableTimeRanges->clear();
       tableTimeRanges->setValue("ADDRESS", t.address);
@@ -690,7 +756,10 @@ int P4d::updateTimeRangeData()
 
       tableTimeRanges->store();
       tableTimeRanges->reset();
+
    }
+
+   tell(0, "Updating time ranges data done");
 
    return done;
 }

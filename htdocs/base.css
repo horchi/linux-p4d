@@ -253,6 +253,25 @@ span > input
     padding: 0px 0px 0px 10px;
 }
 
+
+div.redCircle
+{
+    width: 20px;
+    height: 15px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: red;
+}
+
+div.greenCircle
+{
+    width: 20px;
+    height: 15px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: green;
+}
+
 .tableMultiCol
 {
     width: 100%;
@@ -272,6 +291,7 @@ span > input
 .tableMultiColCell
 {
     padding-right: 12px;
+    height: 30px;
 }
 
 table.tableMultiCol tr:nth-child(even)
@@ -479,6 +499,66 @@ table.tableMultiCol tr:nth-child(odd)
     display: inline;
     width: 200px;
     padding: 4px;
+}
+
+/* ----------------------- */
+/* Heating Menu */
+
+.menuButtonContainer
+{
+    display: list-item;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.menuButtonContainer > div
+{
+    justify-content: center;
+    overflow: hidden;
+    min-height: 60px;
+    margin: 2px;
+    padding: 10px;
+}
+
+.menuButton
+{
+    display: grid;
+    align-items: center;
+    text-align: center;
+    grid-gap: 1px;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--light1);
+}
+
+.menuButtonValue
+{
+    display: grid;
+    align-items: center;
+    text-align: center;
+    grid-gap: 1px;
+    font-size: 1.5em;
+    font-weight: normal;
+    background-color: var(--light1);
+}
+
+.menuButtonValueEditable
+{
+    cursor: pointer;
+    color: #3498db;
+}
+
+.menuButtonCaption
+{
+    display: grid;
+    align-items: center;
+    text-align: center;
+    grid-gap: 1px;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--light3);
 }
 
 /* ----------------------- */

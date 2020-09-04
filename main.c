@@ -37,7 +37,6 @@ int atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
    else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
    else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
-   else if (!strcasecmp(Name, "logLevel"))    loglevel = atoi(Value);
 
    return success;
 }

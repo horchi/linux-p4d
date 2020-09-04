@@ -301,8 +301,6 @@ int main(int argc, char** argv)
 
          for (status = request.getFirstTimeRanges(&t); status != Fs::wrnLast; status = request.getNextTimeRanges(&t))
          {
-            tell(eloAlways, "XXXXX:");
-
             for (int n = 0; n < 4; n++)
                tell(eloAlways, "  Range %d: %s [0x%02x]", n+1, t.getTimeRange(n), t.address);
 

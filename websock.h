@@ -41,6 +41,9 @@ class cWebService
          evChangePasswd,
          evResetPeaks,
          evGroupConfig,
+         evErrors,
+         evMenu,
+         evParEditRequest,
 
          evCount
       };

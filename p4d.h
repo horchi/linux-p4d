@@ -165,6 +165,9 @@ class P4d : public FroelingService, public cWebInterface
       int performUserDetails(long client);
       int performIoSettings(long client);
       int performGroups(long client);
+      int performErrors(long client);
+      int performMenu(json_t* oObject, long client);
+      int performParEditRequest(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
       int performUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);
@@ -213,6 +216,8 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectPendingJobs {nullptr};
       cDbStatement* selectAllMenuItems {nullptr};
+      cDbStatement* selectMenuItemsByParent {nullptr};
+      cDbStatement* selectMenuItemsByChild {nullptr};
       cDbStatement* selectSensorAlerts {nullptr};
 
       cDbStatement* selectSampleInRange {nullptr};   // for alert check
@@ -220,6 +225,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectSamplesRange60 {nullptr};  // for chart
 
       cDbStatement* selectPendingErrors {nullptr};
+      cDbStatement* selectAllErrors {nullptr};
       cDbStatement* selectMaxTime {nullptr};
       cDbStatement* selectHmSysVarByAddr {nullptr};
       cDbStatement* selectScriptByName {nullptr};
@@ -323,6 +329,7 @@ class P4d : public FroelingService, public cWebInterface
 
       std::string alertMailBody;
       std::string alertMailSubject;
+      std::map<int,double> vaValues;
 
       //
 

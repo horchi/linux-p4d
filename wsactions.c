@@ -13,8 +13,121 @@
 #include <algorithm>
 
 #include "lib/json.h"
-
 #include "p4d.h"
+
+//***************************************************************************
+// Dispatch Client Requests
+//***************************************************************************
+
+int P4d::dispatchClientRequest()
+{
+   int status = fail;
+   json_error_t error;
+   json_t *oData, *oObject;
+
+   cMyMutexLock lock(&messagesInMutex);
+
+   if (messagesIn.empty())
+      return done;
+
+   // #TODO loop here while (!messagesIn.empty()) ?
+
+   // dispatch message
+   //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
+
+   tell(1, "DEBUG: Got '%s'", messagesIn.front().c_str());
+   oData = json_loads(messagesIn.front().c_str(), 0, &error);
+
+   // get the request
+
+   Event event = cWebService::toEvent(getStringFromJson(oData, "event", "<null>"));
+   long client = getLongFromJson(oData, "client");
+   oObject = json_object_get(oData, "object");
+   // int addr = getIntFromJson(oObject, "address");
+   // const char* type = getStringFromJson(oObject, "type");
+
+   // rights ...
+
+   if (checkRights(client, event, oObject))
+   {
+      // dispatch client request
+
+      tell(2, "Dispatch event %d '%s'", event, toName(event));
+
+      switch (event)
+      {
+         case evLogin:          status = performLogin(oObject);                  break;
+         case evLogout:         status = performLogout(oObject);                 break;
+         case evGetToken:       status = performTokenRequest(oObject, client);   break;
+         // case evToggleIo:      status = toggleIo(addr, type);                   break;
+         // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
+         // case evToggleMode:    status = toggleOutputMode(addr);                 break;
+         case evStoreConfig:    status = storeConfig(oObject, client);           break;
+         case evStoreIoSetup:   status = storeIoSetup(oObject, client);          break;
+         case evGroupConfig:    status = storeGroups(oObject, client);           break;
+         case evChartData:      status = performChartData(oObject, client);      break;
+         case evUserConfig:     status = performUserConfig(oObject, client);     break;
+         case evChangePasswd:   status = performPasswChange(oObject, client);    break;
+         case evResetPeaks:     status = resetPeaks(oObject, client);            break;
+         case evMenu:           status = performMenu(oObject, client);           break;
+         case evParEditRequest: status = performParEditRequest(oObject, client); break;
+         default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
+                       toName(event), messagesIn.front().c_str());
+      }
+   }
+   else
+   {
+      tell(0, "Insufficient right to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
+           wsClients[(void*)client].user.c_str());
+   }
+
+   json_decref(oData);      // free the json object
+   messagesIn.pop();
+
+   return status;
+}
+
+bool P4d::checkRights(long client, Event event, json_t* oObject)
+{
+   uint rights = wsClients[(void*)client].rights;
+
+   switch (event)
+   {
+      case evLogin:          return true;
+      case evLogout:         return true;
+      case evGetToken:       return true;
+      case evToggleIoNext:   return rights & urControl;
+      case evToggleMode:     return rights & urFullControl;
+      case evStoreConfig:    return rights & urSettings;
+      case evStoreIoSetup:   return rights & urSettings;
+      case evGroupConfig:    return rights & urSettings;
+      case evChartData:      return rights & urView;
+      case evUserConfig:     return rights & urAdmin;
+      case evChangePasswd:   return true;   // check will done in performPasswChange()
+      case evResetPeaks:     return rights & urAdmin;
+      case evMenu:           return rights & urView;
+      case evParEditRequest: return rights & urSettings;
+      default: break;
+   }
+
+   if (event == evToggleIo && rights & urControl)
+   {
+      int addr = getIntFromJson(oObject, "address");
+      const char* type = getStringFromJson(oObject, "type");
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("ADDRESS", addr);
+      tableValueFacts->setValue("TYPE", type);
+
+      if (tableValueFacts->find())
+      {
+         tableValueFacts->reset();
+         return rights & tableValueFacts->getIntValue("RIGHTS");
+      }
+   }
+
+   return false;
+}
 
 //***************************************************************************
 // WS Ping
@@ -108,6 +221,10 @@ int P4d::performLogin(json_t* oObject)
          performIoSettings(client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "groups") == 0)
          performGroups(client);
+      else if (strcmp(name, "errors") == 0)
+         performErrors(client);
+      else if (strcmp(name, "menu") == 0)
+         performMenu(0, client);
       else if (strcmp(name, "chartdata") == 0)
          performChartData(oRequest, client);
    }
@@ -277,6 +394,270 @@ int P4d::performGroups(long client)
 }
 
 //***************************************************************************
+// Perform WS Error Data Request
+//***************************************************************************
+
+int P4d::performErrors(long client)
+{
+   if (client <= 0)
+      return done;
+
+   json_t* oJson = json_array();
+
+   tableErrors->clear();
+
+   for (int f = selectAllErrors->find(); f; f = selectAllErrors->fetch())
+   {
+      json_t* oData = json_object();
+      json_array_append_new(oJson, oData);
+
+      time_t t = std::max(std::max(tableErrors->getTimeValue("TIME1"), tableErrors->getTimeValue("TIME4")), tableErrors->getTimeValue("TIME2"));
+      std::string strTime = l2pTime(t);
+      uint duration {0};
+
+      if (tableErrors->getValue("TIME2")->isNull())
+         duration = time(0) - tableErrors->getTimeValue("TIME1");
+      else
+         duration = tableErrors->getTimeValue("TIME2") - tableErrors->getTimeValue("TIME1");
+
+      json_object_set_new(oData, "state", json_string(tableErrors->getStrValue("STATE")));
+      json_object_set_new(oData, "text", json_string(tableErrors->getStrValue("TEXT")));
+      json_object_set_new(oData, "duration", json_integer(duration));
+      json_object_set_new(oData, "time", json_string(strTime.c_str()));
+   }
+
+   selectAllErrors->freeResult();
+
+   pushOutMessage(oJson, "errors", client);
+
+   return done;
+}
+//***************************************************************************
+// Perform WS Menu Request
+//***************************************************************************
+
+int P4d::performMenu(json_t* oObject, long client)
+{
+   if (client <= 0)
+      return done;
+
+   int parent {1};
+   int last {0};
+   char* title {nullptr};
+
+   if (oObject)
+      parent = getIntFromJson(oObject, "parent", 1);
+
+   json_t* oJson = json_object();
+   json_t* oArray = json_array();
+
+   tableMenu->clear();
+   tableMenu->setValue("CHILD", parent);
+
+   if (selectMenuItemsByChild->find())
+   {
+      last = tableMenu->getIntValue("PARENT");
+      title = strdup(tableMenu->getStrValue("title"));
+   }
+
+   selectMenuItemsByChild->freeResult();
+
+   tableMenu->clear();
+   tableMenu->setValue("PARENT", parent);
+
+   for (int f = selectMenuItemsByParent->find(); f; f = selectMenuItemsByParent->fetch())
+   {
+      int type = tableMenu->getIntValue("TYPE");
+      int address = tableMenu->getIntValue("ADDRESS");
+      int child = tableMenu->getIntValue("CHILD");
+
+      if (type == mstBus || type == mstReset)
+         continue;
+
+      if (!child && !address && tableMenu->getValue("VALUE")->isNull())
+         continue;
+
+      // this 3 'special' addresses takes a long while and don't deliver any usefull data
+
+      if (address == 9997 || address == 9998 || address == 9999)
+         continue;
+
+      char* title = strdup(tableMenu->getStrValue("TITLE"));
+
+      if (isEmpty(rTrim(title)))
+      {
+         free(title);
+         continue;
+      }
+
+      if (title[strlen(title)-1] == ':')
+         title[strlen(title)-1] = '\0';
+
+      bool timeGroup = (type == mstGroup1 || type == mstGroup2) && strcmp(title, "Zeiten") == 0 && (child == 230 || child == 350 || child == 430 || child == 573);
+
+      if (!timeGroup)
+      {
+         json_t* oData = json_object();
+         json_array_append_new(oArray, oData);
+
+         json_object_set_new(oData, "id", json_integer(tableMenu->getIntValue("ID")));
+         json_object_set_new(oData, "parent", json_integer(tableMenu->getIntValue("PARENT")));
+         json_object_set_new(oData, "child", json_integer(child));
+         json_object_set_new(oData, "type", json_integer(type));
+         json_object_set_new(oData, "address", json_integer(address));
+         json_object_set_new(oData, "title", json_string(title));
+         json_object_set_new(oData, "unit", json_string(tableMenu->getStrValue("UNIT")));
+
+         if (type == mstMesswert || type == mstMesswert1)
+            json_object_set_new(oData, "value", json_real(vaValues[address]));
+         else
+            json_object_set_new(oData, "value", json_string(tableMenu->getStrValue("VALUE")));
+
+         if (type == 0x07 || type == 0x08 || type == 0x40 || type == 0x39 || type == 0x32 || type == 0x0a)
+            json_object_set_new(oData, "editable", json_boolean(true));
+      }
+
+      else
+      {
+         int baseAddr {0};
+
+         switch (child)
+         {
+            case 230: baseAddr = 0x00 + (address * 7); break;   // Boiler 'n'
+            case 350: baseAddr = 0x38 + (address * 7); break;   // Heizkreis 'n'
+            case 430: baseAddr = 0xb6 + (address * 7); break;   // Puffer 'n'
+               // case ???: baseAddr = 0xd2 + (address * 7); break    // Kessel
+            case 573: baseAddr = 0xd9 + (address * 7); break;   // Zirkulation
+         }
+
+         for (int wday = 0; wday < 7; wday++)
+         {
+            int trAddr = baseAddr + wday;
+            char* dayTitle {nullptr};
+            asprintf(&dayTitle, "Zeiten '%s'", toWeekdayName(wday));
+
+            tableTimeRanges->clear();
+            tableTimeRanges->setValue("ADDRESS", trAddr);
+
+            json_t* oData = json_object();
+            json_array_append_new(oArray, oData);
+
+            json_object_set_new(oData, "id", json_integer(0));
+            json_object_set_new(oData, "parent", json_integer(0));
+            json_object_set_new(oData, "child", json_integer(0));
+            json_object_set_new(oData, "type", json_integer(0));
+            json_object_set_new(oData, "address", json_integer(0));
+            json_object_set_new(oData, "title", json_string(dayTitle));
+            json_object_set_new(oData, "unit", json_string(""));
+
+            free(dayTitle);
+
+            if (tableTimeRanges->find())
+            {
+               for (int n = 1; n < 5; n++)
+               {
+                  char* rTitle {nullptr};
+                  char* value {nullptr};
+                  char* from {nullptr};
+                  char* to {nullptr};
+
+                  asprintf(&rTitle, "Range %d", n);
+                  asprintf(&from, "from%d", n);
+                  asprintf(&to, "to%d", n);
+                  asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
+
+                  json_t* oData = json_object();
+                  json_array_append_new(oArray, oData);
+
+                  json_object_set_new(oData, "id", json_integer(0));
+                  json_object_set_new(oData, "parent", json_integer(0));
+                  json_object_set_new(oData, "child", json_integer(0));
+                  json_object_set_new(oData, "type", json_integer(0));
+                  json_object_set_new(oData, "address", json_integer(trAddr));
+                  json_object_set_new(oData, "title", json_string(rTitle));
+                  json_object_set_new(oData, "unit", json_string(""));
+                  json_object_set_new(oData, "value", json_string(value));
+
+                  free(rTitle);
+                  free(value);
+                  free(from);
+                  free(to);
+               }
+
+               tableTimeRanges->reset();
+            }
+         }
+      }
+
+      free(title);
+   }
+
+   selectMenuItemsByParent->freeResult();
+
+   json_object_set_new(oJson, "items", oArray);
+   json_object_set_new(oJson, "parent", json_integer(parent));
+   json_object_set_new(oJson, "last", json_integer(last));
+   json_object_set_new(oJson, "title", json_string(title));
+
+   pushOutMessage(oJson, "menu", client);
+
+   return done;
+}
+
+//***************************************************************************
+// Perform WS Parameter Edit Request
+//***************************************************************************
+
+int P4d::performParEditRequest(json_t* oObject, long client)
+{
+   if (client <= 0)
+      return done;
+
+   int id = getIntFromJson(oObject, "id", na);
+
+   tableMenu->clear();
+   tableMenu->setValue("ID", id);
+
+   if (!tableMenu->find())
+   {
+      tell(0, "Info: Id %d for pareditrequest not found!", id);
+      return fail;
+   }
+
+   int type = tableMenu->getIntValue("TYPE");
+   unsigned int address = tableMenu->getIntValue("ADDRESS");
+   const char* title = tableMenu->getStrValue("TITLE");
+
+   tableMenu->reset();
+   sem->p();
+
+   ConfigParameter p(address);
+
+   if (request->getParameter(&p) == success)
+   {
+      cRetBuf value = ConfigParameter::toNice(p.value, type);
+
+      json_t* oJson = json_object();
+      json_object_set_new(oJson, "id", json_integer(id));
+      json_object_set_new(oJson, "type", json_integer(type));
+      json_object_set_new(oJson, "address", json_integer(address));
+      json_object_set_new(oJson, "title", json_string(title));
+      json_object_set_new(oJson, "unit", json_string(type == mstParZeit ? "Uhr" : p.unit));
+      json_object_set_new(oJson, "value", json_string(value));
+      json_object_set_new(oJson, "default", json_integer(p.def));
+      json_object_set_new(oJson, "min", json_integer(p.min));
+      json_object_set_new(oJson, "max", json_integer(p.max));
+      json_object_set_new(oJson, "digits", json_integer(p.digits));
+
+      pushOutMessage(oJson, "pareditrequest", client);
+   }
+
+   sem->v();
+
+   return done;
+}
+
+//***************************************************************************
 // Perform WS ChartData request
 //***************************************************************************
 
@@ -303,7 +684,7 @@ int P4d::performChartData(json_t* oObject, long client)
    int range = getIntFromJson(oObject, "range", 3);                // Anzahl der Tage
    time_t rangeStart = getLongFromJson(oObject, "start", 0);       // Start Datum (unix timestamp)
    const char* sensors = getStringFromJson(oObject, "sensors");    // Kommata getrennte Liste der Sensoren
-   int widget = getIntFromJson(oObject, "widget", no);  //
+   int widget = getIntFromJson(oObject, "widget", no);
    const char* id = getStringFromJson(oObject, "id", "");
 
    cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
@@ -311,7 +692,7 @@ int P4d::performChartData(json_t* oObject, long client)
    if (isEmpty(sensors))
       sensors = chart1;
 
-   tell(eloAlways, "Selecting chats data for '%s' ..", sensors);
+   tell(eloDebug, "Selecting chats data for '%s' ..", sensors);
 
    auto sList = split(sensors, ',');
 
@@ -401,7 +782,7 @@ int P4d::performChartData(json_t* oObject, long client)
    json_object_set_new(oMain, "rows", oJson);
    json_object_set_new(oMain, "id", json_string(id));
    selectActiveValueFacts->freeResult();
-   tell(eloAlways, ".. done");
+   tell(eloDebug, ".. done");
    pushOutMessage(oMain, "chartdata", client);
 
    return done;

@@ -152,6 +152,25 @@ int l2hhmm(time_t t)
    return  tm.tm_hour * 100 + tm.tm_min;
 }
 
+const char* toWeekdayName(uint day)
+{
+   const char* dayNames[] =
+   {
+      "Montag",
+      "Dienstag",
+      "Mittwoch",
+      "Donnerstag",
+      "Freitag",
+      "Samstag",
+      "Sonntag",
+      0
+   };
+
+   if (day > 6)
+      return "<unknown>";
+
+   return dayNames[day];
+}
 
 //***************************************************************************
 // Host ID

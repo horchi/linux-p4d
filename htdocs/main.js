@@ -1,3 +1,12 @@
+/*
+ *  main.js
+ *
+ *  (c) 2020 Jörg Wendel
+ *
+ * This code is distributed under the terms and conditions of the
+ * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+ *
+ */
 
 var WebSocketClient = window.WebSocketClient
 // import WebSocketClient from "./websocket.js"
@@ -33,8 +42,8 @@ window.documentReady = function(doc)
    var url = "ws://" + location.hostname + ":1111";
    var protocol = "p4d";
 
-//      if (location.hostname.indexOf("192.168.200.145") == -1)
-//         url = "ws://" + location.hostname + "/p4d/ws";   // via apache
+   // if (location.hostname.indexOf("192.168.200.145") == -1)
+   //   url = "ws://" + location.hostname + "/p4d/ws";   // via apache
 
    connectWebSocket(url, protocol);
 }
@@ -71,6 +80,10 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "data";
    else if (documentName == "list")
       jsonRequest["name"] = "data";
+   else if (documentName == "errors")
+      jsonRequest["name"] = "errors";
+   else if (documentName == "menu")
+      jsonRequest["name"] = "menu";
 
    jsonArray[0] = jsonRequest;
 
@@ -116,6 +129,8 @@ function dispatchMessage(message)
    var rootGroupSetup = document.getElementById("groupContainer");
    var rootChart = document.getElementById("chart");
    var rootDialog = document.querySelector('dialog');
+   var rootErrors = document.getElementById("errorContainer");
+   var rootMenu = document.getElementById("menuContainer");
 
    var d = new Date();
 
@@ -172,6 +187,15 @@ function dispatchMessage(message)
    else if (event == "valuefacts" && rootIoSetup) {
       initIoSetup(jMessage.object, rootIoSetup);
    }
+   else if (event == "errors" && rootErrors) {
+      initErrors(jMessage.object, rootErrors);
+   }
+   else if (event == "menu" && rootMenu) {
+      initMenu(jMessage.object, rootMenu);
+   }
+   else if (event == "pareditrequest" && rootMenu) {
+      editMenuParameter(jMessage.object, rootMenu);
+   }
    else if (event == "chartdata") {
       var id = jMessage.object.id;
       if (rootChart) {
@@ -195,6 +219,8 @@ function prepareMenu(haveToken)
    html += "<a href=\"index.html\"><button class=\"rounded-border button1\">Dashboard</button></a>";
    html += "<a href=\"list.html\"><button class=\"rounded-border button1\">Liste</button></a>";
    html += "<a href=\"chart.html\"><button class=\"rounded-border button1\">Charts</button></a>";
+   html += "<a href=\"menu.html\"><button class=\"rounded-border button1\">Menü</button></a>";
+   html += "<a href=\"errors.html\"><button class=\"rounded-border button1\">Fehler</button></a>";
 
    html += "<div class=\"menuLogin\">";
    if (haveToken)
@@ -400,19 +426,15 @@ function initGroupSetup(groups, root)
    tableRoot = document.getElementById("groups");
    tableRoot.innerHTML = "";
 
-   for (var i = 0; i < groups.length; i++)
-   {
+   for (var i = 0; i < groups.length; i++) {
       var item = groups[i];
-
-      // var usrtitle = item.usrtitle != null ? item.usrtitle : "";
       var html = "<td id=\"row_" + item.id + "\" data-id=\"" + item.id + "\" >" + item.id + "</td>";
       html += "<td class=\"tableMultiColCell\">";
       html += "  <input id=\"name_" + item.id + "\" class=\"rounded-border inputSetting\" type=\"text\" value=\"" + item.name + "\"/>";
       html += "</td>";
       html += "<td><button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"groupConfig(" + item.id + ", 'delete')\">Löschen</button></td>";
 
-      if (tableRoot != null)
-      {
+      if (tableRoot != null) {
          var elem = document.createElement("tr");
          elem.innerHTML = html;
          tableRoot.appendChild(elem);
@@ -423,6 +445,31 @@ function initGroupSetup(groups, root)
    html += "  <button class=\"rounded-border button2\" onclick=\"groupConfig(0, 'add')\">+</button>";
 
    document.getElementById("addGroupDiv").innerHTML = html;
+}
+
+function initErrors(errors, root)
+{
+   // console.log(JSON.stringify(errors, undefined, 4));
+
+   tableRoot = document.getElementById("errors");
+   tableRoot.innerHTML = "";
+
+   for (var i = 0; i < errors.length; i++) {
+      var item = errors[i];
+
+      var style = item.state == "quittiert" || item.state == "gegangen" ? "greenCircle" : "redCircle";
+      var html = "<td><div class=\"" + style + "\"></div></td>";
+      html += "<td class=\"tableMultiColCell\">" + item.time + "</td>";
+      html += "<td class=\"tableMultiColCell\">" + (item.duration / 60).toFixed(0) + "</td>";
+      html += "<td class=\"tableMultiColCell\">" + item.text + "</td>";
+      html += "<td class=\"tableMultiColCell\">" + item.state + "</td>";
+
+      if (tableRoot != null) {
+         var elem = document.createElement("tr");
+         elem.innerHTML = html;
+         tableRoot.appendChild(elem);
+      }
+   }
 }
 
 function initUserConfig(users, root)
@@ -476,14 +523,14 @@ function initList(widgets, root)
 
    if (daemonState.state != null && daemonState.state == 0)
    {
-      html +=  "              <div id=\"aStateOk\"><span style=\"text-align: center;\">Heating Control ONLINE</span></div><br/>\n";
-      html +=  "              <div><span>Läuft seit:</span><span>" + daemonState.runningsince + "</span>       </div>\n";
-      html +=  "              <div><span>Version:</span> <span>" + daemonState.version + "</span></div>\n";
-      html +=  "              <div><span>CPU-Last:</span><span>" + daemonState.average0 + " " + daemonState.average1 + " "  + daemonState.average2 + " " + "</span>           </div>\n";
+      html +=  "<div id=\"aStateOk\"><span style=\"text-align: center;\">Heating Control ONLINE</span></div><br/>\n";
+      html +=  "<div><span>Läuft seit:</span><span>" + daemonState.runningsince + "</span>       </div>\n";
+      html +=  "<div><span>Version:</span> <span>" + daemonState.version + "</span></div>\n";
+      html +=  "<div><span>CPU-Last:</span><span>" + daemonState.average0 + " " + daemonState.average1 + " "  + daemonState.average2 + " " + "</span>           </div>\n";
    }
    else
    {
-      html += "          <div id=\"aStateFail\">ACHTUNG:<br/>Heating Control OFFLINE</div>\n";
+      html += "<div id=\"aStateFail\">ACHTUNG:<br/>Heating Control OFFLINE</div>\n";
    }
 
    rootState.innerHTML = "";
@@ -1055,7 +1102,7 @@ window.addUser = function()
 
 window.groupConfig = function(id, action)
 {
-   console.log("groupConfig(" + action + ", " + id + ")");
+   // console.log("groupConfig(" + action + ", " + id + ")");
 
    if (action == "delete") {
       if (confirm("Gruppe löschen?"))

@@ -59,7 +59,7 @@ $(CHARTTARGET): $(CHARTOBJS)
 $(CMDTARGET) : $(CMDOBJS)
 	$(doLink) $(CMDOBJS) $(LIBS) -o $@
 
-install: $(TARGET) $(CMDTARGET) install-p4d
+install: $(TARGET) $(CMDTARGET) install-p4d install-web
 
 install-p4d: install-config install-scripts
 	install --mode=755 -D $(TARGET) $(BINDEST)
@@ -114,28 +114,31 @@ install-scripts:
 
 iw: install-web
 
+WEBDESTphp = $(WEBDEST).php
+
 install-web:
-	if ! test -d $(WEBDEST); then \
-		mkdir -p "$(WEBDEST)"; \
-		chmod a+rx "$(WEBDEST)"; \
+	(cd htdocs; $(MAKE) install)
+	if ! test -d $(WEBDESTphp); then \
+		mkdir -p "$(WEBDESTphp)"; \
+		chmod a+rx "$(WEBDESTphp)"; \
 	fi
-	if test -f "$(WEBDEST)/stylesheet.css"; then \
-		cp -Pp "$(WEBDEST)/stylesheet.css" "$(WEBDEST)/stylesheet.css.save"; \
+	if test -f "$(WEBDESTphp)/stylesheet.css"; then \
+		cp -Pp "$(WEBDESTphp)/stylesheet.css" "$(WEBDESTphp)/stylesheet.css.save"; \
 	fi
-	if test -f "$(WEBDEST)/config.php"; then \
-		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.save"; \
+	if test -f "$(WEBDESTphp)/config.php"; then \
+		cp -p "$(WEBDESTphp)/config.php" "$(WEBDESTphp)/config.php.save"; \
 	fi
-	cp -r ./htdocs/* $(WEBDEST)/
-	if test -f "$(WEBDEST)/config.php.save"; then \
-		cp -p "$(WEBDEST)/config.php" "$(WEBDEST)/config.php.dist"; \
-		cp -p "$(WEBDEST)/config.php.save" "$(WEBDEST)/config.php"; \
+	cp -r ./htdocs.php/* $(WEBDESTphp)/
+	if test -f "$(WEBDESTphp)/config.php.save"; then \
+		cp -p "$(WEBDESTphp)/config.php" "$(WEBDESTphp)/config.php.dist"; \
+		cp -p "$(WEBDESTphp)/config.php.save" "$(WEBDESTphp)/config.php"; \
 	fi
-	if test -f "$(WEBDEST)/stylesheet.css.save"; then \
-		cp -Pp "$(WEBDEST)/stylesheet.css.save" "$(WEBDEST)/stylesheet.css"; \
+	if test -f "$(WEBDESTphp)/stylesheet.css.save"; then \
+		cp -Pp "$(WEBDESTphp)/stylesheet.css.save" "$(WEBDESTphp)/stylesheet.css"; \
 	fi
-	chmod -R a+r "$(WEBDEST)"; \
-	chown -R $(WEBOWNER):$(WEBOWNER) "$(WEBDEST)"
-#	cat ./htdocs/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDEST)/header.php"; \
+	chmod -R a+r "$(WEBDESTphp)"; \
+	chown -R $(WEBOWNER):$(WEBOWNER) "$(WEBDESTphp)"
+	cat ./htdocs.php/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDESTphp)/header.php"; \
 
 install-apache-conf:
 	@mkdir -p $(APACHECFGDEST)/conf-available
@@ -151,7 +154,7 @@ install-pcharts:
 	cd $(PCHARTDEST); \
 	git pull; \
 	git checkout 7.x-compatible; \
-	ln -s $(_PCHARTDEST) $(WEBDEST)/pChart; \
+	ln -s $(_PCHARTDEST) $(WEBDESTphp)/pChart; \
 	chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
 
 dist: clean
