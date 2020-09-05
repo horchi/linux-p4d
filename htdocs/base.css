@@ -226,19 +226,23 @@ span > input
 
 .listFirstCol
 {
-    width: 12%;
+    width: 14%;
     min-width: 145px;
     display: inline-block;
     text-align: left;
-    line-height: 45px;
     overflow: hidden;
+
+    line-height: 45px;
+/*    align-items: center;
+    flex-flow: wrap;*/
 }
 
 .listSecondCol
 {
-    display: inline-block;
+    display: inline-flex;
     text-align: left;
-    line-height: 45px;
+    overflow: hidden;
+    align-items: center;
 }
 
 .listRow {
@@ -252,7 +256,6 @@ span > input
     display: flex;
     padding: 0px 0px 0px 10px;
 }
-
 
 div.redCircle
 {
@@ -320,27 +323,56 @@ table.tableMultiCol tr:nth-child(odd)
     justify-content: center;
 }
 
-.daemonInfo
+.imageState
 {
-    /*background-color: var(--light1);*/
+    margin: 3px;
     background-color: slategray;
-    float: right;
-    width: 42%;
+    padding: 15px;
+}
+
+.heatingState
+{
+    background-color: slategray;
+    width: 35%;
+    min-width: 145px;
     padding: 15px;
     margin: 3px;
 }
 
-.daemonInfo > div > span
+.heatingState > div > div
+{
+    display: grid;
+}
+
+.heatingState > div > div > span
 {
     width: 10%;
     min-width: 215px;
+    display: table-flex;
+    text-align: left;
+}
+
+.daemonState
+{
+    background-color: slategray;
+    float: right;
+    width: 35%;
+    min-width: 280px;
+    padding: 15px;
+    margin: 3px;
+}
+
+.daemonState > div > div > span
+{
+    width: 10%;
+    min-width: 150px;
     display: table-cell;
     text-align: left;
 }
 
 #aStateOk
 {
-    color: green;
+    color: #091784;
     font-size: 24px;
 }
 
@@ -348,6 +380,18 @@ table.tableMultiCol tr:nth-child(odd)
 {
     color: red;
     text-decoration: blink;
+    font-size: 24px;
+}
+
+#aStateHeating
+{
+    color: red;
+    font-size: 24px;
+}
+
+#aStateOther
+{
+    color: #091784;
     font-size: 24px;
 }
 
@@ -530,6 +574,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-weight: bold;
     cursor: pointer;
     background-color: var(--light1);
+    color: var(--buttonFont);
 }
 
 .menuButtonValue
@@ -541,6 +586,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-size: 1.5em;
     font-weight: normal;
     background-color: var(--light1);
+    color: var(--buttonFont);
 }
 
 .menuButtonValueEditable
@@ -847,9 +893,10 @@ dialog::backdrop, #backdrop
 
 @media only screen and (max-width: 740px)
 {
-    .content                   { padding: 0px; }
-    .daemonInfo                { font-size: 15px; margin-top: 3px; min-width: 91%; }
-    .daemonInfo > div > span   { min-width: 110px; }
+    .daemonState               { width: 88%; }
+/*    .content                   { padding: 0px; }
+    .daemonState               { font-size: 15px; margin: 5px; min-width: 91%; }
+    .daemonState > div > span  { min-width: 110px; }*/
 
     .inputTableConfig > div > span:nth-child(3) { width: 95%; }
     .inputTableConfig > div > span              { width: 95%; }

@@ -44,6 +44,7 @@ class cWebService
          evErrors,
          evMenu,
          evParEditRequest,
+         evParStore,
 
          evCount
       };

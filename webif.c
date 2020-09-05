@@ -262,7 +262,6 @@ int P4d::performWebifRequests()
             if (ConfigParameter::toValue(data, type, p.value) == success)
             {
                tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", data, p.value, paddr);
-
                sem->p();
 
                if ((status = request->setParameter(&p)) == success)

@@ -10,6 +10,7 @@
 // Include
 //***************************************************************************
 
+#include <dirent.h>
 #include <algorithm>
 
 #include "lib/json.h"
@@ -71,6 +72,7 @@ int P4d::dispatchClientRequest()
          case evResetPeaks:     status = resetPeaks(oObject, client);            break;
          case evMenu:           status = performMenu(oObject, client);           break;
          case evParEditRequest: status = performParEditRequest(oObject, client); break;
+         case evParStore:       status = performParStore(oObject, client);       break;
          default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
                        toName(event), messagesIn.front().c_str());
       }
@@ -107,6 +109,7 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
       case evResetPeaks:     return rights & urAdmin;
       case evMenu:           return rights & urView;
       case evParEditRequest: return rights & urSettings;
+      case evParStore:       return rights & urSettings;
       default: break;
    }
 
@@ -191,6 +194,10 @@ int P4d::performLogin(json_t* oObject)
    oJson = json_object();
    daemonState2Json(oJson);
    pushOutMessage(oJson, "daemonstate", client);
+
+   oJson = json_object();
+   s3200State2Json(oJson);
+   pushOutMessage(oJson, "s3200-state", client);
 
    // perform requests
 
@@ -513,7 +520,8 @@ int P4d::performMenu(json_t* oObject, long client)
          else
             json_object_set_new(oData, "value", json_string(tableMenu->getStrValue("VALUE")));
 
-         if (type == 0x07 || type == 0x08 || type == 0x40 || type == 0x39 || type == 0x32 || type == 0x0a)
+         if (type == mstPar || type == mstParSet || type == mstParSet1 || type == mstParSet2 ||
+             type == mstParDig || type == mstParZeit)
             json_object_set_new(oData, "editable", json_boolean(true));
       }
 
@@ -620,7 +628,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
 
    if (!tableMenu->find())
    {
-      tell(0, "Info: Id %d for pareditrequest not found!", id);
+      tell(0, "Info: Id %d for 'pareditrequest' not found!", id);
       return fail;
    }
 
@@ -644,7 +652,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
       json_object_set_new(oJson, "title", json_string(title));
       json_object_set_new(oJson, "unit", json_string(type == mstParZeit ? "Uhr" : p.unit));
       json_object_set_new(oJson, "value", json_string(value));
-      json_object_set_new(oJson, "default", json_integer(p.def));
+      json_object_set_new(oJson, "def", json_integer(p.def));
       json_object_set_new(oJson, "min", json_integer(p.min));
       json_object_set_new(oJson, "max", json_integer(p.max));
       json_object_set_new(oJson, "digits", json_integer(p.digits));
@@ -653,6 +661,88 @@ int P4d::performParEditRequest(json_t* oObject, long client)
    }
 
    sem->v();
+
+   return done;
+}
+
+//***************************************************************************
+// Perform WS Parameter Store
+//***************************************************************************
+
+int P4d::performParStore(json_t* oObject, long client)
+{
+   if (client <= 0)
+      return done;
+
+   json_t* oJson = json_object();
+   int status {fail};
+   int id = getIntFromJson(oObject, "id", na);
+   const char* value = getStringFromJson(oObject, "value");
+
+   tableMenu->clear();
+   tableMenu->setValue("ID", id);
+
+   if (!tableMenu->find())
+   {
+      tell(0, "Info: Id %d for 'parstore' not found!", id);
+      json_object_set_new(oJson, "status", json_integer(fail));
+      json_object_set_new(oJson, "error", json_string("Parameter not found"));
+   }
+   else
+   {
+      int parent = tableMenu->getIntValue("PARENT");
+      int type = tableMenu->getIntValue("TYPE");
+      unsigned int address = tableMenu->getIntValue("ADDRESS");
+      ConfigParameter p(address);
+
+      if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
+      {
+         tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", value, p.value, address);
+         sem->p();
+
+         if ((status = request->setParameter(&p)) == success)
+         {
+            tableMenu->setValue("VALUE", ConfigParameter::toNice(p.value, type));
+            tableMenu->setValue("UNIT", p.unit);
+            tableMenu->update();
+            json_object_set_new(oJson, "parent", json_integer(parent));
+
+            return performMenu(oJson, client);
+         }
+         else
+         {
+            tell(eloAlways, "Set of parameter failed, error %d", status);
+
+            if (status == P4Request::wrnNonUpdate)
+            {
+               json_object_set_new(oJson, "status", json_integer(P4Request::wrnNonUpdate));
+               json_object_set_new(oJson, "error", json_string("Value not changed, ignoring"));
+            }
+            else if (status == P4Request::wrnOutOfRange)
+            {
+               json_object_set_new(oJson, "status", json_integer(P4Request::wrnOutOfRange));
+               json_object_set_new(oJson, "error", json_string("Value ot of range"));
+            }
+            else
+            {
+               json_object_set_new(oJson, "status", json_integer(P4Request::wrnOutOfRange));
+               json_object_set_new(oJson, "error", json_string("Serial communication error"));
+            }
+         }
+
+         sem->v();
+      }
+      else
+      {
+         tell(eloAlways, "Set of parameter failed, wrong format");
+         json_object_set_new(oJson, "status", json_integer(fail));
+         json_object_set_new(oJson, "error", json_string("Value format error"));
+      }
+
+      tableMenu->reset();
+   }
+
+   pushOutMessage(oJson, "result", client);
 
    return done;
 }
@@ -938,6 +1028,24 @@ int P4d::storeConfig(json_t* obj, long client)
       setConfigItem(key, json_string_value(jValue));
    }
 
+   // create link for the stylesheet
+
+   const char* name = getStringFromJson(obj, "style");
+
+   if (!isEmpty(name))
+   {
+      tell(1, "Info: Creating link 'stylesheet.css' to '%s'", name);
+      char* link {nullptr};
+      char* target {nullptr};
+      asprintf(&link, "%s/stylesheet.css", httpPath);
+      asprintf(&target, "%s/stylesheet-%s.css", httpPath, name);
+      createLink(link, target, true);
+      free(link);
+      free(target);
+   }
+
+   // reload configuration
+
    readConfiguration();
 
    json_t* oJson = json_object();
@@ -1101,9 +1209,66 @@ int P4d::configDetails2Json(json_t* obj)
          json_object_set_new(oDetail, "category", json_string(it.category));
          json_object_set_new(oDetail, "title", json_string(it.title));
          json_object_set_new(oDetail, "descrtiption", json_string(it.description));
+
+         if (it.type == ctChoice)
+            configChoice2json(oDetail, it.name.c_str());
       }
 
       tableConfig->reset();
+   }
+      return done;
+}
+
+int P4d::configChoice2json(json_t* obj, const char* name)
+{
+   if (strcmp(name, "style") == 0)
+   {
+      FileList options;
+      int count {0};
+
+      if (getFileList(httpPath, DT_REG, "css", false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+         {
+            if (strncmp(opt.name.c_str(), "stylesheet-", strlen("stylesheet-")) != 0)
+               continue;
+
+            char* p = strdup(strrchr(opt.name.c_str(), '-'));
+            *(strrchr(p, '.')) = '\0';
+            json_array_append_new(oArray, json_string(p+1));
+         }
+
+         json_object_set_new(obj, "options", oArray);
+      }
+   }
+   else if (strcmp(name, "heatingType") == 0)
+   {
+      FileList options;
+      int count {0};
+      char* path {nullptr};
+
+      asprintf(&path, "%s/img/type", httpPath);
+
+      if (getFileList(path, DT_REG, "png", false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+         {
+            if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
+               continue;
+
+            char* p = strdup(strrchr(opt.name.c_str(), '-'));
+            *(strrchr(p, '.')) = '\0';
+            json_array_append_new(oArray, json_string(p+1));
+         }
+
+         json_object_set_new(obj, "options", oArray);
+      }
+
+      free(path);
    }
 
    return done;
@@ -1180,7 +1345,7 @@ int P4d::groups2Json(json_t* obj)
 }
 
 //***************************************************************************
-// Daemon Status 2 Json
+// Status 2 Json
 //***************************************************************************
 
 int P4d::daemonState2Json(json_t* obj)
@@ -1197,6 +1362,19 @@ int P4d::daemonState2Json(json_t* obj)
    json_object_set_new(obj, "average0", json_real(averages[0]));
    json_object_set_new(obj, "average1", json_real(averages[1]));
    json_object_set_new(obj, "average2", json_real(averages[2]));
+
+   return done;
+}
+
+int P4d::s3200State2Json(json_t* obj)
+{
+   json_object_set_new(obj, "time", json_integer(currentState.time));
+   json_object_set_new(obj, "state", json_integer(currentState.state));
+   json_object_set_new(obj, "stateinfo", json_string(currentState.stateinfo));
+   json_object_set_new(obj, "mode", json_integer(currentState.mode));
+   json_object_set_new(obj, "modeinfo", json_string(currentState.modeinfo));
+   json_object_set_new(obj, "version", json_string(currentState.version));
+   json_object_set_new(obj, "image", json_string(getStateImage(currentState.state)));
 
    return done;
 }

@@ -58,7 +58,7 @@ function editMenuParameter(parameter, root)
    var inpStep = 'step="0.1"';
    var inpType = "text";
    var info = 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>'
-       + ' Default: ' + parameter.default + parameter.unit;
+       + ' Default: ' + parameter.def + parameter.unit;
 
    var form = '<form><div>' + info + '</div><br/>' +
        '<input type="' + inpType + '" value="' + parameter.value + '" name="input"> '
@@ -81,9 +81,8 @@ function editMenuParameter(parameter, root)
    });
 
    function storeParameter(id, value) {
-      console.log(name);
-      socket.send({ "event" : "storepar", "object" : { "id"  : id, "value" : value }});
-      alert("to be implemented");
+      console.log("storing " + name + " - " + value);
+      socket.send({ "event" : "parstore", "object" : { "id"  : id, "value" : value }});
    }
 }
 

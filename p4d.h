@@ -73,7 +73,8 @@ class P4d : public FroelingService, public cWebInterface
          ctNum,
          ctString,
          ctBool,
-         ctRange
+         ctRange,
+         ctChoice
       };
 
       struct ConfigItemDef
@@ -168,6 +169,7 @@ class P4d : public FroelingService, public cWebInterface
       int performErrors(long client);
       int performMenu(json_t* oObject, long client);
       int performParEditRequest(json_t* oObject, long client);
+      int performParStore(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
       int performUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);
@@ -178,10 +180,12 @@ class P4d : public FroelingService, public cWebInterface
 
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
+      int configChoice2json(json_t* obj, const char* name);
       int userDetails2Json(json_t* obj);
       int valueFacts2Json(json_t* obj);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
+      int s3200State2Json(json_t* obj);
       int sensor2Json(json_t* obj, cDbTable* table);
       void pin2Json(json_t* ojData, int pin);
 

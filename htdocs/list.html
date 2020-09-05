@@ -9,15 +9,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 
-    <link rel="shortcut icon" href="$img" type="image/png"/>
-    <link rel="icon" href="$img" type="image/png"/>
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="$img" type="image/png"/>
-    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+    <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
+    <link rel="icon" href="img/icon.png" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="jquery.browser.min.js"></script>
     <script type="text/javascript" src="websocket.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="list.js"></script>
     <script>
       $(document).ready(function() { documentReady("list"); });
     </script>
@@ -32,7 +33,10 @@
 
     <div class="content">
 
-      <div id="stateContainer" class="stateInfo">
+      <div class="stateInfo">
+        <div id="stateContainerS3200" class="rounded-border heatingState"></div>
+        <div id="stateContainerImage" class="rounded-border imageState"></div>
+        <div id="stateContainerP4" class="rounded-border daemonState"></div>
       </div>
 
       <div id="listContainer" class="rounded-border listContainer">

@@ -283,7 +283,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
          memset(sessionData, 0, sizeof(SessionData));
 
-         tell(1, "HTTP: Requested uri: (%ld) '%s'", (ulong)len, url);
+         tell(1, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
 
          // data or file request ...
 
@@ -311,11 +311,11 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
             if (res < 0)
             {
-               tell(2, "HTTP: Failed, uri: '%s' (%d)", url, res);
+               tell(0, "HTTP: Failed to serve url '%s' (%d)", url, res);
                return -1;
             }
 
-            tell(3, "HTTP: Done, uri: '%s'", url);
+            tell(2, "HTTP: Done, url: '%s'", url);
          }
 
          break;

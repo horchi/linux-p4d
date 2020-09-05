@@ -6,18 +6,19 @@
 {
     /* colors */
 
-    --menu: #d9e9ff;
+    --menu: #455e7f;
 
-    --light1: #d9e9ff;
-    --light2: #0066FF;
-    --light3: #89c9ff;
-    --light4: #1100ee;
+    --light1: #0d2546;
+    --light2: white;
+    --light3: #396992;
 
-    --caption1: darkcyan;
-    --caption2: cyan;
+    --light4: white;
+
+    --caption1: #0d2546;
+    --caption2: #113a77;
     --edit: #f9f9ef;
 
-    --borderColor: blue;
+    --borderColor: #0d2546;
     --borderRadius: 3px;
 
     --borderColorSchemaValue: blue;
@@ -29,7 +30,7 @@
     --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
-    --buttonFont: black;
+    --buttonFont: white;
 }
 
 Body

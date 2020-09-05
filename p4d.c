@@ -44,8 +44,8 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
    { "haUrl",                     ctString,  false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 
-   { "style",                     ctString,  false, "2 WEB Interface", "Farbschema", "" },
-   { "heatingType",               ctString,  false, "2 WEB Interface", "Typ der Heizung", "" },
+   { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
+   { "heatingType",               ctChoice,  false, "2 WEB Interface", "Typ der Heizung", "" },
 
    // p4d
 
@@ -107,6 +107,7 @@ const char* cWebService::events[] =
    "errors",
    "menu",
    "pareditrequest",
+   "parstore",
 
    0
 };
@@ -200,6 +201,12 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
 
    char* p = json_dumps(obj, JSON_REAL_PRECISION(4));
    json_decref(obj);
+
+   if (!p)
+   {
+      tell(0, "Error: Dumping json message failed");
+      return fail;
+   }
 
    if (!client && strstr(":all:init:update", title))
    {
