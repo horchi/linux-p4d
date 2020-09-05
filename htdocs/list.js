@@ -12,7 +12,7 @@ function initList(widgets, root)
 {
    if (!widgets)
    {
-      console.log("Faltal: Missing payload!");
+      console.log("Fatal: Missing payload!");
       return;
    }
 

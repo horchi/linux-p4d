@@ -11,7 +11,7 @@
 function initDashboard(widgets, root)
 {
    if (!widgets) {
-      console.log("Faltal: Missing payload!");
+      console.log("Fatal: Missing payload!");
       return;
    }
 
@@ -136,8 +136,7 @@ function updateDashboard(sensors)
             var e = document.getElementById("progress" + sensor.type + sensor.address);
             if (e != null)
                e.style.visibility = (sensor.next == null || sensor.next == 0) ? "hidden" : "visible";
-            else
-               console.log("Element '" + "progress" + sensor.type + sensor.address + "' not found");
+            // else console.log("Element '" + "progress" + sensor.type + sensor.address + "' not found");
 
             if (sensor.mode == "auto" && sensor.next > 0) {
                var pWidth = 100;

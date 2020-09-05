@@ -42,7 +42,7 @@ window.storeGroups = function()
    var rootSetup = document.getElementById("groupContainer");
    var elements = rootSetup.querySelectorAll("[id^='row_']");
 
-   console.log("storeGroups");
+   // console.log("storeGroups");
 
    for (var i = 0; i < elements.length; i++) {
       var jsonObj = {};

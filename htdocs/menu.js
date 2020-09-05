@@ -53,7 +53,7 @@ function initMenu(menu, root)
 
 function editMenuParameter(parameter, root)
 {
-   console.log(JSON.stringify(parameter, undefined, 4));
+   // console.log(JSON.stringify(parameter, undefined, 4));
 
    var inpStep = 'step="0.1"';
    var inpType = "text";

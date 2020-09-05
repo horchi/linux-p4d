@@ -320,7 +320,7 @@ function initErrors(errors, root)
 
 window.chartSelect = function(action)
 {
-   console.log("chartSelect clicked for " + action);
+   // console.log("chartSelect clicked for " + action);
 
    var sensors = "";
    var root = document.getElementById("chartSelector");
@@ -379,7 +379,7 @@ window.toggleIoNext = function(address, type)
 
 window.doLogin = function()
 {
-   console.log("login: " + $("#user").val() + " : " + $.md5($("#password").val()));
+   // console.log("login: " + $("#user").val() + " : " + $.md5($("#password").val()));
    socket.send({ "event": "gettoken", "object":
                  { "user": $("#user").val(),
                    "password": $.md5($("#password").val()) }
@@ -588,7 +588,6 @@ function drawChartWidget(dataObject, root)
       dataset["fill"] = true;
       dataset["pointRadius"] = 2.0;
       data.data.datasets.push(dataset);
-      console.log("append dataset " + i);
    }
 
    var canvas = document.getElementById(id);
@@ -681,7 +680,7 @@ function drawChartDialog(dataObject, root)
       dataset["label"] = dataObject.rows[i].title;
       dataset["pointRadius"] = 0;
       data.data.datasets.push(dataset);
-      console.log("append dataset for chart dialog " + i);
+      // console.log("append dataset for chart dialog " + i);
    }
 
    var canvas = root.querySelector("#chartDialog");

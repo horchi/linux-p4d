@@ -46,7 +46,7 @@ function initUserConfig(users, root)
 
 window.userConfig = function(user, action)
 {
-   console.log("userConfig(" + action + ", " + user + ")");
+   // console.log("userConfig(" + action + ", " + user + ")");
 
    if (action == "delete") {
       if (confirm("User '" + user + "' löschen?"))
@@ -104,7 +104,7 @@ window.chpwd  = function()
 
 window.addUser = function()
 {
-   console.log("Add user: " + $("#input_user").val());
+   // console.log("Add user: " + $("#input_user").val());
 
    socket.send({ "event": "userconfig", "object":
                  { "user": $("#input_user").val(),
