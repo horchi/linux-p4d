@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.4.alpha.1"
+#define _VERSION     "0.4.alpha.2"
 #define VERSION_DATE "05.09.2020"
 
 #ifdef GIT_REV

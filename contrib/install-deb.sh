@@ -44,11 +44,9 @@ wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 apt -y install /tmp/p4d-latest.deb || exit 1
 
 grep -q '^alias p4db=' ~/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
-grep -q '^alias vs=' ~/.bashrc || echo "alias vs='tail -f /var/log/syslog'" >> ~/.bashrc
-grep -q '^alias va=' ~/.bashrc || echo "alias va='tail -f /var/log/apache2/error.log'" >> ~/.bashrc
+grep -q '^alias vl=' ~/.bashrc || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
 grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
-grep -q '^alias vs=' ~pi/.bashrc || echo "alias vs='tail -f /var/log/syslog'" >> ~pi/.bashrc
-grep -q '^alias va=' ~pi/.bashrc || echo "alias va='tail -f /var/log/apache2/error.log'" >> ~pi/.bashrc
+grep -q '^alias vl=' ~pi/.bashrc || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"
@@ -59,7 +57,7 @@ echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
 echo -e "${BLUE}- ${NC}"
 echo -e "${BLUE}- Added aliases for convenience:${NC}"
 echo -e "${BLUE}-  p4db  - go to the SQL prompt${NC}"
-echo -e "${BLUE}-  vs    - view syslog (abort with CTRL-C)${NC}"
+echo -e "${BLUE}-  vl    - view syslog (abort with CTRL-C)${NC}"
 echo -e "${BLUE}-  va    - view apache error log (abort with CTRL-C)${NC}"
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${WHITE}- to permit p4d sending mails: ${NC}"

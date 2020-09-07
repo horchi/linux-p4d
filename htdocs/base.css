@@ -55,14 +55,13 @@
     background-color: var(--caption1);
 }
 
-.buttonLogin
+.buttonHighlighted
 {
     background-color: darkblue;
     color: var(--buttonFont);
-
     width: 300px;
     height: 40px;
-    margin: 20px;
+    margin: 8px;
 }
 
 .seperatorTitle1
@@ -99,7 +98,7 @@
     margin-top: 2px;
     color: black;
     padding: 3px;
-    width: 45px;
+    width: 75px;
     height: 21px;
 }
 
@@ -109,7 +108,7 @@
     margin-top: 2px;
     color: black;
     padding: 3px;
-    width: 65px;
+    width: 75px;
     height: 21px;
 }
 
@@ -188,28 +187,43 @@ span > input
     margin-top: 5px;
 }
 
+.configDescriptionCaption
+{
+    padding: 15px;
+     text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.configDescription
+{
+    padding: 15px;
+}
+
 .inputTableConfig
 {
     background-color: var(--light1);
     background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
-    margin-top: 2px;
+    margin-top: 8px;
     padding: 5px;
 }
 
 .inputTableConfig > div > span
 {
-    width: 20%;
+    width: 24%;
     min-width: 100px;
     display: inline-table;
     text-align: left;
+    height: 24px;
 }
 
 .inputTableConfig > div > span:nth-child(3n)
 {
-    width: 50%;
+    width: 45%;
     min-width: 100px;
     display: inline-table;
     text-align: left;
+    height: 24px;
 }
 
 .listContainer
@@ -226,15 +240,12 @@ span > input
 
 .listFirstCol
 {
-    width: 14%;
+    width: 12%;
     min-width: 145px;
     display: inline-block;
     text-align: left;
     overflow: hidden;
-
     line-height: 45px;
-/*    align-items: center;
-    flex-flow: wrap;*/
 }
 
 .listSecondCol
@@ -685,6 +696,7 @@ table.tableMultiCol tr:nth-child(odd)
     overflow: hidden;
     background-color: Transparent;
     margin-top: 5px;
+    margin-right: 4px;
     color: var(--buttonFont);
 }
 

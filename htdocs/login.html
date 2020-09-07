@@ -13,8 +13,11 @@
     <link rel="icon" href="img/icon.png" type="image/png"/>
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="jquery.dialog.min.css"/>
 
-    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="jquery.dialog.min.js"></script>
     <script src="jquery.md5.js"></script>
     <script src="jquery.browser.min.js"></script>
     <script type="text/javascript" src="websocket.js"></script>
@@ -31,18 +34,24 @@
       <nav id="navMenu" data-login="yes"></nav>
     </div>
 
-    <br/><br/>
-    <table>
-      <tr>
-        <td>User:</td>
-        <td><input id="user" class="rounded-border input" type="text" value=""></input></td>
-      </tr>
-      <tr>
-        <td>Passwort:</td>
-        <td><input id="password" class="rounded-border input" type="password" value=""></input></td>
-      </tr>
-    </table>
-    <button class="rounded-border buttonLogin" onclick="doLogin()">Anmelden</button>
+    <div class="content">
+      <div id="phContainer" class="rounded-border inputTableConfig">
+
+        <table>
+          <tr>
+            <td>User:</td>
+            <td><input id="user" class="rounded-border input" type="text" value=""></input></td>
+          </tr>
+          <tr>
+            <td>Passwort:</td>
+            <td><input id="password" class="rounded-border input" type="password" value=""></input></td>
+          </tr>
+        </table>
+
+        <button class="rounded-border buttonHighlighted" onclick="doLogin()">Anmelden</button>
+
+      </div>
+    </div>
 
   </body>
 </html>

@@ -204,7 +204,7 @@ class FroelingService
                else
                   sprintf(nice, "%d", value);
 
-               return nice;
+               return cRetBuf(nice);
             }
 
             static int toValue(const char* nice, byte type, sword& value)

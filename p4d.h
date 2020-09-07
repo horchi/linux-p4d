@@ -102,6 +102,7 @@ class P4d : public FroelingService, public cWebInterface
       void scheduleTimeSyncIn(int offset = 0);
       int scheduleAggregate();
       int aggregate();
+      bool onDashboard(const char* type, int address);
 
       int updateErrors();
       int performWebifRequests();
@@ -123,8 +124,7 @@ class P4d : public FroelingService, public cWebInterface
       void afterUpdate();
       void sensorAlertCheck(time_t now);
       int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
-      int add2AlertMail(cDbRow* alertRow, const char* title,
-                            double value, const char* unit);
+      int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
       int sendStateMail();
       int sendErrorMail();
@@ -177,7 +177,7 @@ class P4d : public FroelingService, public cWebInterface
       int storeIoSetup(json_t* array, long client);
       int storeGroups(json_t* array, long client);
       int resetPeaks(json_t* obj, long client);
-
+      int replyResult(int status, const char* message, long client);
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
       int configChoice2json(json_t* obj, const char* name);
@@ -316,6 +316,7 @@ class P4d : public FroelingService, public cWebInterface
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
+      char* addrsDashboard {nullptr};
       int mail {no};
       char* mailScript {nullptr};
       char* stateMailAtStates {nullptr};
@@ -328,8 +329,7 @@ class P4d : public FroelingService, public cWebInterface
       int maxTimeLeak {10};
       MemoryStruct htmlHeader;
       char* sensorScript {nullptr};
-      char* chart1 {nullptr};
-      char* chart2 {nullptr};
+      char* chartSensors {nullptr};
 
       std::string alertMailBody;
       std::string alertMailSubject;

@@ -147,13 +147,6 @@ window.storeConfig = function()
    // console.log(JSON.stringify(jsonObj, undefined, 4));
 
    socket.send({ "event" : "storeconfig", "object" : jsonObj });
-
-   // show confirm
-
-   document.getElementById("confirm").innerHTML = "<button class=\"rounded-border\" onclick=\"storeConfig()\">Speichern</button>";
-   var elem = document.createElement("div");
-   elem.innerHTML = "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
-   document.getElementById("confirm").appendChild(elem);
 }
 
 window.resetPeaks = function()
@@ -255,11 +248,4 @@ window.storeIoSetup = function()
    }
 
    socket.send({ "event" : "storeiosetup", "object" : jsonArray });
-
-   // show confirm
-
-   document.getElementById("confirm").innerHTML = "<button class=\"rounded-border\" onclick=\"storeIoSetup()\">Speichern</button>";
-   var elem = document.createElement("div");
-   elem.innerHTML = "<br/><div class=\"info\"><b><center>Einstellungen gespeichert</center></b></div>";
-   document.getElementById("confirm").appendChild(elem);
 }

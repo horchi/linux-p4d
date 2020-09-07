@@ -8,6 +8,17 @@
  *
  */
 
+// !!  sync this arry with UserRights of p4d.h  !!
+
+var rights = [ "View",
+               "Control",
+               "Full Control",
+               "Settings",
+               "Admin" ];
+
+// -------------------------------
+// init
+
 function initUserConfig(users, root)
 {
    var table = document.getElementById("userTable");

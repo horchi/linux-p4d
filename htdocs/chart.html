@@ -13,8 +13,11 @@
     <link rel="icon" href="img/icon.png" type="image/png"/>
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
+    <link rel="stylesheet" type="text/css" href="jquery.dialog.min.css"/>
 
-    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="jquery.dialog.min.js"></script>
     <script src="jquery.md5.js"></script>
     <script src="jquery.browser.min.js"></script>
     <script src="Moment.js"></script>
@@ -40,7 +43,7 @@
 
     <div class="chartButtons">
       <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt;&lt;</button>
-      <button class="rounded-border chartButton" onclick="chartSelect('now')">&#8659;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('now')">Jetzt</button>
       <button class="rounded-border chartButton" onclick="chartSelect('next')">&gt;&gt;</button>
       <input  class="rounded-border chartButton" onclick="chartSelect('range')" id="chartRange" type="number" min="1" value="2"></input>
     </div>

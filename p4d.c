@@ -28,15 +28,11 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 {
    // web
 
-   { "refreshWeb",                ctInteger, false, "2 WEB Interface", "Seite aktualisieren", "" },
-   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Sensoren Dashboard", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "addrsMain",                 ctString,  false, "2 WEB Interface", "Sensoren", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "addrsMainMobile",           ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Angezeigte Sensoren", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+//   { "addrsMain",                 ctString,  false, "2 WEB Interface", "Sensoren", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+//   { "addrsMainMobile",           ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
 
-   { "chart1",                    ctString,  false, "2 WEB Interface", "Chart 1", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "chart2",                    ctString,  false, "2 WEB Interface", "Chart 2", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   // { "chart3",                 ctString,  false, "2 WEB Interface", "Chart 3", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   // { "chart4",                 ctString,  false, "2 WEB Interface", "Chart 4", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   { "chart",                     ctString,  false, "2 WEB Interface", "Charts", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
    { "chartDiv",                  ctInteger, true,  "2 WEB Interface", "Linien-Abstand der Y-Achse", "klein:15 mittel:25 groß:45" },
    { "chartStart",                ctInteger, false, "2 WEB Interface", "Chart Zeitraum (Tage)", "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)" },
    { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animirte Icons", "" },
@@ -78,10 +74,8 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma separierte Empfängerliste" },
 };
 
-/*
-| schema              |
-| schemaBez           |
-*/
+/*  schema
+    schemaBez  */
 
 //***************************************************************************
 // Web Service
@@ -799,6 +793,8 @@ int P4d::readConfiguration()
    getConfigItem("heatingType", heatingType, "P4");
    getConfigItem("stateAni", stateAni, yes);
 
+   getConfigItem("addrsDashboard", addrsDashboard, "");
+
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript, BIN_PATH "/p4d-mail.sh");
    getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
@@ -811,8 +807,7 @@ int P4d::readConfiguration()
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
-   getConfigItem("chart1", chart1, "");
-   getConfigItem("chart2", chart2, "");
+   getConfigItem("chart", chartSensors, "");
 
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
    getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
@@ -1850,6 +1845,24 @@ int P4d::updateState(Status* state)
 }
 
 //***************************************************************************
+// Show Sensor On Dashbord
+//***************************************************************************
+
+bool P4d::onDashboard(const char* type, int address)
+{
+   if (isEmpty(addrsDashboard))
+      return true;
+
+   char* tupel;
+   asprintf(&tupel, "%s:0x%x", type, address);
+
+   bool visible = strstr(addrsDashboard, tupel);
+   free(tupel);
+
+   return visible;
+}
+
+//***************************************************************************
 // Update
 //***************************************************************************
 
@@ -1897,9 +1910,14 @@ int P4d::update(bool webOnly, long client)
             groups[groupid].oJson = json_object();
       }
 
-      json_t* ojData = json_object();
-      json_array_append_new(oWsJson, ojData);
-      sensor2Json(ojData, tableValueFacts);
+      json_t* ojData = {nullptr};
+
+      if (onDashboard(type, addr))
+      {
+         ojData = json_object();
+         json_array_append_new(oWsJson, ojData);
+         sensor2Json(ojData, tableValueFacts);
+      }
 
       if (tableValueFacts->hasValue("TYPE", "VA"))
       {
@@ -1911,8 +1929,11 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         json_object_set_new(ojData, "value", json_real(v.value / factor));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.value / factor)));
+         if (ojData)
+         {
+            json_object_set_new(ojData, "value", json_real(v.value / factor));
+            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.value / factor)));
+         }
 
          if (!webOnly)
          {
@@ -1934,7 +1955,8 @@ int P4d::update(bool webOnly, long client)
 
             tell(eloDebug, "Debug: Got '%s' (%.2f) for (%d) from script", txt.c_str(), value, addr);
 
-            json_object_set_new(ojData, "value", json_real(value / factor));
+            if (ojData)
+               json_object_set_new(ojData, "value", json_real(value / factor));
 
             if (!webOnly)
             {
@@ -1961,8 +1983,11 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         if (ojData)
+         {
+            json_object_set_new(ojData, "value", json_integer(v.state));
+            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         }
 
          if (!webOnly)
          {
@@ -1982,8 +2007,11 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         if (ojData)
+         {
+            json_object_set_new(ojData, "value", json_integer(v.state));
+            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         }
 
          if (!webOnly)
          {
@@ -2003,7 +2031,8 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         json_object_set_new(ojData, "value", json_integer(v.state));
+         if (ojData)
+            json_object_set_new(ojData, "value", json_integer(v.state));
 
          if (!webOnly)
          {
@@ -2017,7 +2046,8 @@ int P4d::update(bool webOnly, long client)
       {
          double value = w1.valueOf(name);
 
-         json_object_set_new(ojData, "value", json_real(value));
+         if (ojData)
+            json_object_set_new(ojData, "value", json_real(value));
 
          if (!webOnly)
          {
@@ -2039,8 +2069,11 @@ int P4d::update(bool webOnly, long client)
          {
             case udState:
             {
-               json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
-               json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
+               if (ojData)
+               {
+                  json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
+                  json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
+               }
 
                if (!webOnly)
                {
@@ -2052,7 +2085,8 @@ int P4d::update(bool webOnly, long client)
             }
             case udMode:
             {
-               json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
+               if (ojData)
+                  json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
 
                if (!webOnly)
                {
@@ -2070,7 +2104,8 @@ int P4d::update(bool webOnly, long client)
                localtime_r(&currentState.time, &tim);
                strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
 
-               json_object_set_new(ojData, "text", json_string(date));
+               if (ojData)
+                  json_object_set_new(ojData, "text", json_string(date));
 
                if (!webOnly)
                {
@@ -2097,7 +2132,6 @@ int P4d::update(bool webOnly, long client)
    // send result to all connected WEBIF clients
 
    pushOutMessage(oWsJson, webOnly ? "init" : "all", client);
-   // ?? json_decref(oWsJson);
 
    // MQTT
 

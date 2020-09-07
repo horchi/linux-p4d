@@ -3,7 +3,7 @@ Version: <VERSION>
 Section: base
 Priority: optional
 Architecture: armhf
-Depends: libssl1.1, libcurl4, libjansson-dev, libxml2, openssl, libmariadb3,
+Depends: libssl1.1, libcurl4, libjansson, libxml2, openssl, libmariadb3, libcurl4
   mailutils, ssmtp, mariadb-server, python-mysql.connector
 Maintainer: Jörg Wendel <linux@jwendel.de>
 Description: p4 deamon

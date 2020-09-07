@@ -81,6 +81,7 @@ int P4d::dispatchClientRequest()
    {
       tell(0, "Insufficient right to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
            wsClients[(void*)client].user.c_str());
+      replyResult(fail, "Insufficient right", client);
    }
 
    json_decref(oData);      // free the json object
@@ -106,10 +107,10 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
       case evChartData:      return rights & urView;
       case evUserConfig:     return rights & urAdmin;
       case evChangePasswd:   return true;   // check will done in performPasswChange()
-      case evResetPeaks:     return rights & urAdmin;
+      case evResetPeaks:     return rights & urFullControl;
       case evMenu:           return rights & urView;
-      case evParEditRequest: return rights & urSettings;
-      case evParStore:       return rights & urSettings;
+      case evParEditRequest: return rights & urControl;
+      case evParStore:       return rights & urControl;
       default: break;
    }
 
@@ -145,6 +146,23 @@ int P4d::performWebSocketPing()
    }
 
    return done;
+}
+
+//***************************************************************************
+// Reply Result
+//***************************************************************************
+
+int P4d::replyResult(int status, const char* message, long client)
+{
+   if (status != success)
+      tell(0, "Error: Web request failed with '%s' (%d)", message, status);
+
+   json_t* oJson = json_object();
+   json_object_set_new(oJson, "status", json_integer(status));
+   json_object_set_new(oJson, "message", json_string(message));
+   pushOutMessage(oJson, "result", client);
+
+   return status;
 }
 
 //***************************************************************************
@@ -684,9 +702,8 @@ int P4d::performParStore(json_t* oObject, long client)
 
    if (!tableMenu->find())
    {
+      replyResult(fail, "Parameter not found", client);
       tell(0, "Info: Id %d for 'parstore' not found!", id);
-      json_object_set_new(oJson, "status", json_integer(fail));
-      json_object_set_new(oJson, "error", json_string("Parameter not found"));
    }
    else
    {
@@ -706,43 +723,30 @@ int P4d::performParStore(json_t* oObject, long client)
             tableMenu->setValue("UNIT", p.unit);
             tableMenu->update();
             json_object_set_new(oJson, "parent", json_integer(parent));
+            sem->v();
 
             return performMenu(oJson, client);
          }
-         else
-         {
-            tell(eloAlways, "Set of parameter failed, error %d", status);
 
-            if (status == P4Request::wrnNonUpdate)
-            {
-               json_object_set_new(oJson, "status", json_integer(P4Request::wrnNonUpdate));
-               json_object_set_new(oJson, "error", json_string("Value not changed, ignoring"));
-            }
-            else if (status == P4Request::wrnOutOfRange)
-            {
-               json_object_set_new(oJson, "status", json_integer(P4Request::wrnOutOfRange));
-               json_object_set_new(oJson, "error", json_string("Value ot of range"));
-            }
-            else
-            {
-               json_object_set_new(oJson, "status", json_integer(P4Request::wrnOutOfRange));
-               json_object_set_new(oJson, "error", json_string("Serial communication error"));
-            }
-         }
+         tell(eloAlways, "Set of parameter failed, error %d", status);
+
+         if (status == P4Request::wrnNonUpdate)
+            replyResult(status, "Value identical, ignoring request", client);
+         else if (status == P4Request::wrnOutOfRange)
+            replyResult(status, "Value ot of range", client);
+         else
+            replyResult(status, "Serial communication error", client);
 
          sem->v();
       }
       else
       {
+         replyResult(status, "Value format error", client);
          tell(eloAlways, "Set of parameter failed, wrong format");
-         json_object_set_new(oJson, "status", json_integer(fail));
-         json_object_set_new(oJson, "error", json_string("Value format error"));
       }
 
       tableMenu->reset();
    }
-
-   pushOutMessage(oJson, "result", client);
 
    return done;
 }
@@ -779,8 +783,14 @@ int P4d::performChartData(json_t* oObject, long client)
 
    cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
 
-   if (isEmpty(sensors))
-      sensors = chart1;
+   if (!widget && !isEmpty(sensors))
+   {
+      tell(0, "storing sensores '%s' for chart", sensors);
+      setConfigItem("chart", sensors);
+      getConfigItem("chart", chartSensors);
+   }
+   else if (isEmpty(sensors))
+      sensors = chartSensors;
 
    tell(eloDebug, "Selecting chats data for '%s' ..", sensors);
 
@@ -824,13 +834,10 @@ int P4d::performChartData(json_t* oObject, long client)
          json_array_append_new(aAvailableSensors, oSensor);
       }
 
-      if (!active)
-      {
-         free(id);
-         continue;
-      }
-
       free(id);
+
+      if (!active)
+         continue;
 
       json_t* oSample = json_object();
       json_array_append_new(oJson, oSample);
@@ -936,12 +943,13 @@ int P4d::performUserConfig(json_t* oObject, long client)
    else if (strcmp(action, "resetpwd") == 0)
    {
       if (!exists)
-         tell(0, "User not exists, ignoring 'resetpwd' request");
+         replyResult(fail, "User not exists, ignoring 'resetpwd' request", client);
       else
       {
          tell(0, "Reset password of user '%s'", user);
          tableUsers->setValue("PASSWD", passwd);
          tableUsers->store();
+         replyResult(success, "Passwort gespeichert", client);
       }
    }
    else if (strcmp(action, "resettoken") == 0)
@@ -1052,7 +1060,7 @@ int P4d::storeConfig(json_t* obj, long client)
    config2Json(oJson);
    pushOutMessage(oJson, "config", client);
 
-   return done;
+   return replyResult(success, "Konfiguration gespeichert", client);
 }
 
 int P4d::storeIoSetup(json_t* array, long client)
@@ -1093,7 +1101,7 @@ int P4d::storeIoSetup(json_t* array, long client)
 
    performIoSettings(client);
 
-   return done;
+   return replyResult(success, "Konfiguration gespeichert", client);
 }
 
 int P4d::storeGroups(json_t* oObject, long client)
@@ -1125,7 +1133,6 @@ int P4d::storeGroups(json_t* oObject, long client)
 
          tableGroups->clearChanged();
          tableGroups->setValue("NAME", name);
-         // tell(0, "Setting name of group (%d) to '%s' %d changes", id, name, tableGroups->getChanges());
 
          if (tableGroups->getChanges())
          {
@@ -1162,7 +1169,7 @@ int P4d::storeGroups(json_t* oObject, long client)
 
    performGroups(client);
 
-   return done;
+   return replyResult(success, "Konfiguration gespeichert", client);
 }
 
 //***************************************************************************

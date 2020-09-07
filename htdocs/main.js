@@ -26,14 +26,6 @@ var theChartRange = 2;
 var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-theChartRange);
 var chartDialogSensor = "";
 
-// !!  sync this arry with UserRights of p4d.h  !!
-
-var rights = [ "View",
-               "Control",
-               "Full Control",
-               "Settings",
-               "Admin" ];
-
 window.documentReady = function(doc)
 {
    daemonState.state = -1;
@@ -136,9 +128,16 @@ function dispatchMessage(message)
    console.log("got event: " + event);
 
    if (event == "result") {
-      dialog.alert({ title: "Fehler (" + jMessage.object.status + ")",
-                     message: jMessage.object.error,
-	                  button: "Schließen"});
+      if (jMessage.object.status == 0)
+         dialog.alert({ title: "",
+                        message: jMessage.object.message,
+	                     cancel: "Schließen"
+	                   });
+      else
+         dialog.alert({ title: "Information (" + jMessage.object.status + ")",
+                          message: jMessage.object.message,
+	                       cancel: "Schließen"
+	                     });
    }
    else if ((event == "update" || event == "all") && rootDashboard) {
       lastUpdate = d.toLocaleTimeString();
@@ -257,26 +256,23 @@ function prepareMenu(haveToken)
       }
    }
 
-   // confirm box - below menu #TODO user dialog instead
+   // storr button below menu #TODO user dialog instead
 
    if ($("#navMenu").data("iosetup") != undefined) {
-      html += "<div id=\"confirm\" class=\"confirmDiv\">";
+      html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border button2\" onclick=\"storeIoSetup()\">Speichern</button>";
       html += "</div>";
    }
    if ($("#navMenu").data("groups") != undefined) {
-      html += "<div id=\"confirm\" class=\"confirmDiv\">";
+      html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border button2\" onclick=\"storeGroups()\">Speichern</button>";
       html += "</div>";
    }
    else if ($("#navMenu").data("maincfg") != undefined) {
-      html += "<div id=\"confirm\" class=\"confirmDiv\">";
+      html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border button2\" onclick=\"storeConfig()\">Speichern</button>";
       html += "  <button id=\"buttonResPeaks\" class=\"rounded-border button2\" onclick=\"resetPeaks()\">Reset Peaks</button>";
       html += "</div>";
-   }
-   else if ($("#navMenu").data("maincfg") != undefined) {
-         html += "<div id=\"confirm\" class=\"confirmDiv\"/>";
    }
    else if ($("#navMenu").data("login") != undefined)
       html += "<div id=\"confirm\" class=\"confirmDiv\"/>";
