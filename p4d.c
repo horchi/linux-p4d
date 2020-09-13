@@ -1580,6 +1580,51 @@ int P4d::initMenu()
 }
 
 //***************************************************************************
+// Update Time Range Data
+//***************************************************************************
+
+int P4d::updateTimeRangeData()
+{
+   Fs::TimeRanges t;
+   int status;
+   char fName[10+TB];
+   char tName[10+TB];
+
+   tell(0, "Updating time ranges data ...");
+
+   if (request->check() != success)
+   {
+      tell(0, "request->check failed");
+      serial->close();
+      return fail;
+   }
+
+   // update / insert time ranges
+
+   for (status = request->getFirstTimeRanges(&t); status == success; status = request->getNextTimeRanges(&t))
+   {
+      tableTimeRanges->clear();
+      tableTimeRanges->setValue("ADDRESS", t.address);
+
+      for (int n = 0; n < 4; n++)
+      {
+         sprintf(fName, "FROM%d", n+1);
+         sprintf(tName, "TO%d", n+1);
+         tableTimeRanges->setValue(fName, t.getTimeRangeFrom(n));
+         tableTimeRanges->setValue(tName, t.getTimeRangeTo(n));
+      }
+
+      tableTimeRanges->store();
+      tableTimeRanges->reset();
+
+   }
+
+   tell(0, "Updating time ranges data done");
+
+   return done;
+}
+
+//***************************************************************************
 // Store
 //***************************************************************************
 
@@ -1749,8 +1794,6 @@ int P4d::standbyUntil(time_t until)
 
 int P4d::meanwhile()
 {
-   static time_t lastCleanup = time(0);
-
    if (!initialized)
       return done;
 
@@ -1763,14 +1806,6 @@ int P4d::meanwhile()
    dispatchClientRequest();
    webSock->performData(cWebSock::mtData);
    performWebSocketPing();
-
-   performWebifRequests(); // old wen interface - to be removed
-
-   if (lastCleanup < time(0) - 6*tmeSecondsPerHour)
-   {
-      cleanupWebifRequests();
-      lastCleanup = time(0);
-   }
 
    return done;
 }

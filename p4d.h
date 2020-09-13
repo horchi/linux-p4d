@@ -107,8 +107,9 @@ class P4d : public FroelingService, public cWebInterface
 
       int updateErrors();
       int updateParameter(cDbTable* tableMenu);
-      int performWebifRequests();
-      int cleanupWebifRequests();
+   // int performWebifRequests();
+   // int cleanupWebifRequests();
+   // int callScript(const char* scriptName, const char*& result);
       int dispatchClientRequest();
       bool checkRights(long client, Event event, json_t* oObject);
 
@@ -137,7 +138,6 @@ class P4d : public FroelingService, public cWebInterface
       int updateTimeRangeData();
       int initMenu();
       int updateScripts();
-      int callScript(const char* scriptName, const char*& result);
       int hmUpdateSysVars();
       int hmSyncSysVars();
 

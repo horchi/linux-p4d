@@ -6,8 +6,6 @@
 
 include Make.config
 
-WEBDESTphp = $(WEBDEST).php
-
 TARGET      = p4d
 CMDTARGET   = p4
 CHARTTARGET = dbchart
@@ -32,7 +30,7 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/thread.o lib/curl.o lib/json.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
-OBJS         = $(LOBJS) $(MQTTOBJS) main.o p4io.o service.o w1.o webif.o hass.o websock.o wsactions.o
+OBJS         = $(LOBJS) $(MQTTOBJS) main.o p4io.o service.o w1.o hass.o websock.o wsactions.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o w1.o lib/common.o
 
@@ -118,44 +116,6 @@ iw: install-web
 
 install-web:
 	(cd htdocs; $(MAKE) install)
-	if ! test -d $(WEBDESTphp); then \
-		mkdir -p "$(WEBDESTphp)"; \
-		chmod a+rx $(WEBDESTphp); \
-	fi
-	if test -f "$(WEBDESTphp)/stylesheet.css"; then \
-		cp -Pp "$(WEBDESTphp)/stylesheet.css" "$(WEBDESTphp)/stylesheet.css.save"; \
-	fi
-	if test -f "$(WEBDESTphp)/config.php"; then \
-		cp -p "$(WEBDESTphp)/config.php" "$(WEBDESTphp)/config.php.save"; \
-	fi
-	cp -r ./htdocs.php/* $(WEBDESTphp)/
-	if test -f "$(WEBDESTphp)/config.php.save"; then \
-		cp -p "$(WEBDESTphp)/config.php" "$(WEBDESTphp)/config.php.dist"; \
-		cp -p "$(WEBDESTphp)/config.php.save" "$(WEBDESTphp)/config.php"; \
-	fi
-	if test -f "$(WEBDESTphp)/stylesheet.css.save"; then \
-		cp -Pp "$(WEBDESTphp)/stylesheet.css.save" "$(WEBDESTphp)/stylesheet.css"; \
-	fi
-	chmod -R a+r "$(WEBDESTphp)"; \
-	chown -R $(WEBOWNER):$(WEBOWNER) "$(WEBDESTphp)"
-	cat ./htdocs.php/header.php | sed s:"<VERSION>":"$(VERSION)":g > "$(WEBDESTphp)/header.php"; \
-
-install-apache-conf:
-	@mkdir -p $(APACHECFGDEST)/conf-available
-	@mkdir -p $(APACHECFGDEST)/conf-enabled
-	install --mode=644 -D apache2/p4.conf $(APACHECFGDEST)/conf-available/
-	rm -f $(APACHECFGDEST)/conf-enabled/p4.conf
-	ln -s ../conf-available/p4.conf $(APACHECFGDEST)/conf-enabled/p4.conf
-
-install-pcharts:
-	if ! test -d $(PCHARTDEST); then \
-		git clone https://github.com/bozhinov/pChart2.0-for-PHP7.git $(PCHARTDEST); \
-	fi
-	cd $(PCHARTDEST); \
-	git pull; \
-	git checkout 7.x-compatible; \
-	ln -s $(_PCHARTDEST) $(WEBDESTphp)/pChart; \
-	chown -R $(WEBOWNER):$(WEBOWNER) $(PCHARTDEST); \
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
@@ -180,9 +140,7 @@ build-deb:
 	rm -rf $(DEB_DEST)
 	make -s install-p4d DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
-	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
 	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
-#	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
 
 publish-deb:
 	echo 'put $(DEB_BASE_DIR)/p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
@@ -210,7 +168,6 @@ lib/mqtt_pal.o  :  lib/mqtt_pal.c  lib/mqtt_c.h
 main.o          :  main.c          $(HEADER) p4d.h websock.h HISTORY.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
-webif.o         :  webif.c         $(HEADER) p4d.h
 w1.o            :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 hass.o          :  hass.c          p4d.h
