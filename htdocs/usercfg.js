@@ -8,7 +8,7 @@
  *
  */
 
-// !!  sync this arry with UserRights of p4d.h  !!
+// !!  sync this arry with UserRights of websock.h  !!
 
 var rights = [ "View",
                "Control",
@@ -105,12 +105,15 @@ window.chpwd  = function()
                        { "user": user,
                          "passwd": $.md5($("#input_passwd").val()),
                          "action": "resetpwd" }});
+
+         $("#input_passwd").val("");
+         $("#input_passwd2").val("");
       }
       else
-         console.log("Passwords not match or empty");
+         showInfoDialog("Passwords not match or empty");
    }
    else
-      console.log("Missing login!");
+      showInfoDialog("Missing login!");
 }
 
 window.addUser = function()

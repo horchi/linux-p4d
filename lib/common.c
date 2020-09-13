@@ -283,6 +283,38 @@ void toUpper(std::string& str)
 }
 
 //***************************************************************************
+// To Case (UTF-8 save)
+//***************************************************************************
+
+const char* toCase(Case cs, char* str)
+{
+   char* s = str;
+   int lenSrc = strlen(str);
+
+   int csSrc;  // size of character
+
+   for (int ps = 0; ps < lenSrc; ps += csSrc)
+   {
+      csSrc = std::max(mblen(&s[ps], lenSrc-ps), 1);
+
+      if (csSrc == 1)
+         s[ps] = cs == cUpper ? toupper(s[ps]) : tolower(s[ps]);
+      else if (csSrc == 2 && s[ps] == (char)0xc3 && s[ps+1] >= (char)0xa0)
+      {
+         s[ps] = s[ps];
+         s[ps+1] = cs == cUpper ? toupper(s[ps+1]) : tolower(s[ps+1]);
+      }
+      else
+      {
+         for (int i = 0; i < csSrc; i++)
+            s[ps+i] = s[ps+i];
+      }
+   }
+
+   return str;
+}
+
+//***************************************************************************
 // String Operations
 //***************************************************************************
 
@@ -516,6 +548,25 @@ std::string num2Str(double num)
 }
 
 //***************************************************************************
+// Split String to Vector
+//***************************************************************************
+
+std::vector<std::string> split(const std::string& str, char delim)
+{
+   std::vector<std::string> strings;
+   size_t start;
+   size_t end {0};
+
+   while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
+   {
+      end = str.find(delim, start);
+      strings.push_back(str.substr(start, end - start));
+   }
+
+   return strings;
+}
+
+//***************************************************************************
 // End Of String
 //***************************************************************************
 
@@ -578,15 +629,6 @@ const char* toElapsed(int seconds, char* buf)
    }
 
    return lTrim(buf);
-}
-
-//***************************************************************************
-// TOOLS
-//***************************************************************************
-
-int isEmpty(const char* str)
-{
-   return !str || !*str;
 }
 
 char* sstrcpy(char* dest, const char* src, int max)
@@ -707,7 +749,8 @@ int loadFromFile(const char* infile, MemoryStruct* data)
 
       else if (strcmp(sfx, "png") == 0 || strcmp(sfx, "jpg") == 0 || strcmp(sfx, "gif") == 0)
          sprintf(data->contentType, "image/%s", sfx);
-
+      else if (strcmp(sfx, "svg") == 0)
+         sprintf(data->contentType, "image/%s+xml", sfx);
       else if (strcmp(sfx, "ico") == 0)
          strcpy(data->contentType, "image/x-icon");
 
@@ -721,6 +764,38 @@ int loadFromFile(const char* infile, MemoryStruct* data)
    }
 
    return success;
+}
+
+//***************************************************************************
+// TOOLS
+//***************************************************************************
+
+int isEmpty(const char* str)
+{
+   return !str || !*str;
+}
+
+const char* notNull(const char* str, const char* def)
+{
+   if (!str)
+      return def;
+
+   return str;
+}
+
+int isZero(const char* str)
+{
+   const char* p = str;
+
+   while (p && *p)
+   {
+      if (*p != '0')
+         return no;
+
+      p++;
+   }
+
+   return yes;
 }
 
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF)

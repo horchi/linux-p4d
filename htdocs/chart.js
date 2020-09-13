@@ -8,7 +8,6 @@
  *
  */
 
-
 function drawCharts(dataObject, root)
 {
    if (theChart != null) {
@@ -115,8 +114,9 @@ function drawCharts(dataObject, root)
    $("#chartTitle").html(theChartStart.toLocaleString('de-DE') + "  -  " + end.toLocaleString('de-DE'));
    $("#chartSelector").html("");
 
-   for (var i = 0; i < dataObject.sensors.length; i++)
-   {
+   updateChartBookmarks();
+
+   for (var i = 0; i < dataObject.sensors.length; i++) {
       var html = "<div class=\"chartSel\"><input id=\"checkChartSel_" + dataObject.sensors[i].id
           + "\"type=\"checkbox\" onclick=\"chartSelect('choice')\" " + (dataObject.sensors[i].active ? "checked" : "")
           + "/>" + dataObject.sensors[i].title + "</div>";
@@ -142,7 +142,53 @@ function getSensors()
    return sensors;
 }
 
-window.chartSelect = function(action)
+function updateChartBookmarks()
+{
+   $("#chartBookmarks").html('<div>'
+                             + '<button title="Lesezeichen hinzufügen" class="rounded-border chartBookmarkButton" style="min-width:30px;" onclick="addBookmark()">&#128209;</button>'
+                             + '<button title="zum Löschen hier ablegen" ondrop="dropBm(event)" ondragover="allowDropBm(event)" class="rounded-border chartBookmarkButton" style="min-width:30px;margin-right:50px;" disabled>&#128465;</button>'
+                             + '</div>');
+
+   if (chartBookmarks != null) {
+      var html = "<div>"
+
+      for (var i = 0; i < chartBookmarks.length; i++)
+         html += '<button class="rounded-border chartBookmarkButton" ondragstart="dragBm(event, \'' + chartBookmarks[i].name + '\')" draggable="true" onclick="chartSelectBookmark(\'' + chartBookmarks[i].sensors + '\')">' + chartBookmarks[i].name + '</button>';
+
+      html += "</div>"
+      $("#chartBookmarks").append(html);
+   }
+}
+
+function dragBm(ev, name)
+{
+   console.log("drag: " + name);
+   ev.dataTransfer.setData("name", name);
+}
+
+function allowDropBm(ev)
+{
+   ev.preventDefault();
+}
+
+function dropBm(ev)
+{
+   ev.preventDefault();
+   var name = ev.dataTransfer.getData("name");
+
+   for (var i = 0; i < chartBookmarks.length; i++) {
+      if (chartBookmarks[i].name == name) {
+         chartBookmarks.splice(i, 1);
+         break;
+      }
+   }
+
+   socket.send({ "event" : "storechartbookmarks", "object" : chartBookmarks});
+
+   // console.log("bookmarks now " + JSON.stringify(chartBookmarks, undefined, 4));
+}
+
+function chartSelect(action)
 {
    theChartRange = parseInt($("#chartRange").val());
 
@@ -165,7 +211,16 @@ window.chartSelect = function(action)
    socket.send({ "event" : "chartdata", "object" : jsonRequest });
 }
 
-window.addBookmark = function()
+function chartSelectBookmark(sensors)
+{
+   console.log("bookmark: " + sensors);
+
+   var jsonRequest = {};
+   prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
+   socket.send({ "event" : "chartdata", "object" : jsonRequest });
+}
+
+function addBookmark()
 {
    var sensors = getSensors();
 
@@ -190,8 +245,12 @@ window.addBookmark = function()
    });
 
    function storeBookmark(name, sensors) {
+      if (chartBookmarks != null)
+         chartBookmarks.push({ "name"  : name, "sensors" : sensors });
+      else
+         chartBookmarks = [{ "name"  : name, "sensors" : sensors }];
 
       console.log("storing " + name + " - " + sensors);
-      socket.send({ "event" : "storechartbookmark", "object" : { "name"  : name, "sensors" : sensors }});
+      socket.send({ "event" : "storechartbookmarks", "object" : chartBookmarks});
    }
 }

@@ -26,7 +26,7 @@ size_t collect_data(void *ptr, size_t size, size_t nmemb, void* stream)
    std::string sTmp;
    size_t actualsize = size * nmemb;
 
-   if ((FILE *)stream == NULL)
+   if (!stream)
    {
       sTmp.assign((char *)ptr, actualsize);
       cCurl::sBuf += sTmp;
@@ -99,6 +99,10 @@ int cCurl::init(const char* httpproxy)
          return fail;
       }
    }
+   else
+   {
+      curl_easy_reset(handle);
+   }
 
    // Reset Options
 
@@ -108,6 +112,7 @@ int cCurl::init(const char* httpproxy)
       curl_easy_setopt(handle, CURLOPT_PROXY, httpproxy);   // Specify HTTP proxy
    }
 
+   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, 0);
    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, collect_data);
    curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0);                        // Set option to write to string
    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, yes);
@@ -119,6 +124,7 @@ int cCurl::init(const char* httpproxy)
    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 30);                         // Set timeout
    curl_easy_setopt(handle, CURLOPT_NOBODY, 0);                           //
    curl_easy_setopt(handle, CURLOPT_USERAGENT, CURL_USERAGENT);           // Some servers don't like requests
+   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
 
    return success;
 }
@@ -153,34 +159,45 @@ int cCurl::GetUrl(const char *url, std::string *sOutput, const std::string &sRef
   curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0);       // Set option to write to string
   sBuf = "";
 
-  res = curl_easy_perform(handle);
-
-  if (res != CURLE_OK)
+   if ((res = curl_easy_perform(handle)) != CURLE_OK)
   {
+      long httpCode = 0;
+
+      curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
+      tell(1, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
+           curl_easy_strerror(res), res, httpCode, url);
+
      *sOutput = "";
+
      return 0;
   }
 
   *sOutput = sBuf;
+
   return 1;
 }
 
 int cCurl::GetUrlFile(const char *url, const char *filename, const std::string &sReferer)
 {
   int nRet = 0;
+
   init();
 
   // Point the output to a file
 
   FILE *fp;
+
   if ((fp = fopen(filename, "w")) == NULL)
     return 0;
 
   curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);       // Set option to write to file
   curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
+
   if (sReferer != "")
     curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
+
   curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
+
   if (curl_easy_perform(handle) == 0)
     nRet = 1;
   else
@@ -433,8 +450,14 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
    if ((res = curl_easy_perform(handle)) != 0)
    {
+      long httpCode = 0;
+
+      curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
+      tell(1, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
+           data->size, curl_easy_strerror(res), res, httpCode, url);
+
       data->clear();
-      tell(1, "Error, download failed; %s (%d)", curl_easy_strerror(res), res);
+      exit();
 
       return fail;
    }
@@ -445,6 +468,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    if (code == 404)
    {
       data->clear();
+      exit();
       return fail;
    }
 

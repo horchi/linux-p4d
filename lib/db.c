@@ -395,6 +395,8 @@ int cDbStatement::bindTextFree(const char* text, cDbValue* value, const char* de
 
 //***************************************************************************
 // Bind In Char   - like <field> in ('A','B','C')
+//
+//   expected string in cDbValue is: "A,B,C"
 //***************************************************************************
 
 int cDbStatement::bindInChar(const char* ctable, const char* fname,
@@ -552,7 +554,13 @@ int cDbStatement::appendBinding(cDbValue* value, BindType bt)
 
 int cDbStatement::prepare()
 {
-   if (!stmtTxt.length() || !connection->getMySql())
+   if (!connection->getMySql())
+   {
+      tell(0, "Error: Lost connection, can't prepare statement");
+      return fail;
+   }
+
+   if (!stmtTxt.length())
       return fail;
 
    if (buildErrors)
@@ -727,15 +735,18 @@ int cDbTable::init(int allowAlter)
 
    // check/create table ...
 
-   if (exist() && allowAlter)
+   if (allowAlter)
+   {
+      if (exist())
       validateStructure(allowAlter);
 
-   if (createTable() != success)
-      return fail;
+      if (!exist() && createTable() != success)
+         return fail;
 
-   // check/create indices
+      // check/create indices
 
-   createIndices();
+      createIndices();
+   }
 
    // ------------------------------
    // prepare BASIC statements
@@ -863,6 +874,7 @@ struct FieldInfo
 {
    std::string columnFormat;
    std::string description;
+   std::string defaulValue;
 };
 
 int cDbTable::validateStructure(int allowAlter)
@@ -871,6 +883,7 @@ int cDbTable::validateStructure(int allowAlter)
    MYSQL_RES* result;
    MYSQL_ROW row;
    std::map<std::string, FieldInfo, _casecmp_>::iterator it;
+   int needDetach = no;
 
    if (!allowAlter)
       return done;
@@ -880,8 +893,13 @@ int cDbTable::validateStructure(int allowAlter)
       " from information_schema.columns "
       " where table_name = '%s' and table_schema= '%s'";
 
+   if (!isAttached())
+   {
+      needDetach = yes;
+
    if (attach() != success)
       return fail;
+   }
 
    // ------------------------
    // execute query
@@ -889,6 +907,7 @@ int cDbTable::validateStructure(int allowAlter)
    if (connection->query(select, TableName(), connection->getName()) != success)
    {
       connection->errorSql(getConnection(), "validateStructure()", 0);
+      if (needDetach) detach();
       return fail;
    }
 
@@ -898,13 +917,23 @@ int cDbTable::validateStructure(int allowAlter)
    if (!(result = mysql_store_result(connection->getMySql())))
    {
       connection->errorSql(getConnection(), "validateStructure()");
+      if (needDetach) detach();
       return fail;
    }
 
    while ((row = mysql_fetch_row(result)))
    {
       fields[row[0]].columnFormat = row[1];
-      fields[row[0]].description = row[2];
+      fields[row[0]].description = row[2] ? row[2] : "";
+      fields[row[0]].defaulValue = row[6] ? strcasecmp(row[6], "NULL") == 0 ? "" : row[6] : "";
+
+      if (fields[row[0]].defaulValue.length() > 2 &&
+          fields[row[0]].defaulValue.back() == '\'' &&
+          fields[row[0]].defaulValue.front() == '\'')
+      {
+         fields[row[0]].defaulValue.pop_back();
+         fields[row[0]].defaulValue.erase(0, 1);
+      }
    }
 
    mysql_free_result(result);
@@ -929,8 +958,21 @@ int cDbTable::validateStructure(int allowAlter)
          getField(i)->toColumnFormat(colType);
 
          if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0 ||
-             strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0)
+             strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0 ||
+             (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
          {
+            if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0)
+               tell(5, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->columnFormat.c_str(), colType);
+
+            if (strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0)
+               tell(5, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->description.c_str(), getField(i)->getDescription());
+
+            if (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary))
+               tell(5, "Debug: Default value of '%s' changed from from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->defaulValue.c_str(), getField(i)->getDefault());
+
             alterModifyField(getField(i));
          }
       }
@@ -948,10 +990,12 @@ int cDbTable::validateStructure(int allowAlter)
             alterDropField(it->first.c_str());
          else
             tell(0, "Info: Field '%s' not used anymore, "
-                 "to remove it call 'ALTER TABLE %s DROP COLUMN %s' manually",
+                 "to remove it call 'ALTER TABLE %s DROP COLUMN %s;' manually",
                  it->first.c_str(), TableName(), it->first.c_str());
       }
    }
+
+   if (needDetach) detach();
 
    return success;
 }
@@ -970,13 +1014,17 @@ int cDbTable::alterModifyField(cDbFieldDef* def)
 
    // alter table events modify column guest varchar(50)
 
-   asprintf(&statement, "alter table %s modify column %s %s comment '%s'",
+   asprintf(&statement, "alter table %s modify column %s %s comment '%s' %s%s%s",
             TableName(),
             def->getDbName(),
             def->toColumnFormat(colType),
-            def->getDbDescription());
+            def->getDbDescription(),
+            !isEmpty(def->getDefault()) ? "default '" : "",
+            !isEmpty(def->getDefault()) ? def->getDefault() : "",
+            !isEmpty(def->getDefault()) ? "'" : ""
+      );
 
-   tell(1, "%s", statement);
+   tell(1, "Execute [%s]", statement);
 
    if (connection->query("%s", statement))
       return connection->errorSql(getConnection(), "alterAddField()",
@@ -1008,8 +1056,8 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    {
       if (def->getType() & ftAutoinc)
          statement += " not null auto_increment";
-      else if (def->getType() & ftDef0)
-         statement += " default '0'";
+      else if (!isEmpty(def->getDefault()))
+         statement += " default '" + std::string(def->getDefault()) + "'";
    }
 
    if (!isEmpty(def->getDbDescription()))
@@ -1018,7 +1066,7 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    if (def->getIndex() > 0)
       statement += std::string(" after ") + getField(def->getIndex()-1)->getDbName();
 
-   tell(1, "%s", statement.c_str());
+   tell(1, "Execute [%s]", statement.c_str());
 
    if (connection->query("%s", statement.c_str()))
       return connection->errorSql(getConnection(), "alterAddField()",
@@ -1041,7 +1089,7 @@ int cDbTable::alterDropField(const char* name)
 
    asprintf(&statement, "alter table %s drop column %s", TableName(), name);
 
-   tell(1, "%s", statement);
+   tell(1, "Execute [%s]", statement);
 
    if (connection->query("%s", statement))
       return connection->errorSql(getConnection(), "alterDropField()",
@@ -1060,17 +1108,26 @@ int cDbTable::createTable()
 {
    std::string statement;
    std::string aKey;
+   int needDetach = no;
 
    if (!tableDef || !row)
       return abrt;
 
+   if (!isAttached())
+   {
+      needDetach = yes;
+
    if (attach() != success)
       return fail;
+   }
 
    // table exists -> nothing to do
 
    if (exist())
+   {
+      if (needDetach) detach();
       return done;
+   }
 
    tell(0, "Initialy creating table '%s'", TableName());
 
@@ -1090,8 +1147,8 @@ int cDbTable::createTable()
       {
          if (getField(i)->getType() & ftAutoinc)
             statement += " not null auto_increment";
-         else if (getField(i)->getType() & ftDef0)
-            statement += " default '0'";
+         else if (!isEmpty(getField(i)->getDefault()))
+            statement += " default '" + std::string(getField(i)->getDefault()) + "'";
       }
 
       if (!isEmpty(getField(i)->getDbDescription()))
@@ -1134,14 +1191,18 @@ int cDbTable::createTable()
       statement += ")";
    }
 
-   // statement += std::string(") ENGINE MYISAM;");
-   statement += std::string(") ENGINE InnoDB;");
+   statement += std::string(") ENGINE=InnoDB ROW_FORMAT=DYNAMIC;");
 
    tell(1, "%s", statement.c_str());
 
    if (connection->query("%s", statement.c_str()))
+   {
+      if (needDetach) detach();
       return connection->errorSql(getConnection(), "createTable()",
                                   0, statement.c_str());
+   }
+
+   if (needDetach) detach();
 
    return success;
 }
@@ -1336,20 +1397,19 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
 
    if (error == CR_SERVER_LOST ||
        error == CR_SERVER_GONE_ERROR ||
+// for compatibility with newer versions of MariaBD library
 #ifdef CR_INVALID_CONN_HANDLE
        error == CR_INVALID_CONN_HANDLE ||
 #endif
-#ifdef CR_INVALID_BUFFER_USE
-       error == CR_INVALID_BUFFER_USE ||
-#endif
+       error == CR_COMMANDS_OUT_OF_SYNC ||
+       error == CR_SERVER_LOST_EXTENDED ||
+       error == CR_STMT_CLOSED ||
+// for compatibility with newer versions of MariaBD library
 #ifdef CR_CONN_UNKNOW_PROTOCOL
        error == CR_CONN_UNKNOW_PROTOCOL ||
 #else
        error == CR_CONN_UNKNOWN_PROTOCOL ||
 #endif
-       error == CR_COMMANDS_OUT_OF_SYNC ||
-       error == CR_SERVER_LOST_EXTENDED ||
-       error == CR_STMT_CLOSED ||
        error == CR_UNSUPPORTED_PARAM_TYPE ||
        error == CR_NO_PREPARE_STMT ||
        error == CR_SERVER_HANDSHAKE_ERR ||
@@ -1519,6 +1579,9 @@ int cDbTable::insert(time_t inssp)
 
       if (strcasecmp(fld->getName(), "updsp") == 0 || strcasecmp(fld->getName(), "inssp") == 0)
          setValue(fld, inssp ? inssp : time(0));
+
+      else if (getValue(fld)->isNull() && !isEmpty(fld->getDefault()))
+         setValue(fld, fld->getDefault());
    }
 
    if (stmtInsert->execute())
@@ -1548,10 +1611,10 @@ int cDbTable::update(time_t updsp)
       cDbFieldDef* fld = f->second;
 
       if (strcasecmp(fld->getName(), "updsp") == 0)
-      {
          setValue(fld, updsp ? updsp : time(0));
-         break;
-      }
+
+      else if (getValue(fld)->isNull() && !isEmpty(fld->getDefault()))
+         setValue(fld, fld->getDefault());
    }
 
    if (stmtUpdate->execute())

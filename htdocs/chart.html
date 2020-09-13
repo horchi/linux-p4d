@@ -9,11 +9,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 
-    <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
     <link rel="icon" href="img/icon.png" type="image/png"/>
-    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+    <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
     <link rel="stylesheet" type="text/css" href="jquery.dialog.min.css"/>
+    <link rel="stylesheet" type="text/css" href="jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
 
     <script src="jquery.min.js"></script>
     <script src="jquery-ui.min.js"></script>
@@ -24,6 +25,8 @@
     <script src="Chart.min.js"></script>
     <script type="text/javascript" src="websocket.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="chart.js"></script>
+
     <script>
       $(document).ready(function() { documentReady("chart"); });
     </script>
@@ -36,8 +39,8 @@
       <nav id="navMenu"></nav>
     </div>
 
-    <div id="chartTitle" class="rounded-border chartTitle">
-    </div>
+    <div id="chartTitle" class="rounded-border chartTitle"></div>
+    <div id="chartBookmarks" class="chartBookmarks"></div>
 
     <canvas id="chart" class="chartCanvas" width="1600" height="600"></canvas>
 
@@ -45,11 +48,10 @@
       <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt;&lt;</button>
       <button class="rounded-border chartButton" onclick="chartSelect('now')">Jetzt</button>
       <button class="rounded-border chartButton" onclick="chartSelect('next')">&gt;&gt;</button>
-      <input  class="rounded-border chartButton" onclick="chartSelect('range')" id="chartRange" type="number" min="1" value="2"></input>
+      <input  class="rounded-border chartButton" onclick="chartSelect('range')" id="chartRange" type="number" min="1" value="3"></input>
     </div>
 
-    <div id="chartSelector" class="chartSelectors">
-    </div>
+    <div id="chartSelector" class="chartSelectors"></div>
 
   </body>
 </html>

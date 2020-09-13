@@ -152,10 +152,15 @@ const char* cDbService::toName(FieldType type, char* buf)
    return buf;
 }
 
+//***************************************************************************
+//***************************************************************************
+// Class cDbDict
+//***************************************************************************
+
 cDbDict dbDict;
 
 //***************************************************************************
-// cDbDict
+// Object
 //***************************************************************************
 
 cDbDict::cDbDict()
@@ -250,7 +255,7 @@ int cDbDict::in(const char* file, int filter)
 
       if (atLine(line) != success)
       {
-         tell(0, "Found unexpected definition '%s', aborting", line);
+         tell(0, "Error: Found unexpected definition '%s', aborting", line);
          free(path);
          return fail;
       }
@@ -402,6 +407,8 @@ int cDbDict::parseField(const char* line)
    if (!curTable)
       return fail;
 
+   // first parse fixed part of field definition up to the 'type'
+   
    for (int i = 0; i < dtCount; i++)
    {
       if (getToken(p, token, sizeTokenMax) != success)
@@ -443,8 +450,7 @@ int cDbDict::parseField(const char* line)
    }
    else
    {
-      tell(0, "Info: Ignoring field '%s' due to filter configiuration",
-           f->getName());
+      tell(2, "Info: Ignoring field '%s' due to filter configiuration", f->getName());
       delete f;
    }
 

@@ -103,8 +103,10 @@ class P4d : public FroelingService, public cWebInterface
       int scheduleAggregate();
       int aggregate();
       bool onDashboard(const char* type, int address);
+      bool onList(const char* type, int address);
 
       int updateErrors();
+      int updateParameter(cDbTable* tableMenu);
       int performWebifRequests();
       int cleanupWebifRequests();
       int dispatchClientRequest();
@@ -131,7 +133,7 @@ class P4d : public FroelingService, public cWebInterface
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
 
       int updateSchemaConfTable();
-      int updateValueFacts();
+      int initValueFacts();
       int updateTimeRangeData();
       int initMenu();
       int updateScripts();
@@ -152,22 +154,29 @@ class P4d : public FroelingService, public cWebInterface
       // web
 
       int pushOutMessage(json_t* obj, const char* title, long client = 0);
+      int pushDataUpdate(const char* title, long client);
 
       int pushInMessage(const char* data) override;
       std::queue<std::string> messagesIn;
       cMyMutex messagesInMutex;
 
+      int replyResult(int status, const char* message, long client);
       int performWebSocketPing();
       int performLogin(json_t* oObject);
       int performLogout(json_t* oObject);
+      int performInitTables(json_t* oObject, long client);
       int performTokenRequest(json_t* oObject, long client);
       int performSyslog(long client);
       int performConfigDetails(long client);
       int performUserDetails(long client);
-      int performIoSettings(long client);
+      int performIoSettings(json_t* oObject, long client);
       int performGroups(long client);
       int performErrors(long client);
       int performMenu(json_t* oObject, long client);
+      int performSchema(json_t* oObject, long client);
+      int performAlerts(json_t* oObject, long client);
+      int performSendMail(json_t* oObject, long client);
+      int performAlertTestMail(int id, long client);
       int performParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
@@ -175,14 +184,18 @@ class P4d : public FroelingService, public cWebInterface
       int performPasswChange(json_t* oObject, long client);
       int storeConfig(json_t* obj, long client);
       int storeIoSetup(json_t* array, long client);
+      int storeAlerts(json_t* oObject, long client);
+      int storeSchema(json_t* oObject, long client);
       int storeGroups(json_t* array, long client);
       int resetPeaks(json_t* obj, long client);
-      int replyResult(int status, const char* message, long client);
+      int performChartbookmarks(long client);
+      int storeChartbookmarks(json_t* array, long client);
+
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
       int configChoice2json(json_t* obj, const char* name);
       int userDetails2Json(json_t* obj);
-      int valueFacts2Json(json_t* obj);
+      int valueFacts2Json(json_t* obj, bool filterActive);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
       int s3200State2Json(json_t* obj);
@@ -223,7 +236,9 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectMenuItemsByParent {nullptr};
       cDbStatement* selectMenuItemsByChild {nullptr};
       cDbStatement* selectSensorAlerts {nullptr};
-
+      cDbStatement* selectAllSensorAlerts {nullptr};
+      cDbStatement* selectSchemaConfByState {nullptr};
+      cDbStatement* selectAllSchemaConf {nullptr};
       cDbStatement* selectSampleInRange {nullptr};   // for alert check
       cDbStatement* selectSamplesRange {nullptr};    // for chart
       cDbStatement* selectSamplesRange60 {nullptr};  // for chart
@@ -273,7 +288,7 @@ class P4d : public FroelingService, public cWebInterface
       {
          std::string user;
          uint rights;                  // rights mask
-         bool dataUpdates {false};     // true if interested on data update
+         std::string page;
          ClientType type {ctActive};
       };
 
@@ -311,12 +326,18 @@ class P4d : public FroelingService, public cWebInterface
 
       int interval {60};
       int stateCheckInterval {10};
+
+      int webPort {1111};
+      char* webUrl {nullptr};
+
       char* ttyDevice {nullptr};
       char* heatingType {nullptr};
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
       char* addrsDashboard {nullptr};
+      char* addrsList {nullptr};
+
       int mail {no};
       char* mailScript {nullptr};
       char* stateMailAtStates {nullptr};
@@ -334,6 +355,15 @@ class P4d : public FroelingService, public cWebInterface
       std::string alertMailBody;
       std::string alertMailSubject;
       std::map<int,double> vaValues;
+
+      struct SensorJson
+      {
+         std::string type;
+         int address;
+         json_t* json;
+      };
+
+      std::vector<SensorJson> jsonSensorList;
 
       //
 

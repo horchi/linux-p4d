@@ -35,6 +35,9 @@ function initConfig(configuration, root)
 
       html += "    <span>" + item.title + ":</span>\n";
 
+      if (item.descrtiption == "")
+         item.descrtiption = "&nbsp;";  // on totally empty the line height not fit :(
+
       switch (item.type) {
       case 0:     // integer
          html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputNum\" type=\"number\" value=\"" + item.value + "\"/></span>\n";
@@ -112,6 +115,12 @@ function initConfig(configuration, root)
    }
 }
 
+function initTables(what)
+{
+   showInfoDialog("init gestartet (kann bis zu einer Minute dauern) ...");
+   socket.send({ "event" : "inittables", "object" : { "action" : what } });
+}
+
 window.storeConfig = function()
 {
    var jsonObj = {};
@@ -154,6 +163,17 @@ window.resetPeaks = function()
    socket.send({ "event" : "resetpeaks", "object" : { "what" : "all" } });
 }
 
+var filterActive = false;
+
+function filterIoSetup()
+{
+   filterActive = !filterActive;
+   console.log("filterIoSetup: " + filterActive);
+
+   $("#filterIoSetup").html(filterActive ? "[aktive]" : "[alle]");
+   socket.send({ "event" : "iosetup", "object" : { "filter" : filterActive } });
+}
+
 function initIoSetup(valueFacts, root)
 {
    // console.log(JSON.stringify(valueFacts, undefined, 4));
@@ -183,6 +203,9 @@ function initIoSetup(valueFacts, root)
       html += "<td style=\"text-align:center;\">" + item.unit + "</td>";
       html += "<td><input id=\"state_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"checkbox\" " + (item.state == 1 ? "checked" : "") + " /></td>";
       html += "<td>" + item.type + ":0x" + item.address.toString(16) + "</td>";
+
+      if (item.type == "VA")
+         html += "<td>" + item.value + item.unit + "</td>";
 
       switch (item.type) {
          case 'VA': root = document.getElementById("ioValues");     break

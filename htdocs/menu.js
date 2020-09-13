@@ -53,7 +53,7 @@ function initMenu(menu, root)
 
 function editMenuParameter(parameter, root)
 {
-   // console.log(JSON.stringify(parameter, undefined, 4));
+   console.log(JSON.stringify(parameter, undefined, 4));
 
    var inpStep = 'step="0.1"';
    var inpType = "text";
@@ -77,11 +77,12 @@ function editMenuParameter(parameter, root)
          'Abbrechen': function () {
             $(this).dialog('close');
          }
-      }
+      },
+      close: function() { $(this).dialog('destroy').remove(); }
    });
 
    function storeParameter(id, value) {
-      console.log("storing " + name + " - " + value);
+      console.log("storing " + id + " - " + value);
       socket.send({ "event" : "parstore", "object" : { "id"  : id, "value" : value }});
    }
 }

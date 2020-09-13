@@ -128,6 +128,7 @@ class cDbFieldDef : public cDbService
          description = 0;
          dbdescription = 0;
          filter = 0xFFFF;
+         def = 0;
       }
 
       cDbFieldDef(const char* n, const char* dn, FieldFormat f, int s, int t, int flt = 0xFFFF)
@@ -140,9 +141,10 @@ class cDbFieldDef : public cDbService
          filter = flt;
          description = 0;
          dbdescription = 0;
+         def = 0;
       }
 
-      ~cDbFieldDef()  { free(name); free(dbname); free(description); free(dbdescription); }
+   ~cDbFieldDef()  { free(name); free(dbname); free(description); free(dbdescription); free(def); }
 
       int getIndex()                 { return index; }
       const char* getName()          { return name; }
@@ -154,6 +156,7 @@ class cDbFieldDef : public cDbService
       int getSize()                  { return size; }
       FieldFormat getFormat()        { return format; }
       int getType()                  { return type; }
+      const char* getDefault()       { return def ? def : ""; }
       int getFilter()                { return filter; }
       int filterMatch(int f)         { return !f || filter & f; }
       int hasType(int types)         { return types & type; }
@@ -193,7 +196,7 @@ class cDbFieldDef : public cDbService
 
             if (format == ffFloat)
                sprintf(eos(buf), "(%d,%d)", size/10 + size%10, size%10); // 62 -> 8,2
-            else if (format == ffInt || format == ffUInt || format == ffAscii)
+            else if (format == ffInt || format == ffUInt || format == ffBigInt || format == ffUBigInt || format == ffAscii)
                sprintf(eos(buf), "(%d)", size);
 
             if (format == ffUInt || format == ffUBigInt)
@@ -222,8 +225,8 @@ class cDbFieldDef : public cDbService
 
          sprintf(fType, "(%s)", toName((FieldType)type, tmp));
 
-         tell(0, "%-20s %-25s %-17s %-20s (0x%04X) '%s'", name, dbname,
-              toColumnFormat(colFmt), fType, filter, description);
+         tell(0, "%-20s %-25s %-17s %-20s (0x%04X) default '%s' '%s'", name, dbname,
+              toColumnFormat(colFmt), fType, filter, notNull(def, ""), description);
       }
 
    protected:
@@ -237,6 +240,7 @@ class cDbFieldDef : public cDbService
       int index;
       int type;
       int filter;     // bitmask (defaults to 0xFFFF)
+      char* def;
 };
 
 //***************************************************************************
@@ -305,6 +309,8 @@ class cDbTableDef : public cDbService
       }
 
       const char* getName()            { return name; }
+
+      int hasName(const char* n)       { return strcasecmp(name, n) == 0; }
       int fieldCount()                 { return dfields.size(); }
       cDbFieldDef* getField(int id)    { return _dfields[id]; }
 

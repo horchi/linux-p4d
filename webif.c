@@ -516,7 +516,7 @@ int P4d::performWebifRequests()
 
       else if (strcasecmp(command, "initvaluefacts") == 0)
       {
-         updateValueFacts();
+         initValueFacts();
          tableJobs->setValue("RESULT", "success:done");
       }
 

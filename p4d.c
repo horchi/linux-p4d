@@ -28,12 +28,11 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 {
    // web
 
-   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Angezeigte Sensoren", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-//   { "addrsMain",                 ctString,  false, "2 WEB Interface", "Sensoren", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-//   { "addrsMainMobile",           ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   { "addrsList",                 ctString,  false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
 
-   { "chart",                     ctString,  false, "2 WEB Interface", "Charts", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "chartDiv",                  ctInteger, true,  "2 WEB Interface", "Linien-Abstand der Y-Achse", "klein:15 mittel:25 groß:45" },
+   // { "chart",                  ctString,  false, "2 WEB Interface", "Charts", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
    { "chartStart",                ctInteger, false, "2 WEB Interface", "Chart Zeitraum (Tage)", "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)" },
    { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animirte Icons", "" },
 
@@ -46,12 +45,13 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    // p4d
 
    { "interval",                  ctInteger, false, "1 P4 Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
+   { "webPort",                   ctInteger, false, "1 P4 Daemon", "Port des Web Interfaces", "" },
    { "stateCheckInterval",        ctInteger, false, "1 P4 Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
    { "ttyDevice",                 ctString,  false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
    { "loglevel",                  ctInteger, false, "1 P4 Daemon", "Log level", "" },   // #PORT
 
    { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 23:00" },
-   { "maxTimeLeak",               ctBool,    false, "1 P4 Daemon", " bei Abweichung über", "Mindestabweichung für Synchronisation" },
+   { "maxTimeLeak",               ctInteger, false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
 
    { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
    { "aggregateInterval",         ctInteger, false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
@@ -68,10 +68,10 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "mail",                      ctBool,    false, "3 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
    { "mailScript",                ctString,  false, "3 Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  false, "3 Mail", "Status Mail Empfänger", "Komma separierte Empfängerliste" },
-   { "stateMailStates",           ctString,  false, "3 Mail", "  für folgende Status", "Komma separierte List" },
+   { "stateMailTo",               ctString,  false, "3 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailStates",           ctString,  false, "3 Mail", "  für folgende Status", "" },
 
-   { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma separierte Empfängerliste" },
+   { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
 };
 
 /*  schema
@@ -91,6 +91,7 @@ const char* cWebService::events[] =
    "togglemode",
    "storeconfig",
    "gettoken",
+   "iosetup",
    "storeiosetup",
    "chartdata",
    "logmessage",
@@ -102,6 +103,13 @@ const char* cWebService::events[] =
    "menu",
    "pareditrequest",
    "parstore",
+   "alerts",
+   "storealerts",
+   "sendmail",
+   "chartbookmarks",
+   "storechartbookmarks",
+   "inittables",
+   "storeschema",
 
    0
 };
@@ -202,23 +210,80 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
       return fail;
    }
 
-   if (!client && strstr(":all:init:update", title))
-   {
-      for (const auto cl : wsClients)
-         if (cl.second.dataUpdates)
-            webSock->pushOutMessage(p, (lws*)cl.first);
-   }
-   else
-   {
-      webSock->pushOutMessage(p, (lws*)client);
-   }
-
+   webSock->pushOutMessage(p, (lws*)client);
    tell(1, "DEBUG: PushMessage [%s]", p);
    free(p);
 
    webSock->performData(cWebSock::mtData);
 
    return done;
+}
+
+int P4d::pushDataUpdate(const char* title, long client)
+{
+   // push all in the jsonSensorList to the 'interested' clients
+
+   if (client)
+   {
+      json_t* oWsJson = json_array();
+
+      auto cl = wsClients[(void*)client];
+
+      for (auto sj : jsonSensorList)
+      {
+         bool visible {false};
+
+         if (cl.page == "dashboard")
+            visible = onDashboard(sj.type.c_str(), sj.address);
+         else if (cl.page == "list")
+            visible = onList(sj.type.c_str(), sj.address);
+         else if (cl.page == "schema")
+            visible = true;  // to be implemented?
+
+         if (visible)
+            json_array_append(oWsJson, sj.json);      // use _append instead of _append_new to keep the object
+      }
+
+      pushOutMessage(oWsJson, title, client);
+   }
+   else
+   {
+      for (const auto cl : wsClients)
+      {
+         json_t* oWsJson = json_array();
+         size_t count {0};
+
+         for (auto sj : jsonSensorList)
+         {
+            bool visible {false};
+
+            if (cl.second.page == "dashboard")
+               visible = onDashboard(sj.type.c_str(), sj.address);
+            else if (cl.second.page == "list")
+               visible = onList(sj.type.c_str(), sj.address);
+
+            if (visible)
+            {
+               json_array_append(oWsJson, sj.json);      // use _append instead of _append_new to keep the object
+               count++;
+            }
+         }
+
+         if (count)
+            pushOutMessage(oWsJson, title, (long)cl.first);
+         else
+            json_decref(oWsJson);
+      }
+   }
+
+   // cleanup
+
+   for (auto sj : jsonSensorList)
+      json_decref(sj.json);
+
+   jsonSensorList.clear();
+
+   return success;
 }
 
 //***************************************************************************
@@ -297,7 +362,7 @@ int P4d::init()
 
    // init web socket ...
 
-   while (webSock->init(1111, webSocketPingTime) != success)
+   while (webSock->init(webPort, webSocketPingTime) != success)
    {
       tell(0, "Retrying in 2 seconds");
       sleep(2);
@@ -369,7 +434,7 @@ int P4d::initDb()
          }
          else
          {
-            status += table->validateStructure();
+            status += table->validateStructure(2);
          }
 
          status += table->createIndices();
@@ -455,7 +520,7 @@ int P4d::initDb()
 
    status += selectAllValueFacts->prepare();
 
-      // ------------------
+   // ------------------
 
    selectAllGroups = new cDbStatement(tableGroups);
 
@@ -500,6 +565,27 @@ int P4d::initDb()
 
    // ------------------
 
+   selectSchemaConfByState = new cDbStatement(tableSchemaConf);
+
+   selectSchemaConfByState->build("select ");
+   selectSchemaConfByState->bindAllOut();
+   selectSchemaConfByState->build(" from %s where ", tableSchemaConf->TableName());
+   selectSchemaConfByState->bind("STATE", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectSchemaConfByState->prepare();
+
+   // ------------------
+
+   selectAllSchemaConf = new cDbStatement(tableSchemaConf);
+
+   selectAllSchemaConf->build("select ");
+   selectAllSchemaConf->bindAllOut();
+   selectAllSchemaConf->build(" from %s", tableSchemaConf->TableName());
+
+   status += selectAllSchemaConf->prepare();
+
+   // ------------------
+
    selectPendingJobs = new cDbStatement(tableJobs);
 
    selectPendingJobs->build("select ");
@@ -523,6 +609,16 @@ int P4d::initDb()
    selectSensorAlerts->bind("KIND", cDBS::bndIn | cDBS::bndSet, " and ");
 
    status += selectSensorAlerts->prepare();
+
+      // ------------------
+
+   selectAllSensorAlerts = new cDbStatement(tableSensorAlert);
+
+   selectAllSensorAlerts->build("select ");
+   selectAllSensorAlerts->bindAllOut();
+   selectAllSensorAlerts->build(" from %s", tableSensorAlert->TableName());
+
+   status += selectAllSensorAlerts->prepare();
 
    // ------------------
    // select * from samples      (for alertCheck)
@@ -748,6 +844,7 @@ int P4d::exitDb()
    delete selectMenuItemsByParent;    selectMenuItemsByParent = 0;
    delete selectMenuItemsByChild;     selectMenuItemsByChild = 0;
    delete selectSensorAlerts;         selectSensorAlerts = 0;
+   delete selectAllSensorAlerts;      selectAllSensorAlerts = 0;
    delete selectSampleInRange;        selectSampleInRange = 0;
    delete selectAllErrors;            selectAllErrors = 0;
    delete selectPendingErrors;        selectPendingErrors = 0;
@@ -759,7 +856,8 @@ int P4d::exitDb()
    delete selectAllUser;              selectAllUser = 0;
    delete selectSamplesRange;         selectSamplesRange = 0;
    delete selectSamplesRange60;       selectSamplesRange60 = 0;
-
+   delete selectSchemaConfByState;    selectSchemaConfByState = 0;
+   delete selectAllSchemaConf;        selectAllSchemaConf = 0;
    delete connection; connection = 0;
 
    return done;
@@ -788,12 +886,26 @@ int P4d::readConfiguration()
 
    getConfigItem("loglevel", loglevel, 1);
    getConfigItem("interval", interval, 60);
+   getConfigItem("webPort", webPort, 1111);
+
+   getConfigItem("webUrl", webUrl);
+
+   char* port {nullptr};
+   asprintf(&port, "%d", webPort);
+   if (isEmpty(webUrl) || !strstr(webUrl, port))
+   {
+      asprintf(&webUrl, "http://%s:%d", getFirstIp(), webPort);
+      setConfigItem("webUrl", webUrl);
+   }
+   free(port);
+
    getConfigItem("stateCheckInterval", stateCheckInterval, 10);
    getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
    getConfigItem("heatingType", heatingType, "P4");
    getConfigItem("stateAni", stateAni, yes);
 
    getConfigItem("addrsDashboard", addrsDashboard, "");
+   getConfigItem("addrsList", addrsList, "");
 
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript, BIN_PATH "/p4d-mail.sh");
@@ -865,11 +977,6 @@ int P4d::initialize(int truncate)
    }
 
    updateTimeRangeData();
-   serial->close();
-
-   sem->v();
-   return done;
-
 
    if (!connection)
       return fail;
@@ -887,7 +994,7 @@ int P4d::initialize(int truncate)
    }
 
    tell(eloAlways, "Requesting value facts from s 3200");
-   updateValueFacts();
+   initValueFacts();
    tell(eloAlways, "Update html schema configuration");
    updateSchemaConfTable();
    tell(eloAlways, "Requesting menu structure from s 3200");
@@ -1003,7 +1110,7 @@ int P4d::updateSchemaConfTable()
 // Update Value Facts
 //***************************************************************************
 
-int P4d::updateValueFacts()
+int P4d::initValueFacts()
 {
    int status {success};
    Fs::ValueSpec v;
@@ -1040,7 +1147,7 @@ int P4d::updateValueFacts()
       {
          tableValueFacts->setValue("NAME", v.name);
          tableValueFacts->setValue("STATE", "D");
-         tableValueFacts->setValue("UNIT", v.unit);
+         tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
@@ -1053,7 +1160,7 @@ int P4d::updateValueFacts()
       {
          tableValueFacts->clearChanged();
          tableValueFacts->setValue("NAME", v.name);
-         tableValueFacts->setValue("UNIT", v.unit);
+         tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
          tableValueFacts->setValue("RES1", v.unknown);
@@ -1072,6 +1179,32 @@ int P4d::updateValueFacts()
    }
 
    tell(eloAlways, "Read %d value facts, modified %d and added %d", count, modified, added);
+   count = 0;
+
+   tell(0, "Update example value of table valuefacts");
+
+   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
+   {
+      if (!tableValueFacts->hasValue("TYPE", "VA"))
+         continue;
+
+      Value v(tableValueFacts->getIntValue("ADDRESS"));
+
+      if ((status = request->getValue(&v)) != success)
+      {
+         tell(eloAlways, "Getting value 0x%04x failed, error %d", v.address, status);
+         continue;
+      }
+
+      double factor = tableValueFacts->getIntValue("FACTOR");
+      double theValue = v.value / factor;
+      tableValueFacts->setValue("VALUE", theValue);
+      tableValueFacts->update();
+      count++;
+   }
+
+   selectAllValueFacts->freeResult();
+   tell(0, "Updated %d example values", count);
 
    // ---------------------------------
    // add default for digital outputs
@@ -1222,7 +1355,7 @@ int P4d::updateValueFacts()
          {
             tableValueFacts->setValue("NAME", it->first.c_str());
             tableValueFacts->setValue("STATE", "D");
-            tableValueFacts->setValue("UNIT", "°");
+            tableValueFacts->setValue("UNIT", "°C");
             tableValueFacts->setValue("FACTOR", 1);
             tableValueFacts->setValue("TITLE", it->first.c_str());
             tableValueFacts->setValue("MAXSCALE", 300);
@@ -1234,6 +1367,9 @@ int P4d::updateValueFacts()
          {
             if (tableValueFacts->getValue("MAXSCALE")->isNull())
                tableValueFacts->setValue("MAXSCALE", 300);
+
+            if (tableValueFacts->getValue("UNIT")->hasValue("°"))
+               tableValueFacts->setValue("UNIT", "°C");
 
             tableValueFacts->store();
             modified++;
@@ -1854,9 +1990,23 @@ bool P4d::onDashboard(const char* type, int address)
       return true;
 
    char* tupel;
-   asprintf(&tupel, "%s:0x%x", type, address);
+   asprintf(&tupel, "%s:0x%02x", type, address);
 
    bool visible = strstr(addrsDashboard, tupel);
+   free(tupel);
+
+   return visible;
+}
+
+bool P4d::onList(const char* type, int address)
+{
+   if (isEmpty(addrsList))
+      return true;
+
+   char* tupel;
+   asprintf(&tupel, "%s:0x%02x", type, address);
+
+   bool visible = strstr(addrsList, tupel);
    free(tupel);
 
    return visible;
@@ -1884,7 +2034,10 @@ int P4d::update(bool webOnly, long client)
    if (!webOnly)
       connection->startTransaction();
 
-   json_t* oWsJson = json_array();  // json to publich to WS clients
+   for (auto sj : jsonSensorList)
+      json_decref(sj.json);
+
+   jsonSensorList.clear();
 
    if (mqttInterfaceStyle == misSingleTopic)
        oJson = json_object();
@@ -1910,14 +2063,9 @@ int P4d::update(bool webOnly, long client)
             groups[groupid].oJson = json_object();
       }
 
-      json_t* ojData = {nullptr};
-
-      if (onDashboard(type, addr))
-      {
-         ojData = json_object();
-         json_array_append_new(oWsJson, ojData);
-         sensor2Json(ojData, tableValueFacts);
-      }
+      json_t* ojData = json_object();
+      jsonSensorList.push_back({type, addr, ojData});
+      sensor2Json(ojData, tableValueFacts);
 
       if (tableValueFacts->hasValue("TYPE", "VA"))
       {
@@ -1929,18 +2077,13 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         if (ojData)
-         {
-            json_object_set_new(ojData, "value", json_real(v.value / factor));
-            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.value / factor)));
-         }
+         json_object_set_new(ojData, "value", json_real(v.value / factor));
+         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.value / factor)));
 
          if (!webOnly)
          {
             store(now, name, title, unit, type, v.address, v.value, factor, groupid);
-
-            sprintf(num, "%.2f", v.value / factor);
-            strcat(num, strcmp(unit, "°") == 0 ? "°C" : unit);
+            sprintf(num, "%.2f%s", v.value / factor, unit);
             addParameter2Mail(title, num);
          }
       }
@@ -1954,20 +2097,12 @@ int P4d::update(bool webOnly, long client)
             double value = strtod(txt.c_str(), 0);
 
             tell(eloDebug, "Debug: Got '%s' (%.2f) for (%d) from script", txt.c_str(), value, addr);
-
-            if (ojData)
-               json_object_set_new(ojData, "value", json_real(value / factor));
+            json_object_set_new(ojData, "value", json_real(value / factor));
 
             if (!webOnly)
             {
                store(now, name, title, unit, type, addr, value, factor, groupid);
-               sprintf(num, "%.2f", value / factor);
-
-               if (strcmp(unit, "°") == 0)
-                  strcat(num, "°C");
-               else
-                  strcat(num, unit);
-
+               sprintf(num, "%.2f%s", value / factor, unit);
                addParameter2Mail(title, num);
             }
          }
@@ -1983,11 +2118,8 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         if (ojData)
-         {
-            json_object_set_new(ojData, "value", json_integer(v.state));
-            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
-         }
+         json_object_set_new(ojData, "value", json_integer(v.state));
+         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
 
          if (!webOnly)
          {
@@ -2007,11 +2139,8 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         if (ojData)
-         {
-            json_object_set_new(ojData, "value", json_integer(v.state));
-            json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
-         }
+         json_object_set_new(ojData, "value", json_integer(v.state));
+         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
 
          if (!webOnly)
          {
@@ -2031,8 +2160,7 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         if (ojData)
-            json_object_set_new(ojData, "value", json_integer(v.state));
+         json_object_set_new(ojData, "value", json_integer(v.state));
 
          if (!webOnly)
          {
@@ -2046,19 +2174,12 @@ int P4d::update(bool webOnly, long client)
       {
          double value = w1.valueOf(name);
 
-         if (ojData)
-            json_object_set_new(ojData, "value", json_real(value));
+         json_object_set_new(ojData, "value", json_real(value));
 
          if (!webOnly)
          {
             store(now, name, title, unit, type, addr, value, factor, groupid);
-            sprintf(num, "%.2f", value / factor);
-
-            if (strcmp(unit, "°") == 0)
-               strcat(num, "°C");
-            else
-               strcat(num, unit);
-
+            sprintf(num, "%.2f%s", value / factor, unit);
             addParameter2Mail(title, num);
          }
       }
@@ -2069,11 +2190,8 @@ int P4d::update(bool webOnly, long client)
          {
             case udState:
             {
-               if (ojData)
-               {
-                  json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
-                  json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
-               }
+               json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
+               json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
 
                if (!webOnly)
                {
@@ -2085,8 +2203,7 @@ int P4d::update(bool webOnly, long client)
             }
             case udMode:
             {
-               if (ojData)
-                  json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
+               json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
 
                if (!webOnly)
                {
@@ -2103,9 +2220,7 @@ int P4d::update(bool webOnly, long client)
 
                localtime_r(&currentState.time, &tim);
                strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
-
-               if (ojData)
-                  json_object_set_new(ojData, "text", json_string(date));
+               json_object_set_new(ojData, "text", json_string(date));
 
                if (!webOnly)
                {
@@ -2131,7 +2246,7 @@ int P4d::update(bool webOnly, long client)
 
    // send result to all connected WEBIF clients
 
-   pushOutMessage(oWsJson, webOnly ? "init" : "all", client);
+   pushDataUpdate(webOnly ? "init" : "all", client);
 
    // MQTT
 
@@ -2587,6 +2702,122 @@ int P4d::updateErrors()
    return success;
 }
 
+int P4d::updateParameter(cDbTable* tableMenu)
+{
+   int type = tableMenu->getIntValue("TYPE");
+   int paddr = tableMenu->getIntValue("ADDRESS");
+
+   if (type == mstReset || type == mstGroup1 || type == mstGroup2)
+      return done;
+
+   sem->p();
+
+   if (type == mstFirmware)
+   {
+      Fs::Status s;
+
+      if (request->getStatus(&s) == success)
+      {
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", s.version);
+            tableMenu->setValue("UNIT", "");
+            tableMenu->update();
+         }
+      }
+   }
+
+   else if (type == mstDigOut || type == mstDigIn || type == mstAnlOut)
+   {
+      int status;
+      Fs::IoValue v(paddr);
+
+      if (type == mstDigOut)
+         status = request->getDigitalOut(&v);
+      else if (type == mstDigIn)
+         status = request->getDigitalIn(&v);
+      else
+         status = request->getAnalogOut(&v);
+
+      if (status == success)
+      {
+         char* buf = 0;
+
+         if (type == mstAnlOut)
+         {
+            if (v.mode == 0xff)
+               asprintf(&buf, "%d (A)", v.state);
+            else
+               asprintf(&buf, "%d (%d)", v.state, v.mode);
+         }
+         else
+            asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
+
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", buf);
+            tableMenu->setValue("UNIT", "");
+            tableMenu->update();
+         }
+
+         free(buf);
+      }
+   }
+
+   else if (type == mstMesswert || type == mstMesswert1)
+   {
+      int status;
+      Fs::Value v(paddr);
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("TYPE", "VA");
+      tableValueFacts->setValue("ADDRESS", paddr);
+
+      if (tableValueFacts->find())
+      {
+         double factor = tableValueFacts->getIntValue("FACTOR");
+         const char* unit = tableValueFacts->getStrValue("UNIT");
+
+         status = request->getValue(&v);
+
+         if (status == success)
+         {
+            char* buf = 0;
+            asprintf(&buf, "%.2f", v.value / factor);
+
+            if (tableMenu->find())
+            {
+               tableMenu->setValue("VALUE", buf);
+               tableMenu->setValue("UNIT", strcmp(unit, "°") == 0 ? "°C" : unit);
+               tableMenu->update();
+            }
+
+            free(buf);
+         }
+      }
+   }
+   else if (paddr != 0 && paddr != 9997 && paddr != 9998 && paddr != 9999)
+   {
+      Fs::ConfigParameter p(paddr);
+
+      if (request->getParameter(&p) == success)
+      {
+         cRetBuf value = ConfigParameter::toNice(p.value, type);
+
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", value);
+            tableMenu->setValue("UNIT", strcmp(p.unit, "°") == 0 ? "°C" : p.unit);
+            tableMenu->update();
+         }
+      }
+   }
+
+   sem->v();
+
+   return done;
+}
+
 //***************************************************************************
 // Send Mail
 //***************************************************************************
@@ -2635,7 +2866,6 @@ int P4d::sendAlertMail(const char* to)
 
 int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
 {
-   char* webUrl = 0;
    char* sensor = 0;
 
    std::string subject = alertRow->getStrValue("MSUBJECT");
@@ -2666,8 +2896,6 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
    if (!body.length())
       body = "- undefined -";
 
-   getConfigItem("webUrl", webUrl, "http://");
-
    // prepare
 
    asprintf(&sensor, "%s/0x%x", type, addr);
@@ -2676,7 +2904,7 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
 
    subject = strReplace("%sensorid%", sensor, subject);
    subject = strReplace("%value%", value, subject);
-   subject = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, subject);
+   subject = strReplace("%unit%", unit, subject);
    subject = strReplace("%title%", title, subject);
    subject = strReplace("%min%", (long)min, subject);
    subject = strReplace("%max%", (long)max, subject);
@@ -2690,7 +2918,7 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
 
    body = strReplace("%sensorid%", sensor, body);
    body = strReplace("%value%", value, body);
-   body = strReplace("%unit%", strcmp(unit, "°") == 0 ? "°C" : unit, body);
+   body = strReplace("%unit%", unit, body);
    body = strReplace("%title%", title, body);
    body = strReplace("%min%", (long)min, body);
    body = strReplace("%max%", (long)max, body);
@@ -2716,7 +2944,6 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
 
 int P4d::sendErrorMail()
 {
-   char* webUrl = 0;
    std::string body = "";
    const char* subject = "Heizung: STÖRUNG";
    char* html = 0;
@@ -2725,10 +2952,6 @@ int P4d::sendErrorMail()
 
    if (isEmpty(mailScript) || isEmpty(errorMailTo))
       return done;
-
-   // get web url ..
-
-   getConfigItem("webUrl", webUrl, "http://to-be-configured");
 
    // build mail ..
 
@@ -2795,17 +3018,12 @@ int P4d::sendErrorMail()
 
 int P4d::sendStateMail()
 {
-   char* webUrl = 0;
    std::string subject = "Heizung - Status: " + std::string(currentState.stateinfo);
 
    // check
 
    if (!isMailState() || isEmpty(mailScript) || !mailBody.length() || isEmpty(stateMailTo))
       return done;
-
-   // get web url ..
-
-   getConfigItem("webUrl", webUrl, "http://to-be-configured");
 
    // HTML mail
 

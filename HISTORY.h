@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.4.alpha.2"
+#define _VERSION     "0.4.alpha.13"
 #define VERSION_DATE "05.09.2020"
 
 #ifdef GIT_REV
@@ -18,7 +18,7 @@
  * ------------------------------------
 
 2020-09-05:  version 0.4.alpha.1
-   - change: Impelmenting alpha version of WS/JS version
+   - change: Implementing alpha version of WS/JS version
 
 2020-08-25:  version 0.3.39
    - change: Changed the value display default for dashbord to text

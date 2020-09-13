@@ -1,6 +1,6 @@
 # Linux - P4 Daemon (p4d)
 
-This daemon is fetching data from the S 3200 and store it in a MySQL database. The data that should be fetched can be configured with a WEBIF or daemon. The collected data of the S 3200 will be displayed with the WEBIF, too.
+This daemon is fetching data from the S 3200 and store it in a MySQL database.
 
 Written by: *Jörg Wendel (linux at jwendel dot de)*
 
@@ -11,9 +11,10 @@ This code is distributed under the terms and conditions of the GNU GENERAL PUBLI
 
 ## Disclaimer
 USE AT YOUR OWN RISK. No warranty.
+This software is a private contribution and not related Fröling. It may not work with future updates of the S3200 firmware and can also cause unintended behavior. Use at your own risk!
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der
-GPLv2 veröffentlicht.
+Die Software wurde für den Eigengebrauch erstellt. Sie wird kostenlos unter der GPLv2 veröffentlicht.
 
 Es ist kein fertiges Produkt, die Software entstand als Studie was hinsichtlich der Kommunikation
 mit der s3200 Steuerung möglich ist und kann Bastlern als Basis und Anregung für eigene Projekte dienen.
@@ -23,7 +24,7 @@ muss das Risiko selbst abschätzen können und wissen was er tut, insbesondere a
 Hinblick auf die Einstellungen der Heizungsparameter und den damit verbundenen Risiken
 hinsichtlich Fehlfunktion, Störung, Brand, etc. Falsche Einstellung können unter anderem
 durch Bedienfehler und Fehler in dieser Software ausgelöst werden!
-Die Vorgaben, Vorschriften und AGB des Herstellers der Heizung bleiben Maßgebend!
+Die Vorgaben, Vorschriften und AGB des Herstellers der Heizung bleiben maßgebend!
 Ich kann  nicht ausschließen das es zu Fehlfunktionen oder unerwartetem Verhalten,
 auch hinsichtlich der zur Heizung übertragenen Daten und damit verbundenen, mehr oder
 weniger kritischen Fehlfunktionen derselben kommen kann!
@@ -96,15 +97,6 @@ if the database is running remote (on a other host or you like to habe remote ac
  flush privileges;
 ```
 
-## Installation of the Apache Webserver:
-Run the following commands to install the Apache webserver and required packages
-```
-apt update
-apt install apache2 libapache2-mod-php php-mysql php-ds php-gd php-mbstring
-```
-
-Check from a remote PC if connection works a webpage with the content `It Works!` will be displayed
-
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
@@ -130,8 +122,6 @@ make install INIT_SYSTEM=sysV
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db connection papameters, ttyDeviceSvc device (change device if required),
   check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
-
-- The db connection parameters for the WEBIF are located in config.php
 
 ## Time to first start of p4d
 ```
@@ -164,31 +154,24 @@ Means that all samples older than 365 days will be aggregated to one sample per 
 If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :o ?).
 Maybe i implement it later ;)
 
-## Install the WEB interface:
-```
- cd /usr/src/linux-p4d
- make install-web
- make install-pcharts
- make install-apache-conf
- systemctl restart apache2.service
-```
+## WEB interface:
 
 The default username and password for the login is
 User: *p4*
 Pass: *p4-3200*
 
-### PHP Settings:
-Modify the php.ini (/etc/php/*.*/apache2/php.ini) and append (or edit) this line ```set max_input_vars = 5000```
-
 ### Fist steps to enable data logging:
 
 1. Log in to the web interface
-2. Goto Setup -> Aufzeichnung -> Init
+2. Goto Setup
+  - click 'Init Messwerte'
+3. Goto Setup -> Aufzeichnung
   - Select the values you like to record and store your selection (click 'Speichern')
-3. Menu -> Init
-4. Menu -> Aktualisieren
+4. Goto Setup
+  - click 'Init Service Menü'
 
-After this you can set up the schema configuration. The schema configuration seems not to be working with the firefox!
+After this you can set up the schema configuration. The schema configuration is done by drag&drop and isn't working on mobile devices!
+Also deleting of chart bookmarks isn't supported on mobile devices.
 
 ### Setup and configure sending mails:
 The next steps are an example to setup the sending of mails. If another tool is preferred it can be used as well. The config is based on GMX. If you have another provider please search in the Internet for the required config.
@@ -316,5 +299,5 @@ chmod +x install.sh
 
 ## Problems - anything is not working
  - check the syslog about errors of the p4d
- - for the WEBIF check also the error.log of the Apache web server
+ - for the WEBIF check also the browser console for errors
 If you post any problem at at git-hub or the forum please post the errors also!

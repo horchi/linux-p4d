@@ -117,13 +117,21 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
       case cDBS::ffInt:
       case cDBS::ffUInt:
       {
-         int v = getIntFromJson(obj, jname, na);
-         if (v != na || !value->isEmpty())
+         int v = getIntFromJson(obj, jname, 0);
+         const char* s = getStringFromJson(obj, jname, "_not_set_");
+
+         if (s && strcmp(s, "_not_set_") == 0)
+            break;
+
+         if (s && strcmp(s, "null") == 0)
+            value->setNull();
+         else
             value->setValue(v);
+
          break;
       }
-// #TODO to be implemented
-//       case cDBS::ffFloat:
+
+//    case cDBS::ffFloat:    #TODO to be implemented
 //       {
 //          double v = getFloatFromJson(obj, jname, na);
 //          if (v != na) value->setValue(v);
@@ -150,6 +158,16 @@ const char* getStringFromJson(json_t* obj, const char* name, const char* def)
       return def;
 
    return json_string_value(o);
+}
+
+int getBoolFromJson(json_t* obj, const char* name, bool def)
+{
+   json_t* o = json_object_get(obj, name);
+
+   if (!o)
+      return def;
+
+   return json_boolean_value(o);
 }
 
 int getIntFromJson(json_t* obj, const char* name, int def)

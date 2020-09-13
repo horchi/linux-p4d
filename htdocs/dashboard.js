@@ -183,7 +183,6 @@ function updateDashboard(sensors)
                $("#peak" + sensor.type + sensor.address).text(sensor.peak.toFixed(2) + " " + sensor.unit);
                $("#value" + sensor.type + sensor.address).text(sensor.value.toFixed(2) + " " + sensor.unit);
                prepareChartRequest(jsonRequest, sensor.type + ":0x" + sensor.address.toString(16) , 0, 1, "chartwidget");
-               jsonRequest["widget"] = 1;
                socket.send({ "event" : "chartdata", "object" : jsonRequest });
             }
          }

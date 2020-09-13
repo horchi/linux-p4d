@@ -9,9 +9,7 @@
  */
 
 var WebSocketClient = window.WebSocketClient
-// import WebSocketClient from "./websocket.js"
-
-const osd2webUrl = "ws://192.168.200.145:4444";
+//  import WebSocketClient from "./websocket.js"
 
 var isActive = null;
 var socket = null;
@@ -25,6 +23,7 @@ var theChart = null;
 var theChartRange = 2;
 var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-theChartRange);
 var chartDialogSensor = "";
+var chartBookmarks = {};
 
 window.documentReady = function(doc)
 {
@@ -33,7 +32,7 @@ window.documentReady = function(doc)
    documentName = doc;
    console.log("documentReady: " + documentName);
 
-   var url = "ws://" + location.hostname + ":1111";
+   var url = "ws://" + location.hostname + ":" + location.port;
    var protocol = "p4d";
 
    connectWebSocket(url, protocol);
@@ -75,6 +74,10 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "errors";
    else if (documentName == "menu")
       jsonRequest["name"] = "menu";
+   else if (documentName == "alerts")
+      jsonRequest["name"] = "alerts";
+   else if (documentName == "schema")
+      jsonRequest["name"] = "schema";
 
    jsonArray[0] = jsonRequest;
 
@@ -83,6 +86,7 @@ function onSocketConnect(protocol)
                     { "type" : "active",
                       "user" : user,
                       "token" : token,
+                      "page"  : documentName,
                       "requests" : jsonArray }
                   });
    }
@@ -109,6 +113,34 @@ function connectWebSocket(useUrl, protocol)
       return !($el.innerHTML = "Your Browser will not support Websockets!");
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+var infoDialog = null;
+
+async function showInfoDialog(message, titleMsg, onCloseCallback)
+{
+   while (infoDialog)
+      await sleep(100);
+
+   var cls = ""
+   if (!titleMsg || titleMsg == "") cls = "no-titlebar";
+
+   $('<div style="margin-top:13px;"></div>').html(message).dialog({
+      dialogClass: cls,
+      width: "60%",
+      height: 75,
+      title: titleMsg,
+		modal: false,
+      resizable: false,
+		closeOnEscape: true,
+      hide: "fade",
+      open:  function() { infoDialog = $(this); setTimeout(function() { infoDialog.dialog('close'); infoDialog = null }, 2000); },
+      close: function() { $(this).dialog('destroy').remove(); }
+   });
+}
+
 function dispatchMessage(message)
 {
    var jMessage = JSON.parse(message);
@@ -122,22 +154,20 @@ function dispatchMessage(message)
    var rootDialog = document.querySelector('dialog');
    var rootErrors = document.getElementById("errorContainer");
    var rootMenu = document.getElementById("menuContainer");
-
+   var rootAlerts = document.getElementById("alertContainer");
+   var rootSchema = document.getElementById("schemaContainer");
    var d = new Date();
 
    console.log("got event: " + event);
 
    if (event == "result") {
       if (jMessage.object.status == 0)
-         dialog.alert({ title: "",
+         showInfoDialog(jMessage.object.message);
+      else
+         dialog.alert({ title: "Information (" + jMessage.object.status + ")",
                         message: jMessage.object.message,
 	                     cancel: "Schließen"
 	                   });
-      else
-         dialog.alert({ title: "Information (" + jMessage.object.status + ")",
-                          message: jMessage.object.message,
-	                       cancel: "Schließen"
-	                     });
    }
    else if ((event == "update" || event == "all") && rootDashboard) {
       lastUpdate = d.toLocaleTimeString();
@@ -156,6 +186,17 @@ function dispatchMessage(message)
       lastUpdate = d.toLocaleTimeString();
       initList(jMessage.object, rootList);
       updateList(jMessage.object);
+   }
+   else if ((event == "init" || event == "update" || event == "all") && rootSchema) {
+      lastUpdate = d.toLocaleTimeString();
+      updateSchema(jMessage.object);
+   }
+   else if (event == "schema" && rootSchema) {
+      initSchema(jMessage.object, rootSchema);
+   }
+   else if (event == "chartbookmarks") {
+      chartBookmarks = jMessage.object;
+      updateChartBookmarks();
    }
    else if (event == "config") {
       config = jMessage.object;
@@ -206,6 +247,9 @@ function dispatchMessage(message)
    else if (event == "menu" && rootMenu) {
       initMenu(jMessage.object, rootMenu);
    }
+   else if (event == "alerts" && rootAlerts) {
+      initAlerts(jMessage.object, rootAlerts);
+   }
    else if (event == "pareditrequest" && rootMenu) {
       editMenuParameter(jMessage.object, rootMenu);
    }
@@ -232,7 +276,8 @@ function prepareMenu(haveToken)
    html += "<a href=\"index.html\"><button class=\"rounded-border button1\">Dashboard</button></a>";
    html += "<a href=\"list.html\"><button class=\"rounded-border button1\">Liste</button></a>";
    html += "<a href=\"chart.html\"><button class=\"rounded-border button1\">Charts</button></a>";
-   html += "<a href=\"menu.html\"><button class=\"rounded-border button1\">Menü</button></a>";
+   html += "<a href=\"schema.html\"><button class=\"rounded-border button1\">Funktionsschema</button></a>";
+   html += "<a href=\"menu.html\"><button class=\"rounded-border button1\">Service Menü</button></a>";
    html += "<a href=\"errors.html\"><button class=\"rounded-border button1\">Fehler</button></a>";
 
    html += "<div class=\"menuLogin\">";
@@ -249,6 +294,7 @@ function prepareMenu(haveToken)
          html += "<div>";
          html += "  <a href=\"maincfg.html\"><button class=\"rounded-border button2\">Allg. Konfiguration</button></a>";
          html += "  <a href=\"iosetup.html\"><button class=\"rounded-border button2\">Aufzeichnung</button></a>";
+         html += "  <a href=\"alerts.html\"><button class=\"rounded-border button2\">Sensor Alerts</button></a>";
          html += "  <a href=\"groups.html\"><button class=\"rounded-border button2\">Baugruppen</button></a>";
          html += "  <a href=\"usercfg.html\"><button class=\"rounded-border button2\">User</button></a>";
          html += "  <a href=\"syslog.html\"><button class=\"rounded-border button2\">Syslog</button></a>";
@@ -256,22 +302,39 @@ function prepareMenu(haveToken)
       }
    }
 
-   // storr button below menu #TODO user dialog instead
+   // buttons below menu
 
    if ($("#navMenu").data("iosetup") != undefined) {
       html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border button2\" onclick=\"storeIoSetup()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeIoSetup()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">[alle]</button>";
       html += "</div>";
    }
-   if ($("#navMenu").data("groups") != undefined) {
+   else if ($("#navMenu").data("alerts") != undefined) {
       html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border button2\" onclick=\"storeGroups()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeAlerts()\">Speichern</button>";
+      html += "</div>";
+   }
+   else if ($("#navMenu").data("schema") != undefined) {
+      if (localStorage.getItem('p4dRights') & 0x08 || localStorage.getItem('p4dRights') & 0x10) {
+         html += "<div class=\"confirmDiv\">";
+         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
+         html += "</div>";
+      }
+   }
+   else if ($("#navMenu").data("groups") != undefined) {
+      html += "<div class=\"confirmDiv\">";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeGroups()\">Speichern</button>";
       html += "</div>";
    }
    else if ($("#navMenu").data("maincfg") != undefined) {
       html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border button2\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "  <button id=\"buttonResPeaks\" class=\"rounded-border button2\" onclick=\"resetPeaks()\">Reset Peaks</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('menu')\">Init Service Menü</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Messwerte</button>";
       html += "</div>";
    }
    else if ($("#navMenu").data("login") != undefined)
@@ -314,39 +377,9 @@ function initErrors(errors, root)
    }
 }
 
-window.chartSelect = function(action)
+window.sendMail = function(subject, body)
 {
-   // console.log("chartSelect clicked for " + action);
-
-   var sensors = "";
-   var root = document.getElementById("chartSelector");
-   var elements = root.querySelectorAll("[id^='checkChartSel_']");
-
-   for (var i = 0; i < elements.length; i++) {
-      if (elements[i].checked) {
-         var id = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
-         sensors += id + ",";
-       }
-   }
-
-   theChartRange = parseInt($("#chartRange").val());
-
-   var now = new Date();
-
-   if (action == "next")
-      theChartStart.setDate(theChartStart.getDate()+1);
-   else if (action == "prev")
-      theChartStart.setDate(theChartStart.getDate()-1);
-   else if (action == "now")
-      theChartStart.setDate(now.getDate()-theChartRange);
-   else if (action == "range")
-      theChartStart.setDate(now.getDate()-theChartRange);
-
-   // console.log("sensors:  '" + sensors + "'");
-
-   var jsonRequest = {};
-   prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
-   socket.send({ "event" : "chartdata", "object" : jsonRequest });
+   socket.send({ "event" : "sendmail", "object" : { "subject" : subject, "body" : body } });
 }
 
 window.toggleMode = function(address, type)
@@ -423,121 +456,6 @@ function prepareChartRequest(jRequest, sensors, start, range, id)
       jRequest["range"] = range;
       jRequest["sensors"] = sensors;
    }
-}
-
-function drawCharts(dataObject, root)
-{
-   if (theChart != null) {
-      theChart.destroy();
-      theChart = null;
-   }
-
-   var data = {
-      type: "line",
-      data: {
-         labels: [],
-         datasets: []
-      },
-      options: {
-         responsive: false,
-         tooltips: {
-            mode: "index",
-            intersect: false,
-         },
-         hover: {
-            mode: "nearest",
-            intersect: true
-         },
-         legend: {
-            display: true,
-            labels: {
-               fontColor: "white"
-            }
-         },
-         scales: {
-            xAxes: [{
-               type: "time",
-               time: { displayFormats: {
-                  millisecond: 'MMM DD - HH:MM',
-                  second: 'MMM DD - HH:MM',
-                  minute: 'HH:MM',
-                  hour: 'MMM DD - HH:MM',
-                  day: 'HH:MM',
-                  week: 'MMM DD - HH:MM',
-                  month: 'MMM DD - HH:MM',
-                  quarter: 'MMM DD - HH:MM',
-                  year: 'MMM DD - HH:MM' } },
-               distribution: "linear",
-               display: true,
-               ticks: {
-                  maxTicksLimit: 25,
-                  padding: 10,
-                  fontColor: "white"
-               },
-               gridLines: {
-                  color: "gray",
-                  borderDash: [5,5]
-               },
-               scaleLabel: {
-                  display: true,
-                  fontColor: "white",
-                  labelString: "Zeit"
-               }
-            }],
-            yAxes: [{
-               display: true,
-               ticks: {
-                  padding: 10,
-                  maxTicksLimit: 20,
-                  fontColor: "white"
-               },
-               gridLines: {
-                  color: "gray",
-                  zeroLineColor: 'gray',
-                  borderDash: [5,5]
-               },
-               scaleLabel: {
-                  display: true,
-                  fontColor: "white",
-                  labelString: "Temperatur [°C]"
-               }
-            }]
-         }
-      }
-   };
-
-   // console.log("dataObject: " + JSON.stringify(dataObject, undefined, 4));
-
-   var colors = ['yellow','white','red','lightblue','lightgreen','purple','blue'];
-
-   for (var i = 0; i < dataObject.rows.length; i++)
-   {
-      var dataset = {};
-
-      dataset["data"] = dataObject.rows[i].data;
-      dataset["backgroundColor"] = colors[i];
-      dataset["borderColor"] = colors[i];
-      dataset["label"] = dataObject.rows[i].title;
-      dataset["borderWidth"] = 1.2;
-      dataset["fill"] = false;
-      dataset["pointRadius"] = 0;
-
-      data.data.datasets.push(dataset);
-   }
-
-   var end = new Date();
-   end.setDate(theChartStart.getDate()+theChartRange);
-
-   $("#chartTitle").html(theChartStart.toLocaleString('de-DE') + "  -  " + end.toLocaleString('de-DE'));
-   $("#chartSelector").html("");
-
-   for (var i = 0; i < dataObject.sensors.length; i++)
-   {
-      var html = "<div class=\"chartSel\"><input id=\"checkChartSel_" + dataObject.sensors[i].id + "\"type=\"checkbox\" onclick=\"chartSelect('choice')\" " + (dataObject.sensors[i].active ? "checked" : "") + "/>" + dataObject.sensors[i].title + "</div>";
-      $("#chartSelector").append(html);
-   }
-
-   theChart = new Chart(root.getContext("2d"), data);
 }
 
 function drawChartWidget(dataObject, root)

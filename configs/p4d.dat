@@ -67,6 +67,8 @@ Table valuefacts
    ORDER                ""  ord                  Int          4 Data,
    RES1                 ""  res1                 Int          4 Data,
    RIGHTS   "needed control rights" rights       Int          0 Data,
+
+   VALUE                ""  value                Float      122 Data,
 }
 
 
@@ -129,21 +131,17 @@ Table schemaconf
 {
    ADDRESS              ""  address              UInt         4 Primary,
    TYPE                 ""  type                 Ascii        2 Primary,
+
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
+
    STATE                ""  state                Ascii        1 Data,
-   KIND                 ""  kind                 Ascii       20 Data,
-   COLOR                ""  color                Ascii       10 Data,
    SHOWUNIT             ""  showunit             Int          1 Data,
    SHOWTEXT             ""  showtext             Int          1 Data,
-   TEXT1                ""  text1                Ascii       10 Data,
-   TEXT2                ""  text2                Ascii       10 Data,
-   BG                   ""  bg                   Int          2 Data,
-   FONTSIZE             ""  fontsize             Int          2 Data,
-   ALEFT                ""  aleft                Int          2 Data,
-   XPOS                 ""  xpos                 Int         11 Data,
-   YPOS                 ""  ypos                 Int         11 Data,
-   LINK                 ""  link                 Ascii      100 Data,
+   SHOWTITLE            ""  showtitle            Int          1 Data,
+   USRTEXT              ""  usrtext              Ascii      100 Data,
+   FUNCTION             ""  function             Text      2000 Data,
+   PROPERTIES           ""  properties           Text      1000 Data,
 }
 
 // ----------------------------------------------------------------
@@ -179,7 +177,7 @@ Table config
    NAME                 ""  name                 Ascii       40 Primary,
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
-   VALUE                ""  value                Ascii      100 Data,
+   VALUE                ""  value                Text      1500 Data,
 }
 
 // ----------------------------------------------------------------

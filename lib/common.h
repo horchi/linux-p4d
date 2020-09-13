@@ -79,6 +79,14 @@ void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* form
 
 char* srealloc(void* ptr, size_t size);
 
+enum Case
+{
+   cUpper,
+   cLower
+};
+
+const char* toCase(Case cs, char* str);
+
 //***************************************************************************
 // Zip
 //***************************************************************************
@@ -288,11 +296,14 @@ std::string l2pTime(time_t t, const char* fmt = "%d.%m.%Y %T");
 char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
 // #to-be-implemented: splitToInts(const char* string, char c, int& i1, int& i2);
+std::vector<std::string> split(const std::string& str, char delim);
 int fileExists(const char* path);
 const char* suffixOf(const char* path);
 int createLink(const char* link, const char* dest, int force);
 int isLink(const char* path);
 int isEmpty(const char* str);
+const char* notNull(const char* str, const char* def = "<null>");
+int isZero(const char* str);
 int removeFile(const char* filename);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);

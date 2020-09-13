@@ -28,64 +28,71 @@ int P4d::dispatchClientRequest()
 
    cMyMutexLock lock(&messagesInMutex);
 
-   if (messagesIn.empty())
-      return done;
-
-   // #TODO loop here while (!messagesIn.empty()) ?
-
-   // dispatch message
-   //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
-
-   tell(1, "DEBUG: Got '%s'", messagesIn.front().c_str());
-   oData = json_loads(messagesIn.front().c_str(), 0, &error);
-
-   // get the request
-
-   Event event = cWebService::toEvent(getStringFromJson(oData, "event", "<null>"));
-   long client = getLongFromJson(oData, "client");
-   oObject = json_object_get(oData, "object");
-   // int addr = getIntFromJson(oObject, "address");
-   // const char* type = getStringFromJson(oObject, "type");
-
-   // rights ...
-
-   if (checkRights(client, event, oObject))
+   while (!messagesIn.empty())
    {
-      // dispatch client request
+      // dispatch message like
+      //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
 
-      tell(2, "Dispatch event %d '%s'", event, toName(event));
+      tell(1, "DEBUG: Got '%s'", messagesIn.front().c_str());
+      oData = json_loads(messagesIn.front().c_str(), 0, &error);
 
-      switch (event)
+      // get the request
+
+      Event event = cWebService::toEvent(getStringFromJson(oData, "event", "<null>"));
+      long client = getLongFromJson(oData, "client");
+      oObject = json_object_get(oData, "object");
+      // int addr = getIntFromJson(oObject, "address");
+      // const char* type = getStringFromJson(oObject, "type");
+
+      // rights ...
+
+      if (checkRights(client, event, oObject))
       {
-         case evLogin:          status = performLogin(oObject);                  break;
-         case evLogout:         status = performLogout(oObject);                 break;
-         case evGetToken:       status = performTokenRequest(oObject, client);   break;
-         // case evToggleIo:      status = toggleIo(addr, type);                   break;
-         // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
-         // case evToggleMode:    status = toggleOutputMode(addr);                 break;
-         case evStoreConfig:    status = storeConfig(oObject, client);           break;
-         case evStoreIoSetup:   status = storeIoSetup(oObject, client);          break;
-         case evGroupConfig:    status = storeGroups(oObject, client);           break;
-         case evChartData:      status = performChartData(oObject, client);      break;
-         case evUserConfig:     status = performUserConfig(oObject, client);     break;
-         case evChangePasswd:   status = performPasswChange(oObject, client);    break;
-         case evResetPeaks:     status = resetPeaks(oObject, client);            break;
-         case evMenu:           status = performMenu(oObject, client);           break;
-         case evParEditRequest: status = performParEditRequest(oObject, client); break;
-         case evParStore:       status = performParStore(oObject, client);       break;
-         default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
-                       toName(event), messagesIn.front().c_str());
-      }
-   }
-   else
-   {
-      tell(0, "Insufficient right to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
-           wsClients[(void*)client].user.c_str());
-      replyResult(fail, "Insufficient right", client);
-   }
+         // dispatch client request
 
-   json_decref(oData);      // free the json object
-   messagesIn.pop();
+         tell(2, "Dispatch event %d '%s'", event, toName(event));
+
+         switch (event)
+         {
+            case evLogin:          status = performLogin(oObject);                  break;
+            case evLogout:         status = performLogout(oObject);                 break;
+            case evGetToken:       status = performTokenRequest(oObject, client);   break;
+            // case evToggleIo:      status = toggleIo(addr, type);                   break;
+            // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
+            // case evToggleMode:    status = toggleOutputMode(addr);                 break;
+            case evInitTables:     status = performInitTables(oObject, client);     break;
+            case evStoreConfig:    status = storeConfig(oObject, client);           break;
+            case evIoSetup:        status = performIoSettings(oObject, client);     break;
+            case evStoreIoSetup:   status = storeIoSetup(oObject, client);          break;
+            case evGroupConfig:    status = storeGroups(oObject, client);           break;
+            case evChartData:      status = performChartData(oObject, client);      break;
+            case evUserConfig:     status = performUserConfig(oObject, client);     break;
+            case evChangePasswd:   status = performPasswChange(oObject, client);    break;
+            case evResetPeaks:     status = resetPeaks(oObject, client);            break;
+            case evMenu:           status = performMenu(oObject, client);           break;
+            case evAlerts:         status = performAlerts(oObject, client);         break;
+            case evSendMail:       status = performSendMail(oObject, client);       break;
+            case evStoreAlerts:    status = storeAlerts(oObject, client);           break;
+            case evStoreSchema:    status = storeSchema(oObject, client);           break;
+            case evParEditRequest: status = performParEditRequest(oObject, client); break;
+            case evParStore:       status = performParStore(oObject, client);       break;
+            case evChartbookmarks: status = performChartbookmarks(client);             break;
+            case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
+
+            default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
+                          toName(event), messagesIn.front().c_str());
+         }
+      }
+      else
+      {
+         tell(0, "Insufficient rights to '%s' for user '%s'",
+              getStringFromJson(oData, "event", "<null>"),
+              wsClients[(void*)client].user.c_str());
+      }
+
+      json_decref(oData);      // free the json object
+      messagesIn.pop();
+   }
 
    return status;
 }
@@ -96,21 +103,29 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
 
    switch (event)
    {
-      case evLogin:          return true;
-      case evLogout:         return true;
-      case evGetToken:       return true;
-      case evToggleIoNext:   return rights & urControl;
-      case evToggleMode:     return rights & urFullControl;
-      case evStoreConfig:    return rights & urSettings;
-      case evStoreIoSetup:   return rights & urSettings;
-      case evGroupConfig:    return rights & urSettings;
-      case evChartData:      return rights & urView;
-      case evUserConfig:     return rights & urAdmin;
-      case evChangePasswd:   return true;   // check will done in performPasswChange()
-      case evResetPeaks:     return rights & urFullControl;
-      case evMenu:           return rights & urView;
-      case evParEditRequest: return rights & urControl;
-      case evParStore:       return rights & urControl;
+      case evLogin:               return true;
+      case evLogout:              return true;
+      case evGetToken:            return true;
+      // case evToggleIoNext:        return rights & urControl;
+      // case evToggleMode:          return rights & urFullControl;
+      case evStoreConfig:         return rights & urSettings;
+      case evIoSetup:             return rights & urView;
+      case evStoreIoSetup:        return rights & urSettings;
+      case evGroupConfig:         return rights & urSettings;
+      case evChartData:           return rights & urView;
+      case evUserConfig:          return rights & urAdmin;
+      case evChangePasswd:        return true;   // check will done in performPasswChange()
+      case evResetPeaks:          return rights & urFullControl;
+      case evMenu:                return rights & urView;
+      case evAlerts:              return rights & urSettings;
+      case evStoreAlerts:         return rights & urSettings;
+      case evStoreSchema:         return rights & urSettings;
+      case evParEditRequest:      return rights & urControl;
+      case evParStore:            return rights & urControl;
+      case evSendMail:            return rights & urSettings;
+      case evChartbookmarks:      return rights & urView;
+      case evStoreChartbookmarks: return rights & urSettings;
+      case evInitTables:          return rights & urSettings;
       default: break;
    }
 
@@ -174,13 +189,14 @@ int P4d::performLogin(json_t* oObject)
    long client = getLongFromJson(oObject, "client");
    const char* user = getStringFromJson(oObject, "user", "");
    const char* token = getStringFromJson(oObject, "token", "");
+   const char* page = getStringFromJson(oObject, "page", "");
    json_t* aRequests = json_object_get(oObject, "requests");
 
    tableUsers->clear();
    tableUsers->setValue("USER", user);
 
    wsClients[(void*)client].user = user;
-   wsClients[(void*)client].dataUpdates = false;
+   wsClients[(void*)client].page = page;
 
    if (tableUsers->find() && tableUsers->hasValue("TOKEN", token))
    {
@@ -219,8 +235,8 @@ int P4d::performLogin(json_t* oObject)
 
    // perform requests
 
-   size_t index;
-   json_t* oRequest;
+   size_t index {0};
+   json_t* oRequest {nullptr};
 
    json_array_foreach(aRequests, index, oRequest)
    {
@@ -232,10 +248,7 @@ int P4d::performLogin(json_t* oObject)
       tell(0, "Got request '%s'", name);
 
       if (strcmp(name, "data") == 0)
-      {
-         wsClients[(void*)client].dataUpdates = true;
          update(true, client);     // push the data ('init')
-      }
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "syslog") == 0)
          performSyslog(client);
       else if (wsClients[(void*)client].rights & urSettings && strcmp(name, "configdetails") == 0)
@@ -243,13 +256,17 @@ int P4d::performLogin(json_t* oObject)
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "userdetails") == 0)
          performUserDetails(client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "iosettings") == 0)
-         performIoSettings(client);
+         performIoSettings(nullptr, client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "groups") == 0)
          performGroups(client);
       else if (strcmp(name, "errors") == 0)
          performErrors(client);
       else if (strcmp(name, "menu") == 0)
          performMenu(0, client);
+      else if (strcmp(name, "schema") == 0)
+         performSchema(0, client);
+      else if (strcmp(name, "alerts") == 0)
+         performAlerts(0, client);
       else if (strcmp(name, "chartdata") == 0)
          performChartData(oRequest, client);
    }
@@ -315,6 +332,30 @@ int P4d::performTokenRequest(json_t* oObject, long client)
    tableUsers->reset();
 
    return done;
+}
+
+//***************************************************************************
+// Perform WS Init Tables
+//***************************************************************************
+
+int P4d::performInitTables(json_t* oObject, long client)
+{
+   const char* action = getStringFromJson(oObject, "action");
+
+   if (isEmpty(action))
+      return replyResult(fail, "missing action", client);
+
+   if (strcmp(action, "valuefacts") == 0)
+   {
+      initValueFacts();
+      updateTimeRangeData();
+   }
+   else if (strcmp(action, "menu") == 0)
+   {
+      initMenu();
+   }
+
+   return replyResult(success, "... init abgeschlossen!", client);
 }
 
 //***************************************************************************
@@ -390,13 +431,18 @@ int P4d::performUserDetails(long client)
 // Perform WS IO Setting Data Request
 //***************************************************************************
 
-int P4d::performIoSettings(long client)
+int P4d::performIoSettings(json_t* oObject, long client)
 {
    if (client <= 0)
       return done;
 
+   bool filterActive = false;
+
+   if (oObject)
+      filterActive = getBoolFromJson(oObject, "filter", false);
+
    json_t* oJson = json_array();
-   valueFacts2Json(oJson);
+   valueFacts2Json(oJson, filterActive);
    pushOutMessage(oJson, "valuefacts", client);
 
    return done;
@@ -457,6 +503,7 @@ int P4d::performErrors(long client)
 
    return done;
 }
+
 //***************************************************************************
 // Perform WS Menu Request
 //***************************************************************************
@@ -495,18 +542,6 @@ int P4d::performMenu(json_t* oObject, long client)
       int type = tableMenu->getIntValue("TYPE");
       int address = tableMenu->getIntValue("ADDRESS");
       int child = tableMenu->getIntValue("CHILD");
-
-      if (type == mstBus || type == mstReset)
-         continue;
-
-      if (!child && !address && tableMenu->getValue("VALUE")->isNull())
-         continue;
-
-      // this 3 'special' addresses takes a long while and don't deliver any usefull data
-
-      if (address == 9997 || address == 9998 || address == 9999)
-         continue;
-
       char* title = strdup(tableMenu->getStrValue("TITLE"));
 
       if (isEmpty(rTrim(title)))
@@ -520,8 +555,22 @@ int P4d::performMenu(json_t* oObject, long client)
 
       bool timeGroup = (type == mstGroup1 || type == mstGroup2) && strcmp(title, "Zeiten") == 0 && (child == 230 || child == 350 || child == 430 || child == 573);
 
+      if (type == mstBus || type == mstReset)
+         continue;
+
+      // this 3 'special' addresses takes a long while and don't deliver any usefull data
+
+      if (address == 9997 || address == 9998 || address == 9999)
+         continue;
+
+      updateParameter(tableMenu);
+
+      if (!child && !address && tableMenu->getValue("VALUE")->isNull())
+         continue;
+
       if (!timeGroup)
       {
+
          json_t* oData = json_object();
          json_array_append_new(oArray, oData);
 
@@ -555,6 +604,8 @@ int P4d::performMenu(json_t* oObject, long client)
                // case ???: baseAddr = 0xd2 + (address * 7); break    // Kessel
             case 573: baseAddr = 0xd9 + (address * 7); break;   // Zirkulation
          }
+
+         // updateTimeRangeData();
 
          for (int wday = 0; wday < 7; wday++)
          {
@@ -628,6 +679,214 @@ int P4d::performMenu(json_t* oObject, long client)
    pushOutMessage(oJson, "menu", client);
 
    return done;
+}
+
+//***************************************************************************
+// Perform WS Scehma Data
+//***************************************************************************
+
+int P4d::performSchema(json_t* oObject, long client)
+{
+   if (client <= 0)
+      return done;
+
+   json_t* oArray = json_array();
+
+   tableSchemaConf->clear();
+
+   for (int f = selectAllSchemaConf->find(); f; f = selectAllSchemaConf->fetch())
+   {
+      tableValueFacts->clear();
+      tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
+      tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
+
+      if (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A"))
+         continue;
+
+      json_t* oData = json_object();
+      json_array_append_new(oArray, oData);
+
+      addFieldToJson(oData, tableSchemaConf, "ADDRESS");
+      addFieldToJson(oData, tableSchemaConf, "TYPE");
+      addFieldToJson(oData, tableSchemaConf, "STATE");
+      addFieldToJson(oData, tableSchemaConf, "SHOWUNIT");
+      addFieldToJson(oData, tableSchemaConf, "SHOWTEXT");
+      addFieldToJson(oData, tableSchemaConf, "SHOWTITLE");
+      addFieldToJson(oData, tableSchemaConf, "USRTEXT");
+      addFieldToJson(oData, tableSchemaConf, "FUNCTION", true, "fct");
+
+      const char* properties = tableSchemaConf->getStrValue("PROPERTIES");
+      if (isEmpty(properties))
+         properties = "{}";
+      json_error_t error;
+      json_t* o = json_loads(properties, 0, &error);
+      json_object_set_new(oData, "properties", o);
+   }
+
+   selectAllSchemaConf->freeResult();
+
+   pushOutMessage(oArray, "schema", client);
+   update(true, client);     // push the data ('init')
+
+   return done;
+}
+
+//***************************************************************************
+// Store Schema
+//***************************************************************************
+
+int P4d::storeSchema(json_t* oObject, long client)
+{
+   if (!client)
+      return done;
+
+   size_t index {0};
+   json_t* jObj {nullptr};
+
+   json_array_foreach(oObject, index, jObj)
+   {
+      int address = getIntFromJson(jObj, "address");
+      const char* type = getStringFromJson(jObj, "type");
+
+      tableSchemaConf->clear();
+      tableSchemaConf->setValue("ADDRESS", address);
+      tableSchemaConf->setValue("TYPE", type);
+
+      if (tableSchemaConf->find())
+      {
+         tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
+         tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
+         tableSchemaConf->setValue("SHOWTEXT", getIntFromJson(jObj, "showtext"));
+         tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
+         tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
+         tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
+
+         json_t* jProp = json_object_get(jObj, "properties");
+         char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
+
+         if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
+            tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
+                 type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
+         else
+            tableSchemaConf->setValue("PROPERTIES", p);
+
+         tableSchemaConf->update();
+         free(p);
+      }
+      else
+      {
+         tell(0, "Info: Row for %s:%d not found", type, address);
+      }
+   }
+
+   tableSchemaConf->reset();
+   replyResult(success, "Konfiguration gespeichert", client);
+
+   return done;
+}
+
+//***************************************************************************
+// Perform WS Sensor Alert Request
+//***************************************************************************
+
+int P4d::performAlerts(json_t* oObject, long client)
+{
+   json_t* oArray = json_array();
+
+   tableSensorAlert->clear();
+
+   for (int f = selectAllSensorAlerts->find(); f; f = selectAllSensorAlerts->fetch())
+   {
+      json_t* oData = json_object();
+      json_array_append_new(oArray, oData);
+
+      json_object_set_new(oData, "id", json_integer(tableSensorAlert->getIntValue("ID")));
+      json_object_set_new(oData, "kind", json_string(tableSensorAlert->getStrValue("ID")));
+      json_object_set_new(oData, "subid", json_integer(tableSensorAlert->getIntValue("SUBID")));
+      json_object_set_new(oData, "lgop", json_integer(tableSensorAlert->getIntValue("LGOP")));
+      json_object_set_new(oData, "type", json_string(tableSensorAlert->getStrValue("TYPE")));
+      json_object_set_new(oData, "address", json_integer(tableSensorAlert->getIntValue("ADDRESS")));
+      json_object_set_new(oData, "state", json_string(tableSensorAlert->getStrValue("STATE")));
+      json_object_set_new(oData, "min", json_integer(tableSensorAlert->getIntValue("MIN")));
+      json_object_set_new(oData, "max", json_integer(tableSensorAlert->getIntValue("MAX")));
+      json_object_set_new(oData, "rangem", json_integer(tableSensorAlert->getIntValue("RANGEM")));
+      json_object_set_new(oData, "delta", json_integer(tableSensorAlert->getIntValue("DELTA")));
+      json_object_set_new(oData, "maddress", json_string(tableSensorAlert->getStrValue("MADDRESS")));
+      json_object_set_new(oData, "msubject", json_string(tableSensorAlert->getStrValue("MSUBJECT")));
+      json_object_set_new(oData, "mbody", json_string(tableSensorAlert->getStrValue("MBODY")));
+      json_object_set_new(oData, "maxrepeat", json_integer(tableSensorAlert->getIntValue("MAXREPEAT")));
+
+      //json_object_set_new(oData, "lastalert", json_integer(0));
+   }
+
+   selectAllSensorAlerts->freeResult();
+   pushOutMessage(oArray, "alerts", client);
+
+   return done;
+}
+
+//***************************************************************************
+// Perform Send Mail
+//***************************************************************************
+
+int P4d::performSendMail(json_t* oObject, long client)
+{
+   int alertid = getIntFromJson(oObject, "alertid", na);
+
+   if (alertid != na)
+      return performAlertTestMail(alertid, client);
+
+   const char* subject = getStringFromJson(oObject, "subject");
+   const char* body = getStringFromJson(oObject, "body");
+
+   tell(eloDetail, "Test mail requested with: '%s/%s'", subject, body);
+
+   if (isEmpty(mailScript))
+      return replyResult(fail, "missing mail script", client);
+
+   if (!fileExists(mailScript))
+      return replyResult(fail, "mail script not found", client);
+
+   if (isEmpty(stateMailTo))
+      return replyResult(fail, "missing receiver", client);
+
+   if (sendMail(stateMailTo, subject, body, "text/plain") != success)
+      return replyResult(fail, "send failed", client);
+
+   return replyResult(success, "mail sended", client);
+}
+
+int P4d::performAlertTestMail(int id, long client)
+{
+   tell(eloDetail, "Test mail for alert (%d) requested", id);
+
+   if (isEmpty(mailScript))
+      return replyResult(fail, "missing mail script", client);
+
+   if (!fileExists(mailScript))
+      return replyResult(fail, "mail script not found", client);
+
+   if (!selectMaxTime->find())
+      tell(eloAlways, "Warning: Got no result by 'select max(time) from samples'");
+
+   time_t  last = tableSamples->getTimeValue("TIME");
+   selectMaxTime->freeResult();
+
+   tableSensorAlert->clear();
+   tableSensorAlert->setValue("ID", id);
+
+   if (!tableSensorAlert->find())
+      return replyResult(fail, "requested alert ID not found", client);
+
+   alertMailBody = "";
+   alertMailSubject = "";
+
+   if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
+      return replyResult(fail, "send failed", client);
+
+   tableSensorAlert->reset();
+
+   return replyResult(success, "mail sended", client);
 }
 
 //***************************************************************************
@@ -725,9 +984,11 @@ int P4d::performParStore(json_t* oObject, long client)
             json_object_set_new(oJson, "parent", json_integer(parent));
             sem->v();
 
+            replyResult(status, "Parameter gespeichert", client);
             return performMenu(oJson, client);
          }
 
+         sem->v();
          tell(eloAlways, "Set of parameter failed, error %d", status);
 
          if (status == P4Request::wrnNonUpdate)
@@ -736,8 +997,6 @@ int P4d::performParStore(json_t* oObject, long client)
             replyResult(status, "Value ot of range", client);
          else
             replyResult(status, "Serial communication error", client);
-
-         sem->v();
       }
       else
       {
@@ -755,21 +1014,6 @@ int P4d::performParStore(json_t* oObject, long client)
 // Perform WS ChartData request
 //***************************************************************************
 
-std::vector<std::string> split(const std::string& str, char delim)
-{
-   std::vector<std::string> strings;
-   size_t start;
-   size_t end {0};
-
-   while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
-   {
-      end = str.find(delim, start);
-      strings.push_back(str.substr(start, end - start));
-   }
-
-   return strings;
-}
-
 int P4d::performChartData(json_t* oObject, long client)
 {
    if (client <= 0)
@@ -778,14 +1022,19 @@ int P4d::performChartData(json_t* oObject, long client)
    int range = getIntFromJson(oObject, "range", 3);                // Anzahl der Tage
    time_t rangeStart = getLongFromJson(oObject, "start", 0);       // Start Datum (unix timestamp)
    const char* sensors = getStringFromJson(oObject, "sensors");    // Kommata getrennte Liste der Sensoren
-   int widget = getIntFromJson(oObject, "widget", no);
    const char* id = getStringFromJson(oObject, "id", "");
 
+   // the id is one of {"chart" "chartwidget" "chartdialog"}
+
+   bool widget = strcmp(id, "chart") != 0;
    cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
 
-   if (!widget && !isEmpty(sensors))
+   if (!widget)
+      performChartbookmarks(client);
+
+   if (strcmp(id, "chart") == 0 && !isEmpty(sensors))
    {
-      tell(0, "storing sensores '%s' for chart", sensors);
+      tell(0, "storing sensors '%s' for chart", sensors);
       setConfigItem("chart", sensors);
       getConfigItem("chart", chartSensors);
    }
@@ -1003,6 +1252,7 @@ int P4d::performPasswChange(json_t* oObject, long client)
       tell(0, "User '%s' changed password", user);
       tableUsers->setValue("PASSWD", passwd);
       tableUsers->store();
+      replyResult(success, "Passwort gespeichert", client);
    }
 
    tableUsers->reset();
@@ -1018,7 +1268,7 @@ int P4d::resetPeaks(json_t* obj, long client)
 {
    tablePeaks->truncate();
 
-   return done;
+   return replyResult(success, "Peaks zurückgesetzt", client);
 }
 
 //***************************************************************************
@@ -1027,8 +1277,8 @@ int P4d::resetPeaks(json_t* obj, long client)
 
 int P4d::storeConfig(json_t* obj, long client)
 {
-   const char* key;
-   json_t* jValue;
+   const char* key {0};
+   json_t* jValue {nullptr};
 
    json_object_foreach(obj, key, jValue)
    {
@@ -1065,8 +1315,8 @@ int P4d::storeConfig(json_t* obj, long client)
 
 int P4d::storeIoSetup(json_t* array, long client)
 {
-   size_t index;
-   json_t* jObj;
+   size_t index {0};
+   json_t* jObj {nullptr};
 
    json_array_foreach(array, index, jObj)
    {
@@ -1099,7 +1349,7 @@ int P4d::storeIoSetup(json_t* array, long client)
       tell(3, "Debug: %s:%d - usrtitle: '%s'; scalemax: %d; state: %d", type, addr, usrTitle, maxScale, state);
    }
 
-   performIoSettings(client);
+   performIoSettings(nullptr, client);
 
    return replyResult(success, "Konfiguration gespeichert", client);
 }
@@ -1111,8 +1361,8 @@ int P4d::storeGroups(json_t* oObject, long client)
    if (strcmp(action, "store") == 0)
    {
       json_t* array = json_object_get(oObject, "groups");
-      json_t* jObj;
-      size_t index;
+      json_t* jObj {nullptr};
+      size_t index {0};
 
       if (!array)
          return fail;
@@ -1173,6 +1423,98 @@ int P4d::storeGroups(json_t* oObject, long client)
 }
 
 //***************************************************************************
+// Store Sensor Alerts
+//***************************************************************************
+
+int P4d::storeAlerts(json_t* oObject, long client)
+{
+   const char* action = getStringFromJson(oObject, "action");
+
+   if (strcmp(action, "delete") == 0)
+   {
+      int alertid = getIntFromJson(oObject, "alertid", na);
+
+      tableSensorAlert->deleteWhere("id = %d", alertid);
+
+      performAlerts(0, client);
+      replyResult(success, "Sensor Alert gelöscht", client);
+   }
+
+   else if (strcmp(action, "store") == 0)
+   {
+      json_t* array = json_object_get(oObject, "alerts");
+      size_t index {0};
+      json_t* jObj {nullptr};
+
+      json_array_foreach(array, index, jObj)
+      {
+         int id = getIntFromJson(jObj, "id", na);
+
+         tableSensorAlert->clear();
+
+         if (id != na)
+         {
+            tableSensorAlert->setValue("ID", id);
+
+            if (!tableSensorAlert->find())
+               continue;
+         }
+
+         tableSensorAlert->clearChanged();
+         tableSensorAlert->setValue("STATE", getStringFromJson(jObj, "state"));
+         tableSensorAlert->setValue("MAXREPEAT", getIntFromJson(jObj, "maxrepeat"));
+
+         tableSensorAlert->setValue("ADDRESS", getIntFromJson(jObj, "address"));
+         tableSensorAlert->setValue("TYPE", getStringFromJson(jObj, "type"));
+         tableSensorAlert->setValue("MIN", getIntFromJson(jObj, "min"));
+         tableSensorAlert->setValue("MAX", getIntFromJson(jObj, "max"));
+         tableSensorAlert->setValue("DELTA", getIntFromJson(jObj, "delta"));
+         tableSensorAlert->setValue("RANGEM", getIntFromJson(jObj, "rangem"));
+         tableSensorAlert->setValue("MADDRESS", getStringFromJson(jObj, "maddress"));
+         tableSensorAlert->setValue("MSUBJECT", getStringFromJson(jObj, "msubject"));
+         tableSensorAlert->setValue("MBODY", getStringFromJson(jObj, "mbody"));
+
+         if (id == na)
+            tableSensorAlert->insert();
+         else if (tableSensorAlert->getChanges())
+            tableSensorAlert->update();
+      }
+
+      performAlerts(0, client);
+      replyResult(success, "Konfiguration gespeichert", client);
+   }
+
+   return success;
+}
+
+//***************************************************************************
+// Chart Bookmarks
+//***************************************************************************
+
+int P4d::storeChartbookmarks(json_t* array, long client)
+{
+   char* bookmarks = json_dumps(array, JSON_REAL_PRECISION(4));
+   setConfigItem("chartBookmarks", bookmarks);
+   free(bookmarks);
+
+   performChartbookmarks(client);
+
+   return done; // replyResult(success, "Bookmarks gespeichert", client);
+}
+
+int P4d::performChartbookmarks(long client)
+{
+   char* bookmarks {nullptr};
+   getConfigItem("chartBookmarks", bookmarks, "{[]}");
+   json_error_t error;
+   json_t* oJson = json_loads(bookmarks, 0, &error);
+   pushOutMessage(oJson, "chartbookmarks", client);
+   free(bookmarks);
+
+   return done;
+}
+
+//***************************************************************************
 // Config 2 Json Stuff
 //***************************************************************************
 
@@ -1223,7 +1565,8 @@ int P4d::configDetails2Json(json_t* obj)
 
       tableConfig->reset();
    }
-      return done;
+
+   return done;
 }
 
 int P4d::configChoice2json(json_t* obj, const char* name)
@@ -1305,12 +1648,15 @@ int P4d::userDetails2Json(json_t* obj)
 // Value Facts 2 Json
 //***************************************************************************
 
-int P4d::valueFacts2Json(json_t* obj)
+int P4d::valueFacts2Json(json_t* obj, bool filterActive)
 {
    tableValueFacts->clear();
 
    for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
+      if (filterActive && !tableValueFacts->hasValue("STATE", "A"))
+         continue;
+
       json_t* oData = json_object();
       json_array_append_new(obj, oData);
 
@@ -1322,6 +1668,7 @@ int P4d::valueFacts2Json(json_t* obj)
       json_object_set_new(oData, "usrtitle", json_string(tableValueFacts->getStrValue("USRTITLE")));
       json_object_set_new(oData, "unit", json_string(tableValueFacts->getStrValue("UNIT")));
       json_object_set_new(oData, "scalemax", json_integer(tableValueFacts->getIntValue("MAXSCALE")));
+      json_object_set_new(oData, "value", json_real(tableValueFacts->getFloatValue("VALUE")));
    }
 
    selectAllValueFacts->freeResult();
@@ -1418,12 +1765,12 @@ int P4d::sensor2Json(json_t* obj, cDbTable* table)
    else
       json_object_set_new(obj, "title", json_string(table->getStrValue("TITLE")));
 
-   json_object_set_new(obj, "unit", json_string(table->getStrValue("UNIT")));
+   const char* unit = table->getStrValue("UNIT");
+   json_object_set_new(obj, "unit", json_string(strcmp(unit, "°") == 0 ? "°C" : unit));
    json_object_set_new(obj, "scalemax", json_integer(table->getIntValue("MAXSCALE")));
    json_object_set_new(obj, "rights", json_integer(table->getIntValue("RIGHTS")));
 
    json_object_set_new(obj, "peak", json_real(peak));
-
 
    return done;
 }
@@ -1509,7 +1856,7 @@ P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint ad
    if (type == "AO")
       return wtGauge;
 
-   if (unit == "°" || unit == "%" || unit == "V" || unit == "A") // 'Volt/Ampere/Prozent/Temperatur
+   if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A") // 'Volt/Ampere/Prozent/Temperatur
       return wtGauge;
 
    if (!unit.length())

@@ -6,6 +6,8 @@
 
 include Make.config
 
+WEBDESTphp = $(WEBDEST).php
+
 TARGET      = p4d
 CMDTARGET   = p4
 CHARTTARGET = dbchart
@@ -107,20 +109,18 @@ install-config:
 
 install-scripts:
 	if ! test -d $(BINDEST); then \
-		mkdir -p "$(BINDEST)" \
+		mkdir -p "$(BINDEST)"; \
 	   chmod a+rx $(BINDEST); \
 	fi
 	install -D ./scripts/p4d-* $(BINDEST)/
 
 iw: install-web
 
-WEBDESTphp = $(WEBDEST).php
-
 install-web:
 	(cd htdocs; $(MAKE) install)
 	if ! test -d $(WEBDESTphp); then \
 		mkdir -p "$(WEBDESTphp)"; \
-		chmod a+rx "$(WEBDESTphp)"; \
+		chmod a+rx $(WEBDESTphp); \
 	fi
 	if test -f "$(WEBDESTphp)/stylesheet.css"; then \
 		cp -Pp "$(WEBDESTphp)/stylesheet.css" "$(WEBDESTphp)/stylesheet.css.save"; \
@@ -181,8 +181,8 @@ build-deb:
 	make -s install-p4d DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	make -s install-apache-conf DESTDIR=$(DEB_DEST) PREFIX=/usr
-	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
 	dpkg-deb --build $(DEB_BASE_DIR)/p4d-$(VERSION)
+#	make -s install-pcharts DESTDIR=$(DEB_DEST) PREFIX=/usr
 
 publish-deb:
 	echo 'put $(DEB_BASE_DIR)/p4d-${VERSION}.deb' | sftp -i ~/.ssh/id_rsa2 p7583735@home26485763.1and1-data.host:p4d
@@ -207,7 +207,7 @@ lib/mqtt.o      :  lib/mqtt.c      lib/mqtt.h lib/mqtt_c.h
 lib/mqtt_c.o    :  lib/mqtt_c.c    lib/mqtt_c.h
 lib/mqtt_pal.o  :  lib/mqtt_pal.c  lib/mqtt_c.h
 
-main.o          :  main.c          $(HEADER) p4d.h websock.h
+main.o          :  main.c          $(HEADER) p4d.h websock.h HISTORY.h
 p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
 p4io.o          :  p4io.c          $(HEADER) p4io.h
 webif.o         :  webif.c         $(HEADER) p4d.h

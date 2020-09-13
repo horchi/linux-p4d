@@ -207,7 +207,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
    SessionData* sessionData = (SessionData*)user;
    std::string clientInfo = "unknown";
 
-   tell(4, "DEBUG: 'callbackHttp' got (%d)", reason);
+   tell(3, "DEBUG: 'callbackHttp' got (%d)", reason);
 
    switch (reason)
    {
@@ -252,11 +252,11 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          int m = lws_get_peer_write_allowance(wsi);
 
          if (!m)
-            tell(3, "right now, peer can't handle anything :o");
+            tell(3, "Right now, peer can't handle anything :o");
          else if (m != -1 && m < sessionData->payloadSize)
-            tell(0, "peer can't handle %d but %d is needed", m, sessionData->payloadSize);
+            tell(0, "Peer can't handle %d but %d is needed", m, sessionData->payloadSize);
          else if (m != -1)
-            tell(3, "all fine, peer can handle %d bytes", m);
+            tell(3, "All fine, peer can handle %d bytes", m);
 
          res = lws_write(wsi, (unsigned char*)sessionData->buffer+sizeLwsPreFrame,
                          sessionData->payloadSize, LWS_WRITE_HTTP);
@@ -278,12 +278,12 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       case LWS_CALLBACK_HTTP:
       {
          int res;
-         char* file = 0;
+         char* file {nullptr};
          const char* url = (char*)in;
 
-         memset(sessionData, 0, sizeof(SessionData));
-
          tell(1, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
+
+         memset(sessionData, 0, sizeof(SessionData));
 
          // data or file request ...
 
@@ -291,6 +291,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          {
             // data request
 
+            tell(0, "Gpt unexpected HTTP request!");
             res = dispatchDataRequest(wsi, sessionData, url);
 
             if (res < 0 || (res > 0 && lws_http_transaction_completed(wsi)))
@@ -321,7 +322,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          break;
       }
 
-      case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+      case LWS_CALLBACK_HTTP_FILE_COMPLETION:     // 15
       {
          if (lws_http_transaction_completed(wsi))
             return -1;
@@ -329,9 +330,11 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          break;
       }
 
+      case LWS_CALLBACK_FILTER_HTTP_CONNECTION:   // 18
+         return 0;
+
       case LWS_CALLBACK_PROTOCOL_INIT:
       case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:
-      case LWS_CALLBACK_FILTER_HTTP_CONNECTION:
       case LWS_CALLBACK_CLOSED_HTTP:
       case LWS_CALLBACK_WSI_CREATE:
       case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
@@ -342,8 +345,8 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       case LWS_CALLBACK_LOCK_POLL:
       case LWS_CALLBACK_UNLOCK_POLL:
       case LWS_CALLBACK_GET_THREAD_ID:
-      case LWS_CALLBACK_HTTP_BIND_PROTOCOL:
-      case LWS_CALLBACK_HTTP_DROP_PROTOCOL:
+      case LWS_CALLBACK_HTTP_BIND_PROTOCOL:       // 49
+      case LWS_CALLBACK_HTTP_DROP_PROTOCOL:       // 50
 #if LWS_LIBRARY_VERSION_MAJOR >= 3
       case LWS_CALLBACK_HTTP_CONFIRM_UPGRADE:
       case LWS_CALLBACK_EVENT_WAIT_CANCELLED:

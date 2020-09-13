@@ -1,4 +1,6 @@
 
+button:focus { outline:0; }
+
 .menu
 {
     display: grid;
@@ -55,6 +57,18 @@
     background-color: var(--caption1);
 }
 
+.buttonOptions
+{
+    display: inline;
+    min-width: 76px;
+    padding: 4px;
+    margin: 2px;
+    color: white;
+    height: 28px;
+    background-color: slategray;
+    text-decoration: none;
+}
+
 .buttonHighlighted
 {
     background-color: darkblue;
@@ -63,6 +77,45 @@
     height: 40px;
     margin: 8px;
 }
+
+/* ----------------------- */
+/* Dialogs */
+
+.ui-widget {}
+
+.ui-widget-content {
+    border-width: 1x;
+    border-radius: 10px;
+    border-color: var(--dialogColor);
+    background: var(--dialogColor);
+    align-items: center;
+}
+
+.ui-dialog {}
+.ui-widget-header {}
+
+.ui-dialog .ui-dialog-content {
+    text-align: center;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    background: var(--dialogColor);
+    border-color: var(--dialogColor);
+}
+
+/*.ui-dialog .ui-dialog-buttonpane button.ui-button {
+    display: none;
+}*/
+
+.no-close .ui-dialog-titlebar-close {
+    display: none
+}
+
+.no-titlebar .ui-dialog-titlebar {
+    display: none;
+}
+
+/* ----------------------- */
 
 .seperatorTitle1
 {
@@ -75,51 +128,54 @@
     margin-bottom: 5px;
 }
 
+/* ----------------------- */
+/* Input */
+
 .input
 {
     background-color: var(--edit);
     margin-top: 2px;
-    color: black;
     padding: 3px;
+    color: black;
 }
 
 .inputTime
 {
     background-color: var(--edit);
     margin-top: 2px;
-    color: black;
     padding: 3px;
     width: 45px;
+    color: black;
 }
 
 .inputNum
 {
     background-color: var(--edit);
     margin-top: 2px;
-    color: black;
     padding: 3px;
     width: 75px;
     height: 21px;
+    color: black;
 }
 
 .inputFloat
 {
     background-color: var(--edit);
     margin-top: 2px;
-    color: black;
     padding: 3px;
     width: 75px;
     height: 21px;
+    color: black;
 }
 
 .inputSetting
 {
-    width: 100%;
     background-color: var(--edit);
     margin-top: 2px;
-    color: black;
-    padding: 4px;
+    padding: 3px;
     margin: 1px;
+    width: 100%;
+    color: black;
 }
 
 span > input
@@ -182,6 +238,52 @@ span > input
     border-radius: 5px;
 }
 
+.schemaBox
+{
+    background-color: var(--light1);
+    padding: 0px;
+    margin-top: 0px;
+    position: relative;
+    display: inline-block;
+}
+
+.schemaDiv
+{
+    color: white;
+    padding-top: 3px;
+    background-color: Transparent;
+    background-repeat: no-repeat;
+    border-radius: var(--borderRadiusSchemaValue);
+    border-color: var(--borderColorSchemaValue);
+    border-style: var(--borderStyleSchemaValue);
+    border-width: 1px;
+}
+
+.buttonSchemaValue
+{
+    color: inherit;
+    background-color: Transparent;
+    border: none;
+}
+
+.inputTableAlert
+{
+    background-color: var(--light1);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    margin-top: 2px;
+    color: black;
+    padding: 5px;
+}
+
+.inputTableAlert > div > span
+{
+    width: 12%;
+    min-width: 100px;
+    display: inline-table;
+    text-align: left;
+    color: white;
+}
+
 .confirmDiv
 {
     margin-top: 5px;
@@ -190,7 +292,7 @@ span > input
 .configDescriptionCaption
 {
     padding: 15px;
-     text-align: center;
+    text-align: center;
     font-weight: bold;
     font-size: 18px;
 }
@@ -528,7 +630,7 @@ table.tableMultiCol tr:nth-child(odd)
 {
     display: flex;
     justify-content: center;
-    margin: 15px;
+    margin: 4px;
 }
 
 .chartButton
@@ -539,6 +641,23 @@ table.tableMultiCol tr:nth-child(odd)
     margin: 5px;
     color: white;
     font-size: x-large;
+    background-color: slategray;
+}
+
+.chartBookmarks
+{
+    display: flex;
+    margin: 4px;
+}
+
+.chartBookmarkButton
+{
+    display: inline;
+    min-width: 76px;
+    padding: 4px;
+    margin: 5px;
+    color: white;
+    height: 28px;
     background-color: slategray;
 }
 

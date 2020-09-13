@@ -471,6 +471,8 @@ class cDbStatement : public cDbService
       int bindTextFree(const char* text, cDbValue* value, const char* delim = 0, int mode = bndIn);
       int bindInChar(const char* ctable, const char* fname, cDbValue* value = 0, const char* delim = 0);
 
+      int appendBinding(cDbValue* value, BindType bt);  // use this interface method seldom from external and with care!
+
       // ..
 
       int prepare();
@@ -486,8 +488,6 @@ class cDbStatement : public cDbService
       static int explain;         // debug explain
 
    private:
-
-      int appendBinding(cDbValue* value, BindType bt);
 
       std::string stmtTxt;
       MYSQL_STMT* stmt;
@@ -613,6 +613,29 @@ class cDbRow : public cDbService
             count += dbValues[f].getChanges();
 
          return count;
+      }
+
+      std::string getChangedFields()
+      {
+         std::string s = "";
+
+         for (int f = 0; f < tableDef->fieldCount(); f++)
+         {
+            if (dbValues[f].getChanges())
+            {
+               if (s.length())
+                  s += ",";
+
+               s += dbValues[f].getName() + std::string("=");
+
+               if (dbValues[f].getField()->hasFormat(ffInt) || dbValues[f].getField()->hasFormat(ffUInt))
+                  s += num2Str((int)dbValues[f].getIntValue());
+               else
+                  s += dbValues[f].getStrValue();
+            }
+         }
+
+         return s;
       }
 
       virtual cDbFieldDef* getField(int id)                     { return tableDef->getField(id); }
@@ -1087,7 +1110,7 @@ class cDbTable : public cDbService
       void clear()                                                    { row->clear(); }
       void clearChanged()                                             { row->clearChanged(); }
       int getChanges()                                                { return row->getChanges(); }
-
+      std::string getChangedFields()                                  { return row->getChangedFields(); }
       void setValue(cDbFieldDef* f, const char* value, int size = 0)  { row->setValue(f, value, size); }
       void setValue(cDbFieldDef* f, int value)                        { row->setValue(f, value); }
       void setValue(cDbFieldDef* f, long value)                       { row->setValue(f, value); }

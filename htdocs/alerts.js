@@ -46,8 +46,8 @@ function printAlert(item)
    html += ' <div>\n';
    html += '   <span>Aktiv</span>\n';
    html += '   <span><input type="checkbox" name="state" ' + (item.state == 'A' ? "checked" : "") + '></input></span>\n';
-   html += '   <span><button class="rounded-border button2" type="button" ">Test Mail</button></span>\n';
-   html += '   <span><button class="rounded-border button2" type="button" onclick="">Löschen</button></span>\n';
+   html += '   <span><button class="rounded-border button2" type="button" onclick="sendAlertMail(' + item.id + ')">Test Mail</button></span>\n';
+   html += '   <span><button class="rounded-border button2" type="button" onclick="deleteAlert(' + item.id +  ')">Löschen</button></span>\n';
    html += ' </div>\n';
 
    html += ' <div>\n';
@@ -123,18 +123,27 @@ window.storeAlerts = function()
 
       for (var i = 0; i < inputs.length; i++) {
          var name = $(inputs[i]).attr('name');
+         var value = $(inputs[i]).val();
 
          if (name == "state")
             jsonObj[name] = $(inputs[i]).is(":checked") ? "A" : "D";
          else
-            jsonObj[name] = $(inputs[i]).val();
+            jsonObj[name] = !isNaN(value) ? parseInt(value) : value;
       }
 
-      if (id != -1 || jsonObj["address"] != "")
+      var address = jsonObj["address"];
+
+      if (id != -1 || !isNaN(address))
          jsonArray[n++] = jsonObj;
    }
 
-   socket.send({ "event" : "storealerts", "object" : jsonArray });
-   // console.log("storing:");
-   // console.log(JSON.stringify(jsonArray, undefined, 4));
+   socket.send({ "event" : "storealerts", "object" : { "action" : "store", "alerts" : jsonArray } });
+}
+
+function deleteAlert(alertId) {
+   socket.send({ "event" : "storealerts", "object" : { "action" : "delete", "alertid" : alertId } });
+}
+
+function sendAlertMail(alertId) {
+   socket.send({ "event" : "sendmail", "object" : { "alertid" : alertId} });
 }

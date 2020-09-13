@@ -35,6 +35,7 @@ int jStringValid(const char* s);
 
 const char* getStringFromJson(json_t* obj, const char* name, const char* def = 0);
 int getIntFromJson(json_t* obj, const char* name, int def = na);
+int getBoolFromJson(json_t* obj, const char* name, bool def = false);
 long getLongFromJson(json_t* obj, const char* name, long def = na);
 double getDoubleFromJson(json_t* obj, const char* name, double def = na);
 
