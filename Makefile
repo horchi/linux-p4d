@@ -62,27 +62,20 @@ $(CMDTARGET) : $(CMDOBJS)
 install: $(TARGET) $(CMDTARGET) install-p4d install-web
 
 install-p4d: install-config install-scripts
-	install --mode=755 -D $(TARGET) $(BINDEST)
-	install --mode=755 -D $(CMDTARGET) $(BINDEST)
-	make install-$(INIT_SYSTEM)
    ifneq ($(DESTDIR),)
 	   @cp -r contrib/DEBIAN $(DESTDIR)
 	   @chown root:root -R $(DESTDIR)/DEBIAN
 		sed -i s:"<VERSION>":"$(VERSION)":g $(DESTDIR)/DEBIAN/control
-	   @mkdir -p $(DESTDIR)/usr/lib
 	   @mkdir -p $(DESTDIR)/usr/bin
-	   @mkdir -p $(DESTDIR)/usr/share/man/man1
    endif
+	install --mode=755 -D $(TARGET) $(BINDEST)
+	install --mode=755 -D $(CMDTARGET) $(BINDEST)
+	make install-systemd
 
 inst_restart: $(TARGET) $(CMDTARGET) install-config install-scripts
 	systemctl stop p4d
 	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
 	systemctl start p4d
-
-install-sysV:
-	install --mode=755 -D ./contrib/p4d $(DESTDIR)/etc/init.d/
-	install --mode=755 -D ./contrib/runp4d $(BINDEST)
-	update-rc.d p4d defaults
 
 install-systemd:
 	cat contrib/p4d.service | sed s:"<BINDEST>":"$(_BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/p4d.service

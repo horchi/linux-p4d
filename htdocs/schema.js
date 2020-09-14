@@ -102,9 +102,14 @@ function updateSchema(data, root)
          html += schemaDef.usrtext;
 
       if (schemaDef.fct != null && schemaDef.fct != "") {
-         var result = eval(schemaDef.fct);
+         try {
+            html += eval(schemaDef.fct);
+         }
+         catch (err) {
+            showInfoDialog("Fehler in JS Funktion: '" + err.message + "'", "Error in '" + schemaDef.fct + "'");
+            schemaDef.fct = "";  // delete buggy function
+         }
          // console.log("result of '" + schemaDef.fct + "' is " + result);
-         html += result;
       }
       else {
          html += schemaDef.showtext ? item.text || item.value : item.value;
@@ -177,8 +182,8 @@ function editSchemaValue(id)
       width: "40%",
       buttons: {
          'Speichern': function () {
-            apply("#div"+id);
-            $(this).dialog('close');
+            if (apply("#div"+id) == 0)
+               $(this).dialog('close');
          },
          'Abbrechen': function () {
             $(this).dialog('close');
@@ -215,10 +220,22 @@ function editSchemaValue(id)
       schemaDef.showtitle = $('#showTitle').is(":checked") ? 1 : 0;
       schemaDef.showunit = $('#showUnit').is(":checked") ? 1 : 0;
       schemaDef.state = $('#showIt').is(":checked") ? "A": "D";
+
+
+      try {
+         var result = eval($('#function').val());
+      }
+      catch (err) {
+         showInfoDialog("Fehler in JS Funktion: '" + err.message + "'", "Error in '" + $('#function').val() + "'");
+         return -1;
+      }
+
       schemaDef.fct = $('#function').val();
 
       setAttributeStyleFrom(schemaRoot.querySelector(id), schemaDef.properties);
       updateSchema(lastData, schemaRoot)
+
+      return 0;  // success
    }
 }
 

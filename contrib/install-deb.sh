@@ -41,24 +41,28 @@ dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=$SET_LANG
 
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
+
+if [[ ! -d /var/lib/p4.php.bak ]]; then
+   mv /var/lib/p4 /var/lib/p4.php.bak
+fi
+
 apt -y install /tmp/p4d-latest.deb || exit 1
 
-grep -q '^alias p4db=' ~/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
-grep -q '^alias vl=' ~/.bashrc || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
+grep -q '^alias p4db=' ~/.bashrc   || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
+grep -q '^alias vl=' ~/.bashrc     || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
 grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
-grep -q '^alias vl=' ~pi/.bashrc || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
+grep -q '^alias vl=' ~pi/.bashrc   || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"
 echo -e "${BLUE}- ${NC}"
-echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>/p4${NC}"
-echo -e "${BLUE}- Guess your IP is ${IP} use:${NC} ${BWHITE}http://${IP}/p4${NC}"
+echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>:1111${NC}"
+echo -e "${BLUE}- Guess your IP is ${IP} use:${NC} ${BWHITE}http://${IP}:1111${NC}"
 echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
 echo -e "${BLUE}- ${NC}"
 echo -e "${BLUE}- Added aliases for convenience:${NC}"
 echo -e "${BLUE}-  p4db  - go to the SQL prompt${NC}"
 echo -e "${BLUE}-  vl    - view syslog (abort with CTRL-C)${NC}"
-echo -e "${BLUE}-  va    - view apache error log (abort with CTRL-C)${NC}"
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${WHITE}- to permit p4d sending mails: ${NC}"
 echo -e "${WHITE}-   setup your SMTP account in /etc/ssmtp/ssmtp.conf properly${NC}"

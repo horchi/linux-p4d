@@ -107,6 +107,7 @@ function initConfig(configuration, root)
 
          html += '  </select>\n';
          html += '</span>\n';
+         break;
       }
 
       var elem = document.createElement("div");

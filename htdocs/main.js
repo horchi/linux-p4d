@@ -124,19 +124,29 @@ async function showInfoDialog(message, titleMsg, onCloseCallback)
    while (infoDialog)
       await sleep(100);
 
-   var cls = ""
-   if (!titleMsg || titleMsg == "") cls = "no-titlebar";
+   var msDuaration = 2000;
+   var bgColor = null;
+   var height = 70;
+   var cls = "no-titlebar";
 
-   $('<div style="margin-top:13px;"></div>').html(message).dialog({
+   if (titleMsg && titleMsg != "") {
+      msDuaration = 10000;
+      cls = "";
+      height = 100;
+      if (titleMsg.indexOf("Error") != -1 || titleMsg.indexOf("Fehler") != -1)
+         bgColor = 'background-color:rgb(224, 102, 102);'
+   }
+
+   $('<div style="margin-top:13px;' + (bgColor != null ? bgColor : "")  + '"></div>').html(message).dialog({
       dialogClass: cls,
       width: "60%",
-      height: 75,
+      height: height,
       title: titleMsg,
-		modal: false,
-      resizable: false,
+		modal: true,
+      resizable: true,
 		closeOnEscape: true,
       hide: "fade",
-      open:  function() { infoDialog = $(this); setTimeout(function() { infoDialog.dialog('close'); infoDialog = null }, 2000); },
+      open:  function() { infoDialog = $(this); setTimeout(function() { infoDialog.dialog('close'); infoDialog = null }, msDuaration); },
       close: function() { $(this).dialog('destroy').remove(); }
    });
 }
@@ -164,10 +174,7 @@ function dispatchMessage(message)
       if (jMessage.object.status == 0)
          showInfoDialog(jMessage.object.message);
       else
-         dialog.alert({ title: "Information (" + jMessage.object.status + ")",
-                        message: jMessage.object.message,
-	                     cancel: "Schließen"
-	                   });
+         showInfoDialog(jMessage.object.message , "Information (" + jMessage.object.status + ")");
    }
    else if ((event == "update" || event == "all") && rootDashboard) {
       lastUpdate = d.toLocaleTimeString();

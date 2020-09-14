@@ -1279,6 +1279,7 @@ int P4d::storeConfig(json_t* obj, long client)
 {
    const char* key {0};
    json_t* jValue {nullptr};
+   int oldWebPort = webPort;
 
    json_object_foreach(obj, key, jValue)
    {
@@ -1310,7 +1311,12 @@ int P4d::storeConfig(json_t* obj, long client)
    config2Json(oJson);
    pushOutMessage(oJson, "config", client);
 
-   return replyResult(success, "Konfiguration gespeichert", client);
+   if (oldWebPort != webPort)
+      replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte poold neu Starten!", client);
+   else
+      replyResult(success, "Konfiguration gespeichert", client);
+
+   return done;
 }
 
 int P4d::storeIoSetup(json_t* array, long client)

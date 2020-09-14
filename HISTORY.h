@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.4.alpha.13"
-#define VERSION_DATE "05.09.2020"
+#define _VERSION     "0.5.0"
+#define VERSION_DATE "14.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,7 +17,13 @@
 /*
  * ------------------------------------
 
-2020-09-05:  version 0.4.alpha.1
+2020-09-14:  version 0.5.0
+  - change:  First release of WS/JS version, removed apache and php stuff
+
+2020-09-13:  version 0.5.beta.1
+  - change:  Final development version of new web interface
+
+2020-09-05:  version 0.5.alpha.1
    - change: Implementing alpha version of WS/JS version
 
 2020-08-25:  version 0.3.39

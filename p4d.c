@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <locale.h>
 #include <libxml/parser.h>
 
 #include "lib/json.h"
@@ -139,6 +140,10 @@ P4d::P4d()
 {
    nextAt = time(0);
    startedAt = time(0);
+
+   // force german locale at least for 'strftime'
+
+   setlocale(LC_ALL, "de_DE.UTF-8");
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -1001,7 +1006,6 @@ int P4d::initialize(int truncate)
    initMenu();
 
    serial->close();
-
    sem->v();
 
    return done;
