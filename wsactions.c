@@ -1267,6 +1267,11 @@ int P4d::performPasswChange(json_t* oObject, long client)
 int P4d::resetPeaks(json_t* obj, long client)
 {
    tablePeaks->truncate();
+   setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
+
+   json_t* oJson = json_object();
+   config2Json(oJson);
+   pushOutMessage(oJson, "config", client);
 
    return replyResult(success, "Peaks zurückgesetzt", client);
 }
@@ -1745,7 +1750,8 @@ int P4d::s3200State2Json(json_t* obj)
 
 int P4d::sensor2Json(json_t* obj, cDbTable* table)
 {
-   double peak {0.0};
+   double peakMax {0.0};
+   double peakMin {0.0};
 
    tablePeaks->clear();
    tablePeaks->setValue("ADDRESS", table->getIntValue("ADDRESS"));
@@ -1758,7 +1764,10 @@ int P4d::sensor2Json(json_t* obj, cDbTable* table)
          table->getIntValue("ADDRESS"))));
 
    if (tablePeaks->find())
-      peak = tablePeaks->getFloatValue("MAX");
+   {
+      peakMax = tablePeaks->getFloatValue("MAX");
+      peakMin = tablePeaks->getFloatValue("MIN");
+   }
 
    tablePeaks->reset();
 
@@ -1776,7 +1785,8 @@ int P4d::sensor2Json(json_t* obj, cDbTable* table)
    json_object_set_new(obj, "scalemax", json_integer(table->getIntValue("MAXSCALE")));
    json_object_set_new(obj, "rights", json_integer(table->getIntValue("RIGHTS")));
 
-   json_object_set_new(obj, "peak", json_real(peak));
+   json_object_set_new(obj, "peak", json_real(peakMax));
+   json_object_set_new(obj, "peakmin", json_real(peakMin));
 
    return done;
 }
@@ -1860,10 +1870,10 @@ P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint ad
       return wtText;
 
    if (type == "AO")
-      return wtGauge;
+      return wtChart;
 
    if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A") // 'Volt/Ampere/Prozent/Temperatur
-      return wtGauge;
+      return wtChart;
 
    if (!unit.length())
       return wtSymbol;

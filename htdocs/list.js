@@ -94,7 +94,7 @@ function initList(widgets, root)
 
       if (widget.widgettype == 1 || widget.widgettype == 3) {      // 1 Gauge or 3 Value
          html += "<span class=\"listFirstCol\"" + id + ">" + widget.value.toFixed(2) + "&nbsp;" + widget.unit;
-         html += "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + widget.peak.toFixed(2) + ")</p>";
+         html += "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + widget.peakmin.toFixed(2) + "/" + widget.peak.toFixed(2) + ")</p>";
          html += "</span>";
       }
       else if (widget.widgettype == 0) {   // 0 Symbol
@@ -124,7 +124,7 @@ function updateList(sensors)
 
       if (sensor.widgettype == 1 || sensor.widgettype == 3) {
          $(id).html(sensor.value.toFixed(2) + "&nbsp;" + sensor.unit +
-                    "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + sensor.peak.toFixed(2) + ")</p>");
+                    "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + sensor.peakmin.toFixed(2) + "/" + sensor.peak.toFixed(2) + ")</p>");
       }
       else if (sensor.widgettype == 0)    // Symbol
          $(id).attr("src", sensor.image);

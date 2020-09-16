@@ -62,9 +62,10 @@ class P4d : public FroelingService, public cWebInterface
       enum WidgetType
       {
          wtSymbol = 0,  // == 0
-         wtGauge,       // == 1
+         wtChart,       // == 1
          wtText,        // == 2
-         wtValue        // == 3
+         wtValue,       // == 3
+         wtGauge1       // == 4
       };
 
       enum ConfigItemType
@@ -102,8 +103,6 @@ class P4d : public FroelingService, public cWebInterface
       void scheduleTimeSyncIn(int offset = 0);
       int scheduleAggregate();
       int aggregate();
-      bool onDashboard(const char* type, int address);
-      bool onList(const char* type, int address);
 
       int updateErrors();
       int updateParameter(cDbTable* tableMenu);
@@ -332,8 +331,8 @@ class P4d : public FroelingService, public cWebInterface
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
-      char* addrsDashboard {nullptr};
-      char* addrsList {nullptr};
+      std::vector<std::string> addrsDashboard;
+      std::vector<std::string> addrsList;
 
       int mail {no};
       char* mailScript {nullptr};
@@ -352,15 +351,7 @@ class P4d : public FroelingService, public cWebInterface
       std::string alertMailBody;
       std::string alertMailSubject;
       std::map<int,double> vaValues;
-
-      struct SensorJson
-      {
-         std::string type;
-         int address;
-         json_t* json;
-      };
-
-      std::vector<SensorJson> jsonSensorList;
+      std::map<std::string, json_t*> jsonSensorList;
 
       //
 

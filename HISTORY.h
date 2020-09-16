@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.0"
-#define VERSION_DATE "14.09.2020"
+#define _VERSION     "0.5.2"
+#define VERSION_DATE "16.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2020-09-16:  version 0.5.2
+  - bugfix:  Fixes display of 'all' sensors
+
+2020-09-16:  version 0.5.1
+  - change:  Show peak min in list view. Show last peak reset with mouse hint at button
 
 2020-09-14:  version 0.5.0
   - change:  First release of WS/JS version, removed apache and php stuff

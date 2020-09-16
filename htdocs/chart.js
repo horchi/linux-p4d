@@ -144,10 +144,13 @@ function getSensors()
 
 function updateChartBookmarks()
 {
-   $("#chartBookmarks").html('<div>'
-                             + '<button title="Lesezeichen hinzufügen" class="rounded-border chartBookmarkButton" style="min-width:30px;" onclick="addBookmark()">&#128209;</button>'
-                             + '<button title="zum Löschen hier ablegen" ondrop="dropBm(event)" ondragover="allowDropBm(event)" class="rounded-border chartBookmarkButton" style="min-width:30px;margin-right:50px;" disabled>&#128465;</button>'
-                             + '</div>');
+   if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10)
+      $("#chartBookmarks").html('<div>'
+                                + '<button title="Lesezeichen hinzufügen" class="rounded-border chartBookmarkButton" style="min-width:30px;" onclick="addBookmark()">&#128209;</button>'
+                                + '<button title="zum Löschen hier ablegen" ondrop="dropBm(event)" ondragover="allowDropBm(event)" class="rounded-border chartBookmarkButton" style="min-width:30px;margin-right:50px;" disabled>&#128465;</button>'
+                                + '</div>');
+   else
+      $("#chartBookmarks").html('');
 
    if (chartBookmarks != null) {
       var html = "<div>"

@@ -83,8 +83,6 @@ function initDashboard(widgets, root)
             elem.className = "widgetGauge rounded-border participation";
             elem.setAttribute("id", "widget" + widget.type + widget.address);
             elem.setAttribute("onclick", "toggleChartDialog('" + widget.type + "'," + widget.address + ")");
-            /* elem.setAttribute("onclick", "window.open('chart.html?sensors=" + widget.type + ":0x" + widget.address.toString(16) +
-                              "' , '_blank', 'scrollbars=yes,width=1610,height=650,resizable=yes,left=120,top=120')"); */
          }
          else {
             html += "<div id=\"peak" + widget.type + widget.address + "\" class=\"chart-peak\"></div>";

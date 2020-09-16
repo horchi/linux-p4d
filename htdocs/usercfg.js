@@ -1,5 +1,5 @@
 /*
- *  user.js
+ *  usercfg.js
  *
  *  (c) 2020 Jörg Wendel
  *
@@ -95,7 +95,7 @@ window.userConfig = function(user, action)
 
 window.chpwd  = function()
 {
-   var user = localStorage.getItem('p4dUser');
+   var user = localStorage.getItem(storagePrefix + 'User');
 
    if (user && user != "") {
       console.log("Change password of " + user);

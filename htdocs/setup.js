@@ -273,3 +273,4 @@ window.storeIoSetup = function()
 
    socket.send({ "event" : "storeiosetup", "object" : jsonArray });
 }
+

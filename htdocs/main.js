@@ -11,6 +11,7 @@
 var WebSocketClient = window.WebSocketClient
 //  import WebSocketClient from "./websocket.js"
 
+var storagePrefix = "p4d";
 var isActive = null;
 var socket = null;
 var config = {};
@@ -40,13 +41,11 @@ window.documentReady = function(doc)
 
 function onSocketConnect(protocol)
 {
-   var token = localStorage.getItem('p4dToken');
-   var user = localStorage.getItem('p4dUser');
+   var token = localStorage.getItem(storagePrefix + 'Token');
+   var user = localStorage.getItem(storagePrefix + 'User');
 
    if (!token || token == null)  token = "";
    if (!user || user == null)    user = "";
-
-   prepareMenu(token != "");
 
    // request some data at login
 
@@ -81,7 +80,6 @@ function onSocketConnect(protocol)
 
    jsonArray[0] = jsonRequest;
 
-   if (documentName != "login") {
       socket.send({ "event" : "login", "object" :
                     { "type" : "active",
                       "user" : user,
@@ -89,7 +87,6 @@ function onSocketConnect(protocol)
                       "page"  : documentName,
                       "requests" : jsonArray }
                   });
-   }
 }
 
 function connectWebSocket(useUrl, protocol)
@@ -207,6 +204,7 @@ function dispatchMessage(message)
    }
    else if (event == "config") {
       config = jMessage.object;
+      prepareMenu();
    /* var head = document.getElementsByTagName('HEAD')[0];
       var link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -231,9 +229,9 @@ function dispatchMessage(message)
       showSyslog(jMessage.object);
    }
    else if (event == "token") {
-      localStorage.setItem('p4dToken', jMessage.object.value);
-      localStorage.setItem('p4dUser', jMessage.object.user);
-      localStorage.setItem('p4dRights', jMessage.object.rights);
+      localStorage.setItem(storagePrefix + 'Token', jMessage.object.value);
+      localStorage.setItem(storagePrefix + 'User', jMessage.object.user);
+      localStorage.setItem(storagePrefix + 'Rights', jMessage.object.rights);
 
       if (jMessage.object.state == "confirm") {
          window.location.replace("index.html");
@@ -276,9 +274,10 @@ function dispatchMessage(message)
    // console.log("event: " + event + " dispatched");
 }
 
-function prepareMenu(haveToken)
+function prepareMenu()
 {
    var html = "";
+   var haveToken = localStorage.getItem(storagePrefix + 'Token') != "";
 
    html += "<a href=\"index.html\"><button class=\"rounded-border button1\">Dashboard</button></a>";
    html += "<a href=\"list.html\"><button class=\"rounded-border button1\">Liste</button></a>";
@@ -289,12 +288,12 @@ function prepareMenu(haveToken)
 
    html += "<div class=\"menuLogin\">";
    if (haveToken)
-      html += "<a href=\"user.html\"><button class=\"rounded-border button1\">[" + localStorage.getItem('p4dUser') + "]</button></a>";
+      html += "<a href=\"user.html\"><button class=\"rounded-border button1\">[" + localStorage.getItem(storagePrefix + 'User') + "]</button></a>";
    else
       html += "<a href=\"login.html\"><button class=\"rounded-border button1\">Login</button></a>";
    html += "</div>";
 
-   if (localStorage.getItem('p4dRights') & 0x08 || localStorage.getItem('p4dRights') & 0x10) {
+   if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
       html += "<a href=\"maincfg.html\"><button class=\"rounded-border button1\">Setup</button></a>";
 
       if ($("#navMenu").data("setup") != undefined) {
@@ -323,7 +322,7 @@ function prepareMenu(haveToken)
       html += "</div>";
    }
    else if ($("#navMenu").data("schema") != undefined) {
-      if (localStorage.getItem('p4dRights') & 0x08 || localStorage.getItem('p4dRights') & 0x10) {
+      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div class=\"confirmDiv\">";
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
@@ -338,7 +337,7 @@ function prepareMenu(haveToken)
    else if ($("#navMenu").data("maincfg") != undefined) {
       html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" title=\"Letzter Reset: " + config.peakResetAt + "\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('menu')\">Init Service Menü</button>";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Messwerte</button>";
@@ -413,6 +412,19 @@ window.toggleIoNext = function(address, type)
                });
 }
 
+window.vdrKeyPress = function(key)
+{
+   // { "event" : "keypress", "object" : { "key" : "menu", "repeat" : 1 } }
+
+   if (key == undefined || key == "")
+      return;
+
+   socket.send({ "event": "keypress", "object":
+                 { "key": key,
+                   "repeat": 1 }
+               });
+}
+
 window.doLogin = function()
 {
    // console.log("login: " + $("#user").val() + " : " + $.md5($("#password").val()));
@@ -424,9 +436,9 @@ window.doLogin = function()
 
 window.doLogout = function()
 {
-   localStorage.removeItem('p4dToken');
-   localStorage.removeItem('p4dUser');
-   localStorage.removeItem('p4dRights');
+   localStorage.removeItem(storagePrefix + 'Token');
+   localStorage.removeItem(storagePrefix + 'User');
+   localStorage.removeItem(storagePrefix + 'Rights');
 
    window.location.replace("login.html");
 }
@@ -601,7 +613,6 @@ function drawChartDialog(dataObject, root)
       dataset["label"] = dataObject.rows[i].title;
       dataset["pointRadius"] = 0;
       data.data.datasets.push(dataset);
-      // console.log("append dataset for chart dialog " + i);
    }
 
    var canvas = root.querySelector("#chartDialog");

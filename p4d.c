@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <locale.h>
 #include <libxml/parser.h>
+#include <algorithm>
 
 #include "lib/json.h"
 #include "p4d.h"
@@ -56,6 +57,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
    { "aggregateInterval",         ctInteger, false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
+   { "peakResetAt",               ctString,  true,  "1 P4 Daemon", "", "" },
 
    // MQTT interface
 
@@ -230,23 +232,33 @@ int P4d::pushDataUpdate(const char* title, long client)
 
    if (client)
    {
+      auto cl = wsClients[(void*)client];
       json_t* oWsJson = json_array();
 
-      auto cl = wsClients[(void*)client];
-
-      for (auto sj : jsonSensorList)
+      if (cl.page == "dashboard")
       {
-         bool visible {false};
+         if (addrsDashboard.size())
+            for (const auto sensor : addrsDashboard)
+               json_array_append(oWsJson, jsonSensorList[sensor]);
+         else
+            for (auto sj : jsonSensorList)
+               json_array_append(oWsJson, sj.second);
+      }
+      else if (cl.page == "list")
+      {
+         if (addrsList.size())
+            for (const auto sensor : addrsList)
+               json_array_append(oWsJson, jsonSensorList[sensor]);
+         else
+            for (auto sj : jsonSensorList)
+               json_array_append(oWsJson, sj.second);
+      }
+      else if (cl.page == "schema")
+      {
+         // #TODO - send visible instead of all
 
-         if (cl.page == "dashboard")
-            visible = onDashboard(sj.type.c_str(), sj.address);
-         else if (cl.page == "list")
-            visible = onList(sj.type.c_str(), sj.address);
-         else if (cl.page == "schema")
-            visible = true;  // to be implemented?
-
-         if (visible)
-            json_array_append(oWsJson, sj.json);      // use _append instead of _append_new to keep the object
+         for (auto sj : jsonSensorList)
+            json_array_append(oWsJson, sj.second);
       }
 
       pushOutMessage(oWsJson, title, client);
@@ -256,35 +268,34 @@ int P4d::pushDataUpdate(const char* title, long client)
       for (const auto cl : wsClients)
       {
          json_t* oWsJson = json_array();
-         size_t count {0};
 
-         for (auto sj : jsonSensorList)
+         if (cl.second.page == "dashboard")
          {
-            bool visible {false};
-
-            if (cl.second.page == "dashboard")
-               visible = onDashboard(sj.type.c_str(), sj.address);
-            else if (cl.second.page == "list")
-               visible = onList(sj.type.c_str(), sj.address);
-
-            if (visible)
-            {
-               json_array_append(oWsJson, sj.json);      // use _append instead of _append_new to keep the object
-               count++;
-            }
+            if (addrsDashboard.size())
+               for (const auto sensor : addrsDashboard)
+                  json_array_append(oWsJson, jsonSensorList[sensor]);
+            else
+               for (auto sj : jsonSensorList)
+                  json_array_append(oWsJson, sj.second);
+         }
+         else if (cl.second.page == "list")
+         {
+            if (addrsList.size())
+               for (const auto sensor : addrsList)
+                  json_array_append(oWsJson, jsonSensorList[sensor]);
+            else
+               for (auto sj : jsonSensorList)
+                  json_array_append(oWsJson, sj.second);
          }
 
-         if (count)
-            pushOutMessage(oWsJson, title, (long)cl.first);
-         else
-            json_decref(oWsJson);
+         pushOutMessage(oWsJson, title, (long)cl.first);
       }
    }
 
    // cleanup
 
    for (auto sj : jsonSensorList)
-      json_decref(sj.json);
+      json_decref(sj.second);
 
    jsonSensorList.clear();
 
@@ -909,8 +920,12 @@ int P4d::readConfiguration()
    getConfigItem("heatingType", heatingType, "P4");
    getConfigItem("stateAni", stateAni, yes);
 
-   getConfigItem("addrsDashboard", addrsDashboard, "");
-   getConfigItem("addrsList", addrsList, "");
+   char* addrs {nullptr};
+   getConfigItem("addrsDashboard", addrs, "");
+   addrsDashboard = split(addrs, ',');
+   getConfigItem("addrsList", addrs, "");
+   addrsList = split(addrs, ',');
+   free(addrs);
 
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript, BIN_PATH "/p4d-mail.sh");
@@ -2020,38 +2035,6 @@ int P4d::updateState(Status* state)
 }
 
 //***************************************************************************
-// Show Sensor On Dashbord
-//***************************************************************************
-
-bool P4d::onDashboard(const char* type, int address)
-{
-   if (isEmpty(addrsDashboard))
-      return true;
-
-   char* tupel;
-   asprintf(&tupel, "%s:0x%02x", type, address);
-
-   bool visible = strstr(addrsDashboard, tupel);
-   free(tupel);
-
-   return visible;
-}
-
-bool P4d::onList(const char* type, int address)
-{
-   if (isEmpty(addrsList))
-      return true;
-
-   char* tupel;
-   asprintf(&tupel, "%s:0x%02x", type, address);
-
-   bool visible = strstr(addrsList, tupel);
-   free(tupel);
-
-   return visible;
-}
-
-//***************************************************************************
 // Update
 //***************************************************************************
 
@@ -2074,7 +2057,7 @@ int P4d::update(bool webOnly, long client)
       connection->startTransaction();
 
    for (auto sj : jsonSensorList)
-      json_decref(sj.json);
+      json_decref(sj.second);
 
    jsonSensorList.clear();
 
@@ -2103,7 +2086,11 @@ int P4d::update(bool webOnly, long client)
       }
 
       json_t* ojData = json_object();
-      jsonSensorList.push_back({type, addr, ojData});
+      char* tupel {nullptr};
+      asprintf(&tupel, "%s:0x%02x", type, addr);
+      jsonSensorList[tupel] = ojData;
+      free(tupel);
+
       sensor2Json(ojData, tableValueFacts);
 
       if (tableValueFacts->hasValue("TYPE", "VA"))
@@ -3201,8 +3188,7 @@ int P4d::loadHtmlHeader()
                      "        border: 1px solid #D2D2D2;\n"
                      "      }\n"
                      "      </style>\n"
-                     "  </head>"
-                     "\0");
+                     "  </head>\n\0");
 
    return success;
 }
@@ -3214,7 +3200,7 @@ int P4d::loadHtmlHeader()
 int P4d::getConfigItem(const char* name, char*& value, const char* def)
 {
    free(value);
-   value = 0;
+   value = nullptr;
 
    tableConfig->clear();
    tableConfig->setValue("OWNER", myName());
@@ -3246,7 +3232,7 @@ int P4d::setConfigItem(const char* name, const char* value)
 
 int P4d::getConfigItem(const char* name, int& value, int def)
 {
-   char* txt = 0;
+   char* txt {nullptr};
 
    getConfigItem(name, txt);
 
@@ -3267,7 +3253,7 @@ int P4d::getConfigItem(const char* name, int& value, int def)
 
 int P4d::setConfigItem(const char* name, int value)
 {
-   char txt[16];
+   char txt[16] = "";
 
    snprintf(txt, sizeof(txt), "%d", value);
 

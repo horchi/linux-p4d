@@ -70,6 +70,7 @@ db.o         :  db.c          $(HEADER) db.h
 epgservice.o :  epgservice.c  $(HEADER) epgservice.h
 dbdict.o     :  dbdict.c      $(HEADER) dbdict.h
 json.o       :  json.c        $(HEADER) json.h
+serial.o     :  serial.c      $(HEADER) serial.h
 
 demo.o       :  demo.c        $(HEADER)
 test.o       :  test.c        $(HEADER)
