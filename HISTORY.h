@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.2"
-#define VERSION_DATE "16.09.2020"
+#define _VERSION     "0.5.4"
+#define VERSION_DATE "17.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,8 +17,14 @@
 /*
  * ------------------------------------
 
+2020-09-17:  version 0.5.4
+  - change:  Useing json 'real' for numeric values instead of string
+
+2020-09-17:  version 0.5.3
+  - bugfix:  Fixed Homeassistant interface
+
 2020-09-16:  version 0.5.2
-  - bugfix:  Fixes display of 'all' sensors
+  - bugfix:  Fixed display of 'all' sensors
 
 2020-09-16:  version 0.5.1
   - change:  Show peak min in list view. Show last peak reset with mouse hint at button
