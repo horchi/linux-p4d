@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.5.4"
+#define _VERSION     "0.5.5"
 #define VERSION_DATE "17.09.2020"
 
 #ifdef GIT_REV
@@ -17,8 +17,11 @@
 /*
  * ------------------------------------
 
+2020-09-17:  version 0.5.5
+  - change:  Merged dev branch back to master
+
 2020-09-17:  version 0.5.4
-  - change:  Useing json 'real' for numeric values instead of string
+  - change:  Using json 'real' for numeric values instead of string
 
 2020-09-17:  version 0.5.3
   - bugfix:  Fixed Homeassistant interface
