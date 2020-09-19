@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.5"
-#define VERSION_DATE "17.09.2020"
+#define _VERSION     "0.5.6"
+#define VERSION_DATE "19.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-09-19:  version 0.5.6
+  - bugfix: Update schemaconf on storing sensor selection
+  - change: Display address in hex on schema edit dialog
+  - added:  JS method getItem for schema view
 
 2020-09-17:  version 0.5.5
   - change:  Merged dev branch back to master

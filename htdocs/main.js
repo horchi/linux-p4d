@@ -144,7 +144,7 @@ async function showInfoDialog(message, titleMsg, onCloseCallback)
 		closeOnEscape: true,
       hide: "fade",
       open:  function() { infoDialog = $(this); setTimeout(function() { infoDialog.dialog('close'); infoDialog = null }, msDuaration); },
-      close: function() { $(this).dialog('destroy').remove(); }
+      close: function() { $(this).dialog('destroy').remove(); infoDialog = null; }
    });
 }
 

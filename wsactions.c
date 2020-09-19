@@ -1360,6 +1360,7 @@ int P4d::storeIoSetup(json_t* array, long client)
       tell(3, "Debug: %s:%d - usrtitle: '%s'; scalemax: %d; state: %d", type, addr, usrTitle, maxScale, state);
    }
 
+   updateSchemaConfTable();
    performIoSettings(nullptr, client);
 
    return replyResult(success, "Konfiguration gespeichert", client);

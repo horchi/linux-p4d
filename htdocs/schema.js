@@ -24,6 +24,16 @@ function getSchemDef(id)
    }
 }
 
+// get data item by 'Type:0xHexAddr' notation !
+
+function getItem(id)
+{
+   for (var i = 0; i < lastData.length; i++) {
+      if (lastData[i].type + ':0x' + lastData[i].address.toString(16).toUpperCase() == id)
+         return lastData[i];
+   }
+}
+
 function initSchema(schemaData, root)
 {
    // console.log(JSON.stringify(schemaData, undefined, 4));
@@ -83,6 +93,9 @@ function initSchema(schemaData, root)
 
 function updateSchema(data, root)
 {
+   if (data.length == 0)
+      return ;
+
    lastData = data;
 
    for (var i = 0; i < data.length; i++) {
@@ -178,7 +191,7 @@ function editSchemaValue(id)
 
    $(form).dialog({
       modal: true,
-      title: (item.title || "") + " (" + item.type + ":" + item.address + ")",
+      title: (item.title || "") + " (" + item.type + ":0x" + item.address.toString(16) + ")",
       width: "40%",
       buttons: {
          'Speichern': function () {
