@@ -156,7 +156,7 @@ Maybe i implement it later ;)
 
 ## WEB interface:
 
-The default username and password for the login is
+The default port of the WEB interface is 1111, The default username and password for the login is
 User: *p4*
 Pass: *p4-3200*
 

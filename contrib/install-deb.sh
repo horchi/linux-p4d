@@ -50,8 +50,8 @@ apt -y install /tmp/p4d-latest.deb || exit 1
 
 grep -q '^alias p4db=' ~/.bashrc   || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
 grep -q '^alias vl=' ~/.bashrc     || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
-grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
-grep -q '^alias vl=' ~pi/.bashrc   || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
+#grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
+#grep -q '^alias vl=' ~pi/.bashrc   || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"

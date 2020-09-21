@@ -157,6 +157,10 @@ window.storeConfig = function()
    // console.log(JSON.stringify(jsonObj, undefined, 4));
 
    socket.send({ "event" : "storeconfig", "object" : jsonObj });
+
+   // try force reload (not working)
+   // location.reload(true);
+   // window.location.href = window.location.href;
 }
 
 window.resetPeaks = function()
@@ -273,4 +277,3 @@ window.storeIoSetup = function()
 
    socket.send({ "event" : "storeiosetup", "object" : jsonArray });
 }
-

@@ -264,6 +264,7 @@ span > input
     color: inherit;
     background-color: Transparent;
     border: none;
+    text-align: left;
 }
 
 .inputTableAlert

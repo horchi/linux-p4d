@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.6"
-#define VERSION_DATE "19.09.2020"
+#define _VERSION     "0.5.12"
+#define VERSION_DATE "21.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,26 @@
 
 /*
  * ------------------------------------
+
+2020-09-21:  version 0.5.12
+  - bugfix: Fixed store of 'by key' moved elements
+  - added:  User constants to schema configuration
+
+2020-09-20:  version 0.5.11
+  - bugfix: Fixed selection of heeting type
+
+2020-09-20:  version 0.5.10
+  - bugfix: Fixed missing config options
+
+2020-09-20:  version 0.5.9
+  - added: Move schema elements with arrow keys
+
+2020-09-20:  version 0.5.8
+  - bugfix: Fixed schema refresh
+
+2020-09-20:  version 0.5.7
+  - bugfix: Fixed Install script
+  - added:  Config of schema image
 
 2020-09-19:  version 0.5.6
   - bugfix: Update schemaconf on storing sensor selection

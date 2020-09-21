@@ -43,6 +43,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
    { "heatingType",               ctChoice,  false, "2 WEB Interface", "Typ der Heizung", "" },
+   { "schema",                    ctChoice,  false, "2 WEB Interface", "Schemaische Darstellung", "" },
 
    // p4d
 
@@ -76,9 +77,6 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
 };
-
-/*  schema
-    schemaBez  */
 
 //***************************************************************************
 // Web Service
@@ -255,7 +253,7 @@ int P4d::pushDataUpdate(const char* title, long client)
       }
       else if (cl.page == "schema")
       {
-         // #TODO - send visible instead of all
+         // #TODO - send visible instead of all??
 
          for (auto sj : jsonSensorList)
             json_array_append(oWsJson, sj.second);
@@ -286,6 +284,13 @@ int P4d::pushDataUpdate(const char* title, long client)
             else
                for (auto sj : jsonSensorList)
                   json_array_append(oWsJson, sj.second);
+         }
+         else if (cl.second.page == "schema")
+         {
+            // #TODO - send visible instead of all??
+
+            for (auto sj : jsonSensorList)
+               json_array_append(oWsJson, sj.second);
          }
 
          pushOutMessage(oWsJson, title, (long)cl.first);

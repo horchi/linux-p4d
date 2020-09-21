@@ -123,6 +123,10 @@ clean:
 	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
 	rm -f com2
 
+activate: install
+	systemctl restart $(TARGET)
+#	tail -f /var/log/$(TARGET).log
+
 cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --language=c++ --force *.c *.h
 

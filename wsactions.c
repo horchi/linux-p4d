@@ -700,7 +700,7 @@ int P4d::performSchema(json_t* oObject, long client)
       tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
       tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
 
-      if (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A"))
+      if (!tableSchemaConf->hasValue("TYPE", "UC") && (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
          continue;
 
       json_t* oData = json_object();
@@ -752,31 +752,24 @@ int P4d::storeSchema(json_t* oObject, long client)
       tableSchemaConf->setValue("ADDRESS", address);
       tableSchemaConf->setValue("TYPE", type);
 
-      if (tableSchemaConf->find())
-      {
-         tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
-         tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
-         tableSchemaConf->setValue("SHOWTEXT", getIntFromJson(jObj, "showtext"));
-         tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
-         tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
-         tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
+      tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
+      tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
+      tableSchemaConf->setValue("SHOWTEXT", getIntFromJson(jObj, "showtext"));
+      tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
+      tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
+      tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
 
-         json_t* jProp = json_object_get(jObj, "properties");
-         char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
+      json_t* jProp = json_object_get(jObj, "properties");
+      char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
 
-         if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
-            tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
-                 type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
-         else
-            tableSchemaConf->setValue("PROPERTIES", p);
-
-         tableSchemaConf->update();
-         free(p);
-      }
+      if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
+         tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
+              type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
       else
-      {
-         tell(0, "Info: Row for %s:%d not found", type, address);
-      }
+         tableSchemaConf->setValue("PROPERTIES", p);
+
+      tableSchemaConf->store();
+      free(p);
    }
 
    tableSchemaConf->reset();
@@ -1285,6 +1278,9 @@ int P4d::storeConfig(json_t* obj, long client)
    const char* key {0};
    json_t* jValue {nullptr};
    int oldWebPort = webPort;
+   char* oldStyle {nullptr};
+
+   getConfigItem("style", oldStyle, "");
 
    json_object_foreach(obj, key, jValue)
    {
@@ -1296,7 +1292,7 @@ int P4d::storeConfig(json_t* obj, long client)
 
    const char* name = getStringFromJson(obj, "style");
 
-   if (!isEmpty(name))
+   if (!isEmpty(name) && strcmp(name, oldStyle) != 0)
    {
       tell(1, "Info: Creating link 'stylesheet.css' to '%s'", name);
       char* link {nullptr};
@@ -1318,8 +1314,12 @@ int P4d::storeConfig(json_t* obj, long client)
 
    if (oldWebPort != webPort)
       replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte poold neu Starten!", client);
+   else if (strcmp(name, oldStyle) != 0)
+      replyResult(success, "Konfiguration gespeichert. Das Farbschema wurde geändert, mit STRG-Umschalt-r neu laden!", client);
    else
       replyResult(success, "Konfiguration gespeichert", client);
+
+   free(oldStyle);
 
    return done;
 }
@@ -1555,25 +1555,27 @@ int P4d::configDetails2Json(json_t* obj)
 {
    for (const auto& it : configuration)
    {
+      if (it.internal)
+         continue;
+
+      json_t* oDetail = json_object();
+      json_array_append_new(obj, oDetail);
+
+      json_object_set_new(oDetail, "name", json_string(it.name.c_str()));
+      json_object_set_new(oDetail, "type", json_integer(it.type));
+      json_object_set_new(oDetail, "category", json_string(it.category));
+      json_object_set_new(oDetail, "title", json_string(it.title));
+      json_object_set_new(oDetail, "descrtiption", json_string(it.description));
+
+      if (it.type == ctChoice)
+         configChoice2json(oDetail, it.name.c_str());
+
       tableConfig->clear();
       tableConfig->setValue("OWNER", myName());
       tableConfig->setValue("NAME", it.name.c_str());
 
       if (tableConfig->find())
-      {
-         json_t* oDetail = json_object();
-         json_array_append_new(obj, oDetail);
-
-         json_object_set_new(oDetail, "name", json_string(tableConfig->getStrValue("NAME")));
-         json_object_set_new(oDetail, "type", json_integer(it.type));
          json_object_set_new(oDetail, "value", json_string(tableConfig->getStrValue("VALUE")));
-         json_object_set_new(oDetail, "category", json_string(it.category));
-         json_object_set_new(oDetail, "title", json_string(it.title));
-         json_object_set_new(oDetail, "descrtiption", json_string(it.description));
-
-         if (it.type == ctChoice)
-            configChoice2json(oDetail, it.name.c_str());
-      }
 
       tableConfig->reset();
    }
@@ -1597,7 +1599,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
             if (strncmp(opt.name.c_str(), "stylesheet-", strlen("stylesheet-")) != 0)
                continue;
 
-            char* p = strdup(strrchr(opt.name.c_str(), '-'));
+            char* p = strdup(strchr(opt.name.c_str(), '-'));
             *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(p+1));
          }
@@ -1622,7 +1624,34 @@ int P4d::configChoice2json(json_t* obj, const char* name)
             if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
                continue;
 
-            char* p = strdup(strrchr(opt.name.c_str(), '-'));
+            char* p = strdup(strchr(opt.name.c_str(), '-'));
+            *(strrchr(p, '.')) = '\0';
+            json_array_append_new(oArray, json_string(p+1));
+         }
+
+         json_object_set_new(obj, "options", oArray);
+      }
+
+      free(path);
+   }
+   else if (strcmp(name, "schema") == 0)
+   {
+      FileList options;
+      int count {0};
+      char* path {nullptr};
+
+      asprintf(&path, "%s/img/schema", httpPath);
+
+      if (getFileList(path, DT_REG, "png", false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+         {
+            if (strncmp(opt.name.c_str(), "schema-", strlen("schema-")) != 0)
+               continue;
+
+            char* p = strdup(strchr(opt.name.c_str(), '-'));
             *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(p+1));
          }
