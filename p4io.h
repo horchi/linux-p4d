@@ -21,60 +21,6 @@
 #include "service.h"
 
 //***************************************************************************
-// Class P4 Packet
-//***************************************************************************
-
-class P4Packet : public FroelingService, public Serial
-{
-   public:
-
-      // declarations
-
-      enum Error
-      {
-         wrnEndOfPacket = -100
-      };
-
-      // object
-
-      P4Packet();
-
-		int read();
-      int set(const char* data);
-      int evaluate();
-      std::vector<Parameter>* getParameters() { return &parameters; }
-
-      Parameter* getParameter(int index)
-      {
-         std::vector<Parameter>::iterator it;
-
-         for (it = parameters.begin(); it != parameters.end(); it++)
-            if ((*it).index == index)
-               return &(*it);
-
-         return 0;
-      }
-
-      const char* all()                        { return buffer; }
-
-   protected:
-
-      // functions
-
-      int readPacket(const char*& p);
-
-      int getItem(Parameter* p);
-      int getToken(char* token);
-
-      // data
-
-      char buffer[sizeMaxPacket+TB];
-      const char* pBuf;
-      std::vector<Parameter> parameters;
-      char rbuffer[sizeMaxPacket+TB];
-};
-
-//***************************************************************************
 // Request
 //***************************************************************************
 
@@ -165,21 +111,6 @@ class P4Request : public FroelingService
          return success;
       }
 
-      int request(byte command)
-      {
-         header.id = htons(commId);
-         header.command = command;
-
-         prepareRequest();
-
-         show("-> ");
-
-         if (!s || !s->isOpen())
-            return fail;
-
-         return s->write(buffer, sizeBufferContent);
-      }
-
       void show(const char* prefix = "", int elo = eloDebug2)
       {
          char tmp[1000];
@@ -216,47 +147,9 @@ class P4Request : public FroelingService
          tell(eloDebug2, "%s", tmp);
       }
 
+      int request(byte command);
+      int readHeader(int tms = 2000);
       Header* getHeader() { return &header; }
-
-      int readHeader(int tms = 2000)
-      {
-         int status;
-
-         clear();
-
-         if (!s || !s->isOpen())
-         {
-            tell(eloAlways, "Line not open, aborting read");
-            return fail;
-         }
-
-         if ((status = readWord(header.id, no, tms)) != success)
-         {
-            tell(eloAlways, "Read word failed, aborting");
-            return status;
-         }
-
-         if (header.id != commId)
-         {
-            tell(eloAlways, "Got wrong communication id %4.4x "
-                 "expected %4.4x", header.id, commId);
-            return fail;
-         }
-
-         if ((status = readWord(header.size, yes, tms)) != success)
-         {
-            tell(eloAlways, "Read size failed, status was %d", status);
-            return status;
-         }
-
-         if ((status = readByte(header.command, yes, tms)) != success)
-         {
-            tell(eloAlways, "Read command failed, status was %d", status);
-            return status;
-         }
-
-         return success;
-      }
 
       // interface
 
@@ -324,4 +217,61 @@ class P4Request : public FroelingService
       int sizeDecodedContent;
 
       Serial* s;
+};
+
+//***************************************************************************
+// COM2 Interface (unused)
+//***************************************************************************
+//***************************************************************************
+// Class P4 Packet
+//***************************************************************************
+
+class P4Packet : public FroelingService, public Serial
+{
+   public:
+
+      // declarations
+
+      enum Error
+      {
+         wrnEndOfPacket = -100
+      };
+
+      // object
+
+      P4Packet();
+
+		int read();
+      int set(const char* data);
+      int evaluate();
+      std::vector<Parameter>* getParameters() { return &parameters; }
+
+      Parameter* getParameter(int index)
+      {
+         std::vector<Parameter>::iterator it;
+
+         for (it = parameters.begin(); it != parameters.end(); it++)
+            if ((*it).index == index)
+               return &(*it);
+
+         return 0;
+      }
+
+      const char* all()                        { return buffer; }
+
+   protected:
+
+      // functions
+
+      int readPacket(const char*& p);
+
+      int getItem(Parameter* p);
+      int getToken(char* token);
+
+      // data
+
+      char buffer[sizeMaxPacket+TB];
+      const char* pBuf;
+      std::vector<Parameter> parameters;
+      char rbuffer[sizeMaxPacket+TB];
 };

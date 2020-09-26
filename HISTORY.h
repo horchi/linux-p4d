@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.12"
-#define VERSION_DATE "21.09.2020"
+#define _VERSION     "0.5.16"
+#define VERSION_DATE "26.09.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,24 @@
 
 /*
  * ------------------------------------
+
+2020-09-26:  version 0.5.16
+  - change: Improved schema element selection
+  - change: UC elements not created on dialog cancel
+  - change: Option to use backend image for schema element
+
+2020-09-24:  version 0.5.15
+  - added:  Improved log messages on websocket errors
+
+2020-09-23:  version 0.5.14
+  - change: Improved schema element move by keboard
+              -> use CTRL key to move 10 pixels instead of 1
+  - added:  Configuration of element layer for schema elements
+  - added:  remove of user constant schema elements
+
+2020-09-22:  version 0.5.13
+  - change: removed unused table smartconf
+  - added:  type image to schema elements
 
 2020-09-21:  version 0.5.12
   - bugfix: Fixed store of 'by key' moved elements

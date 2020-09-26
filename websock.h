@@ -204,6 +204,7 @@ class cWebSock : public cWebService
       static std::map<void*,Client> clients;
       static cMyMutex clientsMutex;
       static MsgType msgType;
+      static std::map<std::string, std::string> htmlTemplates;
 
       // only used in callback
 

@@ -217,7 +217,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbTable* tableJobs {nullptr};
       cDbTable* tableSensorAlert {nullptr};
       cDbTable* tableSchemaConf {nullptr};
-      cDbTable* tableSmartConf {nullptr};
+      // cDbTable* tableSmartConf {nullptr};
       cDbTable* tableConfig {nullptr};
       cDbTable* tableTimeRanges {nullptr};
       cDbTable* tableHmSysVars {nullptr};

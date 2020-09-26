@@ -250,21 +250,16 @@ span > input
 .schemaDiv
 {
     color: white;
-    padding-top: 3px;
+    padding-top: 5px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 3px;
     background-color: Transparent;
     background-repeat: no-repeat;
     border-radius: var(--borderRadiusSchemaValue);
     border-color: var(--borderColorSchemaValue);
     border-style: var(--borderStyleSchemaValue);
     border-width: 1px;
-}
-
-.buttonSchemaValue
-{
-    color: inherit;
-    background-color: Transparent;
-    border: none;
-    text-align: left;
 }
 
 .inputTableAlert

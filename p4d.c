@@ -363,7 +363,7 @@ int P4d::init()
 
    if (!fileExists(sensorScript))
    {
-      tell(0, "Sensor script '%s' not found!", sensorScript);
+      tell(0, "Info: No sensor script '%s' found", sensorScript);
       free(sensorScript);
       sensorScript = nullptr;
    }
@@ -502,8 +502,8 @@ int P4d::initDb()
    tableSchemaConf = new cDbTable(connection, "schemaconf");
    if (tableSchemaConf->open() != success) return fail;
 
-   tableSmartConf = new cDbTable(connection, "smartconfig");
-   if (tableSmartConf->open() != success) return fail;
+   // tableSmartConf = new cDbTable(connection, "smartconfig");
+   // if (tableSmartConf->open() != success) return fail;
 
    tableConfig = new cDbTable(connection, "config");
    if (tableConfig->open() != success) return fail;
@@ -850,7 +850,7 @@ int P4d::exitDb()
    delete tableJobs;                  tableJobs = 0;
    delete tableSensorAlert;           tableSensorAlert = 0;
    delete tableSchemaConf;            tableSchemaConf = 0;
-   delete tableSmartConf;             tableSmartConf = 0;
+//   delete tableSmartConf;             tableSmartConf = 0;
    delete tableErrors;                tableErrors = 0;
    delete tableConfig;                tableConfig = 0;
    delete tableTimeRanges;            tableTimeRanges = 0;
@@ -1014,7 +1014,7 @@ int P4d::initialize(int truncate)
 
       tableValueFacts->truncate();
       tableSchemaConf->truncate();
-      tableSmartConf->truncate();
+      // tableSmartConf->truncate();
       tableMenu->truncate();
    }
 
@@ -1108,7 +1108,7 @@ int P4d::updateSchemaConfTable()
          added++;
       }
 
-      tableSmartConf->clear();
+/*      tableSmartConf->clear();
       tableSmartConf->setValue("ADDRESS", addr);
       tableSmartConf->setValue("TYPE", type);
 
@@ -1122,6 +1122,7 @@ int P4d::updateSchemaConfTable()
 
          tableSmartConf->store();
       }
+*/
    }
 
    selectActiveValueFacts->freeResult();

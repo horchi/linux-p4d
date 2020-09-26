@@ -709,8 +709,10 @@ int P4d::performSchema(json_t* oObject, long client)
       addFieldToJson(oData, tableSchemaConf, "ADDRESS");
       addFieldToJson(oData, tableSchemaConf, "TYPE");
       addFieldToJson(oData, tableSchemaConf, "STATE");
+      addFieldToJson(oData, tableSchemaConf, "KIND");
+      addFieldToJson(oData, tableSchemaConf, "WIDTH");
+      addFieldToJson(oData, tableSchemaConf, "HEIGHT");
       addFieldToJson(oData, tableSchemaConf, "SHOWUNIT");
-      addFieldToJson(oData, tableSchemaConf, "SHOWTEXT");
       addFieldToJson(oData, tableSchemaConf, "SHOWTITLE");
       addFieldToJson(oData, tableSchemaConf, "USRTEXT");
       addFieldToJson(oData, tableSchemaConf, "FUNCTION", true, "fct");
@@ -747,14 +749,25 @@ int P4d::storeSchema(json_t* oObject, long client)
    {
       int address = getIntFromJson(jObj, "address");
       const char* type = getStringFromJson(jObj, "type");
+      int deleted = getBoolFromJson(jObj, "deleted");
 
       tableSchemaConf->clear();
       tableSchemaConf->setValue("ADDRESS", address);
       tableSchemaConf->setValue("TYPE", type);
 
+      if (tableSchemaConf->find() && deleted)
+      {
+         tableSchemaConf->deleteWhere("%s = '%s' and %s = %d",
+                                      tableSchemaConf->getField("TYPE")->getName(), type,
+                                      tableSchemaConf->getField("ADDRESS")->getName(), address);
+         continue;
+      }
+
       tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
       tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
-      tableSchemaConf->setValue("SHOWTEXT", getIntFromJson(jObj, "showtext"));
+      tableSchemaConf->setValue("KIND", getIntFromJson(jObj, "kind"));
+      tableSchemaConf->setValue("WIDTH", getIntFromJson(jObj, "width"));
+      tableSchemaConf->setValue("HEIGHT", getIntFromJson(jObj, "height"));
       tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
       tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
       tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
@@ -1313,7 +1326,7 @@ int P4d::storeConfig(json_t* obj, long client)
    pushOutMessage(oJson, "config", client);
 
    if (oldWebPort != webPort)
-      replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte poold neu Starten!", client);
+      replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte p4d neu Starten!", client);
    else if (strcmp(name, oldStyle) != 0)
       replyResult(success, "Konfiguration gespeichert. Das Farbschema wurde geändert, mit STRG-Umschalt-r neu laden!", client);
    else

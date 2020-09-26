@@ -22,6 +22,7 @@ int cWebSock::msgBufferSize {0};
 int cWebSock::timeout {0};
 cWebSock::MsgType cWebSock::msgType {mtNone};
 std::map<void*,cWebSock::Client> cWebSock::clients;
+std::map<std::string, std::string> cWebSock::htmlTemplates;
 cMyMutex cWebSock::clientsMutex;
 char* cWebSock::httpPath {nullptr};
 
@@ -76,8 +77,8 @@ int cWebSock::init(int aPort, int aTimeout)
    lws_http_mount mount {0};
 
    mount.mount_next = (lws_http_mount*)nullptr;
-   mount.mountpoint = "/";
    mount.origin = httpPath;
+   mount.mountpoint = "/";
    mount.mountpoint_len = 1;
    mount.cache_max_age = true ? 86400 : 604800;
    mount.cache_reusable = 1;
@@ -128,8 +129,8 @@ int cWebSock::init(int aPort, int aTimeout)
 
 void cWebSock::writeLog(int level, const char* line)
 {
-   if (wsLogLevel & level)
-      tell(2, "WS: %s", line);
+   std::string message = strReplace("\n", "", line);
+   tell(0, "WS: %s", message.c_str());
 }
 
 int cWebSock::exit()
