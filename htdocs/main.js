@@ -364,7 +364,7 @@ function prepareMenu()
 function showSyslog(log)
 {
    var root = document.getElementById("syslogContainer");
-   root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br>');
+   root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
 }
 
 function initErrors(errors, root)

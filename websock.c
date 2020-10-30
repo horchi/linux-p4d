@@ -124,6 +124,15 @@ int cWebSock::init(int aPort, int aTimeout)
    tell(0, "Listener at port (%d) established", port);
    tell(1, "using libwebsocket version '%s'", lws_get_library_version());
 
+   threadCtl.webSock = this;
+   threadCtl.timeout = timeout;
+
+   if (pthread_create(&syncThread, NULL, syncFct, &threadCtl))
+   {
+      tell(0, "Error: Failed to start client daemon thread");
+      return fail;
+   }
+
    return success;
 }
 
@@ -135,22 +144,71 @@ void cWebSock::writeLog(int level, const char* line)
 
 int cWebSock::exit()
 {
-   // lws_context_destroy(context);  #TODO ?
+   if (syncThread)
+   {
+      threadCtl.close = true;
+      lws_cancel_service(context);
+
+      time_t endWait = time(0) + 2;  // 2 second for regular end
+
+      while (threadCtl.active && time(0) < endWait)
+         usleep(100);
+
+      if (threadCtl.active)
+         pthread_cancel(syncThread);
+      else
+         pthread_join(syncThread, 0);
+
+      syncThread = 0;
+   }
+
+   lws_context_destroy(context);
 
    return success;
+}
+
+//***************************************************************************
+// Sync
+//***************************************************************************
+
+void* cWebSock::syncFct(void* user)
+{
+   ThreadControl* threadCtl = (ThreadControl*)user;
+   threadCtl->active = true;
+
+   while (!threadCtl->close)
+   {
+      service(threadCtl);
+   }
+
+   threadCtl->active = false;
+   // printf(" :: stopped syncThread regular\n");
+
+   return nullptr;
 }
 
 //***************************************************************************
 // Service
 //***************************************************************************
 
-int cWebSock::service()
+int cWebSock::service(ThreadControl* threadCtl)
 {
+   static time_t nextWebSocketPing {0};
+
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
-   lws_service(context, 0);    // timeout parameter is not supported by the lib anymore
+   // timeout parameter is not supported by the lib anymore
+   lws_service(context, 0);
 #else
    lws_service(context, 100);
 #endif
+
+   threadCtl->webSock->performData(cWebSock::mtData);
+
+   if (nextWebSocketPing < time(0))
+   {
+      threadCtl->webSock->performData(cWebSock::mtPing);
+      nextWebSocketPing = time(0) + threadCtl->timeout-5;
+   }
 
    return done;
 }

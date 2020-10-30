@@ -34,8 +34,6 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "addrsList",                 ctString,  false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
    // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
 
-   // { "chart",                  ctString,  false, "2 WEB Interface", "Charts", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "chartStart",                ctInteger, false, "2 WEB Interface", "Chart Zeitraum (Tage)", "Standardzeitraum der Chartanzeige (seit x Tagen bis heute)" },
    { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animirte Icons", "" },
 
    { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
@@ -51,7 +49,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "webPort",                   ctInteger, false, "1 P4 Daemon", "Port des Web Interfaces", "" },
    { "stateCheckInterval",        ctInteger, false, "1 P4 Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
    { "ttyDevice",                 ctString,  false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
-   { "loglevel",                  ctInteger, false, "1 P4 Daemon", "Log level", "" },   // #PORT
+   { "loglevel",                  ctInteger, false, "1 P4 Daemon", "Log level", "" },
 
    { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 23:00" },
    { "maxTimeLeak",               ctInteger, false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
@@ -191,6 +189,9 @@ int P4d::pushInMessage(const char* data)
    cMyMutexLock lock(&messagesInMutex);
 
    messagesIn.push(data);
+
+   // #TODO inform main thread about new data
+   //  to trigger it to call dispatchClientRequest();
 
    return success;
 }
@@ -1827,10 +1828,10 @@ int P4d::meanwhile()
 
    tell(3, "loop ...");
 
-   webSock->service();       // takes around 1 second :o
+//   webSock->service();       // takes around 1 second :o
    dispatchClientRequest();
-   webSock->performData(cWebSock::mtData);
-   performWebSocketPing();
+//   webSock->performData(cWebSock::mtData);
+//   performWebSocketPing();
 
    return done;
 }

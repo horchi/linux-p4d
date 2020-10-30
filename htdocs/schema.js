@@ -297,7 +297,7 @@ function editSchemaValue(id, newUC)
       '  <span style="align-self:center;width:120px;text-align:right;">Bild Höhe: </span><span><input id="imgHeight" style="width:60px;" type="number" value="' + schemaDef.height + '"/></span>' +
       ' </div>';
 
-   form += ' <div id="imgInfo" style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">Um das vom p4d gelieferte Bild zu verwenden (' + item.image + ') Funktion und URL leer lassen!</span></div>';
+   form += ' <div id="imgInfo" style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">Um das vom p4d gelieferte Bild zu verwenden (' + (item != null ? item.image : "") + ') Funktion und URL leer lassen!</span></div>';
 
    form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelUsrText" style="width:120px;">xxx:</span><span style="width:-webkit-fill-available;"><textarea id="usrText" style="width:inherit;height:inherit;">' + (schemaDef.usrtext || "") + '</textarea></span></div>';
    form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelFunction" style="width:120px;">Funktion:</span><span style="width:-webkit-fill-available;height:95px;"><textarea id="function" style="width:inherit;height:inherit;font-family: monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea></span></div>';

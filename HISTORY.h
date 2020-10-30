@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.16"
-#define VERSION_DATE "26.09.2020"
+#define _VERSION     "0.5.17"
+#define VERSION_DATE "30.10.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2020-10-30:  version 0.5.17
+  - bugfix: Fixed JS error on empty image
+  - bugfix: Slow WEBIF performance on some network environments
 
 2020-09-26:  version 0.5.16
   - change: Improved schema element selection

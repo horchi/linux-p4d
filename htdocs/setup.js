@@ -12,7 +12,7 @@ function initConfig(configuration, root)
 {
    var lastCat = "";
 
-   // console.log(JSON.stringify(configuration, undefined, 4));
+   console.log(JSON.stringify(configuration, undefined, 4));
 
    configuration.sort(function(a, b) {
       return a.category.localeCompare(b.category);
