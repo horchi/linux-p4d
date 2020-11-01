@@ -77,8 +77,8 @@ int cWebSock::init(int aPort, int aTimeout)
    lws_http_mount mount {0};
 
    mount.mount_next = (lws_http_mount*)nullptr;
-   mount.origin = httpPath;
    mount.mountpoint = "/";
+   mount.origin = httpPath;
    mount.mountpoint_len = 1;
    mount.cache_max_age = true ? 86400 : 604800;
    mount.cache_reusable = 1;
@@ -266,7 +266,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
    SessionData* sessionData = (SessionData*)user;
    std::string clientInfo = "unknown";
 
-   tell(3, "DEBUG: 'callbackHttp' got (%d)", reason);
+   tell(4, "DEBUG: 'callbackHttp' got (%d)", reason);
 
    switch (reason)
    {
@@ -340,9 +340,9 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          char* file {nullptr};
          const char* url = (char*)in;
 
-         tell(1, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
-
          memset(sessionData, 0, sizeof(SessionData));
+
+         tell(1, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
 
          // data or file request ...
 
@@ -389,11 +389,9 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          break;
       }
 
-      case LWS_CALLBACK_FILTER_HTTP_CONNECTION:   // 18
-         return 0;
-
       case LWS_CALLBACK_PROTOCOL_INIT:
       case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:
+      case LWS_CALLBACK_FILTER_HTTP_CONNECTION:
       case LWS_CALLBACK_CLOSED_HTTP:
       case LWS_CALLBACK_WSI_CREATE:
       case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:

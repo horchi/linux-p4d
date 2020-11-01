@@ -55,16 +55,19 @@ sudo bash /tmp/install-deb.sh
 
 # Installation by source (working for most linux plattforms)
 
-## Prerequisits:
--  the described installation is tested with Raspbian buster, the p4d should work also with other Linux distributions and versions but the installation process should adapted to them, for example they use other init processes
-   or use different tools for the package management, other package names, ....
-- de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
-
 ## Preliminary:
 Update your package data:
 `sudo apt update`
 and, if you like, update your installation:
 `sudo apt dist-upgrade`
+
+## Prerequisits:
+-  the described installation is tested with Raspbian buster, the p4d should work also with other Linux distributions and versions but the installation process should adapted to them, for example they use other init processes
+   or use different tools for the package management, other package names, ....
+- de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
+
+## Install libwebsockets (https://libwebsockets.org/repo/libwebsockets)
+  at least in version 3.2 better 4.1 or above
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 

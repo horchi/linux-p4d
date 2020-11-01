@@ -292,6 +292,7 @@ int isNum(const char* value);
 char* sstrcpy(char* dest, const char* src, int max);
 std::string num2Str(int num);
 std::string num2Str(double num);
+double round2(double d);
 std::string l2pTime(time_t t, const char* fmt = "%d.%m.%Y %T");
 char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);

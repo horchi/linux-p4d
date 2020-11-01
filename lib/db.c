@@ -1397,14 +1397,14 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
 
    if (error == CR_SERVER_LOST ||
        error == CR_SERVER_GONE_ERROR ||
-// for compatibility with newer versions of MariaBD library
+// for compatibility with newer versions of MariaDB library
 #ifdef CR_INVALID_CONN_HANDLE
        error == CR_INVALID_CONN_HANDLE ||
 #endif
        error == CR_COMMANDS_OUT_OF_SYNC ||
        error == CR_SERVER_LOST_EXTENDED ||
        error == CR_STMT_CLOSED ||
-// for compatibility with newer versions of MariaBD library
+// for compatibility with newer versions of MariaDB library
 #ifdef CR_CONN_UNKNOW_PROTOCOL
        error == CR_CONN_UNKNOW_PROTOCOL ||
 #else

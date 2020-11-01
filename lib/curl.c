@@ -458,20 +458,22 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
       data->clear();
       exit();
+      tell(1, "Error, download failed; %s (%d)", curl_easy_strerror(res), res);
 
       return fail;
    }
 
    curl_easy_getinfo(handle, CURLINFO_HTTP_CODE, &code);
-   data->statusCode = code;
 
-   if (code == 404)
+   if (code == 400 || code == 404 || code == 500)
    {
       data->clear();
+      data->statusCode = code;
       exit();
       return fail;
    }
 
+   data->statusCode = code;
    size = data->size;
 
    return success;
