@@ -103,7 +103,7 @@ if the database is running remote (on a other host or you like to habe remote ac
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat
+apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat uuid-dev
 ```
 
 ### get the p4d and build it

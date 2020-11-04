@@ -43,7 +43,7 @@ function initMenu(menu, root)
       }
 
       if (item.editable) {
-         elem.setAttribute("onclick", "menuEditRequest(" + item.id + ")");
+         elem.setAttribute("onclick", "menuEditRequest(" + item.id + "," + item.address + "," + item.range + ")");
          elem.className = "menuButtonValue menuButtonValueEditable rounded-border";
       }
 
@@ -57,8 +57,11 @@ function editMenuParameter(parameter, root)
 
    var inpStep = 'step="0.1"';
    var inpType = "text";
-   var info = 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>'
-       + ' Default: ' + parameter.def + parameter.unit;
+   var info = "";
+
+   if (parameter.min != null)
+      info = 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>'
+      + ' Default: ' + parameter.def + parameter.unit;
 
    var form = '<form><div>' + info + '</div><br/>' +
        '<input type="' + inpType + '" value="' + parameter.value + '" name="input"> '
@@ -71,7 +74,7 @@ function editMenuParameter(parameter, root)
       buttons: {
          'Speichern': function () {
             var value = $('input[name="input"]').val();
-            storeParameter(parameter.id, value);
+            storeParameter(parameter.id, value, parameter.address, parameter.range);
             $(this).dialog('close');
          },
          'Abbrechen': function () {
@@ -81,9 +84,14 @@ function editMenuParameter(parameter, root)
       close: function() { $(this).dialog('destroy').remove(); }
    });
 
-   function storeParameter(id, value) {
-      console.log("storing " + id + " - " + value);
-      socket.send({ "event" : "parstore", "object" : { "id"  : id, "value" : value }});
+   function storeParameter(id, value, address, range) {
+      console.log("storing " + id + " - " + value + " - " + address  + " - " + range);
+      socket.send({ "event" : "parstore", "object" :
+                    { "id"  : id,
+                      "value" : value,
+                      "address" : address,
+                      "range" : range
+                    }});
    }
 }
 
@@ -92,8 +100,12 @@ window.menuSelected = function(child)
    socket.send({ "event" : "menu", "object" : { "parent"  : child }});
 }
 
-window.menuEditRequest = function(id)
+window.menuEditRequest = function(id, address, range)
 {
    console.log("menuEdit " + id);
-   socket.send({ "event" : "pareditrequest", "object" : { "id"  : id }});
+   socket.send({ "event" : "pareditrequest", "object" :
+                 { "id"  : id,
+                   "address" : address,
+                   "range" : range,
+                 }});
 }

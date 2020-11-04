@@ -570,7 +570,6 @@ int P4d::performMenu(json_t* oObject, long client)
 
       if (!timeGroup)
       {
-
          json_t* oData = json_object();
          json_array_append_new(oArray, oData);
 
@@ -581,6 +580,7 @@ int P4d::performMenu(json_t* oObject, long client)
          json_object_set_new(oData, "address", json_integer(address));
          json_object_set_new(oData, "title", json_string(title));
          json_object_set_new(oData, "unit", json_string(tableMenu->getStrValue("UNIT")));
+         json_object_set_new(oData, "range", json_integer(na));
 
          if (type == mstMesswert || type == mstMesswert1)
             json_object_set_new(oData, "value", json_real(vaValues[address]));
@@ -647,6 +647,7 @@ int P4d::performMenu(json_t* oObject, long client)
                   json_array_append_new(oArray, oData);
 
                   json_object_set_new(oData, "id", json_integer(0));
+                  json_object_set_new(oData, "range", json_integer(n));
                   json_object_set_new(oData, "parent", json_integer(0));
                   json_object_set_new(oData, "child", json_integer(0));
                   json_object_set_new(oData, "type", json_integer(0));
@@ -654,6 +655,7 @@ int P4d::performMenu(json_t* oObject, long client)
                   json_object_set_new(oData, "title", json_string(rTitle));
                   json_object_set_new(oData, "unit", json_string(""));
                   json_object_set_new(oData, "value", json_string(value));
+                  json_object_set_new(oData, "editable", json_boolean(true));
 
                   free(rTitle);
                   free(value);
@@ -909,6 +911,9 @@ int P4d::performParEditRequest(json_t* oObject, long client)
    tableMenu->clear();
    tableMenu->setValue("ID", id);
 
+   if (id == 0)
+      return performTimeParEditRequest(oObject, client);
+
    if (!tableMenu->find())
    {
       tell(0, "Info: Id %d for 'pareditrequest' not found!", id);
@@ -948,6 +953,47 @@ int P4d::performParEditRequest(json_t* oObject, long client)
    return done;
 }
 
+int P4d::performTimeParEditRequest(json_t* oObject, long client)
+{
+   if (client <= 0)
+      return done;
+
+   int trAddr = getIntFromJson(oObject, "address", na);
+   int range = getIntFromJson(oObject, "range", na);
+
+   tableTimeRanges->clear();
+   tableTimeRanges->setValue("ADDRESS", trAddr);
+
+   if (!tableTimeRanges->find())
+   {
+      tell(0, "Info: Address %d or 'pareditrequest' in timetanges not found!", trAddr);
+      return fail;
+   }
+
+   char* rTitle {nullptr};
+   char* value {nullptr};
+   char* from {nullptr};
+   char* to {nullptr};
+
+   asprintf(&rTitle, "Range %d", range);
+   asprintf(&from, "from%d", range);
+   asprintf(&to, "to%d", range);
+   asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
+
+   json_t* oJson = json_object();
+   json_object_set_new(oJson, "id", json_integer(0));
+   json_object_set_new(oJson, "type", json_integer(mstParZeit));
+   json_object_set_new(oJson, "address", json_integer(trAddr));
+   json_object_set_new(oJson, "range", json_integer(range));
+   json_object_set_new(oJson, "title", json_string(rTitle));
+   json_object_set_new(oJson, "unit", json_string("Uhr"));
+   json_object_set_new(oJson, "value", json_string(value));
+
+   pushOutMessage(oJson, "pareditrequest", client);
+
+   return done;
+}
+
 //***************************************************************************
 // Perform WS Parameter Store
 //***************************************************************************
@@ -962,6 +1008,9 @@ int P4d::performParStore(json_t* oObject, long client)
    int id = getIntFromJson(oObject, "id", na);
    const char* value = getStringFromJson(oObject, "value");
 
+   if (id == 0)
+      return performTimeParStore(oObject, client);
+
    tableMenu->clear();
    tableMenu->setValue("ID", id);
 
@@ -969,49 +1018,123 @@ int P4d::performParStore(json_t* oObject, long client)
    {
       replyResult(fail, "Parameter not found", client);
       tell(0, "Info: Id %d for 'parstore' not found!", id);
+      return done;
+   }
+
+   int parent = tableMenu->getIntValue("PARENT");
+   int type = tableMenu->getIntValue("TYPE");
+   unsigned int address = tableMenu->getIntValue("ADDRESS");
+   ConfigParameter p(address);
+
+   if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
+   {
+      tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", value, p.value, address);
+      sem->p();
+
+      if ((status = request->setParameter(&p)) == success)
+      {
+         tableMenu->setValue("VALUE", ConfigParameter::toNice(p.value, type));
+         tableMenu->setValue("UNIT", p.unit);
+         tableMenu->update();
+         json_object_set_new(oJson, "parent", json_integer(parent));
+         sem->v();
+
+         replyResult(status, "Parameter gespeichert", client);
+         return performMenu(oJson, client);
+      }
+
+      sem->v();
+      tell(eloAlways, "Set of parameter failed, error %d", status);
+
+      if (status == P4Request::wrnNonUpdate)
+         replyResult(status, "Value identical, ignoring request", client);
+      else if (status == P4Request::wrnOutOfRange)
+         replyResult(status, "Value ot of range", client);
+      else
+         replyResult(status, "Serial communication error", client);
    }
    else
    {
-      int parent = tableMenu->getIntValue("PARENT");
-      int type = tableMenu->getIntValue("TYPE");
-      unsigned int address = tableMenu->getIntValue("ADDRESS");
-      ConfigParameter p(address);
-
-      if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
-      {
-         tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", value, p.value, address);
-         sem->p();
-
-         if ((status = request->setParameter(&p)) == success)
-         {
-            tableMenu->setValue("VALUE", ConfigParameter::toNice(p.value, type));
-            tableMenu->setValue("UNIT", p.unit);
-            tableMenu->update();
-            json_object_set_new(oJson, "parent", json_integer(parent));
-            sem->v();
-
-            replyResult(status, "Parameter gespeichert", client);
-            return performMenu(oJson, client);
-         }
-
-         sem->v();
-         tell(eloAlways, "Set of parameter failed, error %d", status);
-
-         if (status == P4Request::wrnNonUpdate)
-            replyResult(status, "Value identical, ignoring request", client);
-         else if (status == P4Request::wrnOutOfRange)
-            replyResult(status, "Value ot of range", client);
-         else
-            replyResult(status, "Serial communication error", client);
-      }
-      else
-      {
-         replyResult(status, "Value format error", client);
-         tell(eloAlways, "Set of parameter failed, wrong format");
-      }
-
-      tableMenu->reset();
+      replyResult(status, "Value format error", client);
+      tell(eloAlways, "Set of parameter failed, wrong format");
    }
+
+   tableMenu->reset();
+
+   return done;
+}
+
+int P4d::performTimeParStore(json_t* oObject, long client)
+{
+   int trAddr = getIntFromJson(oObject, "address", na);
+   int range = getIntFromJson(oObject, "range", na);
+   int rangeNo = range - 1;
+   const char* value = getStringFromJson(oObject, "value");
+
+   tableTimeRanges->clear();
+   tableTimeRanges->setValue("ADDRESS", trAddr);
+
+   if (!tableTimeRanges->find() || range < 1)
+   {
+      replyResult(fail, "Parameter not found", client);
+      tell(0, "Info: Address %d for 'parstore' not found!", trAddr);
+      return done;
+   }
+
+   int status {success};
+   Fs::TimeRanges t(trAddr);
+   char fName[10+TB];
+   char tName[10+TB];
+
+   char valueFrom[100+TB];
+   char valueTo[100+TB];
+
+   // parse rangeNo and value from data
+
+   if (sscanf(value, "%[^-]-%[^-]", valueFrom, valueTo) != 2)
+   {
+      replyResult(fail, "Parsing of value failed, wrong format!", client);
+      tell(eloAlways, "Parsing of value '%s' failed, wrong format!", value);
+      return done;
+   }
+
+   // update struct with time ranges from table
+
+   for (int n = 0; n < 4; n++)
+   {
+      sprintf(fName, "FROM%d", n+1);
+      sprintf(tName, "TO%d", n+1);
+
+      status += t.setTimeRange(n, tableTimeRanges->getStrValue(fName), tableTimeRanges->getStrValue(tName));
+   }
+
+   // update the chaged range with new value
+
+   status += t.setTimeRange(rangeNo, valueFrom, valueTo);
+
+   if (status != success)
+   {
+      replyResult(fail, "Set of time range parameter failed, wrong format", client);
+      tell(eloAlways, "Set of time range parameter failed, wrong format");
+   }
+
+   tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(rangeNo), rangeNo+1, t.address);
+
+   if (request->setTimeRanges(&t) != success)
+   {
+      replyResult(fail, "Set of time range parameter failed", client);
+      tell(eloAlways, "Set of time range parameter failed, error %d", status);
+   }
+
+   // update time range table
+
+   sprintf(fName, "FROM%d", range);
+   sprintf(tName, "TO%d", range);
+   tableTimeRanges->setValue(fName, t.getTimeRangeFrom(rangeNo));
+   tableTimeRanges->setValue(tName, t.getTimeRangeTo(rangeNo));
+   tableTimeRanges->update();
+
+   replyResult(status, "Parameter gespeichert", client);
 
    return done;
 }

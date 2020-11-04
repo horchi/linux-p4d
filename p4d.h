@@ -174,7 +174,9 @@ class P4d : public FroelingService, public cWebInterface
       int performSendMail(json_t* oObject, long client);
       int performAlertTestMail(int id, long client);
       int performParEditRequest(json_t* oObject, long client);
+      int performTimeParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);
+      int performTimeParStore(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
       int performUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);

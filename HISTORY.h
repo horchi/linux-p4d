@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.17"
-#define VERSION_DATE "30.10.2020"
+#define _VERSION     "0.5.18"
+#define VERSION_DATE "04.1.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-11-04:  version 0.5.18
+  - added: Edit of Time range parameters
 
 2020-10-30:  version 0.5.17
   - bugfix: Fixed JS error on empty image
