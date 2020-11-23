@@ -562,20 +562,23 @@ function drawChartDialog(dataObject, root)
          scales: {
             xAxes: [{
                type: "time",
-               time: { displayFormats: {
-                  millisecond: 'MMM DD - HH:MM',
-                  second: 'MMM DD - HH:MM',
-                  minute: 'HH:MM',
-                  hour: 'MMM DD - HH:MM',
-                  day: 'HH:MM',
-                  week: 'MMM DD - HH:MM',
-                  month: 'MMM DD - HH:MM',
-                  quarter: 'MMM DD - HH:MM',
-                  year: 'MMM DD - HH:MM' } },
+               time: { 
+                  unit: 'hour',
+                  unitStepSize: 1,
+                  displayFormats: {
+                  millisecond: 'MMM DD - HH:mm',
+                  second: 'MMM DD - HH:mm',
+                  minute: 'HH:mm',
+                  hour: 'MMM DD - HH:mm',
+                  day: 'HH:mm',
+                  week: 'MMM DD - HH:mm',
+                  month: 'MMM DD - HH:mm',
+                  quarter: 'MMM DD - HH:mm',
+                  year: 'MMM DD - HH:mm' } },
                distribution: "linear",
                display: true,
                ticks: {
-                  maxTicksLimit: 25,
+                  maxTicksLimit: 24,
                   padding: 10,
                   fontColor: "white"
                },

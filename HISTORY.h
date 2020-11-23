@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.18"
-#define VERSION_DATE "04.1.2020"
+#define _VERSION     "0.5.20"
+#define VERSION_DATE "08.1.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2020-11-08:  version 0.5.20
+  - added: Workaround for WEBIF problem
+  - bugfix: Fixed sending mail to more receivers
+
+2020-11-05:  version 0.5.19
+  - added: Added missing libwebsock package
 
 2020-11-04:  version 0.5.18
   - added: Edit of Time range parameters

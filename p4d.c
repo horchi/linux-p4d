@@ -41,7 +41,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
    { "heatingType",               ctChoice,  false, "2 WEB Interface", "Typ der Heizung", "" },
-   { "schema",                    ctChoice,  false, "2 WEB Interface", "Schemaische Darstellung", "" },
+   { "schema",                    ctChoice,  false, "2 WEB Interface", "Schematische Darstellung", "" },
 
    // p4d
 
@@ -1828,10 +1828,10 @@ int P4d::meanwhile()
 
    tell(3, "loop ...");
 
-//   webSock->service();       // takes around 1 second :o
+   webSock->service();       // takes around 1 second :o
    dispatchClientRequest();
-//   webSock->performData(cWebSock::mtData);
-//   performWebSocketPing();
+   webSock->performData(cWebSock::mtData);
+   performWebSocketPing();
 
    return done;
 }
@@ -3098,7 +3098,7 @@ int P4d::sendMail(const char* receiver, const char* subject, const char* body, c
    char* command = {nullptr};
    int result {0};
 
-   asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript, subject, body, mimeType, receiver);
+   asprintf(&command, "%s '%s' '%s' '%s' '%s'", mailScript, subject, body, mimeType, receiver);
    result = system(command);
    free(command);
 

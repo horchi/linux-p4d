@@ -1066,9 +1066,9 @@ int P4d::performParStore(json_t* oObject, long client)
 
 int P4d::performTimeParStore(json_t* oObject, long client)
 {
+   int status {success};
    int trAddr = getIntFromJson(oObject, "address", na);
    int range = getIntFromJson(oObject, "range", na);
-   int rangeNo = range - 1;
    const char* value = getStringFromJson(oObject, "value");
 
    tableTimeRanges->clear();
@@ -1081,15 +1081,13 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       return done;
    }
 
-   int status {success};
    Fs::TimeRanges t(trAddr);
    char fName[10+TB];
    char tName[10+TB];
-
    char valueFrom[100+TB];
    char valueTo[100+TB];
 
-   // parse rangeNo and value from data
+   // parse range and value from data
 
    if (sscanf(value, "%[^-]-%[^-]", valueFrom, valueTo) != 2)
    {
@@ -1110,7 +1108,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
    // update the chaged range with new value
 
-   status += t.setTimeRange(rangeNo, valueFrom, valueTo);
+   status += t.setTimeRange(range-1, valueFrom, valueTo);
 
    if (status != success)
    {
@@ -1118,7 +1116,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       tell(eloAlways, "Set of time range parameter failed, wrong format");
    }
 
-   tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(rangeNo), rangeNo+1, t.address);
+   tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(range-1), range, t.address);
 
    if (request->setTimeRanges(&t) != success)
    {
@@ -1130,8 +1128,8 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
    sprintf(fName, "FROM%d", range);
    sprintf(tName, "TO%d", range);
-   tableTimeRanges->setValue(fName, t.getTimeRangeFrom(rangeNo));
-   tableTimeRanges->setValue(tName, t.getTimeRangeTo(rangeNo));
+   tableTimeRanges->setValue(fName, t.getTimeRangeFrom(range-1));
+   tableTimeRanges->setValue(tName, t.getTimeRangeTo(range-1));
    tableTimeRanges->update();
 
    replyResult(status, "Parameter gespeichert", client);
@@ -1449,7 +1447,7 @@ int P4d::storeConfig(json_t* obj, long client)
    pushOutMessage(oJson, "config", client);
 
    if (oldWebPort != webPort)
-      replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte p4d neu Starten!", client);
+      replyResult(success, "Konfiguration gespeichert. Der Web Port wurde geändert, bitte p4d neu Starten!", client);
    else if (strcmp(name, oldStyle) != 0)
       replyResult(success, "Konfiguration gespeichert. Das Farbschema wurde geändert, mit STRG-Umschalt-r neu laden!", client);
    else
