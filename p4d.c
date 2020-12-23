@@ -234,6 +234,14 @@ int P4d::pushDataUpdate(const char* title, long client)
       auto cl = wsClients[(void*)client];
       json_t* oWsJson = json_array();
 
+      json_t* oJson = json_object();
+      daemonState2Json(oJson);
+      pushOutMessage(oJson, "daemonstate", client);
+
+      oJson = json_object();
+      s3200State2Json(oJson);
+      pushOutMessage(oJson, "s3200-state", client);
+
       if (cl.page == "dashboard")
       {
          if (addrsDashboard.size())
@@ -267,6 +275,14 @@ int P4d::pushDataUpdate(const char* title, long client)
       for (const auto cl : wsClients)
       {
          json_t* oWsJson = json_array();
+
+         json_t* oJson = json_object();
+         daemonState2Json(oJson);
+         pushOutMessage(oJson, "daemonstate", client);
+
+         oJson = json_object();
+         s3200State2Json(oJson);
+         pushOutMessage(oJson, "s3200-state", client);
 
          if (cl.second.page == "dashboard")
          {

@@ -20,7 +20,7 @@ function initDashboard(widgets, root)
    root.innerHTML = "";
    var elem = document.createElement("div");
    elem.className = "widget rounded-border";
-   elem.innerHTML = "<div class=\"widget-title\">Aktualisiert</div>\n<div id=\"refreshTime\" class=\"widget-value\"></div>";
+   elem.innerHTML = "<div id=\"refreshTime\" class=\"widget-title\"></div><div id=\"heatingstatus\" class=\"widget-value\"></div>";
    root.appendChild(elem);
 
    // build page content
@@ -117,7 +117,8 @@ function updateDashboard(sensors)
 {
    // console.log("updateDashboard");
 
-   document.getElementById("refreshTime").innerHTML = lastUpdate;
+   document.getElementById("refreshTime").innerHTML = "Aktualisiert: " + lastUpdate + "<br>" + "_________________";
+   document.getElementById("heatingstatus").innerHTML = s3200State.modeinfo + "<br>" + s3200State.stateinfo;
 
    if (sensors)
    {
