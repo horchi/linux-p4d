@@ -45,9 +45,11 @@
     <canvas id="chart" class="chartCanvas" width="1600" height="600"></canvas>
 
     <div class="chartButtons">
-      <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt;&lt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('prevmonth')">&lt; Monat</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt; Tag</button>
       <button class="rounded-border chartButton" onclick="chartSelect('now')">Jetzt</button>
-      <button class="rounded-border chartButton" onclick="chartSelect('next')">&gt;&gt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('next')">Tag &gt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('nextmonth')">Monat &gt;</button>
       <input  class="rounded-border chartButton" onclick="chartSelect('range')" id="chartRange" type="number" min="1" value="3"></input>
     </div>
 

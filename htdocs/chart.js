@@ -94,7 +94,7 @@ function drawCharts(dataObject, root)
 
    // console.log("dataObject: " + JSON.stringify(dataObject, undefined, 4));
 
-   var colors = ['yellow','white','red','lightblue','lightgreen','purple','blue'];
+   var colors = ['yellow','white','red','lightblue','lightgreen','purple','blue','green','pink','#E69138'];
 
    for (var i = 0; i < dataObject.rows.length; i++)
    {
@@ -112,7 +112,7 @@ function drawCharts(dataObject, root)
    }
 
    var end = new Date();
-   end.setDate(theChartStart.getDate()+theChartRange);
+   end.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+theChartRange);
 
    $("#chartTitle").html(theChartStart.toLocaleString('de-DE') + "  -  " + end.toLocaleString('de-DE'));
    $("#chartSelector").html("");
@@ -144,6 +144,7 @@ function getSensors()
 
    return sensors;
 }
+
 
 function updateChartBookmarks()
 {
@@ -202,13 +203,17 @@ function chartSelect(action)
    var now = new Date();
 
    if (action == "next")
-      theChartStart.setDate(theChartStart.getDate()+1);
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+1);
+   else if (action == "nextmonth")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+30);
    else if (action == "prev")
-      theChartStart.setDate(theChartStart.getDate()-1);
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-1);
+   else if (action == "prevmonth")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "now")
-      theChartStart.setDate(now.getDate()-theChartRange);
+      theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
    else if (action == "range")
-      theChartStart.setDate(now.getDate()-theChartRange);
+      theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
 
    // console.log("sensors:  '" + sensors + "'");
 

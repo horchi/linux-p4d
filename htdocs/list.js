@@ -31,10 +31,10 @@ function initList(widgets, root)
 
    var d = new Date(s3200State.time * 1000);
 
-   html += '<div><span id="' + style + '">' + s3200State.stateinfo + '</span></div>\n';
+   html = '<div><span id="' + style + '">' + s3200State.stateinfo + '</span></div>\n';
    html += '<br/>\n';
-   html += '<div><span>' + d.toLocaleTimeString() + '</span></div>\n';
-   html += '<div><span>Betriebsmodus:</span><span>' + s3200State.modeinfo + '</span></div>\n';
+   html += '<div><span>Uhrzeit: ' + d.toLocaleTimeString() + '</span></div>\n';
+   html += '<div><span>Betriebsmodus: </span><span>' + s3200State.modeinfo + '</span></div>\n';
 
    rootStateS3200.innerHTML = "";
    var elem = document.createElement("div");
@@ -44,23 +44,20 @@ function initList(widgets, root)
    // state image
 
    var rootStateImage = document.getElementById("stateContainerImage");
-   var html = "";
 
-   html += '<img src="' + s3200State.image + '">\n';
+   html = '<img src="' + s3200State.image + '">\n';
 
    rootStateImage.innerHTML = "";
    var elem = document.createElement("div");
    elem.innerHTML = html;
    rootStateImage.appendChild(elem);
 
-   // deamon state
-
+   // daemon state
    var rootStateP4 = document.getElementById("stateContainerP4");
-   var html = "";
 
    if (daemonState.state != null && daemonState.state == 0)
    {
-      html +=  "<div id=\"aStateOk\"><span style=\"text-align: center;\">Heating Control ONLINE</span></div>";
+      html =  "<div id=\"aStateOk\"><span style=\"text-align: center;\">Heating Control ONLINE</span></div>";
       html +=  "<br/>\n";
       html +=  "<div><span>Läuft seit:</span><span>" + daemonState.runningsince + "</span></div>\n";
       html +=  "<div><span>Version:</span> <span>" + daemonState.version + "</span></div>\n";
@@ -68,7 +65,7 @@ function initList(widgets, root)
    }
    else
    {
-      html += "<div id=\"aStateFail\">ACHTUNG:<br/>Heating Control OFFLINE</div>\n";
+      html = "<div id=\"aStateFail\">ACHTUNG:<br/>Heating Control OFFLINE</div>\n";
    }
 
    rootStateP4.innerHTML = "";
@@ -116,6 +113,51 @@ function initList(widgets, root)
 function updateList(sensors)
 {
    document.getElementById("refreshTime").innerHTML = "Messwerte von " + lastUpdate;
+
+   // heating state
+   var rootStateS3200 = document.getElementById("stateContainerS3200");
+
+   switch (s3200State.state) {
+      case 0:  style = "aStateFail";     break;
+      case 3:  style = "aStateHeating";  break;
+      case 19: style = "aStateOk";       break;
+      default: style = "aStateOther"
+   }
+
+   d = new Date(s3200State.time * 1000);
+
+   html = '<div><span id="' + style + '">' + s3200State.stateinfo + '</span></div>\n';
+   html += '<br/>\n';
+   html += '<div><span>Uhrzeit: ' + d.toLocaleTimeString() + '</span></div>\n';
+   html += '<div><span>Betriebsmodus: </span><span>' + s3200State.modeinfo + '</span></div>\n';
+
+   rootStateS3200.innerHTML = html;
+
+   // state image
+   var rootStateImage = document.getElementById("stateContainerImage");
+
+   html = '<img src="' + s3200State.image + '">\n';
+
+   rootStateImage.innerHTML = html;
+
+   // daemon state
+   var rootStateP4 = document.getElementById("stateContainerP4");
+
+   if (daemonState.state != null && daemonState.state == 0)
+   {
+      html =  "<div id=\"aStateOk\"><span style=\"text-align: center;\">Heating Control ONLINE</span></div>";
+      html +=  "<br/>\n";
+      html +=  "<div><span>Läuft seit:</span><span>" + daemonState.runningsince + "</span></div>\n";
+      html +=  "<div><span>Version:</span> <span>" + daemonState.version + "</span></div>\n";
+      html +=  "<div><span>CPU-Last:</span><span>" + daemonState.average0 + " " + daemonState.average1 + " "  + daemonState.average2 + " " + "</span></div>\n";
+   }
+   else
+   {
+      html = "<div id=\"aStateFail\">ACHTUNG:<br/>Heating Control OFFLINE</div>\n";
+   }
+
+   rootStateP4.innerHTML = html;
+
 
    for (var i = 0; i < sensors.length; i++)
    {
