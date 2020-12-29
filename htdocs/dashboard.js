@@ -117,8 +117,9 @@ function updateDashboard(sensors)
 {
    // console.log("updateDashboard");
 
+   var heatingtime = new Date(s3200State.time * 1000);
    document.getElementById("refreshTime").innerHTML = "Aktualisiert: " + lastUpdate + "<br>" + "_________________";
-   document.getElementById("heatingstatus").innerHTML = s3200State.modeinfo + "<br>" + s3200State.stateinfo;
+   document.getElementById("heatingstatus").innerHTML = heatingtime.toLocaleTimeString() + "<br>" + s3200State.modeinfo + "<br>" + s3200State.stateinfo;
 
    if (sensors)
    {
