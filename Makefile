@@ -169,7 +169,7 @@ w1.o            :  w1.c            $(HEADER) w1.h
 service.o       :  service.c       $(HEADER) service.h
 hass.o          :  hass.c          p4d.h
 websock.o       :  websock.c       $(HEADER) websock.h
-wsactions.o     :  wsactions.c     $(HEADER) p4d.h
+wsactions.o     :  wsactions.c     $(HEADER) p4d.h HISTORY.h
 chart.o         :  chart.c
 
 # ------------------------------------------------------

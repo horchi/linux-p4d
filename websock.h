@@ -162,8 +162,6 @@ class cWebSock : public cWebService
       void pushOutMessage(const char* p, lws* wsi = 0);
       void setClientType(lws* wsi, ClientType type);
 
-      static int service();
-
    private:
 
       // callback methods
@@ -209,6 +207,7 @@ class cWebSock : public cWebService
       ThreadControl threadCtl;
 
       static void* syncFct(void* user);
+      static int service(ThreadControl* threadCtl);
 
       // statics
 

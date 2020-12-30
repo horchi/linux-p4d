@@ -155,6 +155,8 @@ class P4d : public FroelingService, public cWebInterface
       int pushInMessage(const char* data) override;
       std::queue<std::string> messagesIn;
       cMyMutex messagesInMutex;
+      cCondVar loopCondition;
+      cMyMutex loopMutex;
 
       int replyResult(int status, const char* message, long client);
       int performWebSocketPing();

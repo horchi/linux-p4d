@@ -189,9 +189,7 @@ int P4d::pushInMessage(const char* data)
    cMyMutexLock lock(&messagesInMutex);
 
    messagesIn.push(data);
-
-   // #TODO inform main thread about new data
-   //  to trigger it to call dispatchClientRequest();
+   loopCondition.Broadcast();
 
    return success;
 }
@@ -217,7 +215,8 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
    }
 
    webSock->pushOutMessage(p, (lws*)client);
-   tell(1, "DEBUG: PushMessage [%s]", p);
+   tell(1, "-> event '%s' (0x%lx) [%.150s..]", title, client, p);
+   tell(2, "DEBUG: PushMessage [%s]", p);
    free(p);
 
    webSock->performData(cWebSock::mtData);
@@ -1824,7 +1823,7 @@ int P4d::standbyUntil(time_t until)
    while (time(0) < until && !doShutDown())
    {
       meanwhile();
-      usleep(50000);
+      loopCondition.TimedWait(loopMutex, 1000);
    }
 
    return done;
@@ -1844,10 +1843,10 @@ int P4d::meanwhile()
 
    tell(3, "loop ...");
 
-   webSock->service();       // takes around 1 second :o
+   // webSock->service();
    dispatchClientRequest();
-   webSock->performData(cWebSock::mtData);
-   performWebSocketPing();
+   // webSock->performData(cWebSock::mtData);
+   // performWebSocketPing();
 
    return done;
 }
@@ -1861,6 +1860,8 @@ int P4d::loop()
    int status;
    time_t nextStateAt = 0;
    int lastState = na;
+
+   loopMutex.Lock();
 
    // info
 
@@ -1987,6 +1988,7 @@ int P4d::loop()
    }
 
    serial->close();
+   loopMutex.Unlock();
 
    return success;
 }

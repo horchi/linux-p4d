@@ -50,7 +50,7 @@ int P4d::dispatchClientRequest()
       {
          // dispatch client request
 
-         tell(2, "Dispatch event %d '%s'", event, toName(event));
+         tell(1, "<- event '%s' [%.100s..]", cWebService::toName(event), messagesIn.front().c_str());
 
          switch (event)
          {
@@ -245,7 +245,7 @@ int P4d::performLogin(json_t* oObject)
       if (isEmpty(name))
          continue;
 
-      tell(0, "Got request '%s'", name);
+      tell(0, "Got request '%s' (client 0x%lx, rights %d)", name, client, wsClients[(void*)client].rights);
 
       if (strcmp(name, "data") == 0)
          update(true, client);     // push the data ('init')
@@ -364,7 +364,7 @@ int P4d::performInitTables(json_t* oObject, long client)
 
 int P4d::performSyslog(long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_object();
@@ -401,7 +401,7 @@ int P4d::performSyslog(long client)
 
 int P4d::performConfigDetails(long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_array();
@@ -417,7 +417,7 @@ int P4d::performConfigDetails(long client)
 
 int P4d::performUserDetails(long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_array();
@@ -433,7 +433,7 @@ int P4d::performUserDetails(long client)
 
 int P4d::performIoSettings(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    bool filterActive = false;
@@ -454,7 +454,7 @@ int P4d::performIoSettings(json_t* oObject, long client)
 
 int P4d::performGroups(long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_array();
@@ -470,7 +470,7 @@ int P4d::performGroups(long client)
 
 int P4d::performErrors(long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_array();
@@ -510,7 +510,7 @@ int P4d::performErrors(long client)
 
 int P4d::performMenu(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    int parent {1};
@@ -689,7 +689,7 @@ int P4d::performMenu(json_t* oObject, long client)
 
 int P4d::performSchema(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oArray = json_array();
@@ -903,7 +903,7 @@ int P4d::performAlertTestMail(int id, long client)
 
 int P4d::performParEditRequest(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    int id = getIntFromJson(oObject, "id", na);
@@ -955,7 +955,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
 
 int P4d::performTimeParEditRequest(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    int trAddr = getIntFromJson(oObject, "address", na);
@@ -1000,7 +1000,7 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
 
 int P4d::performParStore(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    json_t* oJson = json_object();
@@ -1143,7 +1143,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
 int P4d::performChartData(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    int range = getIntFromJson(oObject, "range", 3);                // Anzahl der Tage
@@ -1267,7 +1267,7 @@ int P4d::performChartData(json_t* oObject, long client)
 
 int P4d::performUserConfig(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    int rights = getIntFromJson(oObject, "rights", na);
@@ -1358,7 +1358,7 @@ int P4d::performUserConfig(json_t* oObject, long client)
 
 int P4d::performPasswChange(json_t* oObject, long client)
 {
-   if (client <= 0)
+   if (client == 0)
       return done;
 
    const char* user = getStringFromJson(oObject, "user");

@@ -897,8 +897,8 @@ int cDbTable::validateStructure(int allowAlter)
    {
       needDetach = yes;
 
-   if (attach() != success)
-      return fail;
+      if (attach() != success)
+         return fail;
    }
 
    // ------------------------

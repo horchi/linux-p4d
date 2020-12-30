@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.5.20"
-#define VERSION_DATE "08.1.2020"
+#define _VERSION     "0.6.0"
+#define VERSION_DATE "30.12.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2020-12-30:  version 0.5.22
+  - bugfix: Fixed client ID check
+  - change: Improved signal handling for web interface
 
 2020-11-08:  version 0.5.20
   - added: Workaround for WEBIF problem
