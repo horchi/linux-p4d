@@ -20,7 +20,7 @@ function initDashboard(widgets, root)
    root.innerHTML = "";
    var elem = document.createElement("div");
    elem.className = "widget rounded-border";
-   elem.innerHTML = "<div id=\"refreshTime\" class=\"widget-title\"></div><div id=\"heatingstatus\" class=\"widget-value\"></div>";
+   elem.innerHTML = "<div id=\"refreshTime\" class=\"widget-title\"></div><div id=\"heatingStatus\" class=\"widget-value\"></div>";
    root.appendChild(elem);
 
    // build page content
@@ -117,18 +117,25 @@ function updateDashboard(sensors)
 {
    // console.log("updateDashboard");
 
-   var heatingtime = new Date(s3200State.time * 1000);
-   document.getElementById("refreshTime").innerHTML = "Aktualisiert: " + lastUpdate + "<br>" + "_________________";
-   document.getElementById("heatingstatus").innerHTML = heatingtime.toLocaleTimeString() + "<br>" + s3200State.modeinfo + "<br>" + s3200State.stateinfo;
+   var stateDiv = document.getElementById("refreshTime");
+   stateDiv.style.widget = "90%";
+   stateDiv.innerHTML = "Aktualisiert: " + lastUpdate;
+   stateDiv.style.borderWidth = "0.7px";
+   stateDiv.style.borderBottomStyle = "solid";
+   stateDiv.style.paddingBottom = "7px";
+   stateDiv.style.marginBottom = "5px";
 
-   if (sensors)
-   {
-      for (var i = 0; i < sensors.length; i++)
-      {
+   var heatingtime = new Date(s3200State.time * 1000);
+   document.getElementById("heatingStatus").innerHTML =
+      heatingtime.toLocaleTimeString() + "<br>" +
+      s3200State.modeinfo + "<br>" +
+      s3200State.stateinfo;
+
+   if (sensors) {
+      for (var i = 0; i < sensors.length; i++) {
          var sensor = sensors[i];
 
-         if (sensor.widgettype == 0)         // Symbol
-         {
+         if (sensor.widgettype == 0) {       // Symbol
             var modeStyle = sensor.options == 3 && sensor.mode == 'manual' ? "background-color: #a27373;" : "";
             $("#widget" + sensor.type + sensor.address).attr("src", sensor.image);
             $("#div" + sensor.type + sensor.address).attr("style", modeStyle);
@@ -155,8 +162,7 @@ function updateDashboard(sensors)
                }
             }
          }
-         else if (sensor.widgettype == 1)    // Gauge
-         {
+         else if (sensor.widgettype == 1) {   // Gauge
             var elem = $("#widget" + sensor.type + sensor.address);
 
             if (false && sensor.address != 90680919) {
@@ -186,12 +192,10 @@ function updateDashboard(sensors)
                socket.send({ "event" : "chartdata", "object" : jsonRequest });
             }
          }
-         else if (sensor.widgettype == 2)      // Text
-         {
+         else if (sensor.widgettype == 2) {     // Text
             $("#widget" + sensor.type + sensor.address).html(sensor.text);
          }
-         else if (sensor.widgettype == 3)      // plain value
-         {
+         else if (sensor.widgettype == 3) {     // plain value
             $("#widget" + sensor.type + sensor.address).html(sensor.value + " " + sensor.unit);
          }
 

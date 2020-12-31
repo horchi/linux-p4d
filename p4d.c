@@ -51,7 +51,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "ttyDevice",                 ctString,  false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
    { "loglevel",                  ctInteger, false, "1 P4 Daemon", "Log level", "" },
 
-   { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 23:00" },
+   { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
    { "maxTimeLeak",               ctInteger, false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
 
    { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
@@ -2758,6 +2758,8 @@ int P4d::updateParameter(cDbTable* tableMenu)
    int type = tableMenu->getIntValue("TYPE");
    int paddr = tableMenu->getIntValue("ADDRESS");
 
+   tell(3, "Update parameter %d/%d ...", type, paddr);
+
    if (type == mstReset || type == mstGroup1 || type == mstGroup2)
       return done;
 
@@ -2847,7 +2849,8 @@ int P4d::updateParameter(cDbTable* tableMenu)
          }
       }
    }
-   else if (paddr != 0 && paddr != 9997 && paddr != 9998 && paddr != 9999)
+
+   else if (paddr != 0 && paddr != 9997 && paddr != 9998 && paddr != 9999)  // this 3 'special' addresses takes a long while and don't deliver any usefull data
    {
       Fs::ConfigParameter p(paddr);
 

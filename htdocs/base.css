@@ -848,7 +848,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: Transparent;
     cursor: pointer;
     border: none;
-    width: inherit;
+   /* width: inherit;*/
     color: var(--buttonFont);
     text-overflow: ellipsis;
 }
@@ -894,7 +894,7 @@ table.tableMultiCol tr:nth-child(odd)
     grid-area: main;
     display: inline-grid;
     text-align: center;
-    font-size: 2.1em;
+    font-size: xx-large;
     font-weight: bold;
     align-items: center;
     word-break: break-word;
@@ -1021,10 +1021,6 @@ dialog::backdrop, #backdrop
 @media only screen and (max-width: 740px)
 {
     .daemonState               { width: 88%; }
-/*    .content                   { padding: 0px; }
-    .daemonState               { font-size: 15px; margin: 5px; min-width: 91%; }
-    .daemonState > div > span  { min-width: 110px; }*/
-
     .inputTableConfig > div > span:nth-child(3) { width: 95%; }
     .inputTableConfig > div > span              { width: 95%; }
 
@@ -1032,6 +1028,8 @@ dialog::backdrop, #backdrop
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 30% 66% 4%; }
     .widgetChart               { grid-template-rows: 30% 20% 50%; }
+    .widget-title              { font-size: 1.2em; }
+    .widget-value              { font-size: 1.3em; }
 }
 
 @media only screen and (max-width: 375px)

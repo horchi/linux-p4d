@@ -33,7 +33,7 @@ int P4d::dispatchClientRequest()
       // dispatch message like
       //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
 
-      tell(1, "DEBUG: Got '%s'", messagesIn.front().c_str());
+      tell(3, "DEBUG: Got '%s'", messagesIn.front().c_str());
       oData = json_loads(messagesIn.front().c_str(), 0, &error);
 
       // get the request
@@ -601,7 +601,7 @@ int P4d::performMenu(json_t* oObject, long client)
             case 230: baseAddr = 0x00 + (address * 7); break;   // Boiler 'n'
             case 350: baseAddr = 0x38 + (address * 7); break;   // Heizkreis 'n'
             case 430: baseAddr = 0xb6 + (address * 7); break;   // Puffer 'n'
-               // case ???: baseAddr = 0xd2 + (address * 7); break    // Kessel
+         // case ???: baseAddr = 0xd2 + (address * 7); break;   // Kessel
             case 573: baseAddr = 0xd9 + (address * 7); break;   // Zirkulation
          }
 

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.0"
+#define _VERSION     "0.6.1"
 #define VERSION_DATE "30.12.2020"
 
 #ifdef GIT_REV
@@ -17,7 +17,11 @@
 /*
  * ------------------------------------
 
-2020-12-30:  version 0.5.22
+2020-12-30:  version 0.6.1
+  - change: Minor css style improvement of list view header
+  - change: Adjusted dashboard view for mobile devices
+
+2020-12-30:  version 0.6.0
   - bugfix: Fixed client ID check
   - change: Improved signal handling for web interface
 
