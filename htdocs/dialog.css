@@ -1,0 +1,70 @@
+
+/* ----------------------- */
+/* Dialogs */
+
+.ui-widget {}
+
+.ui-widget-content {
+    border-width: 1px;
+    border-radius: var(--borderRadius);
+    border-color: var(--light2);
+    background-color: var(--dialogBackground);
+    background: var(--dialogBackground);
+    color: var(--dialogColor);
+    align-items: center;
+}
+
+.ui-widget.ui-widget-content {
+    box-shadow: 1px 1px 6px var(--shadow);
+    border-style: none;
+}
+
+.ui-dialog {}
+
+.ui-widget-header {
+    color: var(--dialogColor);
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.ui-dialog .ui-dialog-content {
+    text-align: center;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    background: var(--dialogBackground);
+    border-color: var(--dialogBackground);
+    border-bottom-color: var(--blue);
+}
+
+.no-close .ui-dialog-titlebar-close {
+    display: none
+}
+
+.no-titlebar .ui-dialog-titlebar {
+    display: none;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+    border-top-color: var(--blue);
+}
+
+.ui-dialog .ui-dialog-buttonpane button {
+    border-style: none;
+    background-color: var(--caption1);
+    background: var(--caption1);
+    color: var(--buttonFont);
+    display: inline-block;
+    padding: 6px 12px;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    margin-left: 15px;
+    text-decoration: none;
+    transition: 0.5s;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
+}
+
+.ui-dialog .ui-dialog-buttonpane button:hover
+{
+    background-color: var(--blue);
+}

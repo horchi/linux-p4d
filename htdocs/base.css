@@ -1,12 +1,16 @@
 
-button:focus { outline:0; }
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
 
 .menu
 {
     display: grid;
     margin-left: 5px;
     margin-right: 5px;
-    /*white-space: nowrap;*/
     background-color: var(--menu);
 }
 
@@ -17,7 +21,6 @@ button:focus { outline:0; }
 
 .content
 {
-/*    position: relative;*/
     margin: 0px 5px 0px 5px;
     background-color: var(--background);
 }
@@ -26,7 +29,7 @@ button:focus { outline:0; }
 {
     border-radius: var(--borderRadius);
     border-color: var(--borderColor);
-    border-style: solid;
+    border-style: none;
     border-width: 1px;
 }
 
@@ -93,6 +96,11 @@ button:focus { outline:0; }
     box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
+.buttonOptions:hover
+{
+    background-color: darkslategray;
+}
+
 .buttonHighlighted
 {
     background-color: darkblue;
@@ -102,64 +110,6 @@ button:focus { outline:0; }
     margin: 8px;
     box-shadow: 1px 1px 5px 1px var(--shadow);
 }
-
-/* ----------------------- */
-/* Dialogs */
-
-.ui-widget {}
-
-.ui-widget-content {
-    border-width: 1x;
-    border-radius: 10px;
-    border-color: var(--dialogColor);
-    background: var(--dialogColor);
-    align-items: center;
-}
-
-.ui-widget.ui-widget-content {
-    box-shadow: 1px 1px 6px var(--shadow);
-    border-style: none;
-}
-
-.ui-dialog {}
-.ui-widget-header {}
-
-.ui-dialog .ui-dialog-content {
-    text-align: center;
-}
-
-.ui-dialog .ui-dialog-titlebar {
-    background: var(--dialogColor);
-    border-color: var(--dialogColor);
-}
-
-/*.ui-dialog .ui-dialog-buttonpane button.ui-button {
-    display: none;
-}*/
-
-.ui-dialog .ui-dialog-buttonpane button {
-    border-style: none;
-    background-color: var(--caption1);
-    color: var(--buttonFont);
-    display: inline-block;
-    padding: 6px 12px;
-    margin-top: 5px;
-    margin-bottom: 0px;
-    margin-left: 15px;
-    text-decoration: none;
-    transition: 0.5s;
-    box-shadow: 1px 1px 5px 1px var(--shadow);
-}
-
-.no-close .ui-dialog-titlebar-close {
-    display: none
-}
-
-.no-titlebar .ui-dialog-titlebar {
-    display: none;
-}
-
-/* ----------------------- */
 
 .seperatorTitle1
 {
@@ -793,7 +743,7 @@ table.tableMultiCol tr:nth-child(odd)
     overflow: hidden;
     width: 330px;
     height: 212px;
-    margin: 2px;
+    margin: 3px;
     background-color: var(--light1);
     padding: 1px;
 }
@@ -807,6 +757,7 @@ table.tableMultiCol tr:nth-child(odd)
     'progress';
   grid-template-rows: 25% 71% 4%;
   grid-gap: 1px;
+  box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .widgetManuel
@@ -822,6 +773,7 @@ table.tableMultiCol tr:nth-child(odd)
        'main';
     grid-template-rows: 15% 85%;
     grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .widgetCtrl
@@ -833,6 +785,7 @@ table.tableMultiCol tr:nth-child(odd)
       'ctrl1 ctrl2';
     grid-template-rows: 15% 66% 16%;
     grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .widgetChart
@@ -844,6 +797,7 @@ table.tableMultiCol tr:nth-child(odd)
       'chart chart';
     grid-template-rows: 15% 16% 69%;
     grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .chart-value

@@ -1,5 +1,6 @@
 
 @import url("normalize.css");
+@import url("dialog.css");
 @import url("base.css");
 
 :root
@@ -34,7 +35,9 @@
 
     --buttonAction: #818382;
     --buttonFont: white;
-    --dialogColor: lightgray;
+
+    --dialogColor: black;
+    --dialogBackground: lightgray;
 }
 
 Body

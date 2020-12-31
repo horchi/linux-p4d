@@ -1,5 +1,6 @@
 
 @import url("normalize.css");
+@import url("dialog.css");
 @import url("base.css");
 
 :root
@@ -22,7 +23,7 @@
     --background: #ececb8;
     --shadow: black;
 
-    --borderColor: #f1caa4;
+    --borderColor: #ececb8;
     --borderRadius: 3px;
 
     --borderColorSchemaValue: black;
@@ -35,7 +36,9 @@
 
     --buttonAction: #818382;
     --buttonFont: black;
-    --dialogColor: #818382;
+
+    --dialogColor: black;
+    --dialogBackground: #818382;
 }
 
 Body

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.2"
+#define _VERSION     "0.6.3"
 #define VERSION_DATE "31.12.2020"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2020-12-31:  version 0.6.3
+  - change:  Minor stylesheet modifications
 
 2020-12-31:  version 0.6.2
   - added:  Shadow for buttons and dialogs
