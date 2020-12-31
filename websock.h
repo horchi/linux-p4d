@@ -53,6 +53,7 @@ class cWebService
          evStoreChartbookmarks,
          evInitTables,
          evStoreSchema,
+         evUpdateTimeRanges,
 
          evCount
       };

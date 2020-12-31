@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.1"
-#define VERSION_DATE "30.12.2020"
+#define _VERSION     "0.6.2"
+#define VERSION_DATE "31.12.2020"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2020-12-31:  version 0.6.2
+  - added:  Shadow for buttons and dialogs
+  - added:  Progress dialog
+  - added:  Button to refresh configured time ranges
 
 2020-12-30:  version 0.6.1
   - change: Minor css style improvement of list view header

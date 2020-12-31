@@ -19,6 +19,7 @@ button:focus { outline:0; }
 {
 /*    position: relative;*/
     margin: 0px 5px 0px 5px;
+    background-color: var(--background);
 }
 
 .rounded-border
@@ -29,6 +30,26 @@ button:focus { outline:0; }
     border-width: 1px;
 }
 
+.progress {
+  border: 10px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 10px solid var(--blue);
+  width: 80px;
+  height: 80px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {   /* Safari */
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {  /* Safari */
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .button1
 {
     background-color: var(--caption1);
@@ -37,6 +58,7 @@ button:focus { outline:0; }
     display: inline-block;
     padding: 6px 6px;
     text-decoration: none;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
 .button1:hover
@@ -50,6 +72,7 @@ button:focus { outline:0; }
     color: var(--buttonFont);
     padding: 3px 10px;
     text-decoration: none;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
 .button2:hover
@@ -67,6 +90,7 @@ button:focus { outline:0; }
     height: 28px;
     background-color: slategray;
     text-decoration: none;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
 .buttonHighlighted
@@ -76,6 +100,7 @@ button:focus { outline:0; }
     width: 300px;
     height: 40px;
     margin: 8px;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
 /* ----------------------- */
@@ -89,6 +114,11 @@ button:focus { outline:0; }
     border-color: var(--dialogColor);
     background: var(--dialogColor);
     align-items: center;
+}
+
+.ui-widget.ui-widget-content {
+    box-shadow: 1px 1px 6px var(--shadow);
+    border-style: none;
 }
 
 .ui-dialog {}
@@ -106,6 +136,20 @@ button:focus { outline:0; }
 /*.ui-dialog .ui-dialog-buttonpane button.ui-button {
     display: none;
 }*/
+
+.ui-dialog .ui-dialog-buttonpane button {
+    border-style: none;
+    background-color: var(--caption1);
+    color: var(--buttonFont);
+    display: inline-block;
+    padding: 6px 12px;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    margin-left: 15px;
+    text-decoration: none;
+    transition: 0.5s;
+    box-shadow: 1px 1px 5px 1px var(--shadow);
+}
 
 .no-close .ui-dialog-titlebar-close {
     display: none

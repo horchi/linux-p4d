@@ -95,6 +95,13 @@ function editMenuParameter(parameter, root)
    }
 }
 
+function updateTimeRanges()
+{
+   console.log("updateTimeRanges");
+   showProgressDialog();
+   socket.send({ "event" : "updatetimeranges", "object" : {} });
+}
+
 window.menuSelected = function(child)
 {
    socket.send({ "event" : "menu", "object" : { "parent"  : child }});

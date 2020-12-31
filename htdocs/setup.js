@@ -118,7 +118,7 @@ function initConfig(configuration, root)
 
 function initTables(what)
 {
-   showInfoDialog("init gestartet (kann bis zu einer Minute dauern) ...");
+   showProgressDialog();
    socket.send({ "event" : "inittables", "object" : { "action" : what } });
 }
 
@@ -175,7 +175,7 @@ function filterIoSetup()
    filterActive = !filterActive;
    console.log("filterIoSetup: " + filterActive);
 
-   $("#filterIoSetup").html(filterActive ? "[aktive]" : "[alle]");
+   $("#filterIoSetup").html(filterActive ? "Filter [aktive]" : "Filter [alle]");
    socket.send({ "event" : "iosetup", "object" : { "filter" : filterActive } });
 }
 

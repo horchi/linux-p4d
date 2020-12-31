@@ -109,7 +109,7 @@ const char* cWebService::events[] =
    "storechartbookmarks",
    "inittables",
    "storeschema",
-
+   "updatetimeranges",
    0
 };
 

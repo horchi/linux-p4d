@@ -6,17 +6,21 @@
 {
     /* colors */
 
-    --menu: #fdfddf;
+    --menu: #ececb8;
 
     --light1: #fdfddf;
     --light2: #ffffc6;
     --light3old: #f6f694;
     --light3: #cccc93;
     --light4: #efef65;
+    --blue: #2177AD;
 
     --caption1: #F90;
     --caption2: #ffc766;
     --edit: #f9f9ef;
+
+    --background: #ececb8;
+    --shadow: black;
 
     --borderColor: #f1caa4;
     --borderRadius: 3px;
@@ -38,4 +42,11 @@ Body
 {
     font-family: Helvetica,Arial,sans-serif;
     font-size: 1.0em;
+    color: black;
+    background-color: #ececb8;
+}
+
+.content
+{
+    margin: 5px;
 }

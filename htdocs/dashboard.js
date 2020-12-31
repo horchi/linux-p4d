@@ -15,9 +15,8 @@ function initDashboard(widgets, root)
       return;
    }
 
-   // clean page content
-
    root.innerHTML = "";
+
    var elem = document.createElement("div");
    elem.className = "widget rounded-border";
    elem.innerHTML = "<div id=\"refreshTime\" class=\"widget-title\"></div><div id=\"heatingStatus\" class=\"widget-value\"></div>";

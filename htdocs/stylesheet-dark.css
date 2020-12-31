@@ -6,16 +6,20 @@
 {
     /* colors */
 
-    --menu: black;
+    --menu: #171616;
 
     --light1: #272727;
     --light2: lightgray;
     --light3: #403d3d;
     --light4: white;
+    --blue: #2177AD;
 
     --caption1: #292929;
     --caption2: #565353;
     --edit: #f9f9ef;
+
+    --background: #171616;
+    --shadow: black;
 
     --borderColor: black;
     --borderRadius: 3px;
@@ -30,7 +34,7 @@
 
     --buttonAction: #818382;
     --buttonFont: white;
-    --dialogColor: #f8ffdb;
+    --dialogColor: lightgray;
 }
 
 Body

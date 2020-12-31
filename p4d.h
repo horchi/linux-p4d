@@ -190,6 +190,7 @@ class P4d : public FroelingService, public cWebInterface
       int resetPeaks(json_t* obj, long client);
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);
+      int performUpdateTimeRanges(json_t* array, long client);
 
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);

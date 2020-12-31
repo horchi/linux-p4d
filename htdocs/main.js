@@ -156,6 +156,53 @@ async function showInfoDialog(message, titleMsg, onCloseCallback)
    });
 }
 
+var progressDialog = null;
+
+async function hideProgressDialog()
+{
+   if (progressDialog != null) {
+      console.log("hide progress");
+      progressDialog.dialog('destroy').remove();
+      progressDialog = null;
+   }
+}
+
+async function showProgressDialog()
+{
+   while (progressDialog)
+      await sleep(100);
+
+   var msDuration = 30000;   // timeout 30 seconds
+   var form = document.createElement("form");
+   form.style.overflow = "hidden";
+   var div = document.createElement("div");
+   form.appendChild(div);
+   div.className = "progress";
+
+   console.log("show progress");
+
+   $(form).dialog({
+      dialogClass: "no-titlebar rounded-border",
+      width: "130px",
+      title: "",
+		modal: true,
+      resizable: false,
+		closeOnEscape: false,
+      minHeight: "0px",
+      hide: "fade",
+      open: function() {
+         progressDialog = $(this); setTimeout(function() {
+            if (progressDialog)
+               progressDialog.dialog('close');
+            progressDialog = null }, msDuration);
+      },
+      close: function() {
+         $(this).dialog('destroy').remove();
+         progressDialog = null;
+      }
+   });
+}
+
 function dispatchMessage(message)
 {
    var jMessage = JSON.parse(message);
@@ -176,6 +223,7 @@ function dispatchMessage(message)
    console.log("got event: " + event);
 
    if (event == "result") {
+      hideProgressDialog();
       if (jMessage.object.status == 0)
          showInfoDialog(jMessage.object.message);
       else
@@ -321,7 +369,7 @@ function prepareMenu()
    if ($("#navMenu").data("iosetup") != undefined) {
       html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeIoSetup()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">[alle]</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">Filter [alle]</button>";
       html += "</div>";
    }
    else if ($("#navMenu").data("alerts") != undefined) {
@@ -335,6 +383,13 @@ function prepareMenu()
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
+         html += "</div>";
+      }
+   }
+   else if ($("#navMenu").data("sevicemenu") != undefined) {
+      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
+         html += "<div class=\"confirmDiv\">";
+         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"updateTimeRanges()\">Zeiten aktualisieren</button>";
          html += "</div>";
       }
    }
@@ -562,7 +617,7 @@ function drawChartDialog(dataObject, root)
          scales: {
             xAxes: [{
                type: "time",
-               time: { 
+               time: {
                   unit: 'hour',
                   unitStepSize: 1,
                   displayFormats: {

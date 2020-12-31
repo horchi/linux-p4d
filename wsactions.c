@@ -76,8 +76,9 @@ int P4d::dispatchClientRequest()
             case evStoreSchema:    status = storeSchema(oObject, client);           break;
             case evParEditRequest: status = performParEditRequest(oObject, client); break;
             case evParStore:       status = performParStore(oObject, client);       break;
-            case evChartbookmarks: status = performChartbookmarks(client);             break;
-            case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
+            case evChartbookmarks: status = performChartbookmarks(client);          break;
+            case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client);     break;
+            case evUpdateTimeRanges:    status = performUpdateTimeRanges(oObject, client); break;
 
             default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
                           toName(event), messagesIn.front().c_str());
@@ -126,6 +127,7 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
       case evChartbookmarks:      return rights & urView;
       case evStoreChartbookmarks: return rights & urSettings;
       case evInitTables:          return rights & urSettings;
+      case evUpdateTimeRanges:    return rights & urControl;
       default: break;
    }
 
@@ -332,6 +334,16 @@ int P4d::performTokenRequest(json_t* oObject, long client)
    tableUsers->reset();
 
    return done;
+}
+
+//***************************************************************************
+// Perform Update TimeRanges
+//***************************************************************************
+
+int P4d::performUpdateTimeRanges(json_t* oObject, long client)
+{
+   updateTimeRangeData();
+   return replyResult(success, "... done", client);
 }
 
 //***************************************************************************
