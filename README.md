@@ -111,7 +111,7 @@ apt install build-essential libssl-dev libjansson-dev libxml2-dev libcurl4-opens
 cd /usr/src/
 git clone https://github.com/horchi/linux-p4d/
 cd linux-p4d
-make clean all HASSMQTT=yes
+make clean all
 make install
 ```
 #### For older linux distributions which don't support the systemd init process use this instead of 'make install'
@@ -119,8 +119,6 @@ make install
 make install INIT_SYSTEM=sysV
 ```
 #### If you like a other destination than '/usr/local' append PREFIX=your-destination (e.g. PREFIX=/usr) to all make calls above
-
-#### or if you don't like to use the MQTT interface remove 'HASSMQTT=yes' from the commond above!
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
 - Check `/etc/p4d.conf` file for setting db connection papameters, ttyDeviceSvc device (change device if required),

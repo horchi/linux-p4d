@@ -169,8 +169,7 @@ async function hideProgressDialog()
 
 async function showProgressDialog()
 {
-   while (progressDialog)
-      await sleep(100);
+   hideProgressDialog();
 
    var msDuration = 30000;   // timeout 30 seconds
    var form = document.createElement("form");
@@ -183,7 +182,7 @@ async function showProgressDialog()
 
    $(form).dialog({
       dialogClass: "no-titlebar rounded-border",
-      width: "130px",
+      width: "125px",
       title: "",
 		modal: true,
       resizable: false,

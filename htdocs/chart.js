@@ -151,7 +151,7 @@ function updateChartBookmarks()
    if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10)
       $("#chartBookmarks").html('<div>'
                                 + '<button title="Lesezeichen hinzufügen" class="rounded-border chartBookmarkButton" style="min-width:30px;" onclick="addBookmark()">&#128209;</button>'
-                                + '<button title="zum Löschen hier ablegen" ondrop="dropBm(event)" ondragover="allowDropBm(event)" class="rounded-border chartBookmarkButton" style="min-width:30px;margin-right:50px;" disabled>&#128465;</button>'
+                                + '<button title="zum Löschen hier ablegen" ondrop="dropBm(event)" ondragover="allowDropBm(event)" class="rounded-border chartBookmarkButton" style="min-width:30px;margin-right:50px;">&#128465;</button>'
                                 + '</div>');
    else
       $("#chartBookmarks").html('');
@@ -175,6 +175,7 @@ function dragBm(ev, name)
 
 function allowDropBm(ev)
 {
+   console.log("allowDropBm");
    ev.preventDefault();
 }
 
@@ -183,6 +184,7 @@ function dropBm(ev)
    ev.preventDefault();
    var name = ev.dataTransfer.getData("name");
 
+   console.log("dropBm: " + name);
    for (var i = 0; i < chartBookmarks.length; i++) {
       if (chartBookmarks[i].name == name) {
          chartBookmarks.splice(i, 1);

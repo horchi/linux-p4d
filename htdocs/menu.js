@@ -8,6 +8,8 @@
  *
  */
 
+var actualParent = 1;   // the current parent of the menu items (the level of the menu)
+
 function initMenu(menu, root)
 {
    // console.log(JSON.stringify(menu, undefined, 4));
@@ -28,6 +30,7 @@ function initMenu(menu, root)
       var item = menu.items[i];
       var elem = document.createElement("div");
 
+      actualParent = item.parent;   // all items in the loop should have the same parent !!
       elem.innerHTML = item.title;
 
       if (item.child) {
@@ -43,7 +46,7 @@ function initMenu(menu, root)
       }
 
       if (item.editable) {
-         elem.setAttribute("onclick", "menuEditRequest(" + item.id + "," + item.address + "," + item.range + ")");
+         elem.setAttribute("onclick", "menuEditRequest(" + item.id + "," + item.address + "," + item.range + "," + actualParent + ")");
          elem.className = "menuButtonValue menuButtonValueEditable rounded-border";
       }
 
@@ -74,7 +77,7 @@ function editMenuParameter(parameter, root)
       buttons: {
          'Speichern': function () {
             var value = $('input[name="input"]').val();
-            storeParameter(parameter.id, value, parameter.address, parameter.range);
+            storeParameter(parameter.id, value, parameter.address, parameter.range, parameter.parent);
             $(this).dialog('close');
          },
          'Abbrechen': function () {
@@ -84,13 +87,14 @@ function editMenuParameter(parameter, root)
       close: function() { $(this).dialog('destroy').remove(); }
    });
 
-   function storeParameter(id, value, address, range) {
+   function storeParameter(id, value, address, range, parent) {
       console.log("storing " + id + " - " + value + " - " + address  + " - " + range);
       socket.send({ "event" : "parstore", "object" :
                     { "id"  : id,
                       "value" : value,
                       "address" : address,
-                      "range" : range
+                      "range" : range,
+                      "parent" : parent
                     }});
    }
 }
@@ -99,7 +103,7 @@ function updateTimeRanges()
 {
    console.log("updateTimeRanges");
    showProgressDialog();
-   socket.send({ "event" : "updatetimeranges", "object" : {} });
+   socket.send({ "event" : "updatetimeranges", "object" : { "parent" : actualParent } });
 }
 
 window.menuSelected = function(child)
@@ -107,12 +111,13 @@ window.menuSelected = function(child)
    socket.send({ "event" : "menu", "object" : { "parent"  : child }});
 }
 
-window.menuEditRequest = function(id, address, range)
+window.menuEditRequest = function(id, address, range, parent)
 {
    console.log("menuEdit " + id);
    socket.send({ "event" : "pareditrequest", "object" :
                  { "id"  : id,
                    "address" : address,
                    "range" : range,
+                   "parent" : parent
                  }});
 }

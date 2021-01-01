@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.3"
-#define VERSION_DATE "31.12.2020"
+#define _VERSION     "0.6.4"
+#define VERSION_DATE "01.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2021-01-01:  version 0.6.4
+  - bugfix:  Fixed refresh of time ranges
+  - bugfix:  Fixed drag@drop of chart bookmarks for firefox
+  - bugfix:  Fixed some typos at webif
 
 2020-12-31:  version 0.6.3
   - change:  Minor stylesheet modifications

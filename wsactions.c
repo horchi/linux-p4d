@@ -342,8 +342,14 @@ int P4d::performTokenRequest(json_t* oObject, long client)
 
 int P4d::performUpdateTimeRanges(json_t* oObject, long client)
 {
+   int parent = getIntFromJson(oObject, "parent");
    updateTimeRangeData();
-   return replyResult(success, "... done", client);
+   replyResult(success, "... done", client);
+
+   json_t* oJson = json_object();
+   json_object_set_new(oJson, "parent", json_integer(parent));
+
+   return performMenu(oJson, client);
 }
 
 //***************************************************************************
@@ -593,6 +599,7 @@ int P4d::performMenu(json_t* oObject, long client)
          json_object_set_new(oData, "title", json_string(title));
          json_object_set_new(oData, "unit", json_string(tableMenu->getStrValue("UNIT")));
          json_object_set_new(oData, "range", json_integer(na));
+         json_object_set_new(oData, "parent", json_integer(parent));
 
          if (type == mstMesswert || type == mstMesswert1)
             json_object_set_new(oData, "value", json_real(vaValues[address]));
@@ -638,6 +645,7 @@ int P4d::performMenu(json_t* oObject, long client)
             json_object_set_new(oData, "address", json_integer(0));
             json_object_set_new(oData, "title", json_string(dayTitle));
             json_object_set_new(oData, "unit", json_string(""));
+            json_object_set_new(oData, "parent", json_integer(parent));
 
             free(dayTitle);
 
@@ -668,6 +676,7 @@ int P4d::performMenu(json_t* oObject, long client)
                   json_object_set_new(oData, "unit", json_string(""));
                   json_object_set_new(oData, "value", json_string(value));
                   json_object_set_new(oData, "editable", json_boolean(true));
+                  json_object_set_new(oData, "parent", json_integer(parent));
 
                   free(rTitle);
                   free(value);
@@ -919,12 +928,13 @@ int P4d::performParEditRequest(json_t* oObject, long client)
       return done;
 
    int id = getIntFromJson(oObject, "id", na);
-
-   tableMenu->clear();
-   tableMenu->setValue("ID", id);
+   int parent = getIntFromJson(oObject, "parent", 1);
 
    if (id == 0)
       return performTimeParEditRequest(oObject, client);
+
+   tableMenu->clear();
+   tableMenu->setValue("ID", id);
 
    if (!tableMenu->find())
    {
@@ -956,7 +966,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
       json_object_set_new(oJson, "min", json_integer(p.min));
       json_object_set_new(oJson, "max", json_integer(p.max));
       json_object_set_new(oJson, "digits", json_integer(p.digits));
-
+      json_object_set_new(oJson, "parent", json_integer(parent));
       pushOutMessage(oJson, "pareditrequest", client);
    }
 
@@ -972,6 +982,7 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
 
    int trAddr = getIntFromJson(oObject, "address", na);
    int range = getIntFromJson(oObject, "range", na);
+   int parent = getIntFromJson(oObject, "parent", 1);
 
    tableTimeRanges->clear();
    tableTimeRanges->setValue("ADDRESS", trAddr);
@@ -1000,6 +1011,7 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
    json_object_set_new(oJson, "title", json_string(rTitle));
    json_object_set_new(oJson, "unit", json_string("Uhr"));
    json_object_set_new(oJson, "value", json_string(value));
+   json_object_set_new(oJson, "parent", json_integer(parent));
 
    pushOutMessage(oJson, "pareditrequest", client);
 
@@ -1015,13 +1027,14 @@ int P4d::performParStore(json_t* oObject, long client)
    if (client == 0)
       return done;
 
-   json_t* oJson = json_object();
-   int status {fail};
    int id = getIntFromJson(oObject, "id", na);
-   const char* value = getStringFromJson(oObject, "value");
 
    if (id == 0)
       return performTimeParStore(oObject, client);
+
+   json_t* oJson = json_object();
+   int status {fail};
+   const char* value = getStringFromJson(oObject, "value");
 
    tableMenu->clear();
    tableMenu->setValue("ID", id);
@@ -1081,6 +1094,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
    int status {success};
    int trAddr = getIntFromJson(oObject, "address", na);
    int range = getIntFromJson(oObject, "range", na);
+   int parent = getIntFromJson(oObject, "parent", 1);
    const char* value = getStringFromJson(oObject, "value");
 
    tableTimeRanges->clear();
@@ -1108,6 +1122,9 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       return done;
    }
 
+   allTrim(valueFrom);
+   allTrim(valueTo);
+
    // update struct with time ranges from table
 
    for (int n = 0; n < 4; n++)
@@ -1118,7 +1135,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       status += t.setTimeRange(n, tableTimeRanges->getStrValue(fName), tableTimeRanges->getStrValue(tName));
    }
 
-   // update the chaged range with new value
+   // update the changed range with new value
 
    status += t.setTimeRange(range-1, valueFrom, valueTo);
 
@@ -1128,6 +1145,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       tell(eloAlways, "Set of time range parameter failed, wrong format");
    }
 
+   tell(4, "Value was: '%s'-'%s'", valueFrom, valueTo);
    tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(range-1), range, t.address);
 
    if (request->setTimeRanges(&t) != success)
@@ -1146,7 +1164,10 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
    replyResult(status, "Parameter gespeichert", client);
 
-   return done;
+   json_t* oJson = json_object();
+   json_object_set_new(oJson, "parent", json_integer(parent));
+
+   return performMenu(oJson, client);
 }
 
 //***************************************************************************

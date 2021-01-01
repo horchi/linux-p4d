@@ -30,9 +30,9 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 {
    // web
 
-   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   { "addrsList",                 ctString,  false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
-   // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus ID:Typ siehe 'Aufzeichnung'" },
+   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   { "addrsList",                 ctString,  false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
 
    { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animirte Icons", "" },
 
@@ -54,7 +54,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
    { "maxTimeLeak",               ctInteger, false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
 
-   { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
+   { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
    { "aggregateInterval",         ctInteger, false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
    { "peakResetAt",               ctString,  true,  "1 P4 Daemon", "", "" },
 
@@ -63,7 +63,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "mqttUrl",                   ctString,  false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
    { "mqttUser",                  ctString,  false, "4 MQTT Interface", "User", "" },
    { "mqttPassword",              ctString,  false, "4 MQTT Interface", "Password", "" },
-   { "mqttDataTopic",             ctString,  false, "4 MQTT Interface", "MQTT Data Topic Name", " (<NAME> wird gegen den Messwertnamen ersetzt. Beispiel: p4d2mqtt/sensor/<NAME>/state)" },
+   { "mqttDataTopic",             ctString,  false, "4 MQTT Interface", "MQTT Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
    { "mqttHaveConfigTopic",       ctBool,    false, "4 MQTT Interface", "Config Topic", "Speziell für HomeAssistant" },
 
    // mail
