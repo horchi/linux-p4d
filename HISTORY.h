@@ -18,7 +18,8 @@
  * ------------------------------------
 
 2021-01-02:  version 0.6.6
-  - change:
+  - change: Improvement time range dialog
+  - change: Set widget type for unit 'U' to graph
 
 2021-01-02:  version 0.6.5
   - bugfix: Fixed formatting of heating date
