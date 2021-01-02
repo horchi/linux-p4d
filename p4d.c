@@ -215,8 +215,8 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
    }
 
    webSock->pushOutMessage(p, (lws*)client);
-   tell(1, "-> event '%s' (0x%lx) [%.150s..]", title, client, p);
-   tell(2, "DEBUG: PushMessage [%s]", p);
+   tell(2, "-> event '%s' (0x%lx) [%.150s..]", title, client, p);
+   tell(3, "DEBUG: PushMessage [%s]", p);
    free(p);
 
    webSock->performData(cWebSock::mtData);
@@ -2266,17 +2266,13 @@ int P4d::update(bool webOnly, long client)
             }
             case udTime:
             {
-               struct tm tim = {0};
-               char date[100];
-
-               localtime_r(&currentState.time, &tim);
-               strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
-               json_object_set_new(ojData, "text", json_string(date));
+               std::string date = l2pTime(currentState.time, "%A, %d. %b. %Y %H:%M:%S");
+               json_object_set_new(ojData, "text", json_string(date.c_str()));
 
                if (!webOnly)
                {
-                  store(now, name, title, unit, type, udTime, currentState.time, factor, groupid, date);
-                  addParameter2Mail(title, date);
+                  store(now, name, title, unit, type, udTime, currentState.time, factor, groupid, date.c_str());
+                  addParameter2Mail(title, date.c_str());
                }
 
                break;

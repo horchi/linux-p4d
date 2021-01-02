@@ -50,7 +50,7 @@ int P4d::dispatchClientRequest()
       {
          // dispatch client request
 
-         tell(1, "<- event '%s' [%.100s..]", cWebService::toName(event), messagesIn.front().c_str());
+         tell(2, "<- event '%s' [%.100s..]", cWebService::toName(event), messagesIn.front().c_str());
 
          switch (event)
          {
@@ -967,6 +967,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
       json_object_set_new(oJson, "max", json_integer(p.max));
       json_object_set_new(oJson, "digits", json_integer(p.digits));
       json_object_set_new(oJson, "parent", json_integer(parent));
+
       pushOutMessage(oJson, "pareditrequest", client);
    }
 
@@ -1001,7 +1002,11 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
    asprintf(&rTitle, "Range %d", range);
    asprintf(&from, "from%d", range);
    asprintf(&to, "to%d", range);
-   asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
+
+   if (!tableTimeRanges->hasValue(from, "nn:nn") && !tableTimeRanges->hasValue(to, "nn:nn"))
+      asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
+   else
+      asprintf(&value, "%s", "-");
 
    json_t* oJson = json_object();
    json_object_set_new(oJson, "id", json_integer(0));
@@ -1114,6 +1119,9 @@ int P4d::performTimeParStore(json_t* oObject, long client)
    char valueTo[100+TB];
 
    // parse range and value from data
+
+   if (isEmpty(value))
+      value = "nn:nn - nn:nn";
 
    if (sscanf(value, "%[^-]-%[^-]", valueFrom, valueTo) != 2)
    {
@@ -2069,7 +2077,7 @@ P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint ad
    if (type == "AO")
       return wtChart;
 
-   if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A") // 'Volt/Ampere/Prozent/Temperatur
+   if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A" || unit == "U") // Volt/Ampere/Prozent/Temperatur/Umin
       return wtChart;
 
    if (!unit.length())

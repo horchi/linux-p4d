@@ -240,14 +240,8 @@ int main(int argc, char** argv)
 
          if (request.getStatus(&s) == success)
          {
-            struct tm tim = {0};
-            char date[100];
-
-            localtime_r(&s.time, &tim);
-            strftime(date, 100, "%A, %d. %b. %G %H:%M:%S", &tim);
-
             tell(eloAlways, "Version: %s", s.version);
-            tell(eloAlways, "Time: %s", date);
+            tell(eloAlways, "Time: %s", l2pTime(s.time, "%A, %d. %b. %Y %H:%M:%S").c_str());
             tell(eloAlways, "%d - %s", s.mode, s.modeinfo);
             tell(eloAlways, "%d - %s", s.state, s.stateinfo);
          }

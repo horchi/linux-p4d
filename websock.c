@@ -293,7 +293,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
       case LWS_CALLBACK_CLIENT_WRITEABLE:
       {
-         tell(2, "HTTP: Client writeable");
+         tell(3, "HTTP: Client writeable");
          break;
       }
 
@@ -307,7 +307,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
          if (!sessionData->dataPending)
          {
-            tell(1, "Info: No more session data pending");
+            tell(2, "Info: No more session data pending");
             return -1;
          }
 
@@ -326,7 +326,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          if (res < 0)
             tell(0, "Failed writing '%s'", sessionData->buffer+sizeLwsPreFrame);
          else
-            tell(2, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
+            tell(3, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
 
          free(sessionData->buffer);
          memset(sessionData, 0, sizeof(SessionData));
@@ -378,7 +378,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
                return -1;
             }
 
-            tell(2, "HTTP: Done, url: '%s'", url);
+            tell(3, "HTTP: Done, url: '%s'", url);
          }
 
          break;
@@ -410,6 +410,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 #if LWS_LIBRARY_VERSION_MAJOR >= 3
       case LWS_CALLBACK_HTTP_CONFIRM_UPGRADE:
       case LWS_CALLBACK_EVENT_WAIT_CANCELLED:
+      case LWS_CALLBACK_HTTP_BODY_COMPLETION:
 #endif
          break;
 
@@ -520,7 +521,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
                strncpy(msgBuffer + sizeLwsPreFrame, msg.c_str(), msgSize);
 
-               tell(2, "DEBUG: Write (%d) -> %.*s -> to '%s' (%p)\n", msgSize, msgSize,
+               tell(3, "DEBUG: Write (%d) -> %.*s -> to '%s' (%p)\n", msgSize, msgSize,
                     msgBuffer+sizeLwsPreFrame, clientInfo.c_str(), (void*)wsi);
 
                res = lws_write(wsi, (unsigned char*)msgBuffer + sizeLwsPreFrame, msgSize, LWS_WRITE_TEXT);
@@ -637,7 +638,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
       case LWS_CALLBACK_RECEIVE_PONG:                      // ping / pong
       {
-         tell(2, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
+         tell(3, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
          break;
       }
 

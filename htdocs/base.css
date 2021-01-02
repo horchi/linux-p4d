@@ -183,6 +183,36 @@ span > input
     font-size: 13px;
 }
 
+.time-input
+{
+    background-color: var(--edit);
+    margin-top: 2px;
+    padding: 3px;
+    width: 45px;
+    color: black;
+
+    border-radius: var(--borderRadius);
+    border-color: var(--borderColor);
+    border-style: none;
+    border-width: 1px;
+}
+
+.timepicker
+{
+    width: 110px;
+    display: flex;
+}
+
+.timerangepicker
+{
+    display: flex;
+}
+
+.timepicker > input
+{
+    width: inherit;
+}
+
 .info
 {
     background-color: green;

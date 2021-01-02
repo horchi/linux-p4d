@@ -143,7 +143,7 @@ async function showInfoDialog(message, titleMsg, onCloseCallback)
       resizable: true,
 		closeOnEscape: true,
       hide: "fade",
-      open:  function() {
+      open: function() {
          infoDialog = $(this); setTimeout(function() {
             if (infoDialog)
                infoDialog.dialog('close');

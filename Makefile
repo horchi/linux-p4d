@@ -123,6 +123,8 @@ clean:
 	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
 	rm -f com2
 
+build: clean all
+
 activate: install
 	systemctl restart $(TARGET)
 #	tail -f /var/log/$(TARGET).log

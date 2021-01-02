@@ -177,7 +177,7 @@ int P4d::mqttWrite(json_t* obj, uint groupid)
       return fail;
 
    char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
-   tell(2, "Debug: JSON: [%s]", message);
+   tell(3, "Debug: JSON: [%s]", message);
 
    if (mqttInterfaceStyle == misGroupedTopic)
       sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);

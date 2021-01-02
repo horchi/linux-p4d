@@ -343,6 +343,7 @@ int P4Request::readDateExt(time_t& t)
    tm.tm_isdst = -1;               // force DST auto detect
 
    t = mktime(&tm);
+   // printf("got %d %d %d  (%d) '%s'\n", d, m, y, tm.tm_year, l2pTime(t).c_str());
 
    return success;
 }

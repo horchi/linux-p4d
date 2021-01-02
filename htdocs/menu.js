@@ -63,20 +63,43 @@ function editMenuParameter(parameter, root)
    var info = "";
 
    if (parameter.min != null)
-      info = 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>'
+      info = 'Bereich: ' + parameter.min + '-' + parameter.max + parameter.unit + '<br/>'
       + ' Default: ' + parameter.def + parameter.unit;
 
-   var form = '<form><div>' + info + '</div><br/>' +
-       '<input type="' + inpType + '" value="' + parameter.value + '" name="input"> '
-       + parameter.unit + '<br></form>';
+   var timeRange = null;
+   var form = '<form id="dlgForm"><div>' + info + '</div><br/>';
+
+   if (parameter.type == 0x0a) {
+      timeRange = parameter.value.split("-");
+      form +=
+         '<div id=timepicker class="timerangepicker">' +
+         '  <div class="timepicker" id="timeFrom"></div>' +
+         '  <div style="align-self:center;width:90px;">' + ' bis ' + '</div>' +
+         '  <div class="timepicker" id="timeTo">' +
+         '  </div><div style="align-self:center;width:50px;">' + parameter.unit + '</div>' +
+         '</div>';
+   }
+   else {
+      form += '<input class="input rounded-border" type="' + inpType + '" value="' + parameter.value + '" name="input"> ' + parameter.unit;
+   }
+
+   form += '<br></form>';
 
    $(form).dialog({
       modal: true,
-      width: "80%",
+      width: (parameter.type == 0x0a ? "40%" : "60%"),
       title: parameter.title,
       buttons: {
          'Speichern': function () {
-            var value = $('input[name="input"]').val();
+            var value = '';
+            if (parameter.type == 0x0a) {
+               var from = $("#timeFrom").picktim('val');
+               var to = $("#timeTo").picktim('val');
+               if (from.length == 5 && to.length == 5)
+                  value = from + " - " + to;
+            }
+            else
+               value = $('input[name="input"]').val();
             storeParameter(parameter.id, value, parameter.address, parameter.range, parameter.parent);
             $(this).dialog('close');
          },
@@ -84,11 +107,31 @@ function editMenuParameter(parameter, root)
             $(this).dialog('close');
          }
       },
+      open: function() {
+         if (parameter.type == 0x0a) {
+            $("#timeFrom").picktim({
+               mode: 'h24',
+               width: '180px',
+               position: 'fixed',
+               appendTo: '#timepicker',
+               orientation: 'topLeft',
+               defaultValue: timeRange[0].trim()
+            });
+            $("#timeTo").picktim({
+               mode: 'h24',
+               width: '180px',
+               position: 'fixed',
+               appendTo: '#timepicker',
+               orientation: 'topLeft',
+               defaultValue: timeRange[1].trim()
+            });
+         }
+      },
       close: function() { $(this).dialog('destroy').remove(); }
    });
 
    function storeParameter(id, value, address, range, parent) {
-      console.log("storing " + id + " - " + value + " - " + address  + " - " + range);
+      console.log("storing " + id + " - '" + value + "' - 0x" + address  + " timeN: " + range);
       socket.send({ "event" : "parstore", "object" :
                     { "id"  : id,
                       "value" : value,

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.4"
-#define VERSION_DATE "01.01.2021"
+#define _VERSION     "0.6.6"
+#define VERSION_DATE "02.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,18 +17,26 @@
 /*
  * ------------------------------------
 
+2021-01-02:  version 0.6.6
+  - change:
+
+2021-01-02:  version 0.6.5
+  - bugfix: Fixed formatting of heating date
+  - change: Finetuning of log levels
+  - added:  build target to makefile
+
 2021-01-01:  version 0.6.4
-  - bugfix:  Fixed refresh of time ranges
-  - bugfix:  Fixed drag@drop of chart bookmarks for firefox
-  - bugfix:  Fixed some typos at webif
+  - bugfix: Fixed refresh of time ranges
+  - bugfix: Fixed drag@drop of chart bookmarks for firefox
+  - bugfix: Fixed some typos at webif
 
 2020-12-31:  version 0.6.3
-  - change:  Minor stylesheet modifications
+  - change: Minor stylesheet modifications
 
 2020-12-31:  version 0.6.2
-  - added:  Shadow for buttons and dialogs
-  - added:  Progress dialog
-  - added:  Button to refresh configured time ranges
+  - added: Shadow for buttons and dialogs
+  - added: Progress dialog
+  - added: Button to refresh configured time ranges
 
 2020-12-30:  version 0.6.1
   - change: Minor css style improvement of list view header
