@@ -42,16 +42,17 @@ dpkg-reconfigure --frontend=noninteractive locales && \
 
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 
-if [[ ! -d /var/lib/p4.php.bak ]]; then
-   mv /var/lib/p4 /var/lib/p4.php.bak
-fi
-
 apt -y install /tmp/p4d-latest.deb || exit 1
+
+css_link="/var/lib/p4/stylesheet.css"
+
+if [ ! -L ${css_link} ] ; then
+   echo "Creating stylesheet link"
+   ln -s /var/lib/p4/stylesheet-dark.css ${css_link}
+fi
 
 grep -q '^alias p4db=' ~/.bashrc   || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
 grep -q '^alias vl=' ~/.bashrc     || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
-#grep -q '^alias p4db=' ~pi/.bashrc || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~pi/.bashrc
-#grep -q '^alias vl=' ~pi/.bashrc   || echo "alias vl='tail -f /var/log/syslog'" >> ~pi/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"

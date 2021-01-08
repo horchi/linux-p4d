@@ -145,33 +145,95 @@ class FroelingService
          udTime
       };
 
-      // menu struct types
+      // menu struct types (parameter types)
 
       enum MenuStructType
       {
-         mstMesswert  = 0x03,
-         mstMesswert1 = 0x46,
+         // getValue:
 
-         mstPar      = 0x07,
-         mstParDig   = 0x08,
-         mstParSet   = 0x32,
-         mstParSet1  = 0x39,
-         mstParSet2  = 0x40,
-         mstParZeit  = 0x0a,
+         mstMesswert    = 0x03,  //  3 value
+         mstMesswert1   = 0x46,  // 70 value
 
-         mstDigOut   = 0x11,
-         mstAnlOut   = 0x12,
-         mstDigIn    = 0x13,
-         mstEmpty    = 0x22,
-         mstReset    = 0x23,
-         mstZeiten   = 0x26,
-         mstAnzeigen = 0x3a,
-         mstFirmware = 0x16,
-         mstBus      = 0x31,  // for whatever
+         // setParameter/getParameter:
 
-         mstGroup1   = 0x2a,  // anything like a parameter group
-         mstGroup2   = 0x2d   // anything like a parameter group
+         mstPar         = 0x07,  //  7 number parameter
+         mstParDig      = 0x08,  //  8 boolean parameter
+         mstParSet      = 0x32,  // 50
+         mstParSet1     = 0x39,  // 57
+         mstParSet2     = 0x40,  // 64
+         mstParWeekday  = 0x0b,  // 11 -> TODO: check what means value 8
+         mstParZeit     = 0x0a,  // 10 hh:mm -> TODO: check in service menu if it works
+
+         mstWorkMode    = 0x2f,  // 47  -> TODO can set? check
+
+         // getDigitalIn/getDigitalOut/getAnalogOut:
+
+         mstDigOut      = 0x11,  // 17
+         mstAnlOut      = 0x12,  // 18
+         mstDigIn       = 0x13,  // 19
+
+         // ... ??
+
+         mstEmpty       = 0x22,  // 34
+         mstReset       = 0x23,  // 35
+         mstZeiten      = 0x26,  // 38
+         mstAnzeigen    = 0x3a,  // 58
+         mstFirmware    = 0x16,  // 22
+         mstBusValues   = 0x31,  // 49
+         mstFuelKind    = 0x3c,  // 60
+
+         mstUnknown0    = 0x09,  //  9
+         mstCurrentDate = 0x0c,  // 12
+         mstCurrentTime = 0x0d,  // 13
+         mstUnknown3    = 0x0f,  // 15
+         mstMenuLevel   = 0x10,  // 16
+         mstErrors      = 0x14,  // 20
+         mstSetDefaults = 0x15,  // 21
+         mstRost        = 0x18,  // 24
+         mstUnknown8    = 0x19,  // 25
+         mstLanguage    = 0x1d,  // 29
+         mstErrorMem    = 0x1e,  // 30
+         mstErrReset    = 0x1f,  // 31
+         mstUnknown12   = 0x2c,  // 44
+         mstXxxExist    = 0x38,  // 56
+         mstSaugzug     = 0x3b,  // 59
+         mstIgnitonStart= 0x3d,  // 61
+         mstUnknown17   = 0x3e,  // 62
+         mstDisplay     = 0x41,  // 65
+         mstKesselChoice= 0x43,  // 67
+         mstKesselType  = 0x44,  // 68
+         mstWarningMsg  = 0x45,  // 69
+
+         // menu groups
+
+         mstMenuMain        = 0x01,  //  1
+         mstMenuSysChoice   = 0x0e,  // 14
+         mstMenu1           = 0x21,  // 33
+         mstMenuDaySel      = 0x27,  // 39
+         mstMenuRoot        = 0x28,  // 40
+         mstMenuChoice      = 0x2a,  // 42
+         mstMenu2           = 0x2d,  // 45
+         mstMenu3           = 0x2e,  // 46
+         mstMenuDisplay     = 0x30,  // 48
+         mstGroup9          = 0x35,  // 53
+         mstGroup10         = 0x37,  // 55
+         mstMenuControlUnit = 0x3f   // 63
       };
+
+      static bool isGroup(int type)
+      { return
+            type == mstMenuMain        ||
+            type == mstMenuSysChoice   ||
+            type == mstMenu1           ||
+            type == mstMenuDaySel      ||
+            type == mstMenuRoot        ||
+            type == mstMenuChoice      ||
+            type == mstMenu2           ||
+            type == mstMenu3           ||
+            type == mstMenuDisplay     ||
+            type == mstGroup9          ||
+            type == mstGroup10         ||
+            type == mstMenuControlUnit; }
 
       // error states
 
@@ -188,12 +250,37 @@ class FroelingService
 
       struct ConfigParameter
       {
+         friend class P4Request;
+
          public:
 
             ConfigParameter(word addr = addrUnknown)  { unit = 0; address = addr; }
             ~ConfigParameter() { free(unit); }
 
-            static cRetBuf toNice(sword value, byte type)
+            int getFactor() { return factor; }
+            void setUnit(const char* u) { free(unit); unit = strdup(u); }
+
+            void show()
+            {
+               tell(eloAlways,
+                    " Address: 0x%4.4x\n"       \
+                    " Unit: %s\n"               \
+                    " Digits: %d\n"             \
+                    escBlue " Value: %.*f (%d)\n" escReset   \
+                    " Min: %.*f (%d)\n"              \
+                    " Max: %.*f (%d)\n"              \
+                    " Default: %.*f (%d)\n"          \
+                    " Factor: %d\n",
+                    address, unit, digits, digits, rValue, value, digits, rMin, min, digits, rMax, max, digits, rDefault, def, getFactor());
+               tell(eloInfo,
+                    " UB1 %d \n"                \
+                    " UB2 %d \n"                \
+                    " UB3 %d \n"                \
+                    " UW1 %d \n",               \
+                    ub1, ub2, ub3, uw1);
+            }
+
+            cRetBuf toNice(byte type)
             {
                char nice[100+TB];
 
@@ -202,23 +289,50 @@ class FroelingService
                else if (type == mstParZeit)
                   sprintf(nice, "%02d:%02d", value/60, value%60);
                else
-                  sprintf(nice, "%d", value);
+                  sprintf(nice, "%.*f", digits, rValue);
 
                return cRetBuf(nice);
             }
 
-            static int toValue(const char* nice, byte type, sword& value)
+            int setValueDirect(const char* strValue, int dig, int factor)
+            {
+               if (factor <= 0)
+                  factor = 1;
+
+               if (dig == 0)
+               {
+                  if (!isNum(strValue))
+                     return fail;
+
+                  rValue = atoi(strValue);
+                  value = rValue * factor;
+               }
+
+               else
+               {
+                  if (!isFloat(strValue))
+                     return fail;
+
+                  rValue = strtod(strValue, nullptr);
+                  value = rValue * factor;
+               }
+
+               return success;
+            }
+
+            int setValue(byte type, const char* strValue)
             {
                if (type == mstParDig)
                {
-                  if (strcmp(nice, "ja") != 0 && strcmp(nice, "nein") != 0)
+                  if (strcmp(strValue, "ja") != 0 && strcmp(strValue, "nein") != 0)
                      return fail;
 
-                  value = strcmp(nice, "ja") == 0 ? 1 : 0;
+                  value = strcmp(strValue, "ja") == 0 ? 1 : 0;
+                  rValue = value;
                }
                else if (type == mstParZeit)
                {
-                  char* h = strdup(nice);
+                  char* h = strdup(strValue);
                   char* m;
 
                   if ((m = strchr(h, ':')))
@@ -226,35 +340,68 @@ class FroelingService
                      *m++ = 0;
 
                      if (!isNum(h) || !isNum(m))
+                     {
+                        free(h);
                         return fail;
+                     }
 
                      value = atoi(h)*60 + atoi(m);
+                     rValue = value;
                   }
                   else
+                  {
+                     free(h);
                      return fail;
+                  }
 
                   free(h);
                }
-               else if (type == mstPar || type == mstParSet ||
-                        type == mstParSet1  || type == mstParSet2)
+               else if (type == mstPar || type == mstParSet || type == mstParSet1  || type == mstParSet2)
                {
-                  if (!isNum(nice))
-                     return fail;
+                  tell(0, "Set value %d with %d digits and factor %d", atoi(strValue), digits, factor);
+                  if (digits == 0)
+                  {
+                     if (!isNum(strValue))
+                        return fail;
 
-                  value = atoi(nice);
+                     rValue = atoi(strValue);
+                     value = rValue * factor;
+                  }
+
+                  else
+                  {
+                     if (!isFloat(strValue))
+                        return fail;
+
+                     rValue = strtod(strValue, nullptr);
+                     value = rValue * factor;
+                  }
                }
                else
+               {
                   return fail;
+               }
 
                return success;
             }
 
-            void setUnit(const char* u) { free(unit); unit = strdup(u); }
-
             word address;
             char* unit;
             byte digits;
-            word factor;
+
+            double rValue;  // werte mit factor applied
+            double rMin;
+            double rMax;
+            double rDefault;
+
+            byte ub1;
+            byte ub2;
+            byte ub3;
+            sword uw1;
+
+         private:
+
+            byte factor;
             sword value;
             sword min;
             sword max;

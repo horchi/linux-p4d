@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.6"
-#define VERSION_DATE "02.01.2021"
+#define _VERSION     "0.6.8"
+#define VERSION_DATE "08.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,22 @@
 
 /*
  * ------------------------------------
+
+2021-01-08:  version 0.6.8
+  - bugfix: fixed parameter storage
+
+2021-01-04:  version 0.6.7
+  - bugfix: fixed missing stylesheet symlink after initial install
+  - change: modern checkbox style
+  - added:  hover for chart buttons (thx to pellet-heizer:holzheizer-forum)
+  - change: re-structured js file tree
+  - bugfix: fixed display of missing service menu items
+  - change: Improved service menu style
+  - added:  added display of parameter digits for service menu
+  - added:  css style even for buttons of user edit page
+  - added:  new display and edit style for poolean parameter digits at the service menu
+  - added:  honor mix and max in edit dialog of service menu
+  - change: improved parameter display of p4 tool
 
 2021-01-02:  version 0.6.6
   - change: Improvement time range dialog

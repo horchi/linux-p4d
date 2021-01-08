@@ -132,7 +132,7 @@ class P4d : public FroelingService, public cWebInterface
       int updateSchemaConfTable();
       int initValueFacts();
       int updateTimeRangeData();
-      int initMenu();
+      int initMenu(bool updateParameters = false);
       int updateScripts();
       int hmUpdateSysVars();
       int hmSyncSysVars();

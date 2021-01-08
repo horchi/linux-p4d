@@ -32,15 +32,16 @@ function initUserConfig(users, root)
       html += "<td>";
       for (var b = 0; b < rights.length; b++) {
          var checked = item.rights & Math.pow(2, b); // (2 ** b);
-         html += "<input id=\"bit_" + item.user + b + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (checked ? "checked" : "") + "/>"
-         html += "<span style=\"padding-right:20px; padding-left:5px;\">" + rights[b] + "</span>";
+         html += "<input id=\"bit_" + item.user + b + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (checked ? "checked" : "") +
+            '/><label for="bit_' + item.user + b + '">' + rights[b] + '</label>';
+         // html += "<span style=\"padding-right:20px; padding-left:5px;\">" + rights[b] + "</span>";
       }
       html += "</td>";
       html += "<td>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
+      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
+      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
+      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
+      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
       html += "</td>";
 
       var elem = document.createElement("tr");

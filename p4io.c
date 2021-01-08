@@ -623,38 +623,48 @@ int P4Request::getParameter(ConfigParameter* p)
    if (readHeader() == success)
    {
       byte b;
-      word w;
 
       // we need at least the address the unknown byte and crc back
 
       if (header.size < 4)
       {
-         tell(0, "Read heder done, got only %d bytes", header.size);
+         tell(0, "Read header done, got %d bytes instead of 4", header.size);
          for (int i = 0; i < header.size; i++)
             readByte(b);
          return errWrongAddress;
       }
 
-      status = readByte(b)            // what ever
-
+      status = readByte(p->ub1)       // unknown byte 1 -> always 0
          + readWord(p->address)       // address
          + readText(p->unit, 1)       // unit
          + readByte(p->digits)        // decimal digits
-         + readWord(p->factor)        // factor
+
+         + readByte(p->ub2)           // unknown byte 2
+
+         + readByte(p->factor)        // factor
          + readWord(p->value)         // current value
          + readWord(p->min)           // min value
          + readWord(p->max)           // max value
          + readWord(p->def)           // default value
 
-         + readWord(w)                // what ever
-         + readByte(b)                // what ever
+         + readWord(p->uw1)           // unknown word
+         + readByte(p->ub3)           // unknown byte 3
 
          + readByte(b);               // crc
 
       if (status == success)
       {
-         if (p->factor)
-            p->value /= p->factor;
+         if (p->factor <= 0)
+            p->factor = 1;
+
+         p->rValue = double(p->value) / p->factor;
+         // p->rMin = double(p->min) / p->factor;
+         // p->rMax = double(p->max) / p->factor;
+         // p->rDefault = double(p->def) / p->factor;
+
+         p->rMin = double(p->min);
+         p->rMax = double(p->max);
+         p->rDefault = double(p->def);
 
          if (strcmp(p->unit, "°") == 0)
             p->setUnit("°C");
@@ -688,16 +698,14 @@ int P4Request::setParameter(ConfigParameter* p)
 
    if (p->value < pActual.min || p->value > pActual.max)
    {
-      tell(eloAlways, "value %d out of range %d-%d",
-           p->value, pActual.min, pActual.max);
-
+      tell(eloAlways, "Value %d out of range %d-%d, ignoringe store request", p->value, pActual.min, pActual.max);
       return wrnOutOfRange;
    }
 
    cMyMutexLock lock(&mutex);
    clear();
    addAddress(p->address);
-   addAddress(p->value * pActual.factor);
+   addAddress(p->value);
 
    if (request(cmdSetParameter) != success)
       return errRequestFailed;

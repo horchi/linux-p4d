@@ -22,6 +22,34 @@
 #include <vector>
 #include <list>
 
+//***************************************************************************
+// Colors
+//***************************************************************************
+
+#define escRed       "\033[0;31m"
+#define escGreen     "\033[0;32m"
+#define escYellow    "\033[0;33m"
+#define escBlue      "\033[0;34m"
+#define escMagenta   "\033[0;35m"
+#define escCyan      "\033[0;36m"
+#define escGray      "\033[0;37m"
+#define escBlack     "\033[0;38m"
+
+
+#define escBGray     "\033[1;30m"
+#define escBRed      "\033[1;31m"
+#define escBGreen    "\033[1;32m"
+#define escBYellow   "\033[1;33m"
+#define escBBlue     "\033[1;34m"
+#define escBMagenta  "\033[1;35m"
+#define escBCyan     "\033[1;36m"
+#define escBWhite    "\033[1;37m"
+#define escBBlack    "\033[1;38m"
+
+#define escReset     "\033[m"
+
+//***************************************************************************
+
 class MemoryStruct;
 extern int loglevel;
 extern int logstdout;
@@ -69,10 +97,11 @@ enum Eloquence
 {
    eloOff = na,              // -1
    eloAlways,                // 0
-   eloDetail,                // 1
-   eloDebug,                 // 2
-   eloDebug2,                // 3
-   eloDebug3                 // 4
+   eloInfo,                  // 1
+   eloDetail,                // 2
+   eloDebug,                 // 3
+   eloDebug2,                // 4
+   eloDebug3                 // 5
 };
 
 void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* format, ...);
@@ -288,7 +317,8 @@ const char* plural(int n, const char* s = "s");
 char* rTrim(char* buf);
 char* lTrim(char* buf);
 char* allTrim(char* buf);
-int isNum(const char* value);
+bool isNum(const char* value);
+bool isFloat(const char* value);
 char* sstrcpy(char* dest, const char* src, int max);
 std::string num2Str(int num);
 std::string num2Str(double num);
@@ -346,6 +376,8 @@ class cRetBuf
       const char* operator*() const { return s; } // for use in (const void *) context (printf() etc.)
       cRetBuf& operator = (const cRetBuf& buf);
       cRetBuf& operator = (const char* buf);
+
+      const char* string() { return s; }
 
    private:
 

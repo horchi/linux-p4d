@@ -266,21 +266,21 @@ function editSchemaValue(id, newUC)
 
    var form =
        '<form><div style="display:grid;min-width:650px;max-width:750px;">' +
-       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/></span></div>' +
+       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
        '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
        ' </div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
-       '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/></span>' +
+       '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/><label for="showBorder"></label></span></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Radius: </span><span><input id="borderRadius" style="width:60px;" type="text" value="' + (schemaDef.properties["border-radius"] || "3px") + '"/></span>' +
        ' </div>' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Schriftgröße:</span><span><input id="fontSize" style="width:inherit;" type="text" value="' + (schemaDef.properties["font-size"] || "16px") + '"/></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Layer:</span><span><input id="zIndex" style="width:inherit;" type="number" step="1" value="' + (schemaDef.properties["z-index"] || "100") + '"/></span></div>';
    if (!isUC) {
       form +=
-         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Bezeichnung:</span><span><input id="showTitle" style="width:auto;" type="checkbox"' + (schemaDef.showtitle ? "checked" : "") + '/></span></div>' +
-         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einheit:</span><span><input id="showUnit" style="width:auto;" type="checkbox"' + (schemaDef.showunit ? "checked" : "") + '/></span></div>';
+         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Bezeichnung:</span><span><input id="showTitle" style="width:auto;" type="checkbox"' + (schemaDef.showtitle ? "checked" : "") + '/></span><label for="showTitle"></label></span></div>' +
+         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einheit:</span><span><input id="showUnit" style="width:auto;" type="checkbox"' + (schemaDef.showunit ? "checked" : "") + '/><label for="showUnit"></label></span></span></div>';
    }
 
    form +=

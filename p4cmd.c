@@ -14,6 +14,28 @@
 #include "w1.h"
 
 //***************************************************************************
+// Ask Confirm
+//***************************************************************************
+
+bool askConfirm(const char* message)
+{
+   char buffer[1024+TB] = "";
+
+   tell(eloAlways, "%s%sContinue? (YES|no) ", message, !isEmpty(message) ? "\n" : "");
+
+   fgets(buffer, 1000, stdin);
+   buffer[strlen(buffer)-1] = 0;
+
+   if (!isEmpty(buffer) && strcmp(buffer, "yes") != 0)
+   {
+      tell(eloAlways, "Aborted!");
+      return false;
+   }
+
+   return true;
+}
+
+//***************************************************************************
 // Choice
 //***************************************************************************
 
@@ -76,7 +98,7 @@ int main(int argc, char** argv)
    byte b;
    word addr = Fs::addrUnknown;
    int offset = 0;
-   word value = Fs::addrUnknown;
+   const char* value {nullptr};
    UserCommand cmd = ucUnknown;
    const char* device = "/dev/ttyUSB0";
 
@@ -165,7 +187,7 @@ int main(int argc, char** argv)
       {
          case 'o': if (argv[i+1]) offset = strtol(argv[++i], 0, 0);  break;
          case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);    break;
-         case 'v': if (argv[i+1]) value = strtol(argv[++i], 0, 0);   break;
+         case 'v': if (argv[i+1]) value = argv[++i];                 break;
          case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);        break;
          case 'd': if (argv[i+1]) device = argv[++i];                break;
       }
@@ -263,29 +285,42 @@ int main(int argc, char** argv)
 
          if (request.getParameter(&p) == success)
          {
-            tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Digits: %d; "
-                 "Current: %d; Min: %d; Max: %d; Default: %d - Factor: %d (factor already applied)",
-                 p.address, p.unit, p.digits, p.value, p.min, p.max, p.def, p.factor);
-
-            tell(eloAlways, "=> %d%s", p.value, p.unit);
+            p.show();
+            tell(eloAlways, "=> %.*f%s", p.digits, p.rValue, p.unit);
          }
 
          break;
       }
       case ucSetParameter:
       {
+         if (!value)
+         {
+            tell(eloAlways, "Missing value, aborting");
+            break;
+         }
+
          Fs::ConfigParameter p(addr);
 
-         if (value != Fs::addrUnknown)
+         if (request.getParameter(&p) != success)
          {
-            p.value = value;
-
-            if ((status = request.setParameter(&p)) == success)
-               tell(eloAlways, "Parameter 0x%4.4X changed successfully to %d%s",
-                    p.address, p.value, p.unit);
-            else
-               tell(eloAlways, "Set of parameter failed, error %d", status);
+            tell(eloAlways, "Set of parameter failed, query of current setting failed!");
+            break;
          }
+
+         p.setValueDirect(value, p.digits, p.getFactor());
+
+         tell(eloAlways, "Set parameter to:");
+         p.show();
+         if (!askConfirm(""))
+            break;
+
+         if ((status = request.setParameter(&p)) == success)
+         {
+            tell(eloAlways, "Parameter 0x%4.4X changed successfully to:", p.address);
+            p.show();
+         }
+         else
+            tell(eloAlways, "Set of parameter failed, error was %d", status);
 
          break;
       }

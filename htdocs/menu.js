@@ -27,23 +27,34 @@ function initMenu(menu, root)
    }
 
    for (var i = 0; i < menu.items.length; i++) {
+      var html = "";
       var item = menu.items[i];
       var elem = document.createElement("div");
+      var val = item.value;
 
       actualParent = item.parent;   // all items in the loop should have the same parent !!
-      elem.innerHTML = item.title;
+      html = '<div style="display:flex;">' + item.title;
 
       if (item.child) {
          elem.setAttribute("onclick", "menuSelected(" + item.child + ")");
          elem.className = "menuButton rounded-border";
       }
       else if (item.value != null) {
-         elem.innerHTML += ": " + item.value + " " + item.unit;
+         if (item.type == 0x08) {
+            html += '<input id="chkState_' + item.address + '" class="input rounded-border" type="checkbox"'
+               + (parseBool(item.value) ? 'checked' : '') + ' disabled><label for="chkState_' + item.address + '"></label>';
+         }
+         else {
+            html += ": " + val + " " + item.unit;
+         }
          elem.className = "menuButtonValue rounded-border";
       }
       else {
-         elem.className = "menuButton rounded-border";
+         elem.className = "menuButtonHead rounded-border";
       }
+
+      html += '</div>';
+      elem.innerHTML += html;
 
       if (item.editable) {
          elem.setAttribute("onclick", "menuEditRequest(" + item.id + "," + item.address + "," + item.range + "," + actualParent + ")");
@@ -59,15 +70,10 @@ function editMenuParameter(parameter, root)
    console.log(JSON.stringify(parameter, undefined, 4));
 
    var inpStep = 'step="0.1"';
-   var inpType = "text";
-   var info = "";
-
-   if (parameter.min != null)
-      info = 'Bereich: ' + parameter.min + '-' + parameter.max + parameter.unit + '<br/>'
-      + ' Default: ' + parameter.def + parameter.unit;
+   var info = '<div style="font-size:smaller;padding-left: 30px;">(Default ' + parameter.def + parameter.unit + ', Adresse ' + parameter.address + ')</div>';
 
    var timeRange = null;
-   var form = '<form id="dlgForm"><div>' + info + '</div><br/>';
+   var form = '<form id="dlgForm"><div>' + 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>' + '</div><br/>';
 
    if (parameter.type == 0x0a) {
       timeRange = parameter.value.split("-");
@@ -80,26 +86,41 @@ function editMenuParameter(parameter, root)
          '</div>';
    }
    else {
-      form += '<input class="input rounded-border" type="' + inpType + '" value="' + parameter.value + '" name="input"> ' + parameter.unit;
+      form += '<div style="display:flex;justify-content:center;align-items:center;">';
+      if (parameter.type == 0x07) {
+         var step = 1 / Math.pow(10, parameter.digits);
+         var value = parseFloat(parameter.value.replace(',', '.')).toFixed(parameter.digits);
+         form += '<input class="input rounded-border" type="number" min="' + parameter.min + '" max="'
+            + parameter.max + '" step="' + step + '" value="' + value + '" name="input"/>';
+      }
+      else if (parameter.type == 0x08) {
+         form += '<input id="input" class="input rounded-border" type="checkbox" name="input"' + (parseBool(parameter.value) ? 'checked' : '') + '><label for="input"></label>';
+      }
+      else {
+         form += '<input class="input rounded-border" type="text" value="' + parameter.value + '" name="input"/>';
+      }
+      form += parameter.unit + info;
+      form += '</div>';
    }
 
    form += '<br></form>';
 
-   $(form).dialog({
+   $(form).dialog( {
       modal: true,
       width: (parameter.type == 0x0a ? "40%" : "60%"),
       title: parameter.title,
       buttons: {
          'Speichern': function () {
-            var value = '';
+            var value = $('input[name="input"]').val();
             if (parameter.type == 0x0a) {
                var from = $("#timeFrom").picktim('val');
                var to = $("#timeTo").picktim('val');
                if (from.length == 5 && to.length == 5)
                   value = from + " - " + to;
             }
-            else
-               value = $('input[name="input"]').val();
+            if (parameter.type == 0x08) {
+               value = $('input[name="input"]').is(':checked') ? "ja" : "nein";
+            }
             storeParameter(parameter.id, value, parameter.address, parameter.range, parameter.parent);
             $(this).dialog('close');
          },
@@ -131,7 +152,7 @@ function editMenuParameter(parameter, root)
    });
 
    function storeParameter(id, value, address, range, parent) {
-      console.log("storing " + id + " - '" + value + "' - 0x" + address  + " timeN: " + range);
+      console.log("storing '" + value + "' to address 0x" + address.toString(16)  + " timeN: " + range);
       socket.send({ "event" : "parstore", "object" :
                     { "id"  : id,
                       "value" : value,
@@ -151,6 +172,7 @@ function updateTimeRanges()
 
 window.menuSelected = function(child)
 {
+   showProgressDialog();
    socket.send({ "event" : "menu", "object" : { "parent"  : child }});
 }
 

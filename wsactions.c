@@ -372,6 +372,10 @@ int P4d::performInitTables(json_t* oObject, long client)
    {
       initMenu();
    }
+   else if (strcmp(action, "menu-force") == 0)
+   {
+      initMenu(true);
+   }
 
    return replyResult(success, "... init abgeschlossen!", client);
 }
@@ -560,6 +564,7 @@ int P4d::performMenu(json_t* oObject, long client)
       int type = tableMenu->getIntValue("TYPE");
       int address = tableMenu->getIntValue("ADDRESS");
       int child = tableMenu->getIntValue("CHILD");
+      int digits = tableMenu->getIntValue("DIGITS");
       char* title = strdup(tableMenu->getStrValue("TITLE"));
 
       if (isEmpty(rTrim(title)))
@@ -571,9 +576,9 @@ int P4d::performMenu(json_t* oObject, long client)
       if (title[strlen(title)-1] == ':')
          title[strlen(title)-1] = '\0';
 
-      bool timeGroup = (type == mstGroup1 || type == mstGroup2) && strcmp(title, "Zeiten") == 0 && (child == 230 || child == 350 || child == 430 || child == 573);
+      bool timeGroup = (type == mstMenuChoice || type == mstMenu2) && strcmp(title, "Zeiten") == 0 && (child == 230 || child == 350 || child == 430 || child == 573);
 
-      if (type == mstBus || type == mstReset)
+      if (type == mstBusValues || type == mstReset)
          continue;
 
       // this 3 'special' addresses takes a long while and don't deliver any usefull data
@@ -583,7 +588,7 @@ int P4d::performMenu(json_t* oObject, long client)
 
       updateParameter(tableMenu);
 
-      if (!child && !address && tableMenu->getValue("VALUE")->isNull())
+      if (!child && tableMenu->getValue("VALUE")->isNull())
          continue;
 
       if (!timeGroup)
@@ -600,6 +605,7 @@ int P4d::performMenu(json_t* oObject, long client)
          json_object_set_new(oData, "unit", json_string(tableMenu->getStrValue("UNIT")));
          json_object_set_new(oData, "range", json_integer(na));
          json_object_set_new(oData, "parent", json_integer(parent));
+         json_object_set_new(oData, "digits", json_integer(digits));
 
          if (type == mstMesswert || type == mstMesswert1)
             json_object_set_new(oData, "value", json_real(vaValues[address]));
@@ -953,7 +959,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
 
    if (request->getParameter(&p) == success)
    {
-      cRetBuf value = ConfigParameter::toNice(p.value, type);
+      cRetBuf value = p.toNice(type);
 
       json_t* oJson = json_object();
       json_object_set_new(oJson, "id", json_integer(id));
@@ -962,9 +968,9 @@ int P4d::performParEditRequest(json_t* oObject, long client)
       json_object_set_new(oJson, "title", json_string(title));
       json_object_set_new(oJson, "unit", json_string(type == mstParZeit ? "Uhr" : p.unit));
       json_object_set_new(oJson, "value", json_string(value));
-      json_object_set_new(oJson, "def", json_integer(p.def));
-      json_object_set_new(oJson, "min", json_integer(p.min));
-      json_object_set_new(oJson, "max", json_integer(p.max));
+      json_object_set_new(oJson, "def", json_integer(p.rDefault));
+      json_object_set_new(oJson, "min", json_integer(p.rMin));
+      json_object_set_new(oJson, "max", json_integer(p.rMax));
       json_object_set_new(oJson, "digits", json_integer(p.digits));
       json_object_set_new(oJson, "parent", json_integer(parent));
 
@@ -1038,7 +1044,6 @@ int P4d::performParStore(json_t* oObject, long client)
       return performTimeParStore(oObject, client);
 
    json_t* oJson = json_object();
-   int status {fail};
    const char* value = getStringFromJson(oObject, "value");
 
    tableMenu->clear();
@@ -1056,14 +1061,24 @@ int P4d::performParStore(json_t* oObject, long client)
    unsigned int address = tableMenu->getIntValue("ADDRESS");
    ConfigParameter p(address);
 
-   if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
+   request->getParameter(&p);
+
+   if (p.setValue(type, value) != success)
    {
-      tell(eloAlways, "Storing value '%s/%d' for parameter at address 0x%x", value, p.value, address);
+      tableMenu->reset();
+      tell(eloAlways, "Set of parameter failed, wrong format");
+      return replyResult(fail, "Value format error", client);
+   }
+
+//   if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
+   {
+      int status {fail};
+      tell(eloAlways, "Storing value '%s/%s' for parameter at address 0x%x", value, p.toNice(type).string(), address);
       sem->p();
 
       if ((status = request->setParameter(&p)) == success)
       {
-         tableMenu->setValue("VALUE", ConfigParameter::toNice(p.value, type));
+         tableMenu->setValue("VALUE", p.toNice(type));
          tableMenu->setValue("UNIT", p.unit);
          tableMenu->update();
          json_object_set_new(oJson, "parent", json_integer(parent));
@@ -1083,11 +1098,11 @@ int P4d::performParStore(json_t* oObject, long client)
       else
          replyResult(status, "Serial communication error", client);
    }
-   else
-   {
-      replyResult(status, "Value format error", client);
-      tell(eloAlways, "Set of parameter failed, wrong format");
-   }
+   // else
+   // {
+   //    replyResult(status, "Value format error", client);
+   //    tell(eloAlways, "Set of parameter failed, wrong format");
+   // }
 
    tableMenu->reset();
 

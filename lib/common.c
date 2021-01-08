@@ -504,25 +504,56 @@ char* allTrim(char* buf)
 // Is Number
 //***************************************************************************
 
-int isNum(const char* value)
+bool isNum(const char* value)
 {
    const char* p = value;
 
    while (*p)
    {
-      if (p == value && *p == '-')
+      if (p == value && *p == '-')  // '-' is allowed at first pos
       {
          p++;
          continue;
       }
 
       if (!isdigit(*p))
-         return no;
+         return false;
 
       p++;
    }
 
-   return yes;
+   return true;
+}
+
+bool isFloat(const char* value)
+{
+   uint digits {0};
+   const char* p {value};
+
+   while (*p)
+   {
+      if (p == value && *p == '-')  // '-' is allowed at first pos
+      {
+         p++;
+         continue;
+      }
+
+      if (*p == '.')
+      {
+         if (++digits > 1)
+            return false;
+
+         p++;
+         continue;
+      }
+
+      if (!isdigit(*p))
+         return false;
+
+      p++;
+   }
+
+   return true;
 }
 
 //***************************************************************************

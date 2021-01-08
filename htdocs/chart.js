@@ -120,9 +120,8 @@ function drawCharts(dataObject, root)
    updateChartBookmarks();
 
    for (var i = 0; i < dataObject.sensors.length; i++) {
-      var html = "<div class=\"chartSel\"><input id=\"checkChartSel_" + dataObject.sensors[i].id
-          + "\"type=\"checkbox\" onclick=\"chartSelect('choice')\" " + (dataObject.sensors[i].active ? "checked" : "")
-          + "/>" + dataObject.sensors[i].title + "</div>";
+      var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id
+          + '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') + '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + '</label></div>';
       $("#chartSelector").append(html);
    }
 
@@ -222,6 +221,7 @@ function chartSelect(action)
    var jsonRequest = {};
    prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
    socket.send({ "event" : "chartdata", "object" : jsonRequest });
+   showProgressDialog();
 }
 
 function chartSelectBookmark(sensors)
@@ -231,6 +231,7 @@ function chartSelectBookmark(sensors)
    var jsonRequest = {};
    prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
    socket.send({ "event" : "chartdata", "object" : jsonRequest });
+   showProgressDialog();
 }
 
 function addBookmark()

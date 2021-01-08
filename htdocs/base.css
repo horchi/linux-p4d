@@ -650,6 +650,7 @@ table.tableMultiCol tr:nth-child(odd)
 {
     display: flex;
     justify-content: center;
+    align-items: center;
     margin: 4px;
 }
 
@@ -662,6 +663,11 @@ table.tableMultiCol tr:nth-child(odd)
     color: white;
     font-size: x-large;
     background-color: slategray;
+}
+
+.chartButton:hover
+{
+    background-color: darkslategray;
 }
 
 .chartBookmarks
@@ -681,6 +687,11 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: slategray;
 }
 
+.chartBookmarkButton:hover
+{
+    background-color: darkslategray;
+}
+
 .chartSelectors
 {
     display: flex;
@@ -691,8 +702,8 @@ table.tableMultiCol tr:nth-child(odd)
 .chartSel
 {
     display: inline;
-    width: 200px;
-    padding: 4px;
+    width: 300px;
+    padding: 0px;
 }
 
 /* ----------------------- */
@@ -709,9 +720,7 @@ table.tableMultiCol tr:nth-child(odd)
 {
     justify-content: center;
     overflow: hidden;
-    min-height: 60px;
     margin: 2px;
-    padding: 10px;
 }
 
 .menuButton
@@ -725,6 +734,22 @@ table.tableMultiCol tr:nth-child(odd)
     cursor: pointer;
     background-color: var(--light1);
     color: var(--buttonFont);
+    min-height: 60px;
+    padding: 10px;
+}
+
+.menuButtonHead
+{
+    display: grid;
+    align-items: center;
+    text-align: center;
+    grid-gap: 1px;
+    font-size: 1.5em;
+    font-weight: bold;
+    background-color: var(--light1);
+    color: var(--buttonFont);
+    min-height: 40px;
+    padding: 1px;
 }
 
 .menuButtonValue
@@ -733,10 +758,12 @@ table.tableMultiCol tr:nth-child(odd)
     align-items: center;
     text-align: center;
     grid-gap: 1px;
-    font-size: 1.5em;
+    font-size: 1.4em;
     font-weight: normal;
     background-color: var(--light1);
     color: var(--buttonFont);
+    min-height: 50px;
+    padding: 1px;
 }
 
 .menuButtonValueEditable
@@ -754,6 +781,8 @@ table.tableMultiCol tr:nth-child(odd)
     font-size: 1.5em;
     font-weight: bold;
     cursor: pointer;
+    min-height: 60px;
+    padding: 10px;
     background-color: var(--light3);
 }
 

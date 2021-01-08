@@ -12,7 +12,14 @@ function initConfig(configuration, root)
 {
    var lastCat = "";
 
-   console.log(JSON.stringify(configuration, undefined, 4));
+   $('#btnInitMenu').bind('click', function(event) {
+      if (event.ctrlKey)
+         initTables('menu-force');
+      else
+         initTables('menu');
+   });
+
+   // console.log(JSON.stringify(configuration, undefined, 4));
 
    configuration.sort(function(a, b) {
       return a.category.localeCompare(b.category);
@@ -56,7 +63,8 @@ function initConfig(configuration, root)
          break;
 
       case 3:     // boolean
-         html += "    <span><input id=\"checkbox_" + item.name + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (item.value == 1 ? "checked" : "") + "/></span>\n";
+         html += "    <span><input id=\"checkbox_" + item.name + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (item.value == 1 ? "checked" : "") + "/>" +
+            '<label for="checkbox_' + item.name + '"></label></span></span>\n';
          html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
          break;
 
@@ -206,7 +214,7 @@ function initIoSetup(valueFacts, root)
       else
          html += "<td class=\"tableMultiColCell\"></td>";
       html += "<td style=\"text-align:center;\">" + item.unit + "</td>";
-      html += "<td><input id=\"state_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"checkbox\" " + (item.state == 1 ? "checked" : "") + " /></td>";
+      html += "<td><input id=\"state_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"checkbox\" " + (item.state == 1 ? "checked" : "") + ' /><label for="state_' + item.type + item.address + '"></label></td>';
       html += "<td>" + item.type + ":0x" + item.address.toString(16).padStart(2, '0') + "</td>";
 
       if (item.type == "VA")

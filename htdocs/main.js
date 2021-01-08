@@ -63,8 +63,10 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "iosettings";
    else if (documentName == "groups")
       jsonRequest["name"] = "groups";
-   else if (documentName == "chart")
-      prepareChartRequest(jsonRequest, "", 0, 2, "chart")
+   else if (documentName == "chart") {
+      prepareChartRequest(jsonRequest, "", 0, 2, "chart");
+      showProgressDialog();
+   }
    else if (documentName == "dashboard")
       jsonRequest["name"] = "data";
    else if (documentName == "list")
@@ -110,98 +112,6 @@ function connectWebSocket(useUrl, protocol)
       return !($el.innerHTML = "Your Browser will not support Websockets!");
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-var infoDialog = null;
-
-async function showInfoDialog(message, titleMsg, onCloseCallback)
-{
-   while (infoDialog)
-      await sleep(100);
-
-   var msDuaration = 2000;
-   var bgColor = null;
-   var height = 70;
-   var cls = "no-titlebar";
-
-   if (titleMsg && titleMsg != "") {
-      msDuaration = 10000;
-      cls = "";
-      height = 100;
-      if (titleMsg.indexOf("Error") != -1 || titleMsg.indexOf("Fehler") != -1)
-         bgColor = 'background-color:rgb(224, 102, 102);'
-   }
-
-   $('<div style="margin-top:13px;' + (bgColor != null ? bgColor : "")  + '"></div>').html(message).dialog({
-      dialogClass: cls,
-      width: "60%",
-      height: height,
-      title: titleMsg,
-		modal: true,
-      resizable: true,
-		closeOnEscape: true,
-      hide: "fade",
-      open: function() {
-         infoDialog = $(this); setTimeout(function() {
-            if (infoDialog)
-               infoDialog.dialog('close');
-            infoDialog = null }, msDuaration);
-      },
-      close: function() {
-         $(this).dialog('destroy').remove();
-         infoDialog = null;
-      }
-   });
-}
-
-var progressDialog = null;
-
-async function hideProgressDialog()
-{
-   if (progressDialog != null) {
-      console.log("hide progress");
-      progressDialog.dialog('destroy').remove();
-      progressDialog = null;
-   }
-}
-
-async function showProgressDialog()
-{
-   hideProgressDialog();
-
-   var msDuration = 30000;   // timeout 30 seconds
-   var form = document.createElement("form");
-   form.style.overflow = "hidden";
-   var div = document.createElement("div");
-   form.appendChild(div);
-   div.className = "progress";
-
-   console.log("show progress");
-
-   $(form).dialog({
-      dialogClass: "no-titlebar rounded-border",
-      width: "125px",
-      title: "",
-		modal: true,
-      resizable: false,
-		closeOnEscape: false,
-      minHeight: "0px",
-      hide: "fade",
-      open: function() {
-         progressDialog = $(this); setTimeout(function() {
-            if (progressDialog)
-               progressDialog.dialog('close');
-            progressDialog = null }, msDuration);
-      },
-      close: function() {
-         $(this).dialog('destroy').remove();
-         progressDialog = null;
-      }
-   });
-}
-
 function dispatchMessage(message)
 {
    var jMessage = JSON.parse(message);
@@ -221,8 +131,10 @@ function dispatchMessage(message)
 
    console.log("got event: " + event);
 
+   hideProgressDialog();
+
    if (event == "result") {
-      hideProgressDialog();
+      // hideProgressDialog();
       if (jMessage.object.status == 0)
          showInfoDialog(jMessage.object.message);
       else
@@ -402,7 +314,7 @@ function prepareMenu()
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
       html += "  <button class=\"rounded-border buttonOptions\" title=\"Letzter Reset: " + config.peakResetAt + "\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('menu')\">Init Service Menü</button>";
+      html += '  <button id="btnInitMenu" class="rounded-border buttonOptions">Init Service Menü</button>'; // click is bound later - in setup.js
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Messwerte</button>";
       html += "</div>";
    }
@@ -683,4 +595,106 @@ function drawChartDialog(dataObject, root)
 
    var canvas = root.querySelector("#chartDialog");
    theChart = new Chart(canvas, data);
+}
+
+function parseBool(val)
+{
+   if ((typeof val === 'string' && (val.toLowerCase() === 'true' || val.toLowerCase() === 'yes' || val.toLowerCase() === 'ja')) || val === 1)
+      return true;
+   else if ((typeof val === 'string' && (val.toLowerCase() === 'false' || val.toLowerCase() === 'no' || val.toLowerCase() === 'nein')) || val === 0)
+      return false;
+
+   return null;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+var infoDialog = null;
+
+async function showInfoDialog(message, titleMsg, onCloseCallback)
+{
+   while (infoDialog)
+      await sleep(100);
+
+   var msDuaration = 2000;
+   var bgColor = null;
+   var height = 70;
+   var cls = "no-titlebar";
+
+   if (titleMsg && titleMsg != "") {
+      msDuaration = 10000;
+      cls = "";
+      height = 100;
+      if (titleMsg.indexOf("Error") != -1 || titleMsg.indexOf("Fehler") != -1)
+         bgColor = 'background-color:rgb(224, 102, 102);'
+   }
+
+   $('<div style="margin-top:13px;' + (bgColor != null ? bgColor : "")  + '"></div>').html(message).dialog({
+      dialogClass: cls,
+      width: "60%",
+      height: height,
+      title: titleMsg,
+		modal: true,
+      resizable: true,
+		closeOnEscape: true,
+      hide: "fade",
+      open: function() {
+         infoDialog = $(this); setTimeout(function() {
+            if (infoDialog)
+               infoDialog.dialog('close');
+            infoDialog = null }, msDuaration);
+      },
+      close: function() {
+         $(this).dialog('destroy').remove();
+         infoDialog = null;
+      }
+   });
+}
+
+var progressDialog = null;
+
+async function hideProgressDialog()
+{
+   if (progressDialog != null) {
+      console.log("hide progress");
+      progressDialog.dialog('destroy').remove();
+      progressDialog = null;
+   }
+}
+
+async function showProgressDialog()
+{
+   hideProgressDialog();
+
+   var msDuration = 30000;   // timeout 30 seconds
+   var form = document.createElement("form");
+   form.style.overflow = "hidden";
+   var div = document.createElement("div");
+   form.appendChild(div);
+   div.className = "progress";
+
+   console.log("show progress");
+
+   $(form).dialog({
+      dialogClass: "no-titlebar rounded-border",
+      width: "125px",
+      title: "",
+		modal: true,
+      resizable: false,
+		closeOnEscape: false,
+      minHeight: "0px",
+      hide: "fade",
+      open: function() {
+         progressDialog = $(this); setTimeout(function() {
+            if (progressDialog)
+               progressDialog.dialog('close');
+            progressDialog = null }, msDuration);
+      },
+      close: function() {
+         $(this).dialog('destroy').remove();
+         progressDialog = null;
+      }
+   });
 }

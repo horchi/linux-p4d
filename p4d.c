@@ -1563,7 +1563,7 @@ int P4d::hmSyncSysVars()
 // Initialize Menu Structure
 //***************************************************************************
 
-int P4d::initMenu()
+int P4d::initMenu(bool updateParameters)
 {
    int status;
    Fs::MenuItem m;
@@ -1582,7 +1582,7 @@ int P4d::initMenu()
 
    // ...
 
-   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast;
+   for (status = request->getFirstMenuItem(&m); status != Fs::wrnLast && !doShutDown();
         status = request->getNextMenuItem(&m))
    {
       if (status == wrnSkip)
@@ -1616,6 +1616,21 @@ int P4d::initMenu()
    }
 
    tell(eloAlways, "Read %d menu items", count);
+
+   if (updateParameters)
+   {
+      count = 0;
+      tell(eloAlways, "Update menu parameters");
+      tableMenu->clear();
+
+      for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
+      {
+         updateParameter(tableMenu);
+         count++;
+      }
+
+      tell(eloAlways, "Updated %d menu parameters", count);
+   }
 
    return success;
 }
@@ -2753,11 +2768,9 @@ int P4d::updateParameter(cDbTable* tableMenu)
 {
    int type = tableMenu->getIntValue("TYPE");
    int paddr = tableMenu->getIntValue("ADDRESS");
+   int child = tableMenu->getIntValue("CHILD");
 
    tell(3, "Update parameter %d/%d ...", type, paddr);
-
-   if (type == mstReset || type == mstGroup1 || type == mstGroup2)
-      return done;
 
    sem->p();
 
@@ -2845,19 +2858,43 @@ int P4d::updateParameter(cDbTable* tableMenu)
          }
       }
    }
-
-   else if (paddr != 0 && paddr != 9997 && paddr != 9998 && paddr != 9999)  // this 3 'special' addresses takes a long while and don't deliver any usefull data
+   else if (isGroup(type) || type == mstBusValues || type == mstReset || type == mstEmpty)
+   {
+      // nothing to do
+   }
+   else if (child)
+   {
+      // I have childs -> I have no value -> nothing to do
+   }
+   else if (paddr == 0 && type != mstPar)
+   {
+      // address 0 only for type mstPar
+   }
+   else if (paddr == 9997 || paddr == 9998 || paddr == 9999)
+   {
+      // this 3 'special' addresses takes a long while and don't deliver any usefull data
+   }
+   else
    {
       Fs::ConfigParameter p(paddr);
 
       if (request->getParameter(&p) == success)
       {
-         cRetBuf value = ConfigParameter::toNice(p.value, type);
+         cRetBuf value = p.toNice(type);
 
          if (tableMenu->find())
          {
             tableMenu->setValue("VALUE", value);
             tableMenu->setValue("UNIT", strcmp(p.unit, "°") == 0 ? "°C" : p.unit);
+            tableMenu->setValue("DIGITS", p.digits);
+            tableMenu->setValue("MIN", p.rMin);
+            tableMenu->setValue("MAX", p.rMax);
+            tableMenu->setValue("DEF", p.rDefault);
+            tableMenu->setValue("FACTOR", p.getFactor());
+            tableMenu->setValue("PUB1", p.ub1);
+            tableMenu->setValue("PUB2", p.ub2);
+            tableMenu->setValue("PUB3", p.ub3);
+            tableMenu->setValue("PUW1", p.uw1);
             tableMenu->update();
          }
       }

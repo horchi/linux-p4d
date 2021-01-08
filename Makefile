@@ -153,7 +153,7 @@ publish-deb:
 # dependencies
 #***************************************************************************
 
-HEADER = lib/db.h lib/dbdict.h lib/common.h
+HEADER = lib/db.h lib/dbdict.h lib/common.h p4io.h service.h
 
 lib/common.o    :  lib/common.c    $(HEADER)
 lib/db.o        :  lib/db.c        $(HEADER)
@@ -165,14 +165,16 @@ lib/mqtt_c.o    :  lib/mqtt_c.c    lib/mqtt_c.h
 lib/mqtt_pal.o  :  lib/mqtt_pal.c  lib/mqtt_c.h
 
 main.o          :  main.c          $(HEADER) p4d.h websock.h HISTORY.h
-p4d.o           :  p4d.c           $(HEADER) p4d.h p4io.h w1.h lib/mqtt.h
-p4io.o          :  p4io.c          $(HEADER) p4io.h
+p4d.o           :  p4d.c           $(HEADER) p4d.h w1.h lib/mqtt.h
+p4io.o          :  p4io.c          $(HEADER)
 w1.o            :  w1.c            $(HEADER) w1.h
-service.o       :  service.c       $(HEADER) service.h
+service.o       :  service.c       $(HEADER)
 hass.o          :  hass.c          p4d.h
 websock.o       :  websock.c       $(HEADER) websock.h
-wsactions.o     :  wsactions.c     $(HEADER) p4d.h HISTORY.h
+wsactions.o     :  wsactions.c     $(HEADER) HISTORY.h
 chart.o         :  chart.c
+
+p4cmd.o         :  p4cmd.c         $(HEADER) HISTORY.h
 
 # ------------------------------------------------------
 # Git / Versioning / Tagging
