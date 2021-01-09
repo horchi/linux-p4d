@@ -1094,7 +1094,7 @@ int P4d::performParStore(json_t* oObject, long client)
       if (status == P4Request::wrnNonUpdate)
          replyResult(status, "Value identical, ignoring request", client);
       else if (status == P4Request::wrnOutOfRange)
-         replyResult(status, "Value ot of range", client);
+         replyResult(status, "Value out of range", client);
       else
          replyResult(status, "Serial communication error", client);
    }

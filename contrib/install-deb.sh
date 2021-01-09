@@ -42,6 +42,7 @@ dpkg-reconfigure --frontend=noninteractive locales && \
 
 wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 
+apt -y remove p4d
 apt -y install /tmp/p4d-latest.deb || exit 1
 
 css_link="/var/lib/p4/stylesheet.css"

@@ -696,7 +696,7 @@ int P4Request::setParameter(ConfigParameter* p)
    if (p->value == pActual.value)
       return wrnNonUpdate;
 
-   if (p->value < pActual.min || p->value > pActual.max)
+   if (p->rValue < pActual.min || p->rValue > pActual.max)
    {
       tell(eloAlways, "Value %d out of range %d-%d, ignoringe store request", p->value, pActual.min, pActual.max);
       return wrnOutOfRange;

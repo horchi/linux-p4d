@@ -26,6 +26,7 @@ Index samples
 {
    time                 ""  TIME,
    type                 ""  TYPE,
+   aggregate            ""  AGGREGATE,
 }
 
 // ----------------------------------------------------------------
