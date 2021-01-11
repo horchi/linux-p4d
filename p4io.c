@@ -693,8 +693,11 @@ int P4Request::setParameter(ConfigParameter* p)
    if (getParameter(&pActual) != success)
       return fail;
 
-   if (p->value == pActual.value)
+   if (p->rValue == pActual.rValue)
+   {
+      tell(eloAlways, "Value %.*f not changed (%.*f)", p->digits, p->rValue, pActual.digits, pActual.rValue);
       return wrnNonUpdate;
+   }
 
    if (p->rValue < pActual.min || p->rValue > pActual.max)
    {

@@ -53,7 +53,7 @@ if [ ! -L ${css_link} ] ; then
 fi
 
 grep -q '^alias p4db=' ~/.bashrc   || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
-grep -q '^alias vl=' ~/.bashrc     || echo "alias vl='tail -f /var/log/syslog'" >> ~/.bashrc
+grep -q '^alias vp=' ~/.bashrc     || echo "alias vp='tail -f /var/log/p4d.log'" >> ~/.bashrc
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"
@@ -64,7 +64,7 @@ echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
 echo -e "${BLUE}- ${NC}"
 echo -e "${BLUE}- Added aliases for convenience:${NC}"
 echo -e "${BLUE}-  p4db  - go to the SQL prompt${NC}"
-echo -e "${BLUE}-  vl    - view syslog (abort with CTRL-C)${NC}"
+echo -e "${BLUE}-  vp    - view p4d.log (abort with CTRL-C)${NC}"
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${WHITE}- to permit p4d sending mails: ${NC}"
 echo -e "${WHITE}-   setup your SMTP account in /etc/ssmtp/ssmtp.conf properly${NC}"

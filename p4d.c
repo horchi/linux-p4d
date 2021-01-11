@@ -429,6 +429,7 @@ cDbFieldDef rangeToDef("RANGE_TO", "rto", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef avgValueDef("AVG_VALUE", "avalue", cDBS::ffFloat, 122, cDBS::ftData);
 cDbFieldDef maxValueDef("MAX_VALUE", "mvalue", cDBS::ffInt, 0, cDBS::ftData);
 cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
+cDbFieldDef nextTimeDef("NEXT_TIME", "nexttime", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int P4d::initDb()
 {
@@ -726,6 +727,35 @@ int P4d::initDb()
    status += selectSamplesRange60->prepare();
 
    // ------------------
+   // state duration
+   // select value, text, min(time)
+   //  from samples
+   //  where
+   //    address = 1
+   //    and type = 'UD'
+   //    and text is not null
+   //    and date(time) = curdate()
+   //    and time > ?
+   //    and vaue != ?
+
+   nextTime.setField(&nextTimeDef);
+   selectStateDuration = new cDbStatement(tableSamples);
+
+   selectStateDuration->build("select ");
+   selectStateDuration->bind("VALUE", cDBS::bndOut);
+   selectStateDuration->bind("TEXT", cDBS::bndOut, ", ");
+   selectStateDuration->bindTextFree("min(time)", &nextTime, ", ", cDBS::bndOut);
+   selectStateDuration->build(" from %s",  tableSamples->TableName());
+   selectStateDuration->build(" where %s = 1", tableSamples->getField("ADDRESS")->getDbName());
+   selectStateDuration->build(" and %s = 'UD'", tableSamples->getField("TYPE")->getDbName());
+   selectStateDuration->build(" and %s is not null", tableSamples->getField("TEXT")->getDbName());
+   selectStateDuration->build(" and date(%s) = curdate()", tableSamples->getField("TIME")->getDbName());
+   selectStateDuration->bindCmp(0, "TIME", 0, ">", " and ");
+   selectStateDuration->bindCmp(0, "VALUE", 0, "!=", " and ");
+
+   status += selectStateDuration->prepare();
+
+   // ------------------
    // all errors
 
    selectAllErrors = new cDbStatement(tableErrors);
@@ -857,45 +887,45 @@ int P4d::initDb()
 
 int P4d::exitDb()
 {
-   delete tableSamples;               tableSamples = 0;
-   delete tablePeaks;                 tablePeaks = 0;
-   delete tableValueFacts;            tableValueFacts = 0;
-   delete tableGroups;                tableGroups = 0;
-   delete tableUsers;                 tableUsers = 0;
-   delete tableMenu;                  tableMenu = 0;
-   delete tableJobs;                  tableJobs = 0;
-   delete tableSensorAlert;           tableSensorAlert = 0;
-   delete tableSchemaConf;            tableSchemaConf = 0;
-//   delete tableSmartConf;             tableSmartConf = 0;
-   delete tableErrors;                tableErrors = 0;
-   delete tableConfig;                tableConfig = 0;
-   delete tableTimeRanges;            tableTimeRanges = 0;
-   delete tableHmSysVars;             tableHmSysVars = 0;
-   delete tableScripts;               tableScripts = 0;
+   delete tableSamples;               tableSamples = nullptr;
+   delete tablePeaks;                 tablePeaks = nullptr;
+   delete tableValueFacts;            tableValueFacts = nullptr;
+   delete tableGroups;                tableGroups = nullptr;
+   delete tableUsers;                 tableUsers = nullptr;
+   delete tableMenu;                  tableMenu = nullptr;
+   delete tableJobs;                  tableJobs = nullptr;
+   delete tableSensorAlert;           tableSensorAlert = nullptr;
+   delete tableSchemaConf;            tableSchemaConf = nullptr;
+   delete tableErrors;                tableErrors = nullptr;
+   delete tableConfig;                tableConfig = nullptr;
+   delete tableTimeRanges;            tableTimeRanges = nullptr;
+   delete tableHmSysVars;             tableHmSysVars = nullptr;
+   delete tableScripts;               tableScripts = nullptr;
 
-   delete selectActiveValueFacts;     selectActiveValueFacts = 0;
-   delete selectAllValueFacts;        selectAllValueFacts = 0;
-   delete selectAllGroups;            selectAllGroups = 0;
-   delete selectPendingJobs;          selectPendingJobs = 0;
-   delete selectAllMenuItems;         selectAllMenuItems = 0;
-   delete selectMenuItemsByParent;    selectMenuItemsByParent = 0;
-   delete selectMenuItemsByChild;     selectMenuItemsByChild = 0;
-   delete selectSensorAlerts;         selectSensorAlerts = 0;
-   delete selectAllSensorAlerts;      selectAllSensorAlerts = 0;
-   delete selectSampleInRange;        selectSampleInRange = 0;
-   delete selectAllErrors;            selectAllErrors = 0;
-   delete selectPendingErrors;        selectPendingErrors = 0;
-   delete selectMaxTime;              selectMaxTime = 0;
-   delete selectScriptByName;         selectScriptByName = 0;
-   delete selectScript;               selectScript = 0;
-   delete cleanupJobs;                cleanupJobs = 0;
-   delete selectAllConfig;            selectAllConfig = 0;
-   delete selectAllUser;              selectAllUser = 0;
-   delete selectSamplesRange;         selectSamplesRange = 0;
-   delete selectSamplesRange60;       selectSamplesRange60 = 0;
-   delete selectSchemaConfByState;    selectSchemaConfByState = 0;
-   delete selectAllSchemaConf;        selectAllSchemaConf = 0;
-   delete connection; connection = 0;
+   delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
+   delete selectAllValueFacts;        selectAllValueFacts = nullptr;
+   delete selectAllGroups;            selectAllGroups = nullptr;
+   delete selectPendingJobs;          selectPendingJobs = nullptr;
+   delete selectAllMenuItems;         selectAllMenuItems = nullptr;
+   delete selectMenuItemsByParent;    selectMenuItemsByParent = nullptr;
+   delete selectMenuItemsByChild;     selectMenuItemsByChild = nullptr;
+   delete selectSensorAlerts;         selectSensorAlerts = nullptr;
+   delete selectAllSensorAlerts;      selectAllSensorAlerts = nullptr;
+   delete selectSampleInRange;        selectSampleInRange = nullptr;
+   delete selectAllErrors;            selectAllErrors = nullptr;
+   delete selectPendingErrors;        selectPendingErrors = nullptr;
+   delete selectMaxTime;              selectMaxTime = nullptr;
+   delete selectScriptByName;         selectScriptByName = nullptr;
+   delete selectScript;               selectScript = nullptr;
+   delete cleanupJobs;                cleanupJobs = nullptr;
+   delete selectAllConfig;            selectAllConfig = nullptr;
+   delete selectAllUser;              selectAllUser = nullptr;
+   delete selectSamplesRange;         selectSamplesRange = nullptr;
+   delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
+   delete selectStateDuration;        selectStateDuration = nullptr;
+   delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
+   delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
+   delete connection; connection = nullptr;
 
    return done;
 }
@@ -1058,10 +1088,10 @@ int P4d::setup()
 
    for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    {
-      char* res;
-      char buf[100+TB]; *buf = 0;
+      char* res {nullptr};
+      char buf[100+TB] {""};
       char oldState = tableValueFacts->getStrValue("STATE")[0];
-      char state = oldState;
+      char state {oldState};
 
       printf("%s 0x%04lx '%s' (%s)",
              tableValueFacts->getStrValue("TYPE"),
@@ -1315,7 +1345,7 @@ int P4d::initValueFacts()
    tell(eloAlways, "Checked %d digital lines, added %d, modified %d", count, added, modified);
 
    // ---------------------------------
-   // at least add value definitions for special data
+   // add value definitions for special data
 
    count = 0;
    added = 0;
@@ -1977,28 +2007,33 @@ int P4d::loop()
          continue;
       }
 
+      if (stateChanged)
+         calcStateDuration();
+
       // perform update
 
       nextAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+
+      {
+         sem->p();
+         update();
+         updateErrors();
+         sem->v();
+      }
+
+      afterUpdate();
       mailBody = "";
       mailBodyHtml = "";
 
-      sem->p();
-      update();
-
-      updateErrors();
-      afterUpdate();
-
-      // mail
-
-      if (mail && stateChanged)
+      if (stateChanged && mail)
+      {
          sendStateMail();
 
-      if (errorsPending)
-         sendErrorMail();
+         if (errorsPending)
+            sendErrorMail();
+      }
 
-      sem->v();
       initialRun = false;
    }
 
@@ -2250,6 +2285,25 @@ int P4d::update(bool webOnly, long client)
          }
       }
 
+      else if (tableValueFacts->hasValue("TYPE", "SD"))   // state duration
+      {
+         const auto it = stateDurations.find(addr);
+
+         if (it == stateDurations.end())
+            continue;
+
+         double value = stateDurations[addr] / 60;
+
+         json_object_set_new(ojData, "value", json_real(value));
+
+         if (!webOnly)
+         {
+            store(now, name, title, unit, type, addr, value, factor, groupid);
+            sprintf(num, "%.2f%s", value / factor, unit);
+            addParameter2Mail(title, num);
+         }
+      }
+
       else if (tableValueFacts->hasValue("TYPE", "UD"))
       {
          switch (tableValueFacts->getIntValue("ADDRESS"))
@@ -2334,6 +2388,67 @@ int P4d::update(bool webOnly, long client)
 
    if (!webOnly)
       sensorAlertCheck(now);
+
+   return success;
+}
+
+//***************************************************************************
+// Calc State Duration
+//***************************************************************************
+
+int P4d::calcStateDuration()
+{
+   time_t beginTime {0};
+   int thisState = {-1};
+   std::string text {""};
+
+   stateDurations.clear();
+
+   tableSamples->clear();
+   tableSamples->setValue("TIME", beginTime);
+   tableSamples->setValue("VALUE", (double)thisState);
+
+   while (selectStateDuration->find())
+   {
+      if (nextTime.isNull())
+         break;
+
+      time_t endTime = nextTime.getTimeValue();
+
+      if (beginTime)
+      {
+         stateDurations[thisState] += endTime-beginTime;
+
+         tell(3, "%s:0x%02x (%s) '%d/%s' %.2f minutes",
+              "SD", thisState,
+              l2pTime(beginTime).c_str(), thisState, text.c_str(),
+              (endTime-beginTime) / 60.0);
+      }
+
+      thisState = tableSamples->getFloatValue("VALUE");
+      text = tableSamples->getStrValue("TEXT");
+      beginTime = endTime;
+
+      selectStateDuration->freeResult();
+      tableSamples->clear();
+      tableSamples->setValue("TIME", beginTime);
+      tableSamples->setValue("VALUE", (double)thisState);
+   }
+
+   selectStateDuration->freeResult();
+
+   if (loglevel >= 2)
+   {
+      int total {0};
+
+      for (const auto& d : stateDurations)
+      {
+         tell(2, "%d: %ld minutes", d.first, d.second / 60);
+         total += d.second;
+      }
+
+      tell(2, "total: %d minutes", total / 60);
+   }
 
    return success;
 }
@@ -2686,6 +2801,19 @@ int P4d::updateErrors()
    char timeField[5+TB] = "";
    time_t timeOne = 0;
 
+   cDbStatement* select = new cDbStatement(tableErrors);
+   select->build("select ");
+   select->bindAllOut();
+   select->build(" from %s where ", tableErrors->TableName());
+   select->bind("NUMBER", cDBS::bndIn | cDBS::bndSet);
+   select->bind("TIME1", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   if (select->prepare() != success)
+   {
+      tell(eloAlways, "prepare failed!");
+      return fail;
+   }
+
    tell(eloAlways, "Updating error list");
 
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
@@ -2706,26 +2834,11 @@ int P4d::updateErrors()
 
       if (timeOne)
       {
-         cDbStatement* select = new cDbStatement(tableErrors);
-         select->build("select ");
-         select->bindAllOut();
-         select->build(" from %s where ", tableErrors->TableName());
-         select->bind("NUMBER", cDBS::bndIn | cDBS::bndSet);
-         select->bind("TIME1", cDBS::bndIn | cDBS::bndSet, " and ");
-
-         if (select->prepare() != success)
-         {
-            tell(eloAlways, "prepare failed!");
-            delete select;
-            continue;
-         }
-
          tableErrors->clear();
          tableErrors->setValue("NUMBER", e.number);
          tableErrors->setValue("TIME1", timeOne);
 
          insert = !select->find();
-         delete select;
       }
 
       tableErrors->clearChanged();
@@ -2749,6 +2862,8 @@ int P4d::updateErrors()
       if (e.state == 2)
          timeOne = 0;
    }
+
+   delete select;
 
    tell(eloDetail, "Updating error list done");
 

@@ -70,10 +70,10 @@ function editMenuParameter(parameter, root)
    console.log(JSON.stringify(parameter, undefined, 4));
 
    var inpStep = 'step="0.1"';
-   var info = '<div style="font-size:smaller;padding-left: 30px;">(Default ' + parameter.def + parameter.unit + ', Adresse ' + parameter.address + ')</div>';
+   var info = '<div style="font-size:smaller;padding-left: 30px;">(Default ' + parameter.def + parameter.unit + ', Adresse ' + parameter.address + ', Typ ' + parameter.type + ')</div>';
 
    var timeRange = null;
-   var form = '<form id="dlgForm"><div>' + 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>' + '</div><br/>';
+   var form = '<form id="dlgForm">';
 
    if (parameter.type == 0x0a) {
       timeRange = parameter.value.split("-");
@@ -86,6 +86,7 @@ function editMenuParameter(parameter, root)
          '</div>';
    }
    else {
+      form += '<div>' + 'Bereich: ' + parameter.min + ' - ' + parameter.max + parameter.unit + '<br/>' + '</div><br/>';
       form += '<div style="display:flex;justify-content:center;align-items:center;">';
       if (parameter.type == 0x07) {
          var step = 1 / Math.pow(10, parameter.digits);
@@ -100,10 +101,10 @@ function editMenuParameter(parameter, root)
          form += '<input class="input rounded-border" type="text" value="' + parameter.value + '" name="input"/>';
       }
       form += parameter.unit + info;
-      form += '</div>';
+      form += '</div><br/>';
    }
 
-   form += '<br></form>';
+   form += '</form>';
 
    $(form).dialog( {
       modal: true,
@@ -120,6 +121,9 @@ function editMenuParameter(parameter, root)
             }
             if (parameter.type == 0x08) {
                value = $('input[name="input"]').is(':checked') ? "ja" : "nein";
+            }
+            else if (parameter.type == 0x07) {
+               value = value.replace('.', ',');
             }
             storeParameter(parameter.id, value, parameter.address, parameter.range, parameter.parent);
             $(this).dialog('close');

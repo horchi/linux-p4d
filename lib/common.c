@@ -538,7 +538,7 @@ bool isFloat(const char* value)
          continue;
       }
 
-      if (*p == '.')
+      if (*p == ',')
       {
          if (++digits > 1)
             return false;

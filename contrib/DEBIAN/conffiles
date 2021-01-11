@@ -1,1 +1,3 @@
 /etc/p4d/p4d.conf
+/etc/rsyslog.d/10-p4d.conf
+/etc/logrotate.d/p4d

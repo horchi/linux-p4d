@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.8"
-#define VERSION_DATE "08.01.2021"
+#define _VERSION     "0.6.10"
+#define VERSION_DATE "11.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-01-11:  version 0.6.10
+  - bugfix: Removed min max display for time range parameters
+
+2021-01-10:  version 0.6.9
+  - added: Own logfile and logrotate for p4d
+  - added: Recording of state duration
 
 2021-01-08:  version 0.6.8
   - bugfix: fixed parameter storage

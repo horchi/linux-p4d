@@ -390,7 +390,7 @@ int P4d::performSyslog(long client)
       return done;
 
    json_t* oJson = json_object();
-   const char* name = "/var/log/syslog";
+   const char* name = "/var/log/p4d.log";
    std::vector<std::string> lines;
    std::string result;
 
@@ -2090,6 +2090,9 @@ P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint ad
       return wtText;
 
    if (type == "AO")
+      return wtChart;
+
+   if (type == "SD")
       return wtChart;
 
    if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A" || unit == "U") // Volt/Ampere/Prozent/Temperatur/Umin

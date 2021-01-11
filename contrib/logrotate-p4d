@@ -1,0 +1,13 @@
+/var/log/p4d.log
+{
+        rotate 2
+        size 50M
+        missingok
+        notifempty
+        compress
+        delaycompress
+        sharedscripts
+        postrotate
+                /usr/lib/rsyslog/rsyslog-rotate
+        endscript
+}

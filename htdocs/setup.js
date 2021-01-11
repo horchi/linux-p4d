@@ -192,6 +192,7 @@ function initIoSetup(valueFacts, root)
    // console.log(JSON.stringify(valueFacts, undefined, 4));
 
    document.getElementById("ioValues").innerHTML = "";
+   document.getElementById("ioStateDurations").innerHTML = "";
    document.getElementById("ioDigitalOut").innerHTML = "";
    document.getElementById("ioDigitalIn").innerHTML = "";
    document.getElementById("ioAnalogOut").innerHTML = "";
@@ -221,13 +222,14 @@ function initIoSetup(valueFacts, root)
          html += "<td>" + item.value + item.unit + "</td>";
 
       switch (item.type) {
-         case 'VA': root = document.getElementById("ioValues");     break
-         case 'DI': root = document.getElementById("ioDigitalIn");  break
-         case 'DO': root = document.getElementById("ioDigitalOut"); break
-         case 'AO': root = document.getElementById("ioAnalogOut");  break
-         case 'W1': root = document.getElementById("ioOneWire");    break
-         case 'SP': root = document.getElementById("ioOther");      break
-         case 'SC': root = document.getElementById("ioScripts");    break
+         case 'VA': root = document.getElementById("ioValues");        break
+         case 'DI': root = document.getElementById("ioDigitalIn");     break
+         case 'DO': root = document.getElementById("ioDigitalOut");    break
+         case 'AO': root = document.getElementById("ioAnalogOut");     break
+         case 'W1': root = document.getElementById("ioOneWire");       break
+         case 'SP': root = document.getElementById("ioOther");         break
+         case 'SC': root = document.getElementById("ioScripts");       break
+        case 'SD': root = document.getElementById("ioStateDurations"); break
       }
 
       if (root != null)

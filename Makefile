@@ -96,6 +96,10 @@ install-config:
 	if ! test -f $(CONFDEST)/p4d.conf; then \
 	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
 	fi
+	mkdir -p $(DESTDIR)/etc/rsyslog.d
+	@cp contrib/rsyslog-p4d.conf $(DESTDIR)/etc/rsyslog.d/10-p4d.conf
+	mkdir -p $(DESTDIR)/etc/logrotate.d
+	@cp contrib/logrotate-p4d $(DESTDIR)/etc/logrotate.d/p4d
 	install --mode=644 -D ./configs/p4d.dat $(CONFDEST)/;
 
 install-scripts:

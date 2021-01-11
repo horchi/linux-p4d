@@ -100,6 +100,7 @@ class P4d : public FroelingService, public cWebInterface
 
       int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
       int updateState(Status* state);
+      int calcStateDuration();
       void scheduleTimeSyncIn(int offset = 0);
       int scheduleAggregate();
       int aggregate();
@@ -243,6 +244,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectSampleInRange {nullptr};   // for alert check
       cDbStatement* selectSamplesRange {nullptr};    // for chart
       cDbStatement* selectSamplesRange60 {nullptr};  // for chart
+      cDbStatement* selectStateDuration {nullptr};
 
       cDbStatement* selectPendingErrors {nullptr};
       cDbStatement* selectAllErrors {nullptr};
@@ -259,6 +261,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbValue rangeTo;
       cDbValue rangeEnd;
       cDbValue avgValue;
+      cDbValue nextTime;
       cDbValue maxValue;
 
       time_t nextAt;
@@ -356,6 +359,7 @@ class P4d : public FroelingService, public cWebInterface
       std::string alertMailBody;
       std::string alertMailSubject;
       std::map<int,double> vaValues;
+      std::map<int,time_t> stateDurations;
       std::map<std::string, json_t*> jsonSensorList;
 
       //

@@ -358,7 +358,8 @@ class FroelingService
                }
                else if (type == mstPar || type == mstParSet || type == mstParSet1  || type == mstParSet2)
                {
-                  tell(0, "Set value %d with %d digits and factor %d", atoi(strValue), digits, factor);
+                  tell(0, "Set value '%s' with %d digits and factor %d", strValue, digits, factor);
+
                   if (digits == 0)
                   {
                      if (!isNum(strValue))
@@ -375,6 +376,7 @@ class FroelingService
 
                      rValue = strtod(strValue, nullptr);
                      value = rValue * factor;
+                     tell(0, "Set value to %.*f (%d)", digits, rValue, value);
                   }
                }
                else
