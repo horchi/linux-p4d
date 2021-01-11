@@ -429,7 +429,7 @@ cDbFieldDef rangeToDef("RANGE_TO", "rto", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef avgValueDef("AVG_VALUE", "avalue", cDBS::ffFloat, 122, cDBS::ftData);
 cDbFieldDef maxValueDef("MAX_VALUE", "mvalue", cDBS::ffInt, 0, cDBS::ftData);
 cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
-cDbFieldDef nextTimeDef("NEXT_TIME", "nexttime", cDBS::ffDateTime, 0, cDBS::ftData);
+cDbFieldDef endTimeDef("END_TIME", "endtime", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int P4d::initDb()
 {
@@ -684,6 +684,7 @@ int P4d::initDb()
 
    // ------------------
    // select samples for chart data
+   // ein sample avg / 5 Minuten
 
    rangeFrom.setField(&rangeFromDef);
    rangeTo.setField(&rangeToDef);
@@ -708,6 +709,10 @@ int P4d::initDb()
 
    status += selectSamplesRange->prepare();
 
+   // ------------------
+   // select samples for chart data (for dashboard widget and rage > 15)
+   // ein sample avg / 60 Minuten
+
    selectSamplesRange60 = new cDbStatement(tableSamples);
 
    selectSamplesRange60->build("select ");
@@ -727,6 +732,28 @@ int P4d::initDb()
    status += selectSamplesRange60->prepare();
 
    // ------------------
+   // select samples for chart data
+   // ein sample avg / Tag (for ranges > 300 Tage)
+
+   selectSamplesRange720 = new cDbStatement(tableSamples);
+
+   selectSamplesRange720->build("select ");
+   selectSamplesRange720->bind("ADDRESS", cDBS::bndOut);
+   selectSamplesRange720->bind("TYPE", cDBS::bndOut, ", ");
+   selectSamplesRange720->bindTextFree("date_format(time, '%Y-%m-%dT%H:%i')", &xmlTime, ", ", cDBS::bndOut);
+   selectSamplesRange720->bindTextFree("avg(value)", &avgValue, ", ", cDBS::bndOut);
+   selectSamplesRange720->bindTextFree("max(value)", &maxValue, ", ", cDBS::bndOut);
+   selectSamplesRange720->build(" from %s where ", tableSamples->TableName());
+   selectSamplesRange720->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
+   selectSamplesRange720->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSamplesRange720->bindCmp(0, "TIME", &rangeFrom, ">=", " and ");
+   selectSamplesRange720->bindCmp(0, "TIME", &rangeTo, "<=", " and ");
+   selectSamplesRange720->build(" group by date(time)");
+   selectSamplesRange720->build(" order by time");
+
+   status += selectSamplesRange720->prepare();
+
+   // ------------------
    // state duration
    // select value, text, min(time)
    //  from samples
@@ -738,13 +765,13 @@ int P4d::initDb()
    //    and time > ?
    //    and vaue != ?
 
-   nextTime.setField(&nextTimeDef);
+   endTime.setField(&endTimeDef);
    selectStateDuration = new cDbStatement(tableSamples);
 
    selectStateDuration->build("select ");
    selectStateDuration->bind("VALUE", cDBS::bndOut);
    selectStateDuration->bind("TEXT", cDBS::bndOut, ", ");
-   selectStateDuration->bindTextFree("min(time)", &nextTime, ", ", cDBS::bndOut);
+   selectStateDuration->bindTextFree("min(time)", &endTime, ", ", cDBS::bndOut);
    selectStateDuration->build(" from %s",  tableSamples->TableName());
    selectStateDuration->build(" where %s = 1", tableSamples->getField("ADDRESS")->getDbName());
    selectStateDuration->build(" and %s = 'UD'", tableSamples->getField("TYPE")->getDbName());
@@ -922,6 +949,7 @@ int P4d::exitDb()
    delete selectAllUser;              selectAllUser = nullptr;
    delete selectSamplesRange;         selectSamplesRange = nullptr;
    delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
+   delete selectSamplesRange720;      selectSamplesRange720 = nullptr;
    delete selectStateDuration;        selectStateDuration = nullptr;
    delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
    delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
@@ -2396,7 +2424,6 @@ int P4d::update(bool webOnly, long client)
 
 int P4d::calcStateDuration()
 {
-   bool finished {false};
    time_t beginTime {0};
    int thisState = {-1};
    std::string text {""};
@@ -2408,34 +2435,29 @@ int P4d::calcStateDuration()
 
    while (selectStateDuration->find())
    {
-      time_t endTime;
+      time_t eTime;
 
-      if (nextTime.isNull())
-      {
-         endTime = time(0);
-         finished = true;
-      }
+      if (endTime.isNull())
+         eTime = time(0);
       else
-      {
-         endTime = nextTime.getTimeValue();
-      }
+         eTime = endTime.getTimeValue();
 
       if (beginTime)
       {
-         stateDurations[thisState] += endTime-beginTime;
+         stateDurations[thisState] += eTime-beginTime;
 
          tell(3, "%s:0x%02x (%s) '%d/%s' %.2f minutes",
               "SD", thisState,
               l2pTime(beginTime).c_str(), thisState, text.c_str(),
-              (endTime-beginTime) / 60.0);
+              (eTime-beginTime) / 60.0);
       }
 
-      if (finished)
+      if (endTime.isNull())
          break;
 
       thisState = tableSamples->getFloatValue("VALUE");
       text = tableSamples->getStrValue("TEXT");
-      beginTime = endTime;
+      beginTime = eTime;
 
       selectStateDuration->freeResult();
       tableSamples->clear();

@@ -70,7 +70,10 @@ function editMenuParameter(parameter, root)
    console.log(JSON.stringify(parameter, undefined, 4));
 
    var inpStep = 'step="0.1"';
-   var info = '<div style="font-size:smaller;padding-left: 30px;">(Default ' + parameter.def + parameter.unit + ', Adresse ' + parameter.address + ', Typ ' + parameter.type + ')</div>';
+   var info = '<div style="font-size:smaller;padding-left: 30px;">(' +
+       (parameter.def != null ? 'Default ' + parameter.def + ' ' + parameter.unit + ', ' : '') +
+       'Adresse 0x' + parameter.address.toString(16) +
+       ', Typ 0x' + parameter.type.toString(16) + ')</div>';
 
    var timeRange = null;
    var form = '<form id="dlgForm">';
@@ -79,10 +82,12 @@ function editMenuParameter(parameter, root)
       timeRange = parameter.value.split("-");
       form +=
          '<div id=timepicker class="timerangepicker">' +
-         '  <div class="timepicker" id="timeFrom"></div>' +
-         '  <div style="align-self:center;width:90px;">' + ' bis ' + '</div>' +
-         '  <div class="timepicker" id="timeTo">' +
-         '  </div><div style="align-self:center;width:50px;">' + parameter.unit + '</div>' +
+         '  <div class="timepicker" id="timeFrom">';
+      if (timeRange.length > 1) {
+         form += '</div>  <div style="align-self:center;width:90px;">' + ' bis ' + '</div>' +
+            '  <div class="timepicker" id="timeTo">';
+      }
+      form += '  </div><div style="align-self:center;width:50px;">' + parameter.unit + '</div>' + info +
          '</div>';
    }
    else {
@@ -115,9 +120,14 @@ function editMenuParameter(parameter, root)
             var value = $('input[name="input"]').val();
             if (parameter.type == 0x0a) {
                var from = $("#timeFrom").picktim('val');
-               var to = $("#timeTo").picktim('val');
-               if (from.length == 5 && to.length == 5)
-                  value = from + " - " + to;
+               if (timeRange.length > 1) {
+                  var to = $("#timeTo").picktim('val');
+                  if (from.length == 5 && to.length == 5)
+                     value = from + " - " + to;
+               }
+               else {
+                  value = from;
+               }
             }
             if (parameter.type == 0x08) {
                value = $('input[name="input"]').is(':checked') ? "ja" : "nein";
@@ -142,14 +152,16 @@ function editMenuParameter(parameter, root)
                orientation: 'topLeft',
                defaultValue: timeRange[0].trim()
             });
-            $("#timeTo").picktim({
-               mode: 'h24',
-               width: '180px',
-               position: 'fixed',
-               appendTo: '#timepicker',
-               orientation: 'topLeft',
-               defaultValue: timeRange[1].trim()
-            });
+            if (timeRange.length > 1) {
+               $("#timeTo").picktim({
+                  mode: 'h24',
+                  width: '180px',
+                  position: 'fixed',
+                  appendTo: '#timepicker',
+                  orientation: 'topLeft',
+                  defaultValue: timeRange[1].trim()
+               });
+            }
          }
       },
       close: function() { $(this).dialog('destroy').remove(); }

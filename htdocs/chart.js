@@ -216,7 +216,7 @@ function chartSelect(action)
    else if (action == "range")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
 
-   // console.log("sensors:  '" + sensors + "'");
+   // console.log("sensors:  '" + sensors + "'" + ' Range:' + theChartRange);
 
    var jsonRequest = {};
    prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");

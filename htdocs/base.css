@@ -206,6 +206,7 @@ span > input
 .timerangepicker
 {
     display: flex;
+    align-items: center;
 }
 
 .timepicker > input

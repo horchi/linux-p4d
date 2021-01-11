@@ -1209,8 +1209,17 @@ int P4d::performChartData(json_t* oObject, long client)
 
    // the id is one of {"chart" "chartwidget" "chartdialog"}
 
+   cDbStatement* select {nullptr};
    bool widget = strcmp(id, "chart") != 0;
-   cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
+
+   if (widget)
+      select = selectSamplesRange60;
+   else if (range > 300)
+      select = selectSamplesRange720;
+   else if (range > 7)
+      select = selectSamplesRange60;
+   else
+      select = selectSamplesRange;
 
    if (!widget)
       performChartbookmarks(client);
@@ -1224,7 +1233,7 @@ int P4d::performChartData(json_t* oObject, long client)
    else if (isEmpty(sensors))
       sensors = chartSensors;
 
-   tell(eloDebug, "Selecting chats data for '%s' ..", sensors);
+   tell(eloDetail, "Selecting chart data for sendors '%s' with range %d ..", sensors, range);
 
    auto sList = split(sensors, ',');
 
@@ -1286,11 +1295,15 @@ int P4d::performChartData(json_t* oObject, long client)
       tableSamples->setValue("TYPE", tableValueFacts->getStrValue("TYPE"));
       tableSamples->setValue("ADDRESS", tableValueFacts->getIntValue("ADDRESS"));
 
+      tell(eloDebug, " selecting '%s - %s' for '%s:0x%02lx'",
+           l2pTime(rangeFrom.getTimeValue()).c_str(),
+           l2pTime(rangeTo.getTimeValue()).c_str(),
+           tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
+
+      uint count {0};
+
       for (int f = select->find(); f; f = select->fetch())
       {
-         // tell(eloAlways, "0x%x: '%s' : %0.2f", (uint)tableSamples->getStrValue("ADDRESS"),
-         //      xmlTime.getStrValue(), tableSamples->getFloatValue("VALUE"));
-
          json_t* oRow = json_object();
          json_array_append_new(oData, oRow);
 
@@ -1300,8 +1313,11 @@ int P4d::performChartData(json_t* oObject, long client)
             json_object_set_new(oRow, "y", json_integer(maxValue.getIntValue()*10));
          else
             json_object_set_new(oRow, "y", json_real(avgValue.getFloatValue()));
+
+         count++;
       }
 
+      tell(eloDebug, " collected %d samples'", count);
       select->freeResult();
    }
 
@@ -1311,7 +1327,7 @@ int P4d::performChartData(json_t* oObject, long client)
    json_object_set_new(oMain, "rows", oJson);
    json_object_set_new(oMain, "id", json_string(id));
    selectActiveValueFacts->freeResult();
-   tell(eloDebug, ".. done");
+   tell(eloDetail, ".. done");
    pushOutMessage(oMain, "chartdata", client);
 
    return done;

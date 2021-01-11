@@ -86,7 +86,8 @@ enum Misc
 
    tmeSecondsPerMinute = 60,
    tmeSecondsPerHour = 60 * tmeSecondsPerMinute,
-   tmeSecondsPerDay = 24 * tmeSecondsPerHour
+   tmeSecondsPerDay = 24 * tmeSecondsPerHour,
+   tmeMinutesPerDay = 24 * 60
 };
 
 //***************************************************************************

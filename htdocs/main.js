@@ -131,7 +131,8 @@ function dispatchMessage(message)
 
    console.log("got event: " + event);
 
-   hideProgressDialog();
+   if (event != "chartbookmarks" && event != "config"  && event != "daemonstate" && event != "s3200-state")
+      hideProgressDialog();
 
    if (event == "result") {
       // hideProgressDialog();

@@ -241,9 +241,10 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectAllSensorAlerts {nullptr};
       cDbStatement* selectSchemaConfByState {nullptr};
       cDbStatement* selectAllSchemaConf {nullptr};
-      cDbStatement* selectSampleInRange {nullptr};   // for alert check
-      cDbStatement* selectSamplesRange {nullptr};    // for chart
-      cDbStatement* selectSamplesRange60 {nullptr};  // for chart
+      cDbStatement* selectSampleInRange {nullptr};    // for alert check
+      cDbStatement* selectSamplesRange {nullptr};     // for chart
+      cDbStatement* selectSamplesRange60 {nullptr};   // for chart
+      cDbStatement* selectSamplesRange720 {nullptr};  // for chart
       cDbStatement* selectStateDuration {nullptr};
 
       cDbStatement* selectPendingErrors {nullptr};
@@ -261,7 +262,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbValue rangeTo;
       cDbValue rangeEnd;
       cDbValue avgValue;
-      cDbValue nextTime;
+      cDbValue endTime;
       cDbValue maxValue;
 
       time_t nextAt;

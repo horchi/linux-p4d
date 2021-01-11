@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.10"
+#define _VERSION     "0.6.11"
 #define VERSION_DATE "11.01.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2021-01-11:  version 0.6.11
+  - Added:  Implemented time edit dialog
+  - change: Better chart performance for charts > 7 days
+  - change: Disable chart update while typing at day range field
+  - change: Show progress dialog while chart query is running
 
 2021-01-11:  version 0.6.10
   - bugfix: Removed min max display for time range parameters
