@@ -2007,13 +2007,11 @@ int P4d::loop()
          continue;
       }
 
-      if (stateChanged)
-         calcStateDuration();
-
       // perform update
 
       nextAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+      calcStateDuration();
 
       {
          sem->p();
@@ -2398,22 +2396,29 @@ int P4d::update(bool webOnly, long client)
 
 int P4d::calcStateDuration()
 {
+   bool finished {false};
    time_t beginTime {0};
    int thisState = {-1};
    std::string text {""};
 
    stateDurations.clear();
-
    tableSamples->clear();
    tableSamples->setValue("TIME", beginTime);
    tableSamples->setValue("VALUE", (double)thisState);
 
    while (selectStateDuration->find())
    {
-      if (nextTime.isNull())
-         break;
+      time_t endTime;
 
-      time_t endTime = nextTime.getTimeValue();
+      if (nextTime.isNull())
+      {
+         endTime = time(0);
+         finished = true;
+      }
+      else
+      {
+         endTime = nextTime.getTimeValue();
+      }
 
       if (beginTime)
       {
@@ -2424,6 +2429,9 @@ int P4d::calcStateDuration()
               l2pTime(beginTime).c_str(), thisState, text.c_str(),
               (endTime-beginTime) / 60.0);
       }
+
+      if (finished)
+         break;
 
       thisState = tableSamples->getFloatValue("VALUE");
       text = tableSamples->getStrValue("TEXT");
