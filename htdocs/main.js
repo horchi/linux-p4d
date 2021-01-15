@@ -53,6 +53,8 @@ function onSocketConnect(protocol)
    var nRequests = 0;
    var jsonRequest = {};
 
+   showProgressDialog();
+
    if (documentName == "syslog")
       jsonRequest["name"] = "syslog";
    else if (documentName == "maincfg")
@@ -63,10 +65,8 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "iosettings";
    else if (documentName == "groups")
       jsonRequest["name"] = "groups";
-   else if (documentName == "chart") {
+   else if (documentName == "chart")
       prepareChartRequest(jsonRequest, "", 0, 2, "chart");
-      showProgressDialog();
-   }
    else if (documentName == "dashboard")
       jsonRequest["name"] = "data";
    else if (documentName == "list")
@@ -82,13 +82,13 @@ function onSocketConnect(protocol)
 
    jsonArray[0] = jsonRequest;
 
-      socket.send({ "event" : "login", "object" :
-                    { "type" : "active",
-                      "user" : user,
-                      "token" : token,
-                      "page"  : documentName,
-                      "requests" : jsonArray }
-                  });
+   socket.send({ "event" : "login", "object" :
+                 { "type" : "active",
+                   "user" : user,
+                   "token" : token,
+                   "page"  : documentName,
+                   "requests" : jsonArray }
+               });
 }
 
 function connectWebSocket(useUrl, protocol)
@@ -131,11 +131,12 @@ function dispatchMessage(message)
 
    console.log("got event: " + event);
 
-   if (event != "chartbookmarks" && event != "config"  && event != "daemonstate" && event != "s3200-state")
+   if (documentName == "login") {
       hideProgressDialog();
+   }
 
    if (event == "result") {
-      // hideProgressDialog();
+      hideProgressDialog();
       if (jMessage.object.status == 0)
          showInfoDialog(jMessage.object.message);
       else
@@ -153,15 +154,18 @@ function dispatchMessage(message)
       lastUpdate = d.toLocaleTimeString();
       initDashboard(jMessage.object, rootDashboard);
       updateDashboard(jMessage.object);
+      hideProgressDialog();
    }
    else if (event == "init" && rootList) {
       lastUpdate = d.toLocaleTimeString();
       initList(jMessage.object, rootList);
       updateList(jMessage.object);
+      hideProgressDialog();
    }
    else if ((event == "init" || event == "update" || event == "all") && rootSchema) {
       lastUpdate = d.toLocaleTimeString();
       updateSchema(jMessage.object);
+      hideProgressDialog();
    }
    else if (event == "schema" && rootSchema) {
       initSchema(jMessage.object, rootSchema);
@@ -183,9 +187,12 @@ function dispatchMessage(message)
    }
    else if (event == "configdetails" && rootConfig) {
       initConfig(jMessage.object, rootConfig)
+      hideProgressDialog();
    }
-   else if (event == "userdetails" && rootConfig) {
-      initUserConfig(jMessage.object, rootConfig)
+   else if (event == "userdetails") {
+      if (rootConfig)
+         initUserConfig(jMessage.object, rootConfig)
+      hideProgressDialog();
    }
    else if (event == "daemonstate") {
       daemonState = jMessage.object;
@@ -195,6 +202,7 @@ function dispatchMessage(message)
    }
    else if (event == "syslog") {
       showSyslog(jMessage.object);
+      hideProgressDialog();
    }
    else if (event == "token") {
       localStorage.setItem(storagePrefix + 'Token', jMessage.object.value);
@@ -210,18 +218,23 @@ function dispatchMessage(message)
    }
    else if (event == "groups" && rootGroupSetup) {
       initGroupSetup(jMessage.object, rootGroupSetup);
+      hideProgressDialog();
    }
    else if (event == "valuefacts" && rootIoSetup) {
       initIoSetup(jMessage.object, rootIoSetup);
+      hideProgressDialog();
    }
    else if (event == "errors" && rootErrors) {
       initErrors(jMessage.object, rootErrors);
+      hideProgressDialog();
    }
    else if (event == "menu" && rootMenu) {
       initMenu(jMessage.object, rootMenu);
+      hideProgressDialog();
    }
    else if (event == "alerts" && rootAlerts) {
       initAlerts(jMessage.object, rootAlerts);
+      hideProgressDialog();
    }
    else if (event == "pareditrequest" && rootMenu) {
       editMenuParameter(jMessage.object, rootMenu);
@@ -237,6 +250,7 @@ function dispatchMessage(message)
       else if (rootDialog && id == "chartdialog") {          // the dashboard chart dialog
          drawChartDialog(jMessage.object, rootDialog);
       }
+      hideProgressDialog();
    }
 
    // console.log("event: " + event + " dispatched");
@@ -698,4 +712,11 @@ async function showProgressDialog()
          progressDialog = null;
       }
    });
+}
+
+Number.prototype.pad = function(size)
+{
+  var s = String(this);
+  while (s.length < (size || 2)) {s = "0" + s;}
+  return s;
 }

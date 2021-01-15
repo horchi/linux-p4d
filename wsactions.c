@@ -1061,7 +1061,9 @@ int P4d::performParStore(json_t* oObject, long client)
    unsigned int address = tableMenu->getIntValue("ADDRESS");
    ConfigParameter p(address);
 
+   sem->p();
    request->getParameter(&p);
+   sem->v();
 
    if (p.setValue(type, value) != success)
    {
@@ -1070,7 +1072,6 @@ int P4d::performParStore(json_t* oObject, long client)
       return replyResult(fail, "Value format error", client);
    }
 
-//   if ((status = ConfigParameter::toValue(value, type, p.value)) == success)
    {
       int status {fail};
       tell(eloAlways, "Storing value '%s/%s' for parameter at address 0x%x", value, p.toNice(type).string(), address);
@@ -1098,11 +1099,6 @@ int P4d::performParStore(json_t* oObject, long client)
       else
          replyResult(status, "Serial communication error", client);
    }
-   // else
-   // {
-   //    replyResult(status, "Value format error", client);
-   //    tell(eloAlways, "Set of parameter failed, wrong format");
-   // }
 
    tableMenu->reset();
 

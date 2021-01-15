@@ -184,9 +184,17 @@ function updateDashboard(sensors)
                $("#pp" + sensor.type + sensor.address).attr("d", svg_circle_arc_path(500, 500, 450 /*radius*/, peak * 180.0 - 91, peak * 180.0 - 90));
             }
             else {
+               if (sensor.unit == 'min' && sensor.value > 60) {
+                  var value = parseInt(sensor.value/60).pad(2) + ':' + parseInt(sensor.value%60).pad(2);
+                  $("#value" + sensor.type + sensor.address).text(value);
+                  var peak = parseInt(sensor.peak/60).pad(2) + ':' + parseInt(sensor.peak%60).pad(2);
+                  $("#peak" + sensor.type + sensor.address).text(peak);
+               }
+               else {
+                  $("#value" + sensor.type + sensor.address).text(sensor.value.toFixed(2) + " " + sensor.unit);
+                  $("#peak" + sensor.type + sensor.address).text(sensor.peak.toFixed(2) + " " + sensor.unit);
+               }
                var jsonRequest = {};
-               $("#peak" + sensor.type + sensor.address).text(sensor.peak.toFixed(2) + " " + sensor.unit);
-               $("#value" + sensor.type + sensor.address).text(sensor.value.toFixed(2) + " " + sensor.unit);
                prepareChartRequest(jsonRequest, sensor.type + ":0x" + sensor.address.toString(16) , 0, 1, "chartwidget");
                socket.send({ "event" : "chartdata", "object" : jsonRequest });
             }
@@ -197,8 +205,6 @@ function updateDashboard(sensors)
          else if (sensor.widgettype == 3) {     // plain value
             $("#widget" + sensor.type + sensor.address).html(sensor.value + " " + sensor.unit);
          }
-
-         // console.log(i + ": " + sensor.name + " / " + sensor.title);
       }
    }
 }

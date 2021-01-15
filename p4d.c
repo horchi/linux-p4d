@@ -510,26 +510,17 @@ int P4d::initDb()
    tablePeaks = new cDbTable(connection, "peaks");
    if (tablePeaks->open() != success) return fail;
 
-   tableJobs = new cDbTable(connection, "jobs");
-   if (tableJobs->open() != success) return fail;
-
    tableSensorAlert = new cDbTable(connection, "sensoralert");
    if (tableSensorAlert->open() != success) return fail;
 
    tableSchemaConf = new cDbTable(connection, "schemaconf");
    if (tableSchemaConf->open() != success) return fail;
 
-   // tableSmartConf = new cDbTable(connection, "smartconfig");
-   // if (tableSmartConf->open() != success) return fail;
-
    tableConfig = new cDbTable(connection, "config");
    if (tableConfig->open() != success) return fail;
 
    tableTimeRanges = new cDbTable(connection, "timeranges");
    if (tableTimeRanges->open() != success) return fail;
-
-   tableHmSysVars = new cDbTable(connection, "hmsysvars");
-   if (tableHmSysVars->open() != success) return fail;
 
    tableScripts = new cDbTable(connection, "scripts");
    if (tableScripts->open() != success) return fail;
@@ -621,21 +612,6 @@ int P4d::initDb()
    selectAllSchemaConf->build(" from %s", tableSchemaConf->TableName());
 
    status += selectAllSchemaConf->prepare();
-
-   // ------------------
-
-   selectPendingJobs = new cDbStatement(tableJobs);
-
-   selectPendingJobs->build("select ");
-   selectPendingJobs->bind("ID", cDBS::bndOut);
-   selectPendingJobs->bind("REQAT", cDBS::bndOut, ", ");
-   selectPendingJobs->bind("STATE", cDBS::bndOut, ", ");
-   selectPendingJobs->bind("COMMAND", cDBS::bndOut, ", ");
-   selectPendingJobs->bind("ADDRESS", cDBS::bndOut, ", ");
-   selectPendingJobs->bind("DATA", cDBS::bndOut, ", ");
-   selectPendingJobs->build(" from %s where state = 'P'", tableJobs->TableName());
-
-   status += selectPendingJobs->prepare();
 
    // ------------------
 
@@ -823,18 +799,6 @@ int P4d::initDb()
 
    // ------------------
 
-   selectHmSysVarByAddr = new cDbStatement(tableHmSysVars);
-
-   selectHmSysVarByAddr->build("select ");
-   selectHmSysVarByAddr->bindAllOut();
-   selectHmSysVarByAddr->build(" from %s where ", tableHmSysVars->TableName());
-   selectHmSysVarByAddr->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
-   selectHmSysVarByAddr->bind("ATYPE", cDBS::bndIn | cDBS::bndSet, " and ");
-
-   status += selectHmSysVarByAddr->prepare();
-
-   // ------------------
-
    selectScriptByName = new cDbStatement(tableScripts);
 
    selectScriptByName->build("select ");
@@ -855,16 +819,6 @@ int P4d::initDb()
    selectScript->bind("PATH", cDBS::bndIn | cDBS::bndSet);
 
    status += selectScript->prepare();
-
-   // ------------------
-   //
-
-   cleanupJobs = new cDbStatement(tableJobs);
-
-   cleanupJobs->build("delete from %s where ", tableJobs->TableName());
-   cleanupJobs->bindCmp(0, "REQAT", 0, "<");
-
-   status += cleanupJobs->prepare();
 
    // ------------------
    // select all config
@@ -906,7 +860,6 @@ int P4d::initDb()
    }
 
    readConfiguration();
-   connection->query("%s", "truncate table jobs");
    updateScripts();
 
    return status;
@@ -920,19 +873,16 @@ int P4d::exitDb()
    delete tableGroups;                tableGroups = nullptr;
    delete tableUsers;                 tableUsers = nullptr;
    delete tableMenu;                  tableMenu = nullptr;
-   delete tableJobs;                  tableJobs = nullptr;
    delete tableSensorAlert;           tableSensorAlert = nullptr;
    delete tableSchemaConf;            tableSchemaConf = nullptr;
    delete tableErrors;                tableErrors = nullptr;
    delete tableConfig;                tableConfig = nullptr;
    delete tableTimeRanges;            tableTimeRanges = nullptr;
-   delete tableHmSysVars;             tableHmSysVars = nullptr;
    delete tableScripts;               tableScripts = nullptr;
 
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
    delete selectAllValueFacts;        selectAllValueFacts = nullptr;
    delete selectAllGroups;            selectAllGroups = nullptr;
-   delete selectPendingJobs;          selectPendingJobs = nullptr;
    delete selectAllMenuItems;         selectAllMenuItems = nullptr;
    delete selectMenuItemsByParent;    selectMenuItemsByParent = nullptr;
    delete selectMenuItemsByChild;     selectMenuItemsByChild = nullptr;
@@ -944,7 +894,6 @@ int P4d::exitDb()
    delete selectMaxTime;              selectMaxTime = nullptr;
    delete selectScriptByName;         selectScriptByName = nullptr;
    delete selectScript;               selectScript = nullptr;
-   delete cleanupJobs;                cleanupJobs = nullptr;
    delete selectAllConfig;            selectAllConfig = nullptr;
    delete selectAllUser;              selectAllUser = nullptr;
    delete selectSamplesRange;         selectSamplesRange = nullptr;
@@ -981,8 +930,8 @@ int P4d::readConfiguration()
 
    getConfigItem("loglevel", loglevel, 1);
    getConfigItem("interval", interval, 60);
-   getConfigItem("webPort", webPort, 1111);
 
+   getConfigItem("webPort", webPort, 1111);
    getConfigItem("webUrl", webUrl);
 
    char* port {nullptr};
@@ -994,9 +943,21 @@ int P4d::readConfiguration()
    }
    free(port);
 
+   getConfigItem("knownStates", knownStates, "");
+
+   if (!isEmpty(knownStates))
+   {
+      std::vector<std::string> sStates = split(knownStates, ':');
+      for (const auto& s : sStates)
+         stateDurations[atoi(s.c_str())] = 0;
+
+      tell(eloAlways, "Loaded (%d) states [%s]", stateDurations.size(), knownStates);
+   }
+
    getConfigItem("stateCheckInterval", stateCheckInterval, 10);
    getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
    getConfigItem("heatingType", heatingType, "P4");
+   tell(eloDetail, "The heating type is set to '%s'", heatingType);
    getConfigItem("stateAni", stateAni, yes);
 
    char* addrs {nullptr};
@@ -1088,7 +1049,6 @@ int P4d::initialize(int truncate)
 
       tableValueFacts->truncate();
       tableSchemaConf->truncate();
-      // tableSmartConf->truncate();
       tableMenu->truncate();
    }
 
@@ -1181,22 +1141,6 @@ int P4d::updateSchemaConfTable()
          tableSchemaConf->store();
          added++;
       }
-
-/*      tableSmartConf->clear();
-      tableSmartConf->setValue("ADDRESS", addr);
-      tableSmartConf->setValue("TYPE", type);
-
-      if (!tableSmartConf->find())
-      {
-         tableSmartConf->setValue("KIND", "value");
-         tableSmartConf->setValue("STATE", "A");
-         tableSmartConf->setValue("COLOR", "black");
-         tableSmartConf->setValue("XPOS", 12);
-         tableSmartConf->setValue("YPOS", y);
-
-         tableSmartConf->store();
-      }
-*/
    }
 
    selectActiveValueFacts->freeResult();
@@ -1528,96 +1472,6 @@ int P4d::updateScripts()
 }
 
 //***************************************************************************
-// Synchronize HM System Variables
-//***************************************************************************
-/*
-int P4d::hmSyncSysVars()
-{
-   char* hmUrl = 0;
-   char* hmHost = 0;
-   xmlDoc* document = 0;
-   xmlNode* root = 0;
-   int readOptions = 0;
-   MemoryStruct data;
-   int count = 0;
-   int size = 0;
-
-#if LIBXML_VERSION >= 20900
-   readOptions |=  XML_PARSE_HUGE;
-#endif
-
-   getConfigItem("hmHost", hmHost, "");
-
-   if (isEmpty(hmHost))
-      return done;
-
-   tell(eloAlways, "Updating HomeMatic system variables");
-   asprintf(&hmUrl, "http://%s/config/xmlapi/sysvarlist.cgi", hmHost);
-
-   if (curl->downloadFile(hmUrl, size, &data) != success)
-   {
-      tell(0, "Error: Requesting sysvar list at homematic '%s' failed", hmUrl);
-      free(hmUrl);
-      return fail;
-   }
-
-   free(hmUrl);
-
-   tell(3, "Got [%s]", data.memory ? data.memory : "<null>");
-
-   if (document = xmlReadMemory(data.memory, data.size, "", 0, readOptions))
-      root = xmlDocGetRootElement(document);
-
-   if (!root)
-   {
-      tell(0, "Error: Failed to parse XML document [%s]", data.memory ? data.memory : "<null>");
-      return fail;
-   }
-
-   for (xmlNode* node = root->children; node; node = node->next)
-   {
-      xmlChar* id = xmlGetProp(node, (xmlChar*)"ise_id");
-      xmlChar* name = xmlGetProp(node, (xmlChar*)"name");
-      xmlChar* type = xmlGetProp(node, (xmlChar*)"type");
-      xmlChar* unit = xmlGetProp(node, (xmlChar*)"unit");
-      xmlChar* visible = xmlGetProp(node, (xmlChar*)"visible");
-      xmlChar* min = xmlGetProp(node, (xmlChar*)"min");
-      xmlChar* max = xmlGetProp(node, (xmlChar*)"max");
-      xmlChar* time = xmlGetProp(node, (xmlChar*)"timestamp");
-      xmlChar* value = xmlGetProp(node, (xmlChar*)"value");
-
-      tableHmSysVars->clear();
-      tableHmSysVars->setValue("ID", atol((const char*)id));
-      tableHmSysVars->find();
-      tableHmSysVars->setValue("NAME", (const char*)name);
-      tableHmSysVars->setValue("TYPE", atol((const char*)type));
-      tableHmSysVars->setValue("UNIT", (const char*)unit);
-      tableHmSysVars->setValue("VISIBLE", strcmp((const char*)visible, "true") == 0);
-      tableHmSysVars->setValue("MIN", (const char*)min);
-      tableHmSysVars->setValue("MAX", (const char*)max);
-      tableHmSysVars->setValue("TIME", atol((const char*)time));
-      tableHmSysVars->setValue("VALUE", (const char*)value);
-      tableHmSysVars->store();
-
-      xmlFree(id);
-      xmlFree(name);
-      xmlFree(type);
-      xmlFree(unit);
-      xmlFree(visible);
-      xmlFree(min);
-      xmlFree(max);
-      xmlFree(time);
-      xmlFree(value);
-
-      count++;
-   }
-
-   tell(eloAlways, "Upate of (%d) HomeMatic system variables succeeded", count);
-
-   return success;
-} */
-
-//***************************************************************************
 // Initialize Menu Structure
 //***************************************************************************
 
@@ -1799,57 +1653,6 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    else if (mqttInterfaceStyle == misMultiTopic)
       mqttPublishSensor(name, title, unit, theValue, text, initialRun /*forceConfig*/);
 
-   /*
-   // HomeMatic
-   if (lastHmFailAt < time(0) - 3*tmeSecondsPerMinute)  // on fail retry not before 3 minutes
-   {
-      char* hmHost = 0;
-      char* hmUrl = 0;
-      MemoryStruct data;
-      int size = 0;
-
-      getConfigItem("hmHost", hmHost, "");
-
-      if (!isEmpty(hmHost))
-      {
-         tableHmSysVars->clear();
-         tableHmSysVars->setValue("ADDRESS", address);
-         tableHmSysVars->setValue("ATYPE", type);
-
-         if (selectHmSysVarByAddr->find())
-         {
-            char* buf;
-
-            asprintf(&buf, "%f", theValue);
-            tableHmSysVars->setValue("VALUE", buf);
-            free(buf);
-
-            tableHmSysVars->setValue("TIME", now);
-            tableHmSysVars->update();
-
-            asprintf(&hmUrl, "http://%s/config/xmlapi/statechange.cgi?ise_id=%ld&new_value=%f;",
-                     hmHost, tableHmSysVars->getIntValue("ID"), theValue);
-
-            if (curl->downloadFile(hmUrl, size, &data) != success)
-            {
-               tell(0, "Error: Requesting sysvar change at homematic %s failed [%s]", hmHost, hmUrl);
-               lastHmFailAt = time(0);
-               free(hmUrl);
-               return fail;
-            }
-
-            tell(1, "Info: Call of [%s] succeeded", hmUrl);
-            free(hmUrl);
-         }
-
-         selectHmSysVarByAddr->freeResult();
-      }
-   }
-   else
-   {
-      tell(1, "Skipping HomeMatic request due to error within the last 3 minutes");
-   } */
-
    return success;
 }
 
@@ -1916,10 +1719,10 @@ int P4d::meanwhile()
 
    tell(3, "loop ...");
 
-   // webSock->service();
    dispatchClientRequest();
-   // webSock->performData(cWebSock::mtData);
-   // performWebSocketPing();
+
+   if (!isEmpty(mqttUrl))
+      performMqttRequests();
 
    return done;
 }
@@ -2427,29 +2230,36 @@ int P4d::calcStateDuration()
    time_t beginTime {0};
    int thisState = {-1};
    std::string text {""};
+   std::string kStates {""};
 
-   stateDurations.clear();
+   for (auto& s : stateDurations)
+   {
+      s.second = 0;
+      kStates += ":" + std::to_string(s.first);
+   }
+
+   if (knownStates != kStates)
+   {
+      setConfigItem("knownStates", kStates.c_str());
+      getConfigItem("knownStates", knownStates, "");
+   }
+
    tableSamples->clear();
    tableSamples->setValue("TIME", beginTime);
    tableSamples->setValue("VALUE", (double)thisState);
 
    while (selectStateDuration->find())
    {
-      time_t eTime;
+      time_t eTime {time(0)};
 
-      if (endTime.isNull())
-         eTime = time(0);
-      else
+      if (!endTime.isNull())
          eTime = endTime.getTimeValue();
 
       if (beginTime)
       {
          stateDurations[thisState] += eTime-beginTime;
-
-         tell(3, "%s:0x%02x (%s) '%d/%s' %.2f minutes",
-              "SD", thisState,
-              l2pTime(beginTime).c_str(), thisState, text.c_str(),
-              (eTime-beginTime) / 60.0);
+         tell(3, "%s:0x%02x (%s) '%d/%s' %.2f minutes", "SD", thisState,
+              l2pTime(beginTime).c_str(), thisState, text.c_str(), (eTime-beginTime) / 60.0);
       }
 
       if (endTime.isNull())
@@ -2458,6 +2268,9 @@ int P4d::calcStateDuration()
       thisState = tableSamples->getFloatValue("VALUE");
       text = tableSamples->getStrValue("TEXT");
       beginTime = eTime;
+
+      addValueFact(thisState, "SD", 1, ("State_Duration_"+std::to_string(thisState)).c_str(),
+                   "min", (std::string(text)+" (Laufzeit/Tag)").c_str(), false, 2000);
 
       selectStateDuration->freeResult();
       tableSamples->clear();
@@ -2495,7 +2308,6 @@ std::string P4d::getScriptSensor(int address)
       return "";
 
    asprintf(&cmd, "%s %d", sensorScript, address);
-
    tell(0, "Calling '%s'", cmd);
    std::string s = executeCommand(cmd);
 
@@ -2521,6 +2333,98 @@ void P4d::afterUpdate()
    }
 
    free(path);
+}
+
+//***************************************************************************
+// Dispatch Mqtt Command Request
+//   Format:  '{ "command" : "parstore", "address" : 33, "value" : "33" }'
+//***************************************************************************
+
+int P4d::dispatchMqttCommandRequest(const char* jString)
+{
+   json_error_t error;
+   json_t* jData = json_loads(jString, 0, &error);
+
+   if (!jData)
+   {
+      tell(0, "Error: Ignoring invalid json in [%s]", jString);
+      tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+           error.text, error.source, error.line, error.column, error.position);
+      return fail;
+   }
+
+   const char* command = getStringFromJson(jData, "command", "");
+
+   if (isEmpty(command))
+   {
+      tell(0, "Error: Missing 'command' in MQTT request [%s], ignoring", jString);
+   }
+   else if (strcmp(command, "parstore") == 0)
+   {
+      int status {fail};
+      json_t* jAddress = getObjectFromJson(jData, "address");
+      int address = getIntFromJson(jData, "address", -1);
+      const char* value = getStringFromJson(jData, "value");
+
+      if (!json_is_integer(jAddress) || address == -1)
+      {
+         tell(0, "Error: Missing address or invalid object type for MQTT command 'parstore' in [%s], ignoring", jString);
+         return fail;
+      }
+
+      if (isEmpty(value))
+      {
+         tell(0, "Error: Missing value for MQTT command 'parstore' in [%s], ignoring", jString);
+         return fail;
+      }
+
+      tell(0, "Perform MQTT command '%s' for address %d with value '%s'", command, address, value);
+
+      ConfigParameter p(address);
+
+      sem->p();
+      status = request->getParameter(&p);
+      sem->v();
+
+      if (status != success)
+      {
+         tell(eloAlways, "Set of parameter failed, query of current setting failed!");
+         return fail;
+      }
+
+      if (p.setValueDirect(value, p.digits, p.getFactor()) != success)
+      {
+         tell(eloAlways, "Set of parameter failed, wrong format");
+         return fail;
+      }
+
+      tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", value, address);
+      sem->p();
+      status = request->setParameter(&p);
+      sem->v();
+
+      if (status == success)
+      {
+         tell(eloAlways, "Stored parameter");
+      }
+      else
+      {
+         tell(eloAlways, "Set of parameter failed, error was (%d)", status);
+
+         if (status == P4Request::wrnNonUpdate)
+            tell(eloAlways, "Value identical, ignoring request");
+         else if (status == P4Request::wrnOutOfRange)
+            tell(eloAlways, "Value out of range");
+         else
+            tell(eloAlways, "Serial communication error");
+      }
+   }
+   else
+   {
+      tell(0, "Error: Got unexpected command '%s' in MQTT request [%s], ignoring", command, jString);
+   }
+
+   return success;
 }
 
 //***************************************************************************
@@ -3397,6 +3301,59 @@ int P4d::loadHtmlHeader()
                      "  </head>\n\0");
 
    return success;
+}
+
+//***************************************************************************
+// Add Value Fact
+//***************************************************************************
+
+int P4d::addValueFact(int addr, const char* type, int factor, const char* name,
+                      const char* unit, const char* title, bool active, int maxScale)
+{
+   if (maxScale == na)
+      maxScale = unit[0] == '%' ? 100 : 45;
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("ADDRESS", addr);
+   tableValueFacts->setValue("TYPE", type);
+
+   if (!tableValueFacts->find())
+   {
+      tell(0, "Add ValueFact '%ld' '%s'",
+           tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
+
+      tableValueFacts->setValue("NAME", name);
+      tableValueFacts->setValue("STATE", active ? "A" : "D");
+      tableValueFacts->setValue("UNIT", unit);
+      tableValueFacts->setValue("TITLE", title);
+      tableValueFacts->setValue("FACTOR", factor);
+      tableValueFacts->setValue("MAXSCALE", maxScale);
+
+      tableValueFacts->store();
+      tell(2, "Inserted valuefact %s:%d", type, addr);
+      return 1;    // 1 for 'added'
+   }
+   else
+   {
+      tableValueFacts->clearChanged();
+
+      tableValueFacts->setValue("NAME", name);
+      tableValueFacts->setValue("UNIT", unit);
+      tableValueFacts->setValue("TITLE", title);
+      tableValueFacts->setValue("FACTOR", factor);
+
+      if (tableValueFacts->getValue("MAXSCALE")->isNull())
+         tableValueFacts->setValue("MAXSCALE", maxScale);
+
+      if (tableValueFacts->getChanges())
+      {
+         tableValueFacts->store();
+         tell(2, "Updated valuefact %s:%d", type, addr);
+         return 2;  // 2 for 'modified'
+      }
+   }
+
+   return fail;
 }
 
 //***************************************************************************

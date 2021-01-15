@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.11"
-#define VERSION_DATE "11.01.2021"
+#define _VERSION     "0.6.13"
+#define VERSION_DATE "15.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,17 @@
 
 /*
  * ------------------------------------
+
+2021-01-15:  version 0.6.13
+  - bugfix: Fixed valuefacts for 'SD' values
+
+2021-01-13:  version 0.6.12
+  - change: Improved handling of state durations
+  - change: Display progress dialog on load of all pages
+  - change: Log rotate now zip fist backup
+  - change: Display 'min' durations > 60 as HH:MM
+  - change: Minor code cleanup
+  - added:  MQTT command interface to set parameters
 
 2021-01-11:  version 0.6.11
   - Added:  Implemented time edit dialog

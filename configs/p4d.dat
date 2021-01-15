@@ -203,35 +203,6 @@ Table errors
 }
 
 // ----------------------------------------------------------------
-// Table Jobs
-// ----------------------------------------------------------------
-
-Table jobs
-{
-   ID                   ""               id          UInt        11 Primary|Autoinc,
-   INSSP                ""               inssp       Int         10 Meta,
-   UPDSP                ""               updsp       Int         10 Meta,
-   REQAT                ""               requestat   DateTime     0 Data,
-   DONEAT               ""               doneat      DateTime     0 Data,
-   STATE                ""               state       Ascii        1 Data,
-   COMMAND              ""               command     Ascii      100 Data,
-   ADDRESS              ""               address     UInt         4 Data,
-   RESULT               ""               result      Ascii      100 Data,
-   DATA                 "request data"   data        Ascii      255 Data,
-   BDATA                "response data"  bdata       MText    50000 Data,
-}
-
-// ----------------------------------------------------------------
-// Indices for Jobs
-// ----------------------------------------------------------------
-
-Index jobs
-{
-   state                ""  STATE,
-   requestat            ""  REQAT,
-}
-
-// ----------------------------------------------------------------
 // Table SensorAlert
 // ----------------------------------------------------------------
 

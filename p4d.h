@@ -108,6 +108,8 @@ class P4d : public FroelingService, public cWebInterface
       int updateErrors();
       int updateParameter(cDbTable* tableMenu);
       int dispatchClientRequest();
+      int dispatchMqttCommandRequest(const char* jString);
+
       bool checkRights(long client, Event event, json_t* oObject);
 
       int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address, double value,
@@ -117,6 +119,7 @@ class P4d : public FroelingService, public cWebInterface
       int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
       int mqttCheckConnection();
       int mqttWrite(json_t* obj, uint groupid);
+      int performMqttRequests();
 
       void addParameter2Mail(const char* name, const char* value);
 
@@ -135,12 +138,12 @@ class P4d : public FroelingService, public cWebInterface
       int updateTimeRangeData();
       int initMenu(bool updateParameters = false);
       int updateScripts();
-      int hmUpdateSysVars();
-      int hmSyncSysVars();
 
       int isMailState();
       int loadHtmlHeader();
 
+      int addValueFact(int addr, const char* type, int factor, const char* name,
+                       const char* unit, const char* title, bool active, int maxScale = na);
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
       int getConfigItem(const char* name, int& value, int def = na);
@@ -220,20 +223,16 @@ class P4d : public FroelingService, public cWebInterface
       cDbTable* tableGroups {nullptr};
       cDbTable* tableMenu {nullptr};
       cDbTable* tableErrors {nullptr};
-      cDbTable* tableJobs {nullptr};
       cDbTable* tableSensorAlert {nullptr};
       cDbTable* tableSchemaConf {nullptr};
-      // cDbTable* tableSmartConf {nullptr};
       cDbTable* tableConfig {nullptr};
       cDbTable* tableTimeRanges {nullptr};
-      cDbTable* tableHmSysVars {nullptr};
       cDbTable* tableScripts {nullptr};
       cDbTable* tableUsers {nullptr};
 
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
       cDbStatement* selectAllGroups {nullptr};
-      cDbStatement* selectPendingJobs {nullptr};
       cDbStatement* selectAllMenuItems {nullptr};
       cDbStatement* selectMenuItemsByParent {nullptr};
       cDbStatement* selectMenuItemsByChild {nullptr};
@@ -250,10 +249,8 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectPendingErrors {nullptr};
       cDbStatement* selectAllErrors {nullptr};
       cDbStatement* selectMaxTime {nullptr};
-      cDbStatement* selectHmSysVarByAddr {nullptr};
       cDbStatement* selectScriptByName {nullptr};
       cDbStatement* selectScript {nullptr};
-      cDbStatement* cleanupJobs {nullptr};
       cDbStatement* selectAllConfig {nullptr};
       cDbStatement* selectAllUser {nullptr};
 
@@ -326,11 +323,13 @@ class P4d : public FroelingService, public cWebInterface
 
       Mqtt* mqttWriter {nullptr};
       Mqtt* mqttReader {nullptr};
+      Mqtt* mqttCommandReader {nullptr};
 
       // config
 
       int interval {60};
       int stateCheckInterval {10};
+      char* knownStates {nullptr};
 
       int webPort {1111};
       char* webUrl {nullptr};

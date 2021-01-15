@@ -38,7 +38,7 @@ int getIntFromJson(json_t* obj, const char* name, int def = na);
 int getBoolFromJson(json_t* obj, const char* name, bool def = false);
 long getLongFromJson(json_t* obj, const char* name, long def = na);
 double getDoubleFromJson(json_t* obj, const char* name, double def = na);
-
+json_t* getObjectFromJson(json_t* obj, const char* name, json_t* def = nullptr);
 int addToJson(json_t* obj, const char* name, const char* value, const char* def = "");
 int addToJson(json_t* obj, const char* name, long value);
 int addToJson(json_t* obj, const char* name, json_t* o);

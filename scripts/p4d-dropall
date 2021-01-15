@@ -13,7 +13,6 @@ if [ "${c}" = "y" ]; then
 
    mysql -u p4 -pp4 -Dp4 -e 'drop table config;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table errors;'
-   mysql -u p4 -pp4 -Dp4 -e 'drop table jobs;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table schemaconf;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table sensoralert;'
    mysql -u p4 -pp4 -Dp4 -e 'drop table valuefacts;'

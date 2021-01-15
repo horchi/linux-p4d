@@ -749,7 +749,7 @@ void cWebSock::pushOutMessage(const char* message, lws* wsi)
       if (clients.find(wsi) != clients.end())
          clients[wsi].pushMessage(message);
       else
-         tell(0, "client %ld not found!", (ulong)wsi);
+         tell(0, "client %ld not found! [%s]", (ulong)wsi, message);
    }
    else
    {

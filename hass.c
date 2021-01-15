@@ -6,9 +6,7 @@
 // Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
-#include <jansson.h>
-
-// #include "lib/json.h"
+#include "lib/json.h"
 #include "p4d.h"
 
 //***************************************************************************
@@ -186,6 +184,30 @@ int P4d::mqttWrite(json_t* obj, uint groupid)
 }
 
 //***************************************************************************
+// Perform MQTT Requests
+//   - check 'mqttCommandReader' for commands of e.g. a home automation
+//***************************************************************************
+
+int P4d::performMqttRequests()
+{
+   if (mqttCheckConnection() != success)
+      return fail;
+
+   MemoryStruct message;
+   std::string topic;
+
+   if (mqttCommandReader->read(&message, 10) == success)
+   {
+      topic = mqttCommandReader->getLastReadTopic();
+      tell(eloAlways, "<- (%s) [%s]", topic.c_str(), message.memory);
+
+      dispatchMqttCommandRequest(message.memory);
+   }
+
+   return success;
+}
+
+//***************************************************************************
 // Check MQTT Connection
 //***************************************************************************
 
@@ -193,6 +215,15 @@ int P4d::mqttCheckConnection()
 {
    if (!mqttWriter)
       mqttWriter = new Mqtt();
+
+   if (!mqttReader)
+      mqttReader = new Mqtt();
+
+   if (!mqttCommandReader)
+      mqttCommandReader = new Mqtt();
+
+   if (mqttCommandReader->isConnected() && mqttWriter->isConnected() && mqttReader->isConnected())
+      return success;
 
    if (!mqttWriter->isConnected())
    {
@@ -205,11 +236,20 @@ int P4d::mqttCheckConnection()
       tell(0, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
    }
 
+   if (!mqttCommandReader->isConnected())
+   {
+      if (mqttCommandReader->connect(mqttUrl) != success)
+      {
+         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
+         return fail;
+      }
+
+      mqttCommandReader->subscribe("mqtt2p4d/command");
+      tell(0, "MQTT: Connecting command subscriber to '%s' succeeded", mqttUrl);
+   }
+
    if (mqttHaveConfigTopic)
    {
-      if (!mqttReader)
-         mqttReader = new Mqtt();
-
       if (!mqttReader->isConnected())
       {
          if (mqttReader->connect(mqttUrl, mqttUser, mqttPassword) != success)
