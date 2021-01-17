@@ -1734,8 +1734,8 @@ int P4d::meanwhile()
 int P4d::loop()
 {
    int status;
-   time_t nextStateAt = 0;
-   int lastState = na;
+   time_t nextStateAt {0};
+   int lastState {na};
 
    loopMutex.Lock();
 
@@ -1757,7 +1757,7 @@ int P4d::loop()
 
    while (!doShutDown())
    {
-      int stateChanged = no;
+      bool stateChanged {false};
 
       // check db connection
 
@@ -1810,7 +1810,6 @@ int P4d::loop()
       {
          lastState = currentState.state;
          nextAt = time(0);              // force on state change
-
          tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
       }
 
@@ -1852,8 +1851,6 @@ int P4d::loop()
       }
 
       afterUpdate();
-      mailBody = "";
-      mailBodyHtml = "";
 
       if (stateChanged && mail)
       {
@@ -2621,11 +2618,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
 void P4d::addParameter2Mail(const char* name, const char* value)
 {
    char buf[500+TB];
-
-   mailBody += std::string(name) + " = " + std::string(value) + "\n";
-
    sprintf(buf, "        <tr><td>%s</td><td>%s</td></tr>\n", name, value);
-
    mailBodyHtml += buf;
 }
 
@@ -3158,7 +3151,7 @@ int P4d::sendStateMail()
 
    // check
 
-   if (!isMailState() || isEmpty(mailScript) || !mailBody.length() || isEmpty(stateMailTo))
+   if (!isMailState() || isEmpty(mailScript) || !mailBodyHtml.length() || isEmpty(stateMailTo))
       return done;
 
    // HTML mail
@@ -3190,8 +3183,8 @@ int P4d::sendStateMail()
             htmlHeader.memory, webUrl, mailBodyHtml.c_str());
 
    int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
-
    free(html);
+   mailBodyHtml = "";
 
    return result;
 }
@@ -3298,8 +3291,10 @@ int P4d::loadHtmlHeader()
                      "        border: 1px solid #D2D2D2;\n"
                      "      }\n"
                      "      </style>\n"
-                     "  </head>\n\0");
+                     "  </head>\n");
+   htmlHeader.append('\0');
 
+   tell(0, "Created mail header with [%s]", htmlHeader.memory);
    return success;
 }
 

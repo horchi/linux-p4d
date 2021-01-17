@@ -165,7 +165,7 @@ class MemoryStruct
 
       int append(const char* buf, int len = 0)
       {
-         if (!len) len = strlen(buf);
+         if (!len) len = strlen(buf)+TB;
          memory = srealloc(memory, size+len);
          memcpy(memory+size, buf, len);
          size += len;

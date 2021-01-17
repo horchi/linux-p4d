@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.15"
+#define _VERSION     "0.6.16"
 #define VERSION_DATE "17.01.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-01-17:  version 0.6.16
+  - bugfix: Fixed problem with potentially missing state mails
 
 2021-01-17:  version 0.6.15
   - change: New config style for 'stateMailStates' option
