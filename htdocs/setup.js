@@ -116,12 +116,33 @@ function initConfig(configuration, root)
          html += '  </select>\n';
          html += '</span>\n';
          break;
+
+      case 6:    // MultiSelect
+         html += '<span style="width:75%;">\n';
+         html += '  <input style="width:inherit;" class="rounded-border input" ' +
+            ' id="mselect_' + item.name + '" data-index="' + i +
+            '" data-value="' + item.value + '" type="text" value=""/>\n';
+         html += '</span>\n';
+
+
+         break;
       }
 
       var elem = document.createElement("div");
       elem.innerHTML = html;
       root.appendChild(elem);
    }
+
+   $('input[id^="mselect_"]').each(function () {
+      var item = configuration[$(this).data("index")];
+      $(this).autocomplete({
+         source: item.options,
+         multiselect: true});
+      if ($(this).data("value").trim() != "") {
+         // console.log("set", $(this).data("value"));
+         setAutoCompleteValues($(this), $(this).data("value").trim().split(","));
+      }
+   });
 }
 
 function initTables(what)
@@ -162,13 +183,20 @@ window.storeConfig = function()
       }
    }
 
+   // data type 6 - 'MultiSelect' -> as string
+
+   var elements = rootConfig.querySelectorAll("[id^='mselect_']");
+
+   for (var i = 0; i < elements.length; i++) {
+      var name = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
+      var value = getAutoCompleteValues($("#mselect_" + name));
+      value = value.replace(/ /g, ',');
+      jsonObj[name] = value;
+   }
+
    // console.log(JSON.stringify(jsonObj, undefined, 4));
 
    socket.send({ "event" : "storeconfig", "object" : jsonObj });
-
-   // try force reload (not working)
-   // location.reload(true);
-   // window.location.href = window.location.href;
 }
 
 window.resetPeaks = function()

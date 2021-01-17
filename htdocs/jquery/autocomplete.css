@@ -1,0 +1,79 @@
+
+input.vanilla,
+.ui-autocomplete-multiselect.ui-state-default {
+    display: block;
+    padding: 4px 9px 1px 2px;
+    overflow: hidden;
+    cursor: text;
+    background-color: var(--edit);
+    border-radius: var(--borderRadius);
+    border-color: var(--borderColor);
+    border-style: none;
+    border-width: 1px;
+    margin-bottom: 3px;
+    margin-top: 1px;
+    /*height: 24px;*/
+}
+
+div.sortable div.placeholder {
+	 border: 1px dashed #ccc;
+    background-color: #afcada;
+    display: inline-block;
+    border-radius: 4px;
+    padding: 0px 0px;
+    margin-right: 2px;
+    margin-bottom: 0px;
+    width: 60px;
+}
+
+div.sortable div.placeholder:after {
+    content: "\00a0 ";
+}
+
+input.vanilla {
+    line-height: 1.7;
+    padding: 2px 5px;
+}
+
+.ui-autocomplete-multiselect .ui-autocomplete-multiselect-item .ui-icon {
+    float: right;
+    cursor: pointer;
+}
+
+.ui-autocomplete-multiselect .ui-autocomplete-multiselect-item {
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1px 3px;
+    margin-right: 2px;
+    margin-bottom: 3px;
+    color: #333;
+    background-color: #f6f6f6;
+}
+
+.ui-autocomplete-multiselect input {
+    display: inline-block;
+    border: none;
+    outline: none;
+    height: auto;
+    margin: 2px;
+    overflow: visible;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+input.vanilla:focus,
+.ui-autocomplete-multiselect.ui-state-active {
+    outline: none;
+/*    border: 1px solid #7ea4c7;
+    -moz-box-shadow: 0 0 5px rgba(50,150,255,0.5);
+    -webkit-box-shadow: 0 0 5px rgba(50,150,255,0.5);
+    -khtml-box-shadow: 0 0 5px rgba(50,150,255,0.5);
+    box-shadow: 0 0 5px rgba(50,150,255,0.5);*/
+}
+
+.ui-autocomplete {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}

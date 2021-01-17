@@ -30,11 +30,11 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 {
    // web
 
-   { "addrsDashboard",            ctString,  false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   { "addrsList",                 ctString,  false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   { "addrsDashboard",            ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   { "addrsList",                 ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
    // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
 
-   { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animirte Icons", "" },
+   { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animiert Icons", "" },
 
    { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
    { "haUrl",                     ctString,  false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
@@ -71,7 +71,7 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "mail",                      ctBool,    false, "3 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
    { "mailScript",                ctString,  false, "3 Mail", "p4d sendet Mails über das Skript", "" },
    { "stateMailTo",               ctString,  false, "3 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctString,  false, "3 Mail", "  für folgende Status", "" },
+   { "stateMailStates",           ctMultiSelect, false, "3 Mail", "  für folgende Status", "" },
 
    { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
 };
@@ -2337,7 +2337,7 @@ void P4d::afterUpdate()
 
 //***************************************************************************
 // Dispatch Mqtt Command Request
-//   Format:  '{ "command" : "parstore", "address" : 33, "value" : "33" }'
+//   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
 int P4d::dispatchMqttCommandRequest(const char* jString)
@@ -3319,9 +3319,6 @@ int P4d::addValueFact(int addr, const char* type, int factor, const char* name,
 
    if (!tableValueFacts->find())
    {
-      tell(0, "Add ValueFact '%ld' '%s'",
-           tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
-
       tableValueFacts->setValue("NAME", name);
       tableValueFacts->setValue("STATE", active ? "A" : "D");
       tableValueFacts->setValue("UNIT", unit);
@@ -3371,7 +3368,7 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
 
    if (tableConfig->find())
       value = strdup(tableConfig->getStrValue("VALUE"));
-   else if (def)  // only if it is not a nullptr
+   else if (def)  // only if not a nullptr
    {
       value = strdup(def);
       setConfigItem(name, value);  // store the default (may be an empty string)

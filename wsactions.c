@@ -1769,7 +1769,7 @@ int P4d::configDetails2Json(json_t* obj)
       json_object_set_new(oDetail, "title", json_string(it.title));
       json_object_set_new(oDetail, "descrtiption", json_string(it.description));
 
-      if (it.type == ctChoice)
+      if (it.type == ctChoice || it.type == ctMultiSelect)
          configChoice2json(oDetail, it.name.c_str());
 
       tableConfig->clear();
@@ -1804,6 +1804,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
             char* p = strdup(strchr(opt.name.c_str(), '-'));
             *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(p+1));
+            free(p);
          }
 
          json_object_set_new(obj, "options", oArray);
@@ -1829,6 +1830,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
             char* p = strdup(strchr(opt.name.c_str(), '-'));
             *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(p+1));
+            free(p);
          }
 
          json_object_set_new(obj, "options", oArray);
@@ -1856,12 +1858,58 @@ int P4d::configChoice2json(json_t* obj, const char* name)
             char* p = strdup(strchr(opt.name.c_str(), '-'));
             *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(p+1));
+            free(p);
          }
 
          json_object_set_new(obj, "options", oArray);
       }
 
       free(path);
+   }
+   else if (strcmp(name, "addrsDashboard") == 0 || strcmp(name, "addrsList") == 0)
+   {
+      json_t* oArray = json_array();
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("STATE", "A");
+
+      for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+      {
+         const char* title = tableValueFacts->getStrValue("USRTITLE");
+
+         if (isEmpty(title))
+            title = tableValueFacts->getStrValue("TITLE");
+
+         json_t* oOpt = json_object();
+
+         char* tmp;
+         asprintf(&tmp, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
+
+         json_object_set_new(oOpt, "value", json_string(tmp));
+         json_object_set_new(oOpt, "label", json_string(title));
+         json_array_append_new(oArray, oOpt);
+
+         // json_array_append_new(oArray, json_string(tmp));
+         free(tmp);
+      }
+
+      selectActiveValueFacts->freeResult();
+
+      json_object_set_new(obj, "options", oArray);
+   }
+   else if (strcmp(name, "stateMailStates") == 0)
+   {
+      json_t* oArray = json_array();
+
+      for (int i = 0; stateInfos[i].code != na; i++)
+      {
+         json_t* oOpt = json_object();
+         json_object_set_new(oOpt, "value", json_string(std::to_string(stateInfos[i].code).c_str()));
+         json_object_set_new(oOpt, "label", json_string(stateInfos[i].title));
+         json_array_append_new(oArray, oOpt);
+      }
+
+      json_object_set_new(obj, "options", oArray);
    }
 
    return done;

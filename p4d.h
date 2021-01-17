@@ -75,7 +75,8 @@ class P4d : public FroelingService, public cWebInterface
          ctString,
          ctBool,
          ctRange,
-         ctChoice
+         ctChoice,
+         ctMultiSelect
       };
 
       struct ConfigItemDef

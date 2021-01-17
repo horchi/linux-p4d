@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.13"
-#define VERSION_DATE "15.01.2021"
+#define _VERSION     "0.6.15"
+#define VERSION_DATE "17.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2021-01-17:  version 0.6.15
+  - change: New config style for 'stateMailStates' option
+
+2021-01-17:  version 0.6.14
+  - change: New config style for dashboard and list addresses
 
 2021-01-15:  version 0.6.13
   - bugfix: Fixed valuefacts for 'SD' values
