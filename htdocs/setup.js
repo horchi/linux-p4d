@@ -12,6 +12,8 @@ function initConfig(configuration, root)
 {
    var lastCat = "";
 
+   root.innerHTML = "";
+
    $('#btnInitMenu').bind('click', function(event) {
       if (event.ctrlKey)
          initTables('menu-force');
