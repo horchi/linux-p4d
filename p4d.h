@@ -276,6 +276,7 @@ class P4d : public FroelingService, public cWebInterface
       cCurl* curl {nullptr};
 
       Status currentState;
+      bool stateChanged {false};
       std::string mailBodyHtml;
       bool initialRun {true};
 

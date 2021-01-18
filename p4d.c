@@ -1757,7 +1757,7 @@ int P4d::loop()
 
    while (!doShutDown())
    {
-      bool stateChanged {false};
+      stateChanged = false;
 
       // check db connection
 
@@ -1808,6 +1808,7 @@ int P4d::loop()
 
       if (stateChanged)
       {
+         mailBodyHtml = "";
          lastState = currentState.state;
          nextAt = time(0);              // force on state change
          tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
@@ -2617,9 +2618,8 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
 
 void P4d::addParameter2Mail(const char* name, const char* value)
 {
-   char buf[500+TB];
-   sprintf(buf, "        <tr><td>%s</td><td>%s</td></tr>\n", name, value);
-   mailBodyHtml += buf;
+   if (stateChanged)
+      mailBodyHtml += "        <tr><td>" + std::string(name) + "</td><td>" + std::string(value) + "</td></tr>\n";
 }
 
 //***************************************************************************
@@ -3294,7 +3294,6 @@ int P4d::loadHtmlHeader()
                      "  </head>\n");
    htmlHeader.append('\0');
 
-   tell(0, "Created mail header with [%s]", htmlHeader.memory);
    return success;
 }
 
