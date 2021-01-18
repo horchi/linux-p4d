@@ -16,7 +16,8 @@
    ac = $.extend({}, ac, {
       options: $.extend({}, ac.options, {
          multiselect: false,
-         triggerChar: false
+         triggerChar: false,
+         classes: ''
       }),
       _create: function() {
          var self = this;
@@ -27,7 +28,8 @@
             self.selectedItems = {};
             self.multiselect = $('<div class="sortable"></div>')
                .addClass("ui-autocomplete-multiselect ui-state-default ui-widget")
-               .css("width", self.element.width())
+               .addClass(o.classes)
+               // .css("width", self.element.width())
                .insertBefore(self.element)
                .append(self.element)
                .bind("click.autocomplete", function() {
@@ -35,6 +37,10 @@
                })
                .sortable({
                   placeholder: 'placeholder',
+                  cursor: "move",
+                  cursorAt: { right: 5 },
+                  opacity: 0.8,revert: true,
+                  // tolerance: "pointer",
                   update: function(event, ui) {
                      var arr = []; var i = 0;
                      self.multiselect.children('div').each(function () {

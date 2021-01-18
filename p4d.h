@@ -148,6 +148,7 @@ class P4d : public FroelingService, public cWebInterface
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
       int getConfigItem(const char* name, int& value, int def = na);
+      int getConfigItem(const char* name, bool& value, bool def = false);
       int setConfigItem(const char* name, int value);
 
       int doShutDown() { return shutdown; }
@@ -334,7 +335,7 @@ class P4d : public FroelingService, public cWebInterface
 
       int webPort {1111};
       char* webUrl {nullptr};
-
+      bool webSsl {false};
       char* ttyDevice {nullptr};
       char* heatingType {nullptr};
       int aggregateInterval {15};         // aggregate interval in minutes

@@ -1,7 +1,7 @@
 /**
  *  websock.c
  *
- *  (c) 2017-2020 Jörg Wendel
+ *  (c) 2017-2021 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -46,7 +46,7 @@ cWebSock::~cWebSock()
    free(msgBuffer);
 }
 
-int cWebSock::init(int aPort, int aTimeout)
+int cWebSock::init(int aPort, int aTimeout, bool ssl)
 {
    lws_context_creation_info info {0};
 
@@ -85,11 +85,16 @@ int cWebSock::init(int aPort, int aTimeout)
    mount.cache_revalidate = true ? 1 : 0;
    mount.cache_intermediaries = 1;
    mount.origin_protocol = LWSMPRO_FILE;
+   mount.basic_auth_login_file = nullptr;
    mounts[0] = mount;
 
    // setup websocket context info
 
    memset(&info, 0, sizeof(info));
+   info.options = 0;
+   info.mounts = mounts;
+   info.gid = -1;
+   info.uid = -1;
    info.port = port;
    info.protocols = protocols;
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR < 4)
@@ -98,6 +103,13 @@ int cWebSock::init(int aPort, int aTimeout)
    info.ssl_cert_filepath = nullptr;
    info.ssl_private_key_filepath = nullptr;
 
+   if (ssl)
+   {
+      info.ssl_cert_filepath = "/etc/p4d/p4d.cert";
+      info.ssl_private_key_filepath = "/etc/p4d/p4d.key";
+      info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT; // | LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
+   }
+
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
    retry.secs_since_valid_ping = timeout;
    retry.secs_since_valid_hangup = timeout + 10;
@@ -105,11 +117,6 @@ int cWebSock::init(int aPort, int aTimeout)
 #else
    info.ws_ping_pong_interval = timeout;
 #endif
-
-   info.gid = -1;
-   info.uid = -1;
-   info.options = 0;
-   info.mounts = mounts;
 
    // create libwebsocket context representing this server
 
@@ -121,7 +128,7 @@ int cWebSock::init(int aPort, int aTimeout)
       return fail;
    }
 
-   tell(0, "Listener at port (%d) established", port);
+   tell(0, "WebSocket Listener at port (%d) established", port);
    tell(1, "using libwebsocket version '%s'", lws_get_library_version());
 
    threadCtl.webSock = this;
@@ -248,6 +255,8 @@ void getClientInfo(lws* wsi, std::string* clientInfo)
 {
    char clientName[100+TB] = "unknown";
    char clientIp[50+TB] = "";
+
+   return;
 
    if (wsi)
    {
@@ -412,6 +421,9 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       case LWS_CALLBACK_EVENT_WAIT_CANCELLED:
       case LWS_CALLBACK_HTTP_BODY_COMPLETION:
 #endif
+         break;
+      case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS: // 21,
+      case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_SERVER_VERIFY_CERTS: // 22,
          break;
 
       default:

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.17"
-#define VERSION_DATE "17.01.2021"
+#define _VERSION     "0.6.18"
+#define VERSION_DATE "18.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-01-18:  version 0.6.18
+  - added: SSL support for web interface
 
 2021-01-17:  version 0.6.17
   - bugfix: Fixed 'growing' state mails (bug of version 0.6.16)

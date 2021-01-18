@@ -32,11 +32,12 @@ std::list<P4d::ConfigItemDef> P4d::configuration
 
    { "addrsDashboard",            ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
    { "addrsList",                 ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   // { "addrsMainMobile",        ctString,  false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   // { "addrsMainMobile",        ctMultiSelect, false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
 
    { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animiert Icons", "" },
 
    { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
+   { "webSSL",                    ctBool,    false, "2 WEB Interface", "Use SSL for WebInterface", "" },
    { "haUrl",                     ctString,  false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 
    { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
@@ -241,7 +242,7 @@ int P4d::pushDataUpdate(const char* title, long client)
       s3200State2Json(oJson);
       pushOutMessage(oJson, "s3200-state", client);
 
-      if (cl.page == "dashboard")
+      if (cl.page == "index")
       {
          if (addrsDashboard.size())
             for (const auto sensor : addrsDashboard)
@@ -283,7 +284,7 @@ int P4d::pushDataUpdate(const char* title, long client)
          s3200State2Json(oJson);
          pushOutMessage(oJson, "s3200-state", client);
 
-         if (cl.second.page == "dashboard")
+         if (cl.second.page == "index")
          {
             if (addrsDashboard.size())
                for (const auto sensor : addrsDashboard)
@@ -399,7 +400,7 @@ int P4d::init()
 
    // init web socket ...
 
-   while (webSock->init(webPort, webSocketPingTime) != success)
+   while (webSock->init(webPort, webSocketPingTime, webSsl) != success)
    {
       tell(0, "Retrying in 2 seconds");
       sleep(2);
@@ -933,12 +934,13 @@ int P4d::readConfiguration()
 
    getConfigItem("webPort", webPort, 1111);
    getConfigItem("webUrl", webUrl);
+   getConfigItem("webSsl", webSsl);
 
    char* port {nullptr};
    asprintf(&port, "%d", webPort);
    if (isEmpty(webUrl) || !strstr(webUrl, port))
    {
-      asprintf(&webUrl, "http://%s:%d", getFirstIp(), webPort);
+      asprintf(&webUrl, "http%s://%s:%d", webSsl ? "s" : "", getFirstIp(), webPort);
       setConfigItem("webUrl", webUrl);
    }
    free(port);
@@ -3399,6 +3401,25 @@ int P4d::getConfigItem(const char* name, int& value, int def)
    }
    else
       value = 0;
+
+   free(txt);
+
+   return success;
+}
+
+int P4d::getConfigItem(const char* name, bool& value, bool def)
+{
+   char* txt {nullptr};
+
+   getConfigItem(name, txt);
+
+   if (!isEmpty(txt))
+      value = atoi(txt);
+   else if (isEmpty(txt))
+   {
+      value = def;
+      setConfigItem(name, value);
+   }
 
    free(txt);
 

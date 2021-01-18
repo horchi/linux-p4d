@@ -1,3 +1,4 @@
+
 /* WebsocketClient, usage:
    wsClient = new WebSocketClient({
    url: "ws://" + location.host,
@@ -9,7 +10,6 @@
    onerror: function (err) {  ...  }
    });
 */
-
 
 // export default function WebSocketClient(opt)
 

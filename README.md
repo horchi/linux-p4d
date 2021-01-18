@@ -242,6 +242,13 @@ Now edit the script /etc/p4/script-sensor.sh that it output the actual value of 
 ### Points to check
 - reboot the device to check if p4d is starting automatically during startup
 
+## Use https for WEB interface:
+ - add your cert and your key to this two files and make sure the p4d has at least read access to this files
+   /etc/p4d/p4d.cert
+   /etc/p4d/p4d.key
+ - enable WebSSL at 'Setup' -> 'Allg. Konfiguration'
+ - restart the p4d
+ - now access to the web interface is ONLY by https://.. possible
 
 ## Backup
 Backup the data of the p4 database including all recorded values:

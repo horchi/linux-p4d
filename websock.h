@@ -153,7 +153,7 @@ class cWebSock : public cWebService
       cWebSock(cWebInterface* aProcess, const char* aHttpPath);
       virtual ~cWebSock();
 
-      int init(int aPort, int aTimeout);
+      int init(int aPort, int aTimeout, bool ssl = false);
       int exit();
 
       int performData(MsgType type);

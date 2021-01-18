@@ -12,6 +12,7 @@ input.vanilla,
     border-width: 1px;
     margin-bottom: 3px;
     margin-top: 1px;
+    width: inherit;
     /*height: 24px;*/
 }
 

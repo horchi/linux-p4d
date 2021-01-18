@@ -1,7 +1,7 @@
 /*
  *  main.js
  *
- *  (c) 2020 Jörg Wendel
+ *  (c) 2021 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -26,18 +26,32 @@ var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-th
 var chartDialogSensor = "";
 var chartBookmarks = {};
 
-window.documentReady = function(doc)
+function getCurentDocument()
 {
+   console.log("window.location.href: " +window.location.href);
+
+   var pagePathName = window.location.pathname;
+   var pageName = pagePathName.substring(pagePathName.lastIndexOf("/") + 1).split('.');
+   return pageName[0].length > 0 ? pageName[0] : "index";
+}
+
+$('document').ready(function() {
    daemonState.state = -1;
    s3200State.state = -1;
-   documentName = doc;
+   documentName = getCurentDocument();
    console.log("documentReady: " + documentName);
 
-   var url = "ws://" + location.hostname + ":" + location.port;
+   var url = "";
+
+   if (window.location.href.startsWith("https"))
+      url = "wss://" + location.hostname + ":" + location.port;
+   else
+      url = "ws://" + location.hostname + ":" + location.port;
+
    var protocol = "p4d";
 
    connectWebSocket(url, protocol);
-}
+});
 
 function onSocketConnect(protocol)
 {
@@ -59,7 +73,7 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "syslog";
    else if (documentName == "maincfg")
       jsonRequest["name"] = "configdetails";
-   else if (documentName == "usercfg")
+   else if (documentName == "usercfg" || documentName == "user")
       jsonRequest["name"] = "userdetails";
    else if (documentName == "iosetup")
       jsonRequest["name"] = "iosettings";
@@ -67,7 +81,7 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "groups";
    else if (documentName == "chart")
       prepareChartRequest(jsonRequest, "", 0, 2, "chart");
-   else if (documentName == "dashboard")
+   else if (documentName == "index")  //  the 'dashboard'
       jsonRequest["name"] = "data";
    else if (documentName == "list")
       jsonRequest["name"] = "data";
