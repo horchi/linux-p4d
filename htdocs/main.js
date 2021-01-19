@@ -112,7 +112,7 @@ function connectWebSocket(useUrl, protocol)
       protocol: protocol,
       autoReconnectInterval: 1000,
       onopen: function (){
-         console.log("socket opened :)");
+         console.log("socket to "+ useUrl + " for protocol " + protocol + " opened");
          if (isActive === null)     // wurde beim Schliessen auf null gesetzt
             onSocketConnect(protocol);
       }, onclose: function (){

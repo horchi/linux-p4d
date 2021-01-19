@@ -2729,6 +2729,7 @@ int P4d::updateErrors()
    Fs::ErrorInfo e;
    char timeField[5+TB] = "";
    time_t timeOne = 0;
+   cTimeMs timeMs;
 
    cDbStatement* select = new cDbStatement(tableErrors);
    select->build("select ");
@@ -2794,7 +2795,7 @@ int P4d::updateErrors()
 
    delete select;
 
-   tell(eloDetail, "Updating error list done");
+   tell(eloAlways, "Updating error list done in %lldms", timeMs.Elapsed());
 
    // count pending (not 'quittiert' AND not mailed) errors
 

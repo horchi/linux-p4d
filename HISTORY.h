@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.18"
-#define VERSION_DATE "18.01.2021"
+#define _VERSION     "0.6.19"
+#define VERSION_DATE "19.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-01-19:  version 0.6.19
+  - bugfix: Fixed TLS communication package size.
 
 2021-01-18:  version 0.6.18
   - added: SSL support for web interface

@@ -15,10 +15,11 @@
 
 #include "websock.h"
 
-int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN}; // LLL_INFO | LLL_NOTICE | LLL_WARN | LLL_ERR
+// LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG | LLL_PARSER |
+// LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY | LLL_USER | LLL_THREAD
+
+int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN};
 lws_context* cWebSock::context {nullptr};
-char* cWebSock::msgBuffer {nullptr};
-int cWebSock::msgBufferSize {0};
 int cWebSock::timeout {0};
 cWebSock::MsgType cWebSock::msgType {mtNone};
 std::map<void*,cWebSock::Client> cWebSock::clients;
@@ -43,7 +44,6 @@ cWebSock::~cWebSock()
    exit();
 
    free(httpPath);
-   free(msgBuffer);
 }
 
 int cWebSock::init(int aPort, int aTimeout, bool ssl)
@@ -65,8 +65,8 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
    protocols[1].name = singleton->myName();
    protocols[1].callback = callbackWs;
    protocols[1].per_session_data_size = 0;
-   protocols[1].rx_buffer_size = 80*1024;
-
+   protocols[1].rx_buffer_size = 128*1024;
+   protocols[1].tx_packet_size = 0;
    protocols[2].name = 0;
    protocols[2].callback = 0;
    protocols[2].per_session_data_size = 0;
@@ -146,7 +146,7 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
 void cWebSock::writeLog(int level, const char* line)
 {
    std::string message = strReplace("\n", "", line);
-   tell(0, "WS: %s", message.c_str());
+   tell(0, "WS: (%d) %s", level, message.c_str());
 }
 
 int cWebSock::exit()
@@ -206,6 +206,7 @@ int cWebSock::service(ThreadControl* threadCtl)
 
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
    lws_service(context, 0);   // timeout parameter is not supported by the lib anymore
+   usleep(10000);
 #else
    lws_service(context, 100);
 #endif
@@ -227,11 +228,14 @@ int cWebSock::service(ThreadControl* threadCtl)
 
 int cWebSock::performData(MsgType type)
 {
-   int count = 0;
    msgType = type;
 
    cMyMutexLock lock(&clientsMutex);
+   lws_callback_on_writable_all_protocol(context, &protocols[1]);
 
+   return done;
+
+/* int count = 0;
    for (auto it = clients.begin(); it != clients.end(); ++it)
    {
       if (!it->second.messagesOut.empty())
@@ -244,7 +248,7 @@ int cWebSock::performData(MsgType type)
    if (count || msgType == mtPing)
       lws_callback_on_writable_all_protocol(context, &protocols[1]);
 
-   return done;
+   return done; */
 }
 
 //***************************************************************************
@@ -278,7 +282,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
    SessionData* sessionData = (SessionData*)user;
    std::string clientInfo = "unknown";
 
-   tell(4, "DEBUG: 'callbackHttp' got (%d)", reason);
+   tell(6, "DEBUG: 'callbackHttp' got (%d)", reason);
 
    switch (reason)
    {
@@ -362,7 +366,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          {
             // data request
 
-            tell(0, "Gpt unexpected HTTP request!");
+            tell(0, "Got unexpected HTTP request!");
             res = dispatchDataRequest(wsi, sessionData, url);
 
             if (res < 0 || (res > 0 && lws_http_transaction_completed(wsi)))
@@ -470,7 +474,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 {
    std::string clientInfo = "unknown";
 
-   tell(4, "DEBUG: 'callback' got (%d)", reason);
+   tell(6, "DEBUG: 'callback' got (%d)", reason);
 
    switch (reason)
    {
@@ -495,51 +499,77 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          if (msgType == mtPing)
          {
             char buffer[sizeLwsFrame];
-
             tell(4, "DEBUG: Write 'PING' to '%s' (%p)", clientInfo.c_str(), (void*)wsi);
-               lws_write(wsi, (unsigned char*)buffer + sizeLwsPreFrame, 0, LWS_WRITE_PING);
+            lws_write(wsi, (unsigned char*)buffer + sizeLwsPreFrame, 0, LWS_WRITE_PING);
          }
 
          else if (msgType == mtData)
          {
-            while (!clients[wsi].messagesOut.empty() && !lws_send_pipe_choked(wsi))
+            if (!clients[wsi].msgBufferDataPending() && clients[wsi].messagesOut.empty())
+               return 0;
+            if (lws_send_pipe_choked(wsi))
+               return 0;
+
+            if (!clients[wsi].msgBufferDataPending() && !clients[wsi].messagesOut.empty())
             {
-               int res;
-               std::string msg;  // take a copy of the message for short mutex lock!
-
-               // mutex lock context
-               {
-                  cMyMutexLock clock(&clientsMutex);
-                  cMyMutexLock lock(&clients[wsi].messagesOutMutex);
-                  msg = clients[wsi].messagesOut.front();
-                  clients[wsi].messagesOut.pop();
-               }
-
-               int msgSize = strlen(msg.c_str());
+               cMyMutexLock clock(&clientsMutex);
+               cMyMutexLock lock(&clients[wsi].messagesOutMutex);
+               const char* msg = clients[wsi].messagesOut.front().c_str();
+               int msgSize = clients[wsi].messagesOut.front().length();
                int neededSize = sizeLwsFrame + msgSize;
-               char* newBuffer = 0;
+               unsigned char* newBuffer = 0;
 
-               if (neededSize > msgBufferSize)
+               if (neededSize > clients[wsi].msgBufferSize)
                {
-                  if (!(newBuffer = (char*)realloc(msgBuffer, neededSize)))
+                  tell(0, "Debug: re-allocate buffer to %d bytes", neededSize);
+
+                  if (!(newBuffer = (unsigned char*)realloc(clients[wsi].msgBuffer, neededSize)))
                   {
                      tell(0, "Fatal: Can't allocate memory!");
-                     break;
+                     return -1;
                   }
 
-                  msgBuffer = newBuffer;
-                  msgBufferSize = neededSize;
+                  clients[wsi].msgBuffer = newBuffer;
+                  clients[wsi].msgBufferSize = neededSize;
                }
 
-               strncpy(msgBuffer + sizeLwsPreFrame, msg.c_str(), msgSize);
+               strncpy((char*)clients[wsi].msgBuffer + sizeLwsPreFrame, msg, msgSize);
+               clients[wsi].msgBufferPayloadSize = msgSize;
+               clients[wsi].msgBufferSendOffset = 0;
+               clients[wsi].messagesOut.pop();  // remove sent message
 
                tell(3, "DEBUG: Write (%d) -> %.*s -> to '%s' (%p)\n", msgSize, msgSize,
-                    msgBuffer+sizeLwsPreFrame, clientInfo.c_str(), (void*)wsi);
+                    clients[wsi].msgBuffer+sizeLwsPreFrame, clientInfo.c_str(), (void*)wsi);
+            }
 
-               res = lws_write(wsi, (unsigned char*)msgBuffer + sizeLwsPreFrame, msgSize, LWS_WRITE_TEXT);
+            enum { maxChunk = 10*1024 };
 
-               if (res != msgSize)
-                  tell(0, "Error: Only (%d) bytes of (%d) sended", res, msgSize);
+            if (clients[wsi].msgBufferPayloadSize)
+            {
+               unsigned char* p = clients[wsi].msgBuffer + sizeLwsPreFrame + clients[wsi].msgBufferSendOffset;
+               int pending = clients[wsi].msgBufferPayloadSize - clients[wsi].msgBufferSendOffset;
+               int chunkSize = pending > maxChunk ? maxChunk : pending;
+               int flags = lws_write_ws_flags(LWS_WRITE_TEXT, !clients[wsi].msgBufferSendOffset, pending <= maxChunk);
+
+               // tell(0, "----  lws_write chunk %d bytes [%.*s] flags (0x%02x)", chunkSize, chunkSize, p, flags);
+               int res = lws_write(wsi, p, chunkSize, (lws_write_protocol)flags);
+               // tell(0, "----  lws_write result was %d", res);
+
+               if (res < 0)
+               {
+                  tell(0, "Error: lws_write chunk failed with (%d) to (%p) failed (%d) [%s]", res, (void*)wsi, chunkSize, p);
+                  return -1;
+               }
+
+               clients[wsi].msgBufferSendOffset += chunkSize;
+
+               if (clients[wsi].msgBufferSendOffset >= clients[wsi].msgBufferPayloadSize)
+               {
+                  clients[wsi].msgBufferPayloadSize = 0;
+                  clients[wsi].msgBufferSendOffset = 0;
+               }
+               else
+                  lws_callback_on_writable(wsi);
             }
          }
 
@@ -615,10 +645,6 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
             singleton->pushInMessage(p);
             free(p);
          }
-/*         else
-         {
-            tell(1, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
-            } */
 
          json_decref(oData);
          free(message);

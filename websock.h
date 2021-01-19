@@ -123,11 +123,23 @@ class cWebSock : public cWebService
 
       struct Client
       {
+         ~Client() { free(msgBuffer); }
+
          ClientType type;
          int tftprio;
          std::queue<std::string> messagesOut;
          cMyMutex messagesOutMutex;
          void* wsi;
+
+         // buffer to send the payload in chunks
+
+         unsigned char* msgBuffer {nullptr};
+         int msgBufferSize {0};
+         int msgBufferPayloadSize {0};
+         int msgBufferSendOffset {0};
+         bool msgBufferDataPending() { return msgBufferSendOffset < msgBufferPayloadSize; }
+
+         // push next message
 
          void pushMessage(const char* p)
          {
@@ -224,6 +236,6 @@ class cWebSock : public cWebService
 
       // only used in callback
 
-      static char* msgBuffer;
-      static int msgBufferSize;
+      //static char* msgBuffer;
+      //static int msgBufferSize;
 };

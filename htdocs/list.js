@@ -53,7 +53,10 @@ function initList(widgets, root)
 
 function updateList(sensors)
 {
-   document.getElementById("refreshTime").innerHTML = "Messwerte von " + lastUpdate;
+   var refreshTime = document.getElementById("refreshTime");
+
+   if (refreshTime != null)
+      refreshTime.innerHTML = "Messwerte von " + lastUpdate;
 
    // heating state
 
