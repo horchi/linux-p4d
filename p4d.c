@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <locale.h>
+#include <inttypes.h>
 #include <libxml/parser.h>
 #include <algorithm>
 
@@ -953,7 +954,7 @@ int P4d::readConfiguration()
       for (const auto& s : sStates)
          stateDurations[atoi(s.c_str())] = 0;
 
-      tell(eloAlways, "Loaded (%d) states [%s]", stateDurations.size(), knownStates);
+      tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
    }
 
    getConfigItem("stateCheckInterval", stateCheckInterval, 10);
@@ -2795,7 +2796,7 @@ int P4d::updateErrors()
 
    delete select;
 
-   tell(eloAlways, "Updating error list done in %lldms", timeMs.Elapsed());
+   tell(eloAlways, "Updating error list done in %" PRIu64 "ms", timeMs.Elapsed());
 
    // count pending (not 'quittiert' AND not mailed) errors
 

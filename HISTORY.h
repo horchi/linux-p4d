@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.19"
+#define _VERSION     "0.6.20"
 #define VERSION_DATE "19.01.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-01-19:  version 0.6.20
+  - bugfix: Fixed jquery compatibility issue
 
 2021-01-19:  version 0.6.19
   - bugfix: Fixed TLS communication package size.
