@@ -37,6 +37,7 @@ function getItemById(id)
 function getItem(id)
 {
    for (var i = 0; i < lastData.length; i++) {
+      console.log("check '" + id + "' : " + lastData[i].type + ':0x' + lastData[i].address.toString(16).toUpperCase());
       if (lastData[i].type + ':0x' + lastData[i].address.toString(16).toUpperCase() == id)
          return lastData[i];
    }
@@ -265,11 +266,11 @@ function editSchemaValue(id, newUC)
    }
 
    var form =
-       '<form><div style="display:grid;min-width:650px;max-width:750px;">' +
+       '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
-       '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
-       '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
+       '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
+       '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
        ' </div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
        '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/><label for="showBorder"></label></span></span>' +
@@ -338,6 +339,7 @@ function editSchemaValue(id, newUC)
       open: function() {
          $('#colorFg').spectrum({
             type : "color",
+            appendTo: '#settingsForm',
             hideAfterPaletteSelect : "true",
             showInput : "true",
             showButtons : "false",
@@ -345,6 +347,7 @@ function editSchemaValue(id, newUC)
          });
          $('#colorBg').spectrum({
             type : "color",
+            appendTo: '#settingsForm',
             hideAfterPaletteSelect : "true",
             showInput : "true",
             showButtons : "false",

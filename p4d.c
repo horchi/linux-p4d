@@ -35,14 +35,13 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "addrsList",                 ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
    // { "addrsMainMobile",        ctMultiSelect, false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
 
-   { "stateAni",                  ctBool,    false, "2 WEB Interface", "Animiert Icons", "" },
-
    { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
    { "webSSL",                    ctBool,    false, "2 WEB Interface", "Use SSL for WebInterface", "" },
    { "haUrl",                     ctString,  false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 
-   { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
    { "heatingType",               ctChoice,  false, "2 WEB Interface", "Typ der Heizung", "" },
+   { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
+   { "iconSet",                   ctChoice,  false, "2 WEB Interface", "Status Icon Set", "" },
    { "schema",                    ctChoice,  false, "2 WEB Interface", "Schematische Darstellung", "" },
 
    // p4d
@@ -961,7 +960,7 @@ int P4d::readConfiguration()
    getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
    getConfigItem("heatingType", heatingType, "P4");
    tell(eloDetail, "The heating type is set to '%s'", heatingType);
-   getConfigItem("stateAni", stateAni, yes);
+   getConfigItem("iconSet", iconSet, "light");
 
    char* addrs {nullptr};
    getConfigItem("addrsDashboard", addrs, "");

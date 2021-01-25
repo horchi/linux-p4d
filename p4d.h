@@ -209,7 +209,6 @@ class P4d : public FroelingService, public cWebInterface
       int sensor2Json(json_t* obj, cDbTable* table);
       void pin2Json(json_t* ojData, int pin);
 
-      bool fileExistsAtWeb(const char* file);
       const char* getImageOf(const char* title, const char* usrTitle, int value);
       const char* getStateImage(int state);
       WidgetType getWidgetTypeOf(std::string type, std::string unit, uint address);
@@ -351,7 +350,7 @@ class P4d : public FroelingService, public cWebInterface
       char* errorMailTo {nullptr};
       int errorsPending {0};
       int tSync {no};
-      int stateAni {no};
+      char* iconSet {nullptr};
       time_t nextTimeSyncAt {0};
       int maxTimeLeak {10};
       MemoryStruct htmlHeader;

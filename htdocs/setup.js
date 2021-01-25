@@ -109,10 +109,12 @@ function initConfig(configuration, root)
          html += '<span>\n';
          html += '  <select id="input_' + item.name + '" class="rounded-border input" name="style">\n';
 
-         for (var o = 0; o < item.options.length; o++) {
-            var option = item.options[o];
-            var sel = item.value == option ? 'SELECTED' : '';
-            html += '    <option value="' + option + '" ' + sel + '>' + option + '</option>\n';
+         if (item.options != null) {
+            for (var o = 0; o < item.options.length; o++) {
+               var option = item.options[o];
+               var sel = item.value == option ? 'SELECTED' : '';
+               html += '    <option value="' + option + '" ' + sel + '>' + option + '</option>\n';
+            }
          }
 
          html += '  </select>\n';

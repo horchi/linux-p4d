@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.20"
-#define VERSION_DATE "19.01.2021"
+#define _VERSION     "0.6.21"
+#define VERSION_DATE "25.01.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-01-25:  version 0.6.21
+  - bugfix: Fixed color picker at schema config
+  - change: Cleanup icons (removed obsolete)
+  - change: Modified state icons (thx to Michael Pölsterl)
+  - added:  New 'light' version of state icons (thx to Michael Pölsterl)
+  - added:  Selection of state icon set in setup
 
 2021-01-19:  version 0.6.20
   - bugfix: Fixed jquery compatibility issue

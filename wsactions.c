@@ -247,7 +247,7 @@ int P4d::performLogin(json_t* oObject)
       if (isEmpty(name))
          continue;
 
-      tell(0, "Got request '%s' (client 0x%lx, rights %d)", name, client, wsClients[(void*)client].rights);
+      tell(0, "Got request '%s/%s' (client 0x%lx, rights %d)", name, page, client, wsClients[(void*)client].rights);
 
       if (strcmp(name, "data") == 0)
          update(true, client);     // push the data ('init')
@@ -256,6 +256,8 @@ int P4d::performLogin(json_t* oObject)
       else if (wsClients[(void*)client].rights & urSettings && strcmp(name, "configdetails") == 0)
          performConfigDetails(client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "userdetails") == 0)
+         performUserDetails(client);
+      else if (strcmp(name, "userdetails") == 0 && strcmp(page, "user") == 0)
          performUserDetails(client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "iosettings") == 0)
          performIoSettings(nullptr, client);
@@ -271,6 +273,8 @@ int P4d::performLogin(json_t* oObject)
          performAlerts(0, client);
       else if (strcmp(name, "chartdata") == 0)
          performChartData(oRequest, client);
+      else
+         replyResult(fail, "Unexpected request or insufficient rights", client);
    }
 
    return done;
@@ -440,7 +444,10 @@ int P4d::performConfigDetails(long client)
 int P4d::performUserDetails(long client)
 {
    if (client == 0)
+   {
+      tell(eloAlways, "Abort 'userdetails', missing client");
       return done;
+   }
 
    json_t* oJson = json_array();
    userDetails2Json(oJson);
@@ -1838,6 +1845,34 @@ int P4d::configChoice2json(json_t* obj, const char* name)
 
       free(path);
    }
+   else if (strcmp(name, "iconSet") == 0)
+   {
+      FileList options;
+      int count {0};
+      char* path {nullptr};
+
+      asprintf(&path, "%s/img/state", httpPath);
+
+      if (getFileList(path, DT_DIR, nullptr, false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+         {
+            // if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
+            //    continue;
+
+            // char* p = strdup(strchr(opt.name.c_str(), '-'));
+            // *(strrchr(p, '.')) = '\0';
+            json_array_append_new(oArray, json_string(opt.name.c_str()));
+            // free(p);
+         }
+
+         json_object_set_new(obj, "options", oArray);
+      }
+
+      free(path);
+   }
    else if (strcmp(name, "schema") == 0)
    {
       FileList options;
@@ -2095,47 +2130,44 @@ const char* P4d::getImageOf(const char* title, const char* usrtitle, int value)
    return imagePath;
 }
 
-bool P4d::fileExistsAtWeb(const char* file)
-{
-   static char path[512];
-   sprintf(path, "%s/%s", httpPath, file);
-   return fileExists(path);
-}
-
 const char* P4d::getStateImage(int state)
 {
-   bool stateAni {true};
+   static char result[100] = "";
+   const char* image {nullptr};
 
    if (state <= 0)
-      return "img/state/state-error.gif";
+      image = "state-error.gif";
    else if (state == 1)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-fireoff.gif") ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+      image = "state-fireoff.gif";
    else if (state == 2)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-heatup.gif") ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+      image = "state-heatup.gif";
    else if (state == 3)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-fire.gif") ? "img/state/ani/state-fire.gif" : "img/state/state-fire.gif";
+      image = "state-fire.gif";
    else if (state == 4)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-firehold.gif") ? "img/state/ani/state-firehold.gif" : "img/state/state-firehold.gif";
+      image = "/state/state-firehold.gif";
    else if (state == 5)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-fireoff.gif") ? "img/state/ani/state-fireoff.gif" : "img/state/state-fireoff.gif";
+      image = "state-fireoff.gif";
    else if (state == 6)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-dooropen.gif") ? "img/state/ani/state-dooropen.gif" : "img/state/state-dooropen.gif";
+      image = "state-dooropen.gif";
    else if (state == 7)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-preparation.gif") ? "img/state/ani/state-preparation.gif" : "img/state/state-preparation.gif";
+      image = "state-preparation.gif";
    else if (state == 8)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-warmup.gif") ? "img/state/ani/state-warmup.gif" : "img/state/state-warmup.gif";
+      image = "state-warmup.gif";
    else if (state == 9)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-heatup.gif") ? "img/state/ani/state-heatup.gif" : "img/state/state-heatup.gif";
+      image = "state-heatup.gif";
    else if (state == 15 || state == 70 || state == 69)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-clean.gif") ? "img/state/ani/state-clean.gif" : "img/state/state-clean.gif";
+      image = "state-clean.gif";
    else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-wait.gif") ? "img/state/ani/state-wait.gif" : "img/state/state-wait.gif";
-   else if (state == 60 || state == 61  || state == 72)
-      return stateAni && fileExistsAtWeb("img/state/ani/state-shfire.gif") ? "img/state/ani/state-shfire.gif" : "img/state/state-shfire.gif";
+      image = "state-wait.gif";
+   else if (state == 60 || state == 61 || state == 72)
+      image = "state-shfire.png";
 
-   static char buffer[100];
-   sprintf(buffer, "img/type/heating-%s.png", heatingType);
-   return buffer;
+   if (image)
+      sprintf(result, "img/state/%s/%s", iconSet, image);
+   else
+      sprintf(result, "img/type/heating-%s.png", heatingType);
+
+   return result;
 }
 
 P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint address)

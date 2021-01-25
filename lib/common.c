@@ -907,7 +907,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
          free(buf);
       }
 
-      // filter type and ignore '.', '..' an hidden files
+      // filter type and ignore '.', '..' and hidden files
 
       if (pEntry->d_type != type || pEntry->d_name[0] == '.')
          continue;

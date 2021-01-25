@@ -67,7 +67,7 @@ and, if you like, update your installation:
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
 ## Install libwebsockets (https://libwebsockets.org/repo/libwebsockets)
-  at least in version 3.2 better 4.1 or above
+  at least version 4.1 or above
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
@@ -238,6 +238,12 @@ insert into valuefacts set type = 'SC', address = 1, inssp = UNIX_TIMESTAMP(), u
 Change address to a uniq one, name, title, unit as you like. maxscale and state can set later on in the WEBIF.
 After this restart the p4d!
 Now edit the script /etc/p4/script-sensor.sh that it output the actual value of this sensors using it's address.
+
+### Style
+You can chose the Web Interface Style at 'Setup' -> 'Allg. Konfiguration' with the options 'Farbschema' and 'Icon Style Set'.
+The 'Farbschema' option include all CSS styles which are found in your web folder and fit the naming scheme 'stylesheet-*.css' where the wildcard '*' is used as the name of the style.
+The 'Icon Style Set' option includes the name of all suborders of img/state/* in your  web folder. You can place additional custom styles and icon sets which automatically appear in the settings.
+The default web folder is /var/lib/p4/.
 
 ### Points to check
 - reboot the device to check if p4d is starting automatically during startup
