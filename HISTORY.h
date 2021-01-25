@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.6.21"
+#define _VERSION     "0.6.22"
 #define VERSION_DATE "25.01.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-01-25:  version 0.6.22
+  - change: More flexible 'id' handling for schema item definitions
 
 2021-01-25:  version 0.6.21
   - bugfix: Fixed color picker at schema config

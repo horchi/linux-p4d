@@ -32,15 +32,16 @@ function getItemById(id)
    }
 }
 
-// get data item by '<Type>:0x<HexAddr>' notation !
-
 function getItem(id)
 {
+   var idPar = id.split(':');
+
    for (var i = 0; i < lastData.length; i++) {
-      console.log("check '" + id + "' : " + lastData[i].type + ':0x' + lastData[i].address.toString(16).toUpperCase());
-      if (lastData[i].type + ':0x' + lastData[i].address.toString(16).toUpperCase() == id)
+      if (idPar.length == 2 && idPar[0] == lastData[i].type && idPar[1] == lastData[i].address)
          return lastData[i];
    }
+
+   return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
 }
 
 // get data item definition by '<Type>:0x<HexAddr>' notation !
