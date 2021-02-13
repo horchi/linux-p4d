@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.6.22"
-#define VERSION_DATE "25.01.2021"
+#define _VERSION     "0.7.0"
+#define VERSION_DATE "05.02.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-02-05:  version 0.7.0
+  - added:  Pellets consuption overview
+
+2021-01-26:  version 0.6.23
+  - added:  Create stylesheet link on start if missing
+  - change: Updated img/icons
 
 2021-01-25:  version 0.6.22
   - change: More flexible 'id' handling for schema item definitions

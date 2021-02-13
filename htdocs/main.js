@@ -93,6 +93,8 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "alerts";
    else if (documentName == "schema")
       jsonRequest["name"] = "schema";
+   else if (documentName == "pellets")
+      jsonRequest["name"] = "pellets";
 
    jsonArray[0] = jsonRequest;
 
@@ -174,6 +176,10 @@ function dispatchMessage(message)
       lastUpdate = d.toLocaleTimeString();
       initList(jMessage.object, rootList);
       updateList(jMessage.object);
+      hideProgressDialog();
+   }
+   else if (event == "pellets") {
+      initPellets(jMessage.object);
       hideProgressDialog();
    }
    else if ((event == "init" || event == "update" || event == "all") && rootSchema) {
@@ -288,6 +294,10 @@ function prepareMenu()
    else
       html += "<a href=\"login.html\"><button class=\"rounded-border button1\">Login</button></a>";
    html += "</div>";
+
+   if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x02) {
+      html += "<a href=\"pellets.html\"><button class=\"rounded-border button1\">Pellets</button></a>";
+   }
 
    if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
       html += "<a href=\"maincfg.html\"><button class=\"rounded-border button1\">Setup</button></a>";
@@ -734,3 +744,36 @@ Number.prototype.pad = function(size)
   while (s.length < (size || 2)) {s = "0" + s;}
   return s;
 }
+
+Date.prototype.toDatetimeLocal = function toDatetimeLocal()
+{
+   var date = this,
+       ten = function (i) {
+          return (i < 10 ? '0' : '') + i;
+       },
+       YYYY = date.getFullYear(),
+       MM = ten(date.getMonth() + 1),
+       DD = ten(date.getDate()),
+       HH = ten(date.getHours()),
+       II = ten(date.getMinutes()),
+       SS = ten(date.getSeconds()),
+       MS = date.getMilliseconds()
+   ;
+
+   return YYYY + '-' + MM + '-' + DD + 'T' +
+      HH + ':' + II + ':' + SS; //  + ',' + MS;
+};
+
+Date.prototype.toDateLocal = function toDateLocal()
+{
+   var date = this,
+       ten = function (i) {
+          return (i < 10 ? '0' : '') + i;
+       },
+       YYYY = date.getFullYear(),
+       MM = ten(date.getMonth() + 1),
+       DD = ten(date.getDate())
+   ;
+
+   return YYYY + '-' + MM + '-' + DD;
+};

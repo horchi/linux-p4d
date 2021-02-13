@@ -148,6 +148,7 @@ class P4d : public FroelingService, public cWebInterface
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
       int getConfigItem(const char* name, int& value, int def = na);
+      int getConfigItem(const char* name, double& value, double def = na);
       int getConfigItem(const char* name, bool& value, bool def = false);
       int setConfigItem(const char* name, int value);
 
@@ -197,6 +198,8 @@ class P4d : public FroelingService, public cWebInterface
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);
       int performUpdateTimeRanges(json_t* array, long client);
+      int performPellets(json_t* array, long client);
+      int performPelletsAdd(json_t* array, long client);
 
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
@@ -230,6 +233,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbTable* tableTimeRanges {nullptr};
       cDbTable* tableScripts {nullptr};
       cDbTable* tableUsers {nullptr};
+      cDbTable* tablePellets {nullptr};
 
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
@@ -241,6 +245,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectAllSensorAlerts {nullptr};
       cDbStatement* selectSchemaConfByState {nullptr};
       cDbStatement* selectAllSchemaConf {nullptr};
+      cDbStatement* selectStokerHours {nullptr};
       cDbStatement* selectSampleInRange {nullptr};    // for alert check
       cDbStatement* selectSamplesRange {nullptr};     // for chart
       cDbStatement* selectSamplesRange60 {nullptr};   // for chart
@@ -254,6 +259,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbStatement* selectScript {nullptr};
       cDbStatement* selectAllConfig {nullptr};
       cDbStatement* selectAllUser {nullptr};
+      cDbStatement* selectAllPellets {nullptr};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;
@@ -262,6 +268,7 @@ class P4d : public FroelingService, public cWebInterface
       cDbValue avgValue;
       cDbValue endTime;
       cDbValue maxValue;
+      cDbValue minValue;
 
       time_t nextAt;
       time_t startedAt;
@@ -331,6 +338,7 @@ class P4d : public FroelingService, public cWebInterface
       int interval {60};
       int stateCheckInterval {10};
       char* knownStates {nullptr};
+      double consumptionPerHour {0};
 
       int webPort {1111};
       char* webUrl {nullptr};

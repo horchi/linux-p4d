@@ -79,16 +79,17 @@ int P4d::dispatchClientRequest()
             case evChartbookmarks: status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client);     break;
             case evUpdateTimeRanges:    status = performUpdateTimeRanges(oObject, client); break;
-
+            case evPellets:             status = performPellets(oObject, client);          break;
+            case evPelletsAdd:          status = performPelletsAdd(oObject, client);       break;
             default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
                           toName(event), messagesIn.front().c_str());
          }
       }
       else
       {
-         tell(0, "Insufficient rights to '%s' for user '%s'",
-              getStringFromJson(oData, "event", "<null>"),
+         tell(0, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
               wsClients[(void*)client].user.c_str());
+         replyResult(fail, "Insufficient rights", client);
       }
 
       json_decref(oData);      // free the json object
@@ -121,13 +122,15 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
       case evAlerts:              return rights & urSettings;
       case evStoreAlerts:         return rights & urSettings;
       case evStoreSchema:         return rights & urSettings;
-      case evParEditRequest:      return rights & urControl;
-      case evParStore:            return rights & urControl;
+      case evParEditRequest:      return rights & urFullControl;
+      case evParStore:            return rights & urFullControl;
       case evSendMail:            return rights & urSettings;
       case evChartbookmarks:      return rights & urView;
       case evStoreChartbookmarks: return rights & urSettings;
       case evInitTables:          return rights & urSettings;
-      case evUpdateTimeRanges:    return rights & urControl;
+      case evUpdateTimeRanges:    return rights & urFullControl;
+      case evPellets:             return rights & urControl;
+      case evPelletsAdd:          return rights & urFullControl;
       default: break;
    }
 
@@ -269,6 +272,8 @@ int P4d::performLogin(json_t* oObject)
          performMenu(0, client);
       else if (strcmp(name, "schema") == 0)
          performSchema(0, client);
+      else if (wsClients[(void*)client].rights & urControl && strcmp(name, "pellets") == 0)
+         performPellets(0, client);
       else if (strcmp(name, "alerts") == 0)
          performAlerts(0, client);
       else if (strcmp(name, "chartdata") == 0)
@@ -445,7 +450,7 @@ int P4d::performUserDetails(long client)
 {
    if (client == 0)
    {
-      tell(eloAlways, "Abort 'userdetails', missing client");
+      tell(eloAlways, "Abort 'userdetails' request, missing client");
       return done;
    }
 
@@ -454,6 +459,130 @@ int P4d::performUserDetails(long client)
    pushOutMessage(oJson, "userdetails", client);
 
    return done;
+}
+
+//***************************************************************************
+// Perform Pellets Request
+//***************************************************************************
+
+int P4d::performPellets(json_t* oObject, long client)
+{
+   uint stokerHhLast {0};
+   time_t timeLast {0};
+   double tAmount {0.0};
+   double tPrice {0.0};
+   json_t* oJson = json_array();
+   double consumptionHLast {0.0};
+
+   tablePellets->clear();
+
+   for (int f = selectAllPellets->find(); f; f = selectAllPellets->fetch())
+   {
+      json_t* oData = json_object();
+      json_array_append_new(oJson, oData);
+
+      json_object_set_new(oData, "id", json_integer(tablePellets->getIntValue("ID")));
+      json_object_set_new(oData, "time", json_integer(tablePellets->getTimeValue("TIME")));
+      json_object_set_new(oData, "amount", json_integer(tablePellets->getIntValue("AMOUNT")));
+      json_object_set_new(oData, "price", json_real(tablePellets->getFloatValue("PRICE")));
+      json_object_set_new(oData, "comment", json_string(tablePellets->getStrValue("COMMENT")));
+
+      double amount = tablePellets->getIntValue("AMOUNT");
+      tAmount += tablePellets->getIntValue("AMOUNT");
+      tPrice += tablePellets->getFloatValue("PRICE");
+
+      // ...
+
+      minValue.clear();
+      tableSamples->clear();
+      tableSamples->setValue("TYPE", "VA");
+      tableSamples->setValue("ADDRESS", 0xad);
+      tableSamples->setValue("TIME", tablePellets->getTimeValue("TIME"));
+
+      if (!selectStokerHours->find())
+      {
+         tell(eloAlways, "Info: Sample for stoker hours not found!");
+         continue;
+      }
+
+      if (timeLast)
+      {
+         uint durationDays = (tablePellets->getTimeValue("TIME") - timeLast) / tmeSecondsPerDay;
+         json_object_set_new(oData, "duration", json_integer(durationDays));
+      }
+
+      uint stokerHh = minValue.getIntValue();   // is bound as int !!
+
+      tell(eloAlways, "Getankt: '%s' stokerH %d at '%s'",
+           l2pTime(tablePellets->getTimeValue("TIME")).c_str(),
+           stokerHh, l2pTime(tableSamples->getTimeValue("TIME")).c_str());
+
+      if (stokerHhLast && stokerHh-stokerHhLast > 0)
+      {
+         tell(eloAlways, "stokerHh delta => %d", stokerHh - stokerHhLast);
+         json_object_set_new(oData, "stokerHours", json_integer(stokerHh - stokerHhLast));
+         consumptionHLast = amount/(stokerHh-stokerHhLast);
+         json_object_set_new(oData, "consumptionH", json_real(consumptionHLast));
+      }
+
+      timeLast = tablePellets->getTimeValue("TIME");
+      stokerHhLast = stokerHh;
+   }
+
+   selectAllPellets->freeResult();
+
+   json_t* oData = json_object();
+   json_array_append_new(oJson, oData);
+
+   json_object_set_new(oData, "id", json_integer(-1));
+   json_object_set_new(oData, "sum", json_boolean(true));
+   json_object_set_new(oData, "time", json_integer(time(0)));
+   json_object_set_new(oData, "amount", json_integer(tAmount));
+   json_object_set_new(oData, "price", json_real(tPrice));
+   json_object_set_new(oData, "comment", json_string("Total"));
+   json_object_set_new(oData, "stokerHours", json_integer(vaValues[0xad] - stokerHhLast));
+
+   double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
+   tell(eloAlways, "Calculating consumption sice tankering by %.2f kg / stoker hour", consumptionH);
+   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaValues[0xad]-stokerHhLast)));
+
+   return pushOutMessage(oJson, "pellets", client);
+}
+
+//***************************************************************************
+// Perform Pellets Add Entry
+//***************************************************************************
+
+int P4d::performPelletsAdd(json_t* oObject, long client)
+{
+   int id = getIntFromJson(oObject, "id", -1);
+   bool del = getBoolFromJson(oObject, "delete", false);
+
+   tablePellets->clear();
+   tablePellets->setValue("ID", id);
+
+   if (del)
+   {
+      if (!tablePellets->find())
+         return replyResult(success, "failed", client);
+
+      tablePellets->deleteWhere("id = %d", id);
+      performPellets(0, client);
+      return replyResult(success, "Eintrag gelöscht", client);
+   }
+
+   if (id >= 0 && !tablePellets->find())
+      return replyResult(success, "failed", client);
+
+   tablePellets->setValue("TIME", getLongFromJson(oObject, "time"));
+   tablePellets->setValue("AMOUNT", getIntFromJson(oObject, "amount"));
+   tablePellets->setValue("PRICE", getDoubleFromJson(oObject, "price"));
+   tablePellets->setValue("COMMENT", getStringFromJson(oObject, "comment"));
+   tablePellets->store();
+
+   performPellets(0, client);
+
+   return replyResult(success, "Eintrag gespeichert", client);
 }
 
 //***************************************************************************
@@ -2115,7 +2244,7 @@ const char* P4d::getImageOf(const char* title, const char* usrtitle, int value)
    const char* imagePath = "unknown.jpg";
 
    if (strcasestr(title, "Pump") || strcasestr(usrtitle, "Pump"))
-      imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
+      imagePath = value ? "img/icon/pump-up-on.gif" : "img/icon/pump-up-off.png";
    else if (strcasestr(title, "Steckdose"))
       imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
    else if (strcasestr(title, "UV-C"))

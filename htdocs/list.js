@@ -24,8 +24,7 @@ function initList(widgets, root)
 
    // build page content
 
-   for (var i = 0; i < widgets.length; i++)
-   {
+   for (var i = 0; i < widgets.length; i++) {
       var html = "";
       var widget = widgets[i];
       var id = "id=\"widget" + widget.type + widget.address + "\"";

@@ -27,6 +27,7 @@ Index samples
    time                 ""  TIME,
    type                 ""  TYPE,
    aggregate            ""  AGGREGATE,
+   addr_type_time       ""  ADDRESS TYPE TIME,
 }
 
 // ----------------------------------------------------------------
@@ -134,6 +135,23 @@ Table timeranges
 }
 
 // ----------------------------------------------------------------
+// Table Pellets
+// ----------------------------------------------------------------
+
+Table pellets
+{
+   ID                   ""    id                   UInt         4 Primary|Autoinc,
+
+   INSSP                ""    inssp                Int         10 Meta,
+   UPDSP                ""    updsp                Int         10 Meta,
+
+   TIME                 ""    time                 DateTime     0 Data,
+   AMOUNT               "kg"  amount               Int          0 Data,
+   PRICE                "€/t" price                Float      122 Data,
+   COMMENT              ""    comment              Ascii      200 Data,
+}
+
+// ----------------------------------------------------------------
 // Table SchemaConf
 // ----------------------------------------------------------------
 
@@ -235,34 +253,34 @@ Table sensoralert
 // Table HomeMatic System Variables
 // ----------------------------------------------------------------
 
-Table hmsysvars
-{
-   ID                   ""  id                   UInt        11 Primary,
-   INSSP                ""  inssp                Int          0 Meta,
-   UPDSP                ""  updsp                Int          0 Meta,
-
-   NAME                 ""  name                 Ascii      100 Data,
-   TYPE                 ""  type                 UInt         1 Data,
-   UNIT                 ""  unit                 Ascii       10 Data,
-   VISIBLE              ""  visible              UInt         1 Data,
-   MIN                  ""  min                  Ascii      100 Data,
-   MAX                  ""  max                  Ascii      100 Data,
-
-   TIME                 ""  time                 DateTime     0 Data,
-   VALUE                ""  value                Ascii      100 Data,
-
-   ADDRESS              ""  address              UInt         4 Data,
-   ATYPE                ""  atype                Ascii        2 Data
-}
-
+//Table hmsysvars
+//{
+//   ID                   ""  id                   UInt        11 Primary,
+//   INSSP                ""  inssp                Int          0 Meta,
+//   UPDSP                ""  updsp                Int          0 Meta,
+//
+//   NAME                 ""  name                 Ascii      100 Data,
+//   TYPE                 ""  type                 UInt         1 Data,
+//   UNIT                 ""  unit                 Ascii       10 Data,
+//   VISIBLE              ""  visible              UInt         1 Data,
+//   MIN                  ""  min                  Ascii      100 Data,
+//   MAX                  ""  max                  Ascii      100 Data,
+//
+//   TIME                 ""  time                 DateTime     0 Data,
+//   VALUE                ""  value                Ascii      100 Data,
+//
+//   ADDRESS              ""  address              UInt         4 Data,
+//   ATYPE                ""  atype                Ascii        2 Data
+//}
+//
 // ----------------------------------------------------------------
 // Indices for HomeMatic System Variables
 // ----------------------------------------------------------------
 
-Index hmsysvars
-{
-   address             ""  ADDRESS, ATYPE
-}
+//Index hmsysvars
+//{
+//   address             ""  ADDRESS ATYPE
+//}
 
 // ----------------------------------------------------------------
 // Table

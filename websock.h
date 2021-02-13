@@ -54,6 +54,8 @@ class cWebService
          evInitTables,
          evStoreSchema,
          evUpdateTimeRanges,
+         evPellets,
+         evPelletsAdd,
 
          evCount
       };

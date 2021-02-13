@@ -45,13 +45,6 @@ wget www.jwendel.de/p4d/p4d-latest.deb -O /tmp/p4d-latest.deb || exit 1
 apt -y remove p4d
 apt -y install /tmp/p4d-latest.deb || exit 1
 
-css_link="/var/lib/p4/stylesheet.css"
-
-if [ ! -L ${css_link} ] ; then
-   echo "Creating stylesheet link"
-   ln -s /var/lib/p4/stylesheet-dark.css ${css_link}
-fi
-
 grep -q '^alias p4db=' ~/.bashrc   || echo "alias p4db='mysql -u p4 -D p4 -pp4'" >> ~/.bashrc
 grep -q '^alias vp=' ~/.bashrc     || echo "alias vp='tail -f /var/log/p4d.log'" >> ~/.bashrc
 

@@ -59,6 +59,8 @@ std::list<P4d::ConfigItemDef> P4d::configuration
    { "aggregateInterval",         ctInteger, false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
    { "peakResetAt",               ctString,  true,  "1 P4 Daemon", "", "" },
 
+   { "consumptionPerHour",        ctNum,     false, "1 P4 Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
+
    // MQTT interface
 
    { "mqttUrl",                   ctString,  false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
@@ -111,6 +113,8 @@ const char* cWebService::events[] =
    "inittables",
    "storeschema",
    "updatetimeranges",
+   "pellets",
+   "pelletsadd",
    0
 };
 
@@ -331,7 +335,28 @@ int P4d::pushDataUpdate(const char* title, long client)
 int P4d::init()
 {
    int status {success};
-   char* dictPath = 0;
+   char* dictPath {nullptr};
+
+   if (fileExists(httpPath))
+   {
+      char* link {nullptr};
+      asprintf(&link, "%s/stylesheet.css", httpPath);
+
+      if (!fileExists(link))
+      {
+         char* stylesheet {nullptr};
+         asprintf(&stylesheet, "%s/stylesheet-dark.css", httpPath);
+         tell(eloAlways, "Creating link '%s'", link);
+         createLink(link, stylesheet, true);
+         free(stylesheet);
+      }
+
+      free(link);
+   }
+   else
+   {
+      tell(eloAlways, "Missing http path '%s'", httpPath);
+   }
 
    curl->init();
 
@@ -429,6 +454,7 @@ cDbFieldDef rangeFromDef("RANGE_FROM", "rfrom", cDBS::ffDateTime, 0, cDBS::ftDat
 cDbFieldDef rangeToDef("RANGE_TO", "rto", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef avgValueDef("AVG_VALUE", "avalue", cDBS::ffFloat, 122, cDBS::ftData);
 cDbFieldDef maxValueDef("MAX_VALUE", "mvalue", cDBS::ffInt, 0, cDBS::ftData);
+cDbFieldDef minValueDef("MIN_VALUE", "minvalue", cDBS::ffInt, 0, cDBS::ftData);
 cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef endTimeDef("END_TIME", "endtime", cDBS::ffDateTime, 0, cDBS::ftData);
 
@@ -528,6 +554,9 @@ int P4d::initDb()
 
    tableUsers = new cDbTable(connection, "users");
    if (tableUsers->open() != success) return fail;
+
+   tablePellets = new cDbTable(connection, "pellets");
+   if (tablePellets->open() != success) return fail;
 
    // prepare statements
 
@@ -634,6 +663,24 @@ int P4d::initDb()
    selectAllSensorAlerts->build(" from %s", tableSensorAlert->TableName());
 
    status += selectAllSensorAlerts->prepare();
+
+   // ------------------
+   // select min(value), time from samples
+   //    where address = ? type = ?
+   //     and time > ?
+
+   minValue.setField(&minValueDef);
+   selectStokerHours = new cDbStatement(tableSamples);
+
+   selectStokerHours->build("select ");
+   selectStokerHours->bindTextFree("min(value)", &minValue, "", cDBS::bndOut);
+   selectStokerHours->bind("TIME", cDBS::bndOut, ", ");
+   selectStokerHours->build(" from %s where ", tableSamples->TableName());
+   selectStokerHours->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
+   selectStokerHours->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectStokerHours->bindCmp(0, "TIME", 0, ">", " and ");
+
+   status += selectStokerHours->prepare();
 
    // ------------------
    // select * from samples      (for alertCheck)
@@ -844,10 +891,19 @@ int P4d::initDb()
    status += selectAllUser->prepare();
 
    // ------------------
+   // select all pellets
+
+   selectAllPellets = new cDbStatement(tablePellets);
+   selectAllPellets->build("select ");
+   selectAllPellets->bindAllOut();
+   selectAllPellets->build(" from %s", tablePellets->TableName());
+   selectAllPellets->build(" order by time");
+   status += selectAllPellets->prepare();
+
+   // ------------------
 
    if (status == success)
       tell(eloAlways, "Connection to database established");
-
 
    int gCount {0};
 
@@ -873,6 +929,7 @@ int P4d::exitDb()
    delete tableValueFacts;            tableValueFacts = nullptr;
    delete tableGroups;                tableGroups = nullptr;
    delete tableUsers;                 tableUsers = nullptr;
+   delete tablePellets;               tablePellets= nullptr;
    delete tableMenu;                  tableMenu = nullptr;
    delete tableSensorAlert;           tableSensorAlert = nullptr;
    delete tableSchemaConf;            tableSchemaConf = nullptr;
@@ -897,6 +954,8 @@ int P4d::exitDb()
    delete selectScript;               selectScript = nullptr;
    delete selectAllConfig;            selectAllConfig = nullptr;
    delete selectAllUser;              selectAllUser = nullptr;
+   delete selectAllPellets;           selectAllPellets = nullptr;
+   delete selectStokerHours;          selectStokerHours = nullptr;
    delete selectSamplesRange;         selectSamplesRange = nullptr;
    delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
    delete selectSamplesRange720;      selectSamplesRange720 = nullptr;
@@ -931,6 +990,7 @@ int P4d::readConfiguration()
 
    getConfigItem("loglevel", loglevel, 1);
    getConfigItem("interval", interval, 60);
+   getConfigItem("consumptionPerHour", consumptionPerHour, 0);
 
    getConfigItem("webPort", webPort, 1111);
    getConfigItem("webUrl", webUrl);
@@ -2359,6 +2419,34 @@ int P4d::dispatchMqttCommandRequest(const char* jString)
    {
       tell(0, "Error: Missing 'command' in MQTT request [%s], ignoring", jString);
    }
+   else if (strcmp(command, "parget") == 0)
+   {
+      int status {fail};
+      json_t* jAddress = getObjectFromJson(jData, "address");
+      int address = getIntFromJson(jData, "address", -1);
+
+      if (!json_is_integer(jAddress) || address == -1)
+      {
+         tell(0, "Error: Missing address or invalid object type for MQTT command 'parstore' in [%s], ignoring", jString);
+         return fail;
+      }
+
+      tell(0, "Perform MQTT command '%s' for address %d", command, address);
+
+      ConfigParameter p(address);
+
+      sem->p();
+      status = request->getParameter(&p);
+      sem->v();
+
+      if (status != success)
+      {
+         tell(eloAlways, "Parameter request failed!");
+         return fail;
+      }
+
+      tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Value: %.*f", p.address, p.unit, p.digits, p.rValue);
+   }
    else if (strcmp(command, "parstore") == 0)
    {
       int status {fail};
@@ -3395,6 +3483,30 @@ int P4d::getConfigItem(const char* name, int& value, int def)
 
    if (!isEmpty(txt))
       value = atoi(txt);
+   else if (isEmpty(txt) && def != na)
+   {
+      value = def;
+      setConfigItem(name, value);
+   }
+   else
+      value = 0;
+
+   free(txt);
+
+   return success;
+}
+
+int P4d::getConfigItem(const char* name, double& value, double def)
+{
+   char* txt {nullptr};
+
+   getConfigItem(name, txt);
+
+   if (!isEmpty(txt))
+   {
+      std::string s = strReplace(".", ",", txt);
+      value = strtod(s.c_str(), nullptr);
+   }
    else if (isEmpty(txt) && def != na)
    {
       value = def;

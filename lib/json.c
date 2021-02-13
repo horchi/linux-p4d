@@ -197,6 +197,9 @@ double getDoubleFromJson(json_t* obj, const char* name, double def)
    if (!o)
       return def;
 
+   if (json_is_integer(o))
+      return json_integer_value(o);
+
    return json_real_value(o);
 }
 

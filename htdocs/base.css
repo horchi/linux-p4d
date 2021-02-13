@@ -391,6 +391,41 @@ span > input
     padding: 0px 0px 0px 10px;
 }
 
+.tableRow
+{
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    border-radius: var(--borderRadius);
+    margin: 2px;
+    height: 30px;
+    display: flex;
+    padding: 5px;
+}
+
+.tableRow > input
+{
+    margin-left: 15px;
+    align-self: center;
+    height: 18px;
+}
+
+.tableRow > button
+{
+    margin-left: 15px;
+    align-self: center;
+    height: 25px;
+}
+
+.tableRow > input[type='search']
+{
+    height: 24px;
+}
+
+.tableRow > div
+{
+    margin-left: 15px;
+    align-self: center;
+}
+
 div.redCircle
 {
     width: 20px;
