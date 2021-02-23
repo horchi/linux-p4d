@@ -442,7 +442,7 @@ class FroelingService
          sword value;
       };
 
-      struct IoValue
+      struct IoValue    // digital and analog in/out
       {
          IoValue(word addr = addrUnknown)  { address = addr; }
          ~IoValue() { }
@@ -462,7 +462,7 @@ class FroelingService
          word factor;
          char* name {nullptr};
          char* description {nullptr};
-         word unknown;
+         word type;  // this seems to be something like the type
       };
 
       struct MenuItem

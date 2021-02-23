@@ -326,7 +326,7 @@ int Mqtt::write(const char* topic, const char* message, int len)
       return wrnEmptyMessage;
 
    if (!len && message)
-      len = strlen(message) + TB;
+      len = strlen(message);
 
    return write(topic, message, len, MQTT_PUBLISH_QOS_0);
 }

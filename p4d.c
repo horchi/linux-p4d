@@ -1240,7 +1240,7 @@ int P4d::initValueFacts()
          continue;
 
       tell(eloDebug, "%3d) 0x%04x '%s' %d '%s' (%04d) '%s'",
-           count, v.address, v.name, v.factor, v.unit, v.unknown, v.description);
+           count, v.address, v.name, v.factor, v.unit, v.type, v.description);
 
       // update table
 
@@ -1255,7 +1255,7 @@ int P4d::initValueFacts()
          tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
-         tableValueFacts->setValue("RES1", v.unknown);
+         tableValueFacts->setValue("RES1", v.type);
          tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
 
          tableValueFacts->store();
@@ -1268,7 +1268,7 @@ int P4d::initValueFacts()
          tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
          tableValueFacts->setValue("FACTOR", v.factor);
          tableValueFacts->setValue("TITLE", v.description);
-         tableValueFacts->setValue("RES1", v.unknown);
+         tableValueFacts->setValue("RES1", v.type);
 
          if (tableValueFacts->getValue("MAXSCALE")->isNull())
             tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
@@ -1302,7 +1302,9 @@ int P4d::initValueFacts()
       }
 
       double factor = tableValueFacts->getIntValue("FACTOR");
-      double theValue = v.value / factor;
+      int dataType = tableValueFacts->getIntValue("RES1");
+      int value = dataType == 1 ? (word)v.value : (sword)v.value;
+      double theValue = value / factor;
       tableValueFacts->setValue("VALUE", theValue);
       tableValueFacts->update();
       count++;
@@ -2034,7 +2036,8 @@ int P4d::update(bool webOnly, long client)
       double factor = tableValueFacts->getIntValue("FACTOR");
       const char* title = tableValueFacts->getStrValue("TITLE");
       const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
-      const char* type = tableValueFacts->getStrValue("TYPE");
+      const char* type = tableValueFacts->getStrValue("TYPE"); // VA, DI, ...
+      int dataType = tableValueFacts->getIntValue("RES1");
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
@@ -2067,13 +2070,16 @@ int P4d::update(bool webOnly, long client)
             continue;
          }
 
-         json_object_set_new(ojData, "value", json_real(v.value / factor));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.value / factor)));
+         int value = dataType == 1 ? (word)v.value : (sword)v.value;
+         double theValue = value / factor;
+
+         json_object_set_new(ojData, "value", json_real(theValue));
+         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, theValue)));
 
          if (!webOnly)
          {
-            store(now, name, title, unit, type, v.address, v.value, factor, groupid);
-            sprintf(num, "%.2f%s", v.value / factor, unit);
+            store(now, name, title, unit, type, v.address, value, factor, groupid);
+            sprintf(num, "%.2f%s", theValue, unit);
             addParameter2Mail(title, num);
          }
       }
@@ -2972,13 +2978,16 @@ int P4d::updateParameter(cDbTable* tableMenu)
       {
          double factor = tableValueFacts->getIntValue("FACTOR");
          const char* unit = tableValueFacts->getStrValue("UNIT");
+         int dataType = tableValueFacts->getIntValue("RES1");
 
          status = request->getValue(&v);
 
          if (status == success)
          {
             char* buf = 0;
-            asprintf(&buf, "%.2f", v.value / factor);
+            int value = dataType == 1 ? (word)v.value : (sword)v.value;
+
+            asprintf(&buf, "%.2f", value / factor);
 
             if (tableMenu->find())
             {

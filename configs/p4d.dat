@@ -52,25 +52,25 @@ Table peaks
 
 Table valuefacts
 {
-   ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
+   ADDRESS              ""          address              UInt         4 Primary,
+   TYPE                 ""          type                 Ascii        2 Primary,
 
-   INSSP                ""  inssp                Int         10 Meta,
-   UPDSP                ""  updsp                Int         10 Meta,
+   INSSP                ""          inssp                Int         10 Meta,
+   UPDSP                ""          updsp                Int         10 Meta,
 
-   GROUPID              ""  groupid              Int         10 Data,
-   STATE                ""  state                Ascii        1 Data,
-   UNIT                 ""  unit                 Ascii        5 Data,
-   FACTOR               ""  factor               Int          4 Data,
-   NAME                 ""  name                 Ascii      100 Data,
-   TITLE                ""  title                Ascii      100 Data,
-   USRTITLE             ""  usrtitle             Ascii      100 Data,
-   MAXSCALE             ""  maxscale             Int          4 Data,
-   ORDER                ""  ord                  Int          4 Data,
-   RES1                 ""  res1                 Int          4 Data,
+   GROUPID              ""          groupid              Int         10 Data,
+   STATE                ""          state                Ascii        1 Data,
+   UNIT                 ""          unit                 Ascii        5 Data,
+   FACTOR               ""          factor               Int          4 Data,
+   NAME                 ""          name                 Ascii      100 Data,
+   TITLE                ""          title                Ascii      100 Data,
+   USRTITLE             ""          usrtitle             Ascii      100 Data,
+   MAXSCALE             ""          maxscale             Int          4 Data,
+   ORDER                ""          ord                  Int          4 Data,
+   RES1                 "data type" res1                 Int          4 Data,
    RIGHTS   "needed control rights" rights       Int          0 Data,
 
-   VALUE                ""  value                Float      122 Data,
+   VALUE                ""          value                Float      122 Data,
 }
 
 

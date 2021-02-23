@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.7.0"
-#define VERSION_DATE "05.02.2021"
+#define _VERSION     "0.7.3"
+#define VERSION_DATE "23.02.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,15 @@
 
 /*
  * ------------------------------------
+
+2021-02-23:  version 0.7.3
+  - bugfix: removed extra character (terminating null) from MQTT messages
+
+2021-02-21:  version 0.7.2
+  - change: Evaluate type of 'VA' values
+
+2021-02-20:  version 0.7.1
+  - added:  Signed display of value for p4 tool
 
 2021-02-05:  version 0.7.0
   - added:  Pellets consuption overview

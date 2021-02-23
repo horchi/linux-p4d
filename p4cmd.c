@@ -361,7 +361,7 @@ int main(int argc, char** argv)
          Fs::Value v(addr);
 
          if ((status = request.getValue(&v)) == success)
-            tell(eloAlways, "value 0x%x is %d", v.address, v.value);
+            tell(eloAlways, "value 0x%x is %d / %d", v.address, v.value, (word)v.value);
          else
             tell(eloAlways, "Getting value '%d' failed, error %d", v.address, status);
 
@@ -377,7 +377,7 @@ int main(int argc, char** argv)
          {
             if (status == success)
                tell(eloAlways, "%3d) 0x%04x %4d '%s' (%04d) '%s'",
-                    n, v.address, v.factor, v.unit, v.unknown, v.description);
+                    n, v.address, v.factor, v.unit, v.type, v.description);
             else
                tell(eloAlways, "%3d) <empty>", n);
 

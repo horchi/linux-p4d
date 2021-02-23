@@ -1071,7 +1071,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
 
    status += readWord(v->factor);
    size -= 2;
-   status += readWord(v->unknown);
+   status += readWord(v->type);
    size -= 2;
    status += readText(v->unit, 2);
    size -= 2;
