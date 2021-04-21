@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.7.5"
+#define _VERSION     "0.7.6"
 #define VERSION_DATE "21.04.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-04-21:  version 0.7.6
+  - change: Merged path of anathusic
 
 2021-04-21:  version 0.7.5
   - bugfix: Fixed possible crash on empty string
