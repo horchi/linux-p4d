@@ -195,7 +195,7 @@ function updateDashboard(sensors)
                   $("#peak" + sensor.type + sensor.address).text(sensor.peak.toFixed(2) + " " + sensor.unit);
                }
                var jsonRequest = {};
-               prepareChartRequest(jsonRequest, sensor.type + ":0x" + sensor.address.toString(16) , 0, 1, "chartwidget");
+               prepareChartRequest(jsonRequest, sensor.type + ":0x" + ((sensor.address)>>>0).toString(16) , 0, 1, "chartwidget");
                socket.send({ "event" : "chartdata", "object" : jsonRequest });
             }
          }
@@ -223,7 +223,7 @@ function toggleChartDialog(type, address)
       dialog.setAttribute('open', 'open');
 
       var jsonRequest = {};
-      prepareChartRequest(jsonRequest, type + ":0x" + address.toString(16) , 0, 1, "chartdialog");
+      prepareChartRequest(jsonRequest, type + ":0x" + ((address)>>>0).toString(16) , 0, 1, "chartdialog");
       socket.send({ "event" : "chartdata", "object" : jsonRequest });
 
       // EventListener für ESC-Taste

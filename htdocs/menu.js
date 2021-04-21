@@ -72,7 +72,7 @@ function editMenuParameter(parameter, root)
    var inpStep = 'step="0.1"';
    var info = '<div style="font-size:smaller;padding-left: 30px;">(' +
        (parameter.def != null ? 'Default ' + parameter.def + ' ' + parameter.unit + ', ' : '') +
-       'Adresse 0x' + parameter.address.toString(16) +
+       'Adresse 0x' + ((parameter.address)>>>0).toString(16) +
        ', Typ 0x' + parameter.type.toString(16) + ')</div>';
 
    var timeRange = null;
@@ -168,7 +168,7 @@ function editMenuParameter(parameter, root)
    });
 
    function storeParameter(id, value, address, range, parent) {
-      console.log("storing '" + value + "' to address 0x" + address.toString(16)  + " timeN: " + range);
+      console.log("storing '" + value + "' to address 0x" + ((address)>>>0).toString(16)  + " timeN: " + range);
       socket.send({ "event" : "parstore", "object" :
                     { "id"  : id,
                       "value" : value,

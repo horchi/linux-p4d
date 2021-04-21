@@ -19,7 +19,7 @@ var schemaRoot = null;
 function getSchemDef(id)
 {
    for (var i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type + lastSchemadata[i].address == id)
+      if (lastSchemadata[i].type + ((lastSchemadata[i].address)>>>0).toString(10) == id)
          return lastSchemadata[i];
    }
 }
@@ -27,7 +27,7 @@ function getSchemDef(id)
 function getItemById(id)
 {
    for (var i = 0; i < lastData.length; i++) {
-      if (lastData[i].type + lastData[i].address == id)
+      if (lastData[i].type + ((lastData[i].address)>>>0).toString(10) == id)
          return lastData[i];
    }
 }
@@ -45,13 +45,14 @@ function getItem(id)
 }
 
 // get data item definition by '<Type>:0x<HexAddr>' notation !
-
 function getItemDef(id)
 {
    for (var i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type + ':0x' + lastSchemadata[i].address.toString(16).toUpperCase() == id)
+      if (lastSchemadata[i].type + ':0x' + ((lastSchemadata[i].address)>>>0).toString(16).toUpperCase() == id)
          return lastSchemadata[i];
    }
+
+   return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
 }
 
 function initSchema(schemaData, root)
@@ -78,15 +79,16 @@ function initSchema(schemaData, root)
          initSchemaElement(schemaData[i], i);
    }
 }
+
 function initSchemaElement(item, tabindex)
 {
-   var id = item.type + item.address;
+   var id = item.type + ((item.address)>>>0).toString(10);
    var div = document.createElement("div");
 
    div.classList.add("schemaDiv");
    div.setAttribute("id", id);
    div.setAttribute('data-type', item.type);
-   div.setAttribute('data-address', item.address);
+   div.setAttribute('data-address', ((item.address)>>>0).toString(10));
    setAttributeStyleFrom(div, item.properties);
    div.style.visibility = (modeEdit || item.state == 'A') ? "visible" : "hidden";
    div.style.cursor = modeEdit ? "move" : "default";
@@ -98,7 +100,7 @@ function initSchemaElement(item, tabindex)
 
    if (modeEdit) {
       div.setAttribute("draggable", true);
-      div.setAttribute("ondragstart", 'dragSValue(event,"' + item.type + item.address + '")');
+      div.setAttribute("ondragstart", 'dragSValue(event,"' + item.type + ((item.address)>>>0).toString(10) + '")');
 
       div.addEventListener('mousedown', event => {
          oTop = event.offsetY;
@@ -141,7 +143,7 @@ function updateSchema(data, root)
 
    for (var i = 0; i < lastSchemadata.length; i++) {
       var schemaDef = lastSchemadata[i];
-      var id = schemaDef.type + schemaDef.address;
+      var id = schemaDef.type + ((schemaDef.address)>>>0).toString(10);
       var item = getItemById(id);
 
       if (schemaDef == null)
@@ -190,6 +192,10 @@ function updateSchema(data, root)
 
          html += schemaDef.showunit ? item.unit || "" : "";
       }
+      else {
+         if(schemaDef.fct == null && schemaDef.fct == "" && item == null)
+             html += " item: '" + id + "' is null";
+      }
 
       $("#"+id).html(html == "" ? "&nbsp;" : html);
 
@@ -199,7 +205,7 @@ function updateSchema(data, root)
       else if (item != null)
          title = item.title;
 
-      $("#"+id).attr("title", title + " (" + schemaDef.type + ":" + schemaDef.address + ")");
+      $("#"+id).attr("title", title + " (" + schemaDef.type + ":" + ((schemaDef.address)>>>0).toString(10) + ")");
    }
 }
 
@@ -223,7 +229,7 @@ function schemaAddItem()
    var addr = 0;
 
    for (var i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type == "UC" && lastSchemadata[i].address == addr)
+      if (lastSchemadata[i].type == "UC" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
          addr++;
    }
 
@@ -237,7 +243,7 @@ function schemaAddItem()
 
    lastSchemadata[lastSchemadata.length] = schemaDef;
    initSchemaElement(schemaDef, lastSchemadata.length);
-   editSchemaValue(schemaDef.type + schemaDef.address, true);
+   editSchemaValue(schemaDef.type + ((schemaDef.address)>>>0).toString(10), true);
 }
 
 function setAttributeStyleFrom(element, json)
@@ -260,7 +266,7 @@ function editSchemaValue(id, newUC)
    var isUC = schemaDef.type == "UC";
 
    for (var i = 0; i < lastData.length; i++) {
-      if (lastData[i].type + lastData[i].address == id) {
+      if (lastData[i].type + ((lastData[i].address)>>>0).toString(10) == id) {
          item = lastData[i];
          break;
       }
@@ -334,7 +340,7 @@ function editSchemaValue(id, newUC)
 
    $(form).dialog({
       modal: true,
-      title: title + " (" + schemaDef.type + ":0x" + schemaDef.address.toString(16) + ")",
+      title: title + " (" + schemaDef.type + ":0x" + ((schemaDef.address)>>>0).toString(16) + ")",
       width: "auto",
       buttons: buttons,
       open: function() {
@@ -388,7 +394,7 @@ function editSchemaValue(id, newUC)
 
    function deleteUC(id) {
       for (var i = 0; i < lastSchemadata.length; i++) {
-         if (lastSchemadata[i].type + lastSchemadata[i].address == id) {
+         if (lastSchemadata[i].type + ((lastSchemadata[i].address)>>>0).toString(10) == id) {
             lastSchemadata[i].deleted = true;
             $("#"+id).remove();
             return 0;

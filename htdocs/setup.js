@@ -245,7 +245,7 @@ function initIoSetup(valueFacts, root)
          html += "<td class=\"tableMultiColCell\"></td>";
       html += "<td style=\"text-align:center;\">" + item.unit + "</td>";
       html += "<td><input id=\"state_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"checkbox\" " + (item.state == 1 ? "checked" : "") + ' /><label for="state_' + item.type + item.address + '"></label></td>';
-      html += "<td>" + item.type + ":0x" + item.address.toString(16).padStart(2, '0') + "</td>";
+      html += "<td>" + item.type + ":0x" + ((item.address)>>>0).toString(16).padStart(2, '0') + "</td>";
 
       if (item.type == "VA")
          html += "<td>" + item.value + item.unit + "</td>";
