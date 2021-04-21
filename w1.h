@@ -18,7 +18,7 @@
 class W1
 {
    public:
-      
+
       typedef std::map<std::string, double> SensorList;
 
       W1()  { w1Path = strdup("/sys/bus/w1/devices"); }
@@ -35,7 +35,7 @@ class W1
       static unsigned int toId(const char* name);
 
    protected:
-      
-      char* w1Path;
+
+      char* w1Path {nullptr};
       SensorList sensors;
 };

@@ -27,13 +27,11 @@ function initConfig(configuration, root)
       return a.category.localeCompare(b.category);
    });
 
-   for (var i = 0; i < configuration.length; i++)
-   {
+   for (var i = 0; i < configuration.length; i++) {
       var item = configuration[i];
       var html = "";
 
-      if (lastCat != item.category)
-      {
+      if (lastCat != item.category) {
          html += "<div class=\"rounded-border seperatorTitle1\">" + item.category + "</div>";
          var elem = document.createElement("div");
          elem.innerHTML = html;
@@ -232,8 +230,7 @@ function initIoSetup(valueFacts, root)
    document.getElementById("ioOther").innerHTML = "";
    document.getElementById("ioScripts").innerHTML = "";
 
-   for (var i = 0; i < valueFacts.length; i++)
-   {
+   for (var i = 0; i < valueFacts.length; i++) {
       var item = valueFacts[i];
       var root = null;
 
@@ -253,6 +250,22 @@ function initIoSetup(valueFacts, root)
       if (item.type == "VA")
          html += "<td>" + item.value + item.unit + "</td>";
 
+      if (item.type != "SD") {
+         html += '<td>\n';
+         html += '  <select id="group_' + item.type + item.address + '" class="rounded-border inputSetting" name="group">\n';
+
+         if (grouplist != null) {
+            for (var g = 0; g < grouplist.length; g++) {
+               var group = grouplist[g];
+               var sel = item.groupid == group.id ? 'SELECTED' : '';
+               html += '    <option value="' + group.id + '" ' + sel + '>' + group.name + '</option>\n';
+            }
+         }
+
+         html += '  </select>\n';
+         html += '</td>\n';
+      }
+
       switch (item.type) {
          case 'VA': root = document.getElementById("ioValues");        break
          case 'DI': root = document.getElementById("ioDigitalIn");     break
@@ -261,7 +274,7 @@ function initIoSetup(valueFacts, root)
          case 'W1': root = document.getElementById("ioOneWire");       break
          case 'SP': root = document.getElementById("ioOther");         break
          case 'SC': root = document.getElementById("ioScripts");       break
-        case 'SD': root = document.getElementById("ioStateDurations"); break
+         case 'SD': root = document.getElementById("ioStateDurations"); break
       }
 
       if (root != null)
@@ -281,7 +294,8 @@ function toTimeRangesString(base)
       var id = "#" + base + i;
 
       if ($(id + "From") && $(id + "From").val() && $(id + "To") && $(id + "To").val()) {
-         if (times != "") times += ",";
+         if (times != "")
+            times += ",";
          times += $(id + "From").val() + "-" + $(id + "To").val();
       }
       else {
@@ -302,7 +316,6 @@ window.storeIoSetup = function()
 
    for (var i = 0; i < elements.length; i++) {
       var jsonObj = {};
-
       var type = $(elements[i]).data("type");
       var address = $(elements[i]).data("address");
       // console.log("  loop for: " + type + ":" + address);
@@ -314,6 +327,10 @@ window.storeIoSetup = function()
          jsonObj["scalemax"] = parseInt($("#scalemax_" + type + address).val());
       jsonObj["usrtitle"] = $("#usrtitle_" + type + address).val();
       jsonObj["state"] = $("#state_" + type + address).is(":checked") ? 1 : 0;
+
+      if (type != 'SD')
+         jsonObj["groupid"] = parseInt($("#group_" + type + address).val());
+
       jsonArray[i] = jsonObj;
    }
 

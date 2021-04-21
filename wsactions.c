@@ -238,6 +238,10 @@ int P4d::performLogin(json_t* oObject)
    s3200State2Json(oJson);
    pushOutMessage(oJson, "s3200-state", client);
 
+   oJson = json_array();
+   groups2Json(oJson);
+   pushOutMessage(oJson, "grouplist", client);
+
    // perform requests
 
    size_t index {0};
@@ -1367,7 +1371,10 @@ int P4d::performChartData(json_t* oObject, long client)
 
    tell(eloDetail, "Selecting chart data for sendors '%s' with range %d ..", sensors, range);
 
-   auto sList = split(sensors, ',');
+   std::vector<std::string> sList;
+
+   if (sensors)
+      sList = split(sensors, ',');
 
    json_t* oMain = json_object();
    json_t* oJson = json_array();
@@ -1674,6 +1681,7 @@ int P4d::storeIoSetup(json_t* array, long client)
       int state = getIntFromJson(jObj, "state");
       const char* usrTitle = getStringFromJson(jObj, "usrtitle", "");
       int maxScale = getIntFromJson(jObj, "scalemax");
+      int groupid = getIntFromJson(jObj, "groupid");
 
       tableValueFacts->clear();
       tableValueFacts->setValue("ADDRESS", addr);
@@ -1688,6 +1696,9 @@ int P4d::storeIoSetup(json_t* array, long client)
 
       if (maxScale >= 0)
          tableValueFacts->setValue("MAXSCALE", maxScale);
+
+      if (groupid >= 0)
+         tableValueFacts->setValue("GROUPID", groupid);
 
       if (tableValueFacts->getChanges())
       {
@@ -2124,6 +2135,18 @@ int P4d::valueFacts2Json(json_t* obj, bool filterActive)
       json_object_set_new(oData, "unit", json_string(tableValueFacts->getStrValue("UNIT")));
       json_object_set_new(oData, "scalemax", json_integer(tableValueFacts->getIntValue("MAXSCALE")));
       json_object_set_new(oData, "value", json_real(tableValueFacts->getFloatValue("VALUE")));
+
+
+      tableGroups->clear();
+      tableGroups->setValue("ID", tableValueFacts->getIntValue("GROUPID"));
+
+      if (tableGroups->find())
+      {
+         json_object_set_new(oData, "groupid", json_integer(tableGroups->getIntValue("ID")));
+         json_object_set_new(oData, "group", json_string(tableGroups->getStrValue("NAME")));
+      }
+
+      tableGroups->reset();
    }
 
    selectAllValueFacts->freeResult();

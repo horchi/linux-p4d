@@ -324,6 +324,7 @@ class P4d : public FroelingService, public cWebInterface
       char* mqttUrl {nullptr};
       char* mqttUser {nullptr};
       char* mqttPassword {nullptr};
+      time_t lastMqttConnectAt {0};
       char* mqttDataTopic {nullptr};
       int mqttHaveConfigTopic {yes};
       json_t* oJson {nullptr};

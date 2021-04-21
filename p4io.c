@@ -257,7 +257,7 @@ int P4Request::readHeader(int tms)
    {
       tell(eloAlways, "Read command failed, status was %d", status);
       return status;
-         }
+   }
 
    return success;
 }
@@ -398,9 +398,15 @@ int P4Request::readText(char*& s, int size)
 {
    byte b;
    int i;
-   int p = 0;
-   char* tmp = (char*)malloc(size+1);
+   int p {0};
 
+   if (size <= 0)
+   {
+      s = strdup("");
+      return done;
+   }
+
+   char* tmp = (char*)malloc(size+1);
    s = 0;
 
    for (i = 0; i < size; i++)
@@ -421,7 +427,9 @@ int P4Request::readText(char*& s, int size)
    if (toUTF8(s, 2*size, tmp) != success)
    {
       tell(eloDetail, "Warning: Converting of charset failed [%s]", tmp);
-      strcpy(s, tmp);
+
+      if (s)
+         strcpy(s, tmp);
    }
 
    free(tmp);
@@ -861,7 +869,7 @@ int P4Request::getValue(Value* v)
 {
    RequestClean clean(this);
    int status = fail;
-   byte crc;
+   byte rCrc;
 
    if (!v || v->address == addrUnknown)
       return errWrongAddress;
@@ -874,7 +882,27 @@ int P4Request::getValue(Value* v)
    if (readHeader() == success)
    {
       status = readWord(v->value)
-         + readByte(crc);
+         + readByte(rCrc);
+
+      // CRC check
+      {
+         int sizeNetto {0};
+         byte tmp[sizeof(Header)+100+TB];
+
+         memcpy(tmp+sizeNetto, &header, sizeof(Header));
+         sizeNetto += sizeof(Header);
+         memcpy(tmp+sizeNetto, &v->value, 2);
+         sizeNetto += 2;
+
+         byte bCrc = crc(tmp, sizeNetto);
+
+         if (bCrc != rCrc)
+         {
+            show("<- ");
+            tell(eloAlways, "Error: CRC check failed, got %c, expected %c", bCrc, rCrc);
+            return fail;
+         }
+      }
 
       show("<- ");
    }

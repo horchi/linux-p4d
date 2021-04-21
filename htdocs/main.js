@@ -25,6 +25,7 @@ var theChartRange = 2;
 var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-theChartRange);
 var chartDialogSensor = "";
 var chartBookmarks = {};
+var grouplist = {};
 
 function getCurentDocument()
 {
@@ -239,6 +240,9 @@ function dispatchMessage(message)
    else if (event == "groups" && rootGroupSetup) {
       initGroupSetup(jMessage.object, rootGroupSetup);
       hideProgressDialog();
+   }
+   else if (event == "grouplist") {
+      grouplist = jMessage.object;
    }
    else if (event == "valuefacts" && rootIoSetup) {
       initIoSetup(jMessage.object, rootIoSetup);

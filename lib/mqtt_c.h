@@ -694,7 +694,7 @@ enum MQTTConnectFlags {
  *                          \c MQTT_CONNECT_WILL_QOS_X (for \c X &isin; {0, 1, 2}), and
  *                          \c MQTT_CONNECT_WILL_RETAIN. Set to 0 if no additional flags are
  *                          required.
- * @param[in] keep_alive the keep alive time in seconds. It is the responsibility of the clinet
+ * @param[in] keep_alive the keep alive time in seconds. It is the responsibility of the client
  *                       to ensure packets are sent to the server \em {at least} this frequently.
  *
  * @note If there is a \p will_topic and no additional \p connect_flags are given, then by

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.7.3"
-#define VERSION_DATE "23.02.2021"
+#define _VERSION     "0.7.5"
+#define VERSION_DATE "21.04.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-04-21:  version 0.7.5
+  - bugfix: Fixed possible crash on empty string
+
+2021-04-18:  version 0.7.4
+  - change: Added group config to io setup
+  - change: Added CRC cehck for read of vales
 
 2021-02-23:  version 0.7.3
   - bugfix: removed extra character (terminating null) from MQTT messages
