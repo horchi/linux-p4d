@@ -93,6 +93,9 @@ install-config:
 	   mkdir -p $(CONFDEST)/scripts.d; \
 	   chmod a+rx $(CONFDEST); \
 	fi
+	if ! test -f $(DESTDIR)/etc/msmtprc; then \
+	   install --mode=644 -D ./configs/msmtprc $(DESTDIR)/etc/; \
+	fi
 	if ! test -f $(CONFDEST)/p4d.conf; then \
 	   install --mode=644 -D ./configs/p4d.conf $(CONFDEST)/; \
 	fi

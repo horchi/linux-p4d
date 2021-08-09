@@ -225,10 +225,10 @@ int P4d::mqttCheckConnection()
    if (mqttCommandReader->isConnected() && mqttWriter->isConnected() && mqttReader->isConnected())
       return success;
 
-   if (lastMqttConnectAt >= time(0) - 60)
-      return fail;
+   // if (lastMqttConnectAt >= time(0) - 60)
+   //    return fail;
 
-   lastMqttConnectAt = time(0);
+   // lastMqttConnectAt = time(0);
 
    if (!mqttWriter->isConnected())
    {

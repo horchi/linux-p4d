@@ -302,7 +302,7 @@ Table scripts
 // Indices for scrips table
 // ----------------------------------------------------------------
 
-Index scrips
+Index scripts
 {
    path             ""  PATH
 }

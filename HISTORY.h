@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.7.6"
-#define VERSION_DATE "21.04.2021"
+#define _VERSION     "0.7.8"
+#define VERSION_DATE "10.05.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,12 @@
 /*
  * ------------------------------------
 
+2021-05-10:  version 0.7.8
+  - change: Removed MQTT recover improvement of 0.7.4
+
+2021-05-08:  version 0.7.7
+  - change: Added debug message
+
 2021-04-21:  version 0.7.6
   - change: Merged path of anathusic
 
@@ -25,7 +31,7 @@
 
 2021-04-18:  version 0.7.4
   - change: Added group config to io setup
-  - change: Added CRC cehck for read of vales
+  - change: Added CRC check for read of values
 
 2021-02-23:  version 0.7.3
   - bugfix: removed extra character (terminating null) from MQTT messages

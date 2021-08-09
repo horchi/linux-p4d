@@ -2259,6 +2259,8 @@ int P4d::update(bool webOnly, long client)
 
    pushDataUpdate(webOnly ? "init" : "all", client);
 
+   tell(1, "MQTT InterfaceStyle is %d", mqttInterfaceStyle);
+
    // MQTT
 
    if (mqttInterfaceStyle == misSingleTopic)
@@ -2270,6 +2272,8 @@ int P4d::update(bool webOnly, long client)
 
    else if (mqttInterfaceStyle == misGroupedTopic)
    {
+      tell(1, "Writing MQTT for %d groups", groups.size());
+
       for (auto it : groups)
       {
          if (it.second.oJson)

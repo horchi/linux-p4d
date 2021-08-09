@@ -67,6 +67,7 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
    protocols[1].per_session_data_size = 0;
    protocols[1].rx_buffer_size = 128*1024;
    protocols[1].tx_packet_size = 0;
+
    protocols[2].name = 0;
    protocols[2].callback = 0;
    protocols[2].per_session_data_size = 0;
@@ -557,7 +558,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
                if (res < 0)
                {
-                  tell(0, "Error: lws_write chunk failed with (%d) to (%p) failed (%d) [%s]", res, (void*)wsi, chunkSize, p);
+                  tell(0, "Error: lws_write chunk failed with (%d) to (%p) failed (%d) [%.*s]", res, (void*)wsi, chunkSize, chunkSize, p);
                   return -1;
                }
 

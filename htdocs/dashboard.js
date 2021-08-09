@@ -212,6 +212,7 @@ function updateDashboard(sensors)
 function toggleChartDialog(type, address)
 {
    var dialog = document.querySelector('dialog');
+   dialog.style.position = 'fixed';
 
    if (type != "" && !dialog.hasAttribute('open')) {
       var canvas = document.querySelector("#chartDialog");
