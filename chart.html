@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="author" content="Jörg Wendel"/>
+    <meta name="copyright" content="Jörg Wendel"/>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <link rel="icon" href="img/icon.png" type="image/png"/>
+    <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
+
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="jquery/autocomplete.css">
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+
+    <script src="jquery/jquery-3.5.1.min.js"></script>
+    <script src="jquery/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+    <script src="jquery/jquery.browser.min.js"></script>
+    <script src="jquery/jquery.md5.js"></script>
+    <script src="jquery/Moment.js"></script>
+    <script src="Chart.min.js"></script>
+    <script type="text/javascript" src="websocket.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="chart.js"></script>
+
+    <title>Heating Control Dashboard</title>
+  </head>
+  <body>
+
+    <div class="menu">
+      <nav id="navMenu"></nav>
+    </div>
+
+    <div id="chartTitle" class="rounded-border chartTitle"></div>
+    <div id="chartBookmarks" class="chartBookmarks"></div>
+
+    <canvas id="chart" class="chartCanvas" width="1600" height="600"></canvas>
+
+    <div class="chartButtons">
+      <button class="rounded-border chartButton" onclick="chartSelect('prevmonth')">&lt; Monat</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('prevweek')">&lt; Woche</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt; Tag</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('now')">Jetzt</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('next')">Tag &gt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('nextweek')">Woche &gt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('nextmonth')">Monat &gt;</button>
+      <div>Tage</div><input class="rounded-border chartButton" style="width:70px;" onchange="chartSelect('range')" id="chartRange" type="number" min="1" value="3"></input>
+    </div>
+
+    <div id="chartSelector" class="chartSelectors"></div>
+
+  </body>
+</html>
