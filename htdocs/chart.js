@@ -205,10 +205,14 @@ function chartSelect(action)
 
    if (action == "next")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+1);
+   else if (action == "nextweek")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+7);
    else if (action == "nextmonth")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+30);
    else if (action == "prev")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-1);
+   else if (action == "prevweek")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-7);
    else if (action == "prevmonth")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "now")

@@ -685,7 +685,7 @@ table.tableMultiCol tr:nth-child(odd)
 .chartButtons
 {
     display: flex;
-    justify-content: center;
+    justify-content: left;
     align-items: center;
     margin: 4px;
 }

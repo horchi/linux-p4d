@@ -42,11 +42,13 @@
 
     <div class="chartButtons">
       <button class="rounded-border chartButton" onclick="chartSelect('prevmonth')">&lt; Monat</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('prevweek')">&lt; Woche</button>
       <button class="rounded-border chartButton" onclick="chartSelect('prev')">&lt; Tag</button>
       <button class="rounded-border chartButton" onclick="chartSelect('now')">Jetzt</button>
       <button class="rounded-border chartButton" onclick="chartSelect('next')">Tag &gt;</button>
+      <button class="rounded-border chartButton" onclick="chartSelect('nextweek')">Woche &gt;</button>
       <button class="rounded-border chartButton" onclick="chartSelect('nextmonth')">Monat &gt;</button>
-      <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect('range')" id="chartRange" type="number" min="1" value="3"></input>
+      <div>Tage</div><input class="rounded-border chartButton" style="width:70px;" onchange="chartSelect('range')" id="chartRange" type="number" min="1" value="3"></input>
     </div>
 
     <div id="chartSelector" class="chartSelectors"></div>
