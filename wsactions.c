@@ -535,6 +535,11 @@ int P4d::performPellets(json_t* oObject, long client)
 
    selectAllPellets->freeResult();
 
+   double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
+   char* hint;
+   asprintf(&hint, "Calculating consumption sice tankering by %.2f kg / stoker hour", consumptionH);
+   tell(eloAlways, "%s", hint);
+
    json_t* oData = json_object();
    json_array_append_new(oJson, oData);
 
@@ -544,11 +549,11 @@ int P4d::performPellets(json_t* oObject, long client)
    json_object_set_new(oData, "amount", json_integer(tAmount));
    json_object_set_new(oData, "price", json_real(tPrice));
    json_object_set_new(oData, "comment", json_string("Total"));
+   json_object_set_new(oData, "consumptionHint", json_string(hint));
    json_object_set_new(oData, "stokerHours", json_integer(vaValues[0xad] - stokerHhLast));
-
-   double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
-   tell(eloAlways, "Calculating consumption sice tankering by %.2f kg / stoker hour", consumptionH);
    json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaValues[0xad]-stokerHhLast)));
+
+   free(hint);
 
    return pushOutMessage(oJson, "pellets", client);
 }

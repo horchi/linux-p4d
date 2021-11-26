@@ -110,6 +110,7 @@ function addRow(id, date, amount, price, comment, stokerHours, consumptionH, dur
               .css('width', sum ? '' : '100px')
               .css('padding', sum ? '4px' : '')
               .css('background-color', sum ? bgColor : '')
+              .attr('title', pData.consumptionHint)
               .html(sum ? pData.consumptionDelta + ' kg' : (consumptionH ? (consumptionH).toFixed(2) : '')));
 
    if (!sum)

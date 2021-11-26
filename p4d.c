@@ -249,7 +249,7 @@ int P4d::pushDataUpdate(const char* title, long client)
       if (cl.page == "index")
       {
          if (addrsDashboard.size())
-            for (const auto sensor : addrsDashboard)
+            for (const auto& sensor : addrsDashboard)
                json_array_append(oWsJson, jsonSensorList[sensor]);
          else
             for (auto sj : jsonSensorList)
@@ -258,7 +258,7 @@ int P4d::pushDataUpdate(const char* title, long client)
       else if (cl.page == "list")
       {
          if (addrsList.size())
-            for (const auto sensor : addrsList)
+            for (const auto& sensor : addrsList)
                json_array_append(oWsJson, jsonSensorList[sensor]);
          else
             for (auto sj : jsonSensorList)
@@ -276,7 +276,7 @@ int P4d::pushDataUpdate(const char* title, long client)
    }
    else
    {
-      for (const auto cl : wsClients)
+      for (const auto& cl : wsClients)
       {
          json_t* oWsJson = json_array();
 
@@ -291,7 +291,7 @@ int P4d::pushDataUpdate(const char* title, long client)
          if (cl.second.page == "index")
          {
             if (addrsDashboard.size())
-               for (const auto sensor : addrsDashboard)
+               for (const auto& sensor : addrsDashboard)
                   json_array_append(oWsJson, jsonSensorList[sensor]);
             else
                for (auto sj : jsonSensorList)
@@ -300,7 +300,7 @@ int P4d::pushDataUpdate(const char* title, long client)
          else if (cl.second.page == "list")
          {
             if (addrsList.size())
-               for (const auto sensor : addrsList)
+               for (const auto& sensor : addrsList)
                   json_array_append(oWsJson, jsonSensorList[sensor]);
             else
                for (auto sj : jsonSensorList)
@@ -2272,7 +2272,7 @@ int P4d::update(bool webOnly, long client)
 
    else if (mqttInterfaceStyle == misGroupedTopic)
    {
-      tell(1, "Writing MQTT for %d groups", groups.size());
+      tell(1, "Writing MQTT for %zu groups", groups.size());
 
       for (auto it : groups)
       {
