@@ -1,0 +1,44 @@
+#! /bin/bash
+
+SERVICE="$2"
+
+case "$1" in
+    start)
+        systemctl start --quiet ${SERVICE}
+        ;;
+
+    stop)
+        systemctl stop --quiet ${SERVICE}
+        ;;
+
+    toggle)
+        systemctl is-active --quiet ${SERVICE}
+        if [ $? == 0 ]; then
+            systemctl stop --quiet ${SERVICE}
+        else
+            systemctl start --quiet ${SERVICE}
+        fi
+        ;;
+
+    status)
+        ;;
+
+    *)
+       echo "Usage: {start|stop|status|toggle}"
+       ;;
+
+esac
+
+systemctl is-active --quiet ${SERVICE}
+RETVAL="$?"
+
+if [ $RETVAL != 0 ]; then
+   echo -n "{ \"kind\":\"status\",\"value\":0 }"
+   #echo -n "status:0"
+   exit 1
+fi
+
+echo -n "{ \"kind\":\"status\",\"value\":1 }"
+#echo -n "status:1"
+
+exit 0

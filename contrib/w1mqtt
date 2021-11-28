@@ -1,0 +1,1 @@
+W1MQTT_OPTS="-u tcp://localhost:1883"
