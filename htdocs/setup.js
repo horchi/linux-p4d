@@ -203,7 +203,7 @@ window.storeConfig = function()
 
 window.resetPeaks = function()
 {
-   socket.send({ "event" : "resetpeaks", "object" : { "what" : "all" } });
+   socket.send({ "event" : "reset", "object" : { "what" : "peaks" } });
 }
 
 var filterActive = false;

@@ -52,6 +52,7 @@
 
 class MemoryStruct;
 extern int loglevel;
+extern int argLoglevel;
 extern int logstdout;
 extern int logstamp;
 
@@ -301,6 +302,7 @@ std::string executeCommand(const char* cmd);
 
 double usNow();
 int l2hhmm(time_t t);
+time_t midnightOf(time_t t);
 const char* toWeekdayName(uint day);
 unsigned int getHostId();
 byte crc(const byte* data, int size);
@@ -314,6 +316,7 @@ std::string strReplace(const std::string& what, const std::string& with, const s
 std::string strReplace(const std::string& what, long with, const std::string& subject);
 std::string strReplace(const std::string& what, double with, const std::string& subject);
 
+bool isNan(double value);
 const char* plural(int n, const char* s = "s");
 char* rTrim(char* buf);
 char* lTrim(char* buf);
@@ -340,6 +343,17 @@ int removeFile(const char* filename);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
 
+struct FsStat
+{
+   double total;
+   double available;
+   double used;
+   unsigned int usedP;
+
+};
+
+int fsStat(const char* mount, FsStat* stat);
+
 struct FileInfo
 {
    std::string path;
@@ -347,8 +361,9 @@ struct FileInfo
    uint type;
 };
 
-typedef std::list<FileInfo> FileList;
+typedef std::vector<FileInfo> FileList;
 int getFileList(const char* path, int type, const char* extensions, int recursion, FileList* dirs, int& count);
+void sortFileList(FileList& list);
 
 const char* getHostName();
 const char* getFirstIp();

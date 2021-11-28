@@ -12,14 +12,37 @@ button:focus {
     margin-left: 5px;
     margin-right: 5px;
     background-color: var(--menu);
+    padding: 3px;
+}
+
+.infoBox
+{
+    background-color: var(--editadd);
+    color: black;
+    padding: 10px;
+/*    font-weight: bold;*/
 }
 
 .menuLogin
 {
     float: right;
+    width: 42px;
+    padding: 4px 4px !important;
 }
 
 .content
+{
+    margin: 0px 5px 0px 5px;
+    background-color: var(--background);
+}
+
+.menuLogin > div {
+    height: 2px;
+    margin: 4px;
+    background-color: white;
+}
+
+.vdrContent
 {
     margin: 0px 5px 0px 5px;
     background-color: var(--background);
@@ -31,6 +54,14 @@ button:focus {
     border-color: var(--borderColor);
     border-style: none;
     border-width: 1px;
+}
+
+.hidden
+{
+    width: 0px !important;
+    height: 0px !important;
+    visibility: hidden !important;
+    display: none !important;
 }
 
 .progress {
@@ -53,6 +84,26 @@ button:focus {
   100% { transform: rotate(360deg); }
 }
 
+.progress-small {
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid var(--blue);
+  width: 40px;
+  height: 40px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+.progress-smaller {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid var(--blue);
+  width: 20px;
+  height: 20px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
 .button1
 {
     background-color: var(--caption1);
@@ -62,6 +113,7 @@ button:focus {
     padding: 6px 6px;
     text-decoration: none;
     box-shadow: 1px 1px 5px 1px var(--shadow);
+    margin-left: 5px;
 }
 
 .button1:hover
@@ -115,11 +167,10 @@ button:focus {
 {
     background-color: var(--caption1);
     color: var(--light2);
-    margin-top: 0px;
     padding: 5px 15px;
     font-weight: bold;
-    margin-top: 10px;
-    margin-bottom: 5px;
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 
 /* ----------------------- */
@@ -323,11 +374,35 @@ span > input
     padding: 15px;
 }
 
+.phSetup
+{
+    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    margin-top: 8px;
+    padding: 5px;
+}
+
+.phSetup > div > span
+{
+    width: 15%;
+    min-width: 200px;
+    display: inline-table;
+    text-align: left;
+    height: 24px;
+}
+
+.phSetup > div > span:nth-child(n+2)
+{
+    width: 3%;
+    min-width: 45px;
+    display: inline-table;
+    text-align: left;
+    height: 24px;
+}
+
 .inputTableConfig
 {
     background-color: var(--light1);
     background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
-    margin-top: 8px;
     padding: 5px;
 }
 
@@ -347,6 +422,11 @@ span > input
     display: inline-table;
     text-align: left;
     height: 24px;
+}
+
+.container
+{
+    overflow-y: auto;
 }
 
 .listContainer
@@ -606,6 +686,11 @@ table.tableMultiCol tr:nth-child(odd)
     padding: 0px;
 }
 
+.vdrButton:active {
+    background-color: var(--caption2);
+    transform: translateY(2px);
+}
+
 .vdrButton:hover
 {
 /*    background-color: var(--caption2); */
@@ -830,13 +915,14 @@ table.tableMultiCol tr:nth-child(odd)
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    color: white;
 }
 
 .widgetContainer > div
 {
     justify-content: center;
     overflow: hidden;
-    width: 330px;
+    width: 212px;
     height: 212px;
     margin: 3px;
     background-color: var(--light1);
@@ -850,9 +936,15 @@ table.tableMultiCol tr:nth-child(odd)
     'title'
     'main'
     'progress';
-  grid-template-rows: 25% 71% 4%;
+    grid-template-rows: 14% 82% 2%;
   grid-gap: 1px;
   box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.widgetPlain
+{
+    text-align: center;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .widgetManuel
@@ -946,6 +1038,19 @@ table.tableMultiCol tr:nth-child(odd)
     text-overflow: ellipsis;
 }
 
+.widget-edit
+{
+    justify-self: flex-end;
+    font-size: 1em;
+    z-index: 99;
+    color: var(--blue);
+}
+
+.widget-edit:hover
+{
+    color: yellow;
+}
+
 .widget-progress {
     grid-area: progress;
     background-color: gray;
@@ -980,6 +1085,67 @@ table.tableMultiCol tr:nth-child(odd)
 .widget-main > img
 {
     max-height: 100%;
+}
+
+.widget-main-gauge
+{
+    grid-area: main;
+    width: 100%;
+    align-self: center;
+}
+
+.widgetMeter
+{
+    display: grid;
+    grid-template-areas:
+        'title'
+        'main';
+    grid-template-rows: 15% 85%;
+    grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.widgetMeterLinear
+{
+    display: grid;
+    grid-template-areas:
+        'title title'
+        'main value';
+    grid-template-rows: 15% 85%;
+    grid-template-columns: 55% 45%;
+    grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.widget-main-meter
+{
+    grid-area: main;
+    width: 100%;
+    height: 100%;
+    align-self: center;
+}
+
+.widget-main-meter-lin
+{
+    grid-area: main;
+    height: 100%;
+    /*align-self: center;*/
+    margin-left: 20%;
+}
+
+.widget-main-value-lin
+{
+    grid-area: value;
+    font-size: 1.5em;
+    /*text-align: end;*/
+    font-weight: bold;
+    align-self: center;
+}
+
+.widget-main-meter > canvas
+{
+    width: 100%;
+    height: 100%;
 }
 
 .widget-value
@@ -1042,6 +1208,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-size: 3.0em;
     fill: white;
 }
+
 .gauge-value
 {
     text-align: center;
@@ -1114,10 +1281,11 @@ dialog::backdrop, #backdrop
 @media only screen and (max-width: 740px)
 {
     .daemonState               { width: 88%; }
-    .inputTableConfig > div > span:nth-child(3) { width: 95%; }
-    .inputTableConfig > div > span              { width: 95%; }
+    .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
+    .inputTableConfig > div > span:nth-child(3) { width: 25%; }
+    .inputTableConfig > div > span              { width: 30%; }
 
-    .widgetContainer > div     { width: 185px; height: 160px; }
+    .widgetContainer > div     { width: 180px; height: 160px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 30% 66% 4%; }
     .widgetChart               { grid-template-rows: 30% 20% 50%; }

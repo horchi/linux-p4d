@@ -8,10 +8,6 @@
 
 #pragma once
 
-//***************************************************************************
-// Includes
-//***************************************************************************
-
 #include <queue>
 #include <jansson.h>
 #include <libwebsockets.h>
@@ -29,6 +25,9 @@ class cWebService
          evUnknown,
          evLogin,
          evLogout,
+         evPageChange,
+         evData,
+         evInit,
          evToggleIo,
          evToggleIoNext,
          evToggleMode,
@@ -39,18 +38,22 @@ class cWebService
          evChartData,
          evLogMessage,
          evUserConfig,
+         evStoreUserConfig,
          evChangePasswd,
-         evResetPeaks,
+         evReset,
          evGroupConfig,
+         evChartbookmarks,
+         evStoreChartbookmarks,
+         evSendMail,
+         evSyslog,
+         evForceRefresh,
+
          evErrors,
          evMenu,
          evParEditRequest,
          evParStore,
          evAlerts,
          evStoreAlerts,
-         evSendMail,
-         evChartbookmarks,
-         evStoreChartbookmarks,
          evInitTables,
          evStoreSchema,
          evUpdateTimeRanges,
@@ -167,7 +170,7 @@ class cWebSock : public cWebService
       cWebSock(cWebInterface* aProcess, const char* aHttpPath);
       virtual ~cWebSock();
 
-      int init(int aPort, int aTimeout, bool ssl = false);
+      int init(int aPort, int aTimeout, const char* confDir, bool ssl = false);
       int exit();
 
       int performData(MsgType type);
@@ -235,9 +238,4 @@ class cWebSock : public cWebService
       static cMyMutex clientsMutex;
       static MsgType msgType;
       static std::map<std::string, std::string> htmlTemplates;
-
-      // only used in callback
-
-      //static char* msgBuffer;
-      //static int msgBufferSize;
 };

@@ -32,6 +32,7 @@ case "$1" in
            echo "No local databse found, skipping db setup" >&2
         fi
         systemctl daemon-reload && systemctl enable p4d
+        systemctl daemon-reload && systemctl enable w1mqtt
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

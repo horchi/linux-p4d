@@ -1,83 +1,27 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
-// File p4d.c
+// Automation Control
+// File daemon.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 // Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
-//***************************************************************************
-// Include
-//***************************************************************************
-
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <locale.h>
-#include <inttypes.h>
 #include <libxml/parser.h>
 #include <algorithm>
+#include <cmath>
+#include <libgen.h>
+
+#ifndef _NO_RASPBERRY_PI_
+#  include <wiringPi.h>
+#endif
 
 #include "lib/json.h"
-#include "p4d.h"
+#include "daemon.h"
 
-int P4d::shutdown = no;
-
-//***************************************************************************
-// Configuration Items
-//***************************************************************************
-
-std::list<P4d::ConfigItemDef> P4d::configuration
-{
-   // web
-
-   { "addrsDashboard",            ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   { "addrsList",                 ctMultiSelect, false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   // { "addrsMainMobile",        ctMultiSelect, false, "2 WEB Interface", "Sensoren Mobile Device", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-
-   { "webUrl",                    ctString,  false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
-   { "webSSL",                    ctBool,    false, "2 WEB Interface", "Use SSL for WebInterface", "" },
-   { "haUrl",                     ctString,  false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
-
-   { "heatingType",               ctChoice,  false, "2 WEB Interface", "Typ der Heizung", "" },
-   { "style",                     ctChoice,  false, "2 WEB Interface", "Farbschema", "" },
-   { "iconSet",                   ctChoice,  false, "2 WEB Interface", "Status Icon Set", "" },
-   { "schema",                    ctChoice,  false, "2 WEB Interface", "Schematische Darstellung", "" },
-
-   // p4d
-
-   { "interval",                  ctInteger, false, "1 P4 Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
-   { "webPort",                   ctInteger, false, "1 P4 Daemon", "Port des Web Interfaces", "" },
-   { "stateCheckInterval",        ctInteger, false, "1 P4 Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
-   { "ttyDevice",                 ctString,  false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
-   { "loglevel",                  ctInteger, false, "1 P4 Daemon", "Log level", "" },
-
-   { "tsync",                     ctBool,    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
-   { "maxTimeLeak",               ctInteger, false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
-
-   { "aggregateHistory",          ctInteger, false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
-   { "aggregateInterval",         ctInteger, false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
-   { "peakResetAt",               ctString,  true,  "1 P4 Daemon", "", "" },
-
-   { "consumptionPerHour",        ctNum,     false, "1 P4 Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
-
-   // MQTT interface
-
-   { "mqttUrl",                   ctString,  false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttUser",                  ctString,  false, "4 MQTT Interface", "User", "" },
-   { "mqttPassword",              ctString,  false, "4 MQTT Interface", "Password", "" },
-   { "mqttDataTopic",             ctString,  false, "4 MQTT Interface", "MQTT Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttHaveConfigTopic",       ctBool,    false, "4 MQTT Interface", "Config Topic", "Speziell für HomeAssistant" },
-
-   // mail
-
-   { "mail",                      ctBool,    false, "3 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
-   { "mailScript",                ctString,  false, "3 Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  false, "3 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctMultiSelect, false, "3 Mail", "  für folgende Status", "" },
-
-   { "errorMailTo",               ctString,  false, "3 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
-};
+bool Daemon::shutdown {false};
 
 //***************************************************************************
 // Web Service
@@ -88,6 +32,9 @@ const char* cWebService::events[] =
    "unknown",
    "login",
    "logout",
+   "pagechange",
+   "data",
+   "init",
    "toggleio",
    "toggleionext",
    "togglemode",
@@ -98,23 +45,28 @@ const char* cWebService::events[] =
    "chartdata",
    "logmessage",
    "userconfig",
+   "storeuserconfig",
    "changepasswd",
-   "resetpeaks",
+   "reset",
    "groupconfig",
+   "chartbookmarks",
+   "storechartbookmarks",
+   "sendmail",
+   "syslog",
+   "forcerefresh",
+
    "errors",
    "menu",
    "pareditrequest",
    "parstore",
    "alerts",
    "storealerts",
-   "sendmail",
-   "chartbookmarks",
-   "storechartbookmarks",
    "inittables",
    "storeschema",
    "updatetimeranges",
    "pellets",
    "pelletsadd",
+
    0
 };
 
@@ -128,6 +80,9 @@ const char* cWebService::toName(Event event)
 
 cWebService::Event cWebService::toEvent(const char* name)
 {
+   if (!name)
+      return evUnknown;
+
    for (int e = evUnknown; e < evCount; e++)
       if (strcasecmp(name, events[e]) == 0)
          return (Event)e;
@@ -136,17 +91,51 @@ cWebService::Event cWebService::toEvent(const char* name)
 }
 
 //***************************************************************************
+// Service
+//***************************************************************************
+
+const char* Daemon::widgetTypes[] =
+{
+   "Symbol",
+   "Chart",
+   "Text",
+   "Value",
+   "Gauge",
+   "Meter",
+   "MeterLevel",
+   "PlainText",
+   "Choice",
+   0
+};
+
+const char* Daemon::toName(WidgetType type)
+{
+   if (type > wtUnknown && type < wtCount)
+      return widgetTypes[type];
+
+   return widgetTypes[wtText];
+}
+
+Daemon::WidgetType Daemon::toType(const char* name)
+{
+   if (!name)
+      return wtUnknown;
+
+   for (int t = wtUnknown+1; t < wtCount; t++)
+      if (strcasecmp(name, widgetTypes[t]) == 0)
+         return (WidgetType)t;
+
+   return wtText;
+}
+
+//***************************************************************************
 // Object
 //***************************************************************************
 
-P4d::P4d()
+Daemon::Daemon()
 {
-   nextAt = time(0);
+   nextRefreshAt = time(0) + 5;
    startedAt = time(0);
-
-   // force german locale at least for 'strftime'
-
-   setlocale(LC_ALL, "de_DE.UTF-8");
 
    cDbConnection::init();
    cDbConnection::setEncoding("utf8");
@@ -159,37 +148,38 @@ P4d::P4d()
    sem = new Sem(0x3da00001);
    serial = new Serial;
    request = new P4Request(serial);
-   curl = new cCurl();
    webSock = new cWebSock(this, httpPath);
 }
 
-P4d::~P4d()
+Daemon::~Daemon()
 {
    exit();
 
-   delete mqttWriter;
    delete mqttReader;
+   delete mqttHassWriter;
+   delete mqttHassReader;
+   delete mqttHassCommandReader;
+   delete webSock;
 
    free(mailScript);
-   free(stateMailAtStates);
    free(stateMailTo);
+
+   free(stateMailAtStates);
    free(errorMailTo);
    free(sensorScript);
 
    delete serial;
    delete request;
    delete sem;
-   delete curl;
-   delete webSock;
 
    cDbConnection::exit();
 }
 
 //***************************************************************************
-// Push In Message (from WS to p4d)
+// Push In Message (from WS to daemon)
 //***************************************************************************
 
-int P4d::pushInMessage(const char* data)
+int Daemon::pushInMessage(const char* data)
 {
    cMyMutexLock lock(&messagesInMutex);
 
@@ -200,10 +190,10 @@ int P4d::pushInMessage(const char* data)
 }
 
 //***************************************************************************
-// Push Out Message (from p4d to WS)
+// Push Out Message (from daemon to WS)
 //***************************************************************************
 
-int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
+int Daemon::pushOutMessage(json_t* oContents, const char* title, long client)
 {
    json_t* obj = json_object();
 
@@ -229,7 +219,7 @@ int P4d::pushOutMessage(json_t* oContents, const char* title, long client)
    return done;
 }
 
-int P4d::pushDataUpdate(const char* title, long client)
+int Daemon::pushDataUpdate(const char* title, long client)
 {
    // push all in the jsonSensorList to the 'interested' clients
 
@@ -332,10 +322,12 @@ int P4d::pushDataUpdate(const char* title, long client)
 // Init / Exit
 //***************************************************************************
 
-int P4d::init()
+int Daemon::init()
 {
    int status {success};
    char* dictPath {nullptr};
+
+   initLocale();
 
    if (fileExists(httpPath))
    {
@@ -358,11 +350,9 @@ int P4d::init()
       tell(eloAlways, "Missing http path '%s'", httpPath);
    }
 
-   curl->init();
-
    // initialize the dictionary
 
-   asprintf(&dictPath, "%s/p4d.dat", confDir);
+   asprintf(&dictPath, "%s/database.dat", confDir);
 
    if (dbDict.in(dictPath) != success)
    {
@@ -387,62 +377,471 @@ int P4d::init()
 
    if (userCount <= 0)
    {
-      tell(0, "Initially adding default user (p4/p4-3200)");
+      tell(0, "Initially adding default user (" TARGET "/" TARGET ")");
 
       md5Buf defaultPwd;
-      createMd5("p4-3200", defaultPwd);
+      createMd5(TARGET, defaultPwd);
       tableUsers->clear();
-      tableUsers->setValue("USER", "p4");
+      tableUsers->setValue("USER", TARGET);
       tableUsers->setValue("PASSWD", defaultPwd);
       tableUsers->setValue("TOKEN", "dein&&secret12login34token");
       tableUsers->setValue("RIGHTS", 0xff);  // all rights
       tableUsers->store();
    }
 
-   // Sensor Script
+   // ---------------------------------
+   // Update/Read configuration from config table
 
-   asprintf(&sensorScript, "%s/script-sensor.sh", confDir);
-
-   if (!fileExists(sensorScript))
+   for (const auto& it : *getConfiguration())
    {
-      tell(0, "Info: No sensor script '%s' found", sensorScript);
-      free(sensorScript);
-      sensorScript = nullptr;
-   }
-   else
-   {
-      tell(0, "Found sensor script '%s'", sensorScript);
+      tableConfig->clear();
+      tableConfig->setValue("OWNER", myName());
+      tableConfig->setValue("NAME", it.name.c_str());
+
+      if (!tableConfig->find())
+      {
+         tableConfig->setValue("VALUE", it.def);
+         tableConfig->store();
+      }
    }
 
-   // prepare one wire sensors
-
-   w1.scan();
+   readConfiguration(true);
 
    // ---------------------------------
-   // apply some configuration specials
+   // setup GPIO
+
+   wiringPiSetupPhys();     // we use the 'physical' PIN numbers
+   // wiringPiSetup();      // to use the 'special' wiringPi PIN numbers
+   // wiringPiSetupGpio();  // to use the 'GPIO' PIN numbers
+
+   // ---------------------------------
+   // apply configuration specials
 
    applyConfigurationSpecials();
 
    // init web socket ...
 
-   while (webSock->init(webPort, webSocketPingTime, webSsl) != success)
+   while (webSock->init(webPort, webSocketPingTime, confDir, webSsl) != success)
    {
       tell(0, "Retrying in 2 seconds");
       sleep(2);
    }
+
+//   initArduino();
+   performMqttRequests();
+   initScripts();
+   loadStates();
 
    initialized = true;
 
    return success;
 }
 
-int P4d::exit()
+int Daemon::initLocale()
+{
+   // set a locale to "" means 'reset it to the environment'
+   // as defined by the ISO-C standard the locales after start are C
+
+   const char* locale {nullptr};
+
+   setlocale(LC_ALL, "");
+   locale = setlocale(LC_ALL, 0);  // 0 for query the setting
+
+   if (!locale)
+   {
+      tell(0, "Info: Detecting locale setting for LC_ALL failed");
+      return fail;
+   }
+
+   tell(1, "current locale is %s", locale);
+
+   if ((strcasestr(locale, "UTF-8") != 0) || (strcasestr(locale, "UTF8") != 0))
+      tell(1, "Detected UTF-8");
+
+   return done;
+}
+
+int Daemon::exit()
 {
    exitDb();
    serial->close();
-   curl->exit();
 
    return success;
+}
+
+//***************************************************************************
+// Init digital Output
+//***************************************************************************
+
+int Daemon::initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights)
+{
+   digitalOutputStates[pin].opt = opt;
+   digitalOutputStates[pin].mode = mode;
+   digitalOutputStates[pin].name = name;
+
+   cDbRow* fact = valueFactOf("DO", pin);
+
+   if (fact)
+   {
+      if (!fact->getValue("USRTITLE")->isEmpty())
+         digitalOutputStates[pin].title = fact->getStrValue("USRTITLE");
+      else
+         digitalOutputStates[pin].title = fact->getStrValue("TITLE");
+   }
+   else
+   {
+      digitalOutputStates[pin].title = name;
+      tableValueFacts->setValue("RIGHTS", (int)rights);
+   }
+
+   pinMode(pin, OUTPUT);
+   gpioWrite(pin, false, false);
+   addValueFact(pin, "DO", name, "", wtSymbol, 0, 0, urControl);
+
+   return done;
+}
+
+//***************************************************************************
+// Init digital Input
+//***************************************************************************
+
+int Daemon::initInput(uint pin, const char* name)
+{
+   pinMode(pin, INPUT);
+
+   if (!isEmpty(name))
+      addValueFact(pin, "DI", name, "", wtSymbol, 0, 0);
+
+   digitalInputStates[pin] = gpioRead(pin);
+
+   return done;
+}
+
+//***************************************************************************
+// Init Scripts
+//***************************************************************************
+
+int Daemon::initScripts()
+{
+   char* path {nullptr};
+   int count {0};
+   FileList scripts;
+
+   asprintf(&path, "%s/scripts.d", confDir);
+   int status = getFileList(path, DT_REG, "sh py", false, &scripts, count);
+
+   if (status == success)
+   {
+      for (const auto& script : scripts)
+      {
+         char* scriptPath {nullptr};
+         uint addr {0};
+         char* cmd {nullptr};
+         std::string result;
+         PySensor* pySensor {nullptr};
+
+         asprintf(&scriptPath, "%s/%s", path, script.name.c_str());
+
+         if (strstr(script.name.c_str(), ".py"))
+         {
+            pySensor = new PySensor(this, path, script.name.c_str());
+
+            if (pySensor->init() != success || (result = executePython(pySensor, "status")) == "")
+            {
+               tell(0, "Initialized python script '%s' failed", script.name.c_str());
+               delete pySensor;
+               continue;
+            }
+         }
+         else
+         {
+            asprintf(&cmd, "%s status", scriptPath);
+            result = executeCommand(cmd);
+            tell(5, "Calling '%s'", cmd);
+            free(cmd);
+         }
+
+         json_error_t error;
+         json_t* oData = json_loads(result.c_str(), 0, &error);
+
+         if (!oData)
+         {
+            tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
+            tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+                 error.text, error.source, error.line, error.column, error.position);
+            delete pySensor;
+            continue;
+         }
+
+         std::string kind = getStringFromJson(oData, "kind", "status");
+         const char* title = getStringFromJson(oData, "title");
+         const char* unit = getStringFromJson(oData, "unit");
+         const char* choices = getStringFromJson(oData, "choices");
+         double value = getDoubleFromJson(oData, "value");
+         bool valid = getBoolFromJson(oData, "valid", false);
+         const char* text = getStringFromJson(oData, "text");
+
+         tableScripts->clear();
+         tableScripts->setValue("PATH", scriptPath);
+
+         if (!selectScriptByPath->find())
+         {
+            tableScripts->store();
+            addr = tableScripts->getLastInsertId();
+         }
+         else
+            addr = tableScripts->getIntValue("ID");
+
+         selectScriptByPath->freeResult();
+
+         addValueFact(addr, "SC", !isEmpty(title) ? title : script.name.c_str(), unit,
+                      kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
+                      0, 0, urControl, choices);
+
+         tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
+
+         scSensors[addr].kind = kind;
+         scSensors[addr].pySensor = pySensor;
+         scSensors[addr].last = time(0);
+         scSensors[addr].valid = valid;
+
+         if (kind == "status")
+            scSensors[addr].state = (bool)value;
+         else if (kind == "text")
+            scSensors[addr].text = text;
+         else if (kind == "value")
+            scSensors[addr].value = value;
+
+         tell(0, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
+         free(scriptPath);
+      }
+   }
+
+   free(path);
+
+   return status;
+}
+
+//***************************************************************************
+// Call Script
+//***************************************************************************
+
+int Daemon::callScript(int addr, const char* command, const char* name, const char* title)
+{
+   char* cmd {nullptr};
+
+   tableScripts->clear();
+   tableScripts->setValue("ID", addr);
+
+   if (!tableScripts->find())
+   {
+      tell(0, "Fatal: Script with id (%d) not found", addr);
+      return fail;
+   }
+
+   asprintf(&cmd, "%s %s", tableScripts->getStrValue("PATH"), command);
+
+   std::string result;
+   tell(2, "Info: Calling '%s'", cmd);
+
+   if (scSensors[addr].pySensor != nullptr)
+      result = executePython(scSensors[addr].pySensor, command);
+   else
+      result = executeCommand(cmd);
+
+   tableScripts->reset();
+   tell(2, "Debug: Result of script '%s' was [%s]", cmd, result.c_str());
+   free(cmd);
+
+   json_error_t error;
+   json_t* oData = json_loads(result.c_str(), 0, &error);
+
+   if (!oData)
+   {
+      tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
+      tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+           error.text, error.source, error.line, error.column, error.position);
+      return fail;
+   }
+
+   std::string kind = getStringFromJson(oData, "kind", "status");
+   const char* unit = getStringFromJson(oData, "unit");
+   double value = getDoubleFromJson(oData, "value");
+   const char* text = getStringFromJson(oData, "text");
+   bool valid = getBoolFromJson(oData, "valid", false);
+
+   tell(3, "DEBUG: Got '%s' from script (kind:%s unit:%s value:%0.2f) [SC:%d]", result.c_str(), kind.c_str(), unit, value, addr);
+
+   scSensors[addr].kind = kind;
+   scSensors[addr].last = time(0);
+   scSensors[addr].valid = valid;
+
+   if (kind == "status")
+      scSensors[addr].state = (bool)value;
+   else if (kind == "text")
+      scSensors[addr].text = text;
+   else if (kind == "value")
+      scSensors[addr].value = value;
+   else
+      tell(0, "Got unexpected script kind '%s' in '%s'", kind.c_str(), result.c_str());
+
+   // update WS
+   {
+      json_t* oJson = json_array();
+      json_t* ojData = json_object();
+      json_array_append_new(oJson, ojData);
+
+      json_object_set_new(ojData, "address", json_integer((ulong)addr));
+      json_object_set_new(ojData, "type", json_string("SC"));
+      json_object_set_new(ojData, "name", json_string(name));
+      json_object_set_new(ojData, "title", json_string(title));
+
+      if (kind == "status")
+         json_object_set_new(ojData, "value", json_integer((bool)value));
+      else if (kind == "text")
+         json_object_set_new(ojData, "text", json_string(text));
+      else if (kind == "value")
+         json_object_set_new(ojData, "value", json_real(value));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", "SC", (int)addr);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
+
+   mqttPublishSensor(iotLight, name, "", "", value, "", false /*forceConfig*/);
+
+   return success;
+}
+
+//***************************************************************************
+// Execute Python Sensor Script
+//***************************************************************************
+
+std::string Daemon::executePython(PySensor* pySensor, const char* command)
+{
+   pySensor->execute(command);
+
+   return pySensor->getResult();
+}
+
+//***************************************************************************
+// Value Fact Of
+//***************************************************************************
+
+cDbRow* Daemon::valueFactOf(const char* type, int addr)
+{
+   tableValueFacts->clear();
+
+   tableValueFacts->setValue("ADDRESS", addr);
+   tableValueFacts->setValue("TYPE", type);
+
+   if (!tableValueFacts->find())
+      return nullptr;
+
+   return tableValueFacts->getRow();
+}
+
+//***************************************************************************
+// Set Special Value
+//***************************************************************************
+
+void Daemon::setSpecialValue(uint addr, double value, const std::string& text)
+{
+   spSensors[addr].last = time(0);
+   spSensors[addr].value = value;
+   spSensors[addr].text = text;
+   spSensors[addr].kind = text == "" ? "value" : "text";
+   spSensors[addr].valid = spSensors[addr].kind == "text" ? true : !isNan(value);
+}
+
+
+//***************************************************************************
+// Sensor Json String Of
+//***************************************************************************
+
+std::string Daemon::sensorJsonStringOf(const char* type, uint addr)
+{
+   cDbRow* fact = valueFactOf(type, addr);
+
+   if (!fact)
+      return "";
+
+   json_t* ojData = json_object();
+
+   sensor2Json(ojData, tableValueFacts);
+
+   if (strcmp(type, "W1") == 0)
+   {
+      bool w1Exist = existW1(fact->getStrValue("NAME"));
+      time_t w1Last {0};
+      double w1Value {0};
+
+      if (w1Exist)
+         w1Value = valueOfW1(fact->getStrValue("NAME"), w1Last);
+
+      json_object_set_new(ojData, "value", json_real(w1Value));
+      json_object_set_new(ojData, "last", json_integer(w1Last));
+      json_object_set_new(ojData, "valid", json_boolean(w1Exist && w1Last > time(0)-300));
+   }
+   else if (strcmp(type, "AI") == 0)
+   {
+      json_object_set_new(ojData, "value", json_real(aiSensors[addr].value));
+      json_object_set_new(ojData, "last", json_integer(aiSensors[addr].last));
+      json_object_set_new(ojData, "valid", json_boolean(aiSensors[addr].valid));
+      if (aiSensors[addr].disabled)
+         json_object_set_new(ojData, "disabled", json_boolean(true));
+   }
+   else if (strcmp(type, "DO") == 0)
+   {
+      json_object_set_new(ojData, "value", json_integer(digitalOutputStates[addr].state));
+      json_object_set_new(ojData, "last", json_integer(digitalOutputStates[addr].last));
+      json_object_set_new(ojData, "valid", json_boolean(digitalOutputStates[addr].valid));
+   }
+   else if (strcmp(type, "SC") == 0)
+   {
+      if (scSensors[addr].kind == "status")
+         json_object_set_new(ojData, "value", json_integer(scSensors[addr].state));
+      else if (scSensors[addr].kind == "text")
+         json_object_set_new(ojData, "text", json_string(scSensors[addr].text.c_str()));
+      else if (scSensors[addr].kind == "value")
+         json_object_set_new(ojData, "value", json_real(scSensors[addr].value));
+
+      json_object_set_new(ojData, "last", json_integer(scSensors[addr].last));
+      json_object_set_new(ojData, "valid", json_boolean(scSensors[addr].valid));
+
+      if (scSensors[addr].disabled)
+         json_object_set_new(ojData, "disabled", json_boolean(true));
+   }
+   else if (strcmp(type, "SP") == 0)
+   {
+      if (spSensors[addr].kind == "text")
+         json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
+      else if (spSensors[addr].kind == "value")
+         json_object_set_new(ojData, "value", json_real(spSensors[addr].value));
+
+      json_object_set_new(ojData, "last", json_integer(spSensors[addr].last));
+      json_object_set_new(ojData, "valid", json_integer(spSensors[addr].valid));
+
+      if (spSensors[addr].disabled)
+         json_object_set_new(ojData, "disabled", json_boolean(true));
+   }
+
+   char* p = json_dumps(ojData, JSON_REAL_PRECISION(4));
+   json_decref(ojData);
+
+   if (!p)
+   {
+      tell(0, "Error: Dumping json message in 'sensorJsonStringOf' failed");
+      return "";
+   }
+
+   std::string str = p;
+   free(p);
+
+   return str;
 }
 
 //***************************************************************************
@@ -458,7 +857,7 @@ cDbFieldDef minValueDef("MIN_VALUE", "minvalue", cDBS::ffInt, 0, cDBS::ftData);
 cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef endTimeDef("END_TIME", "endtime", cDBS::ffDateTime, 0, cDBS::ftData);
 
-int P4d::initDb()
+int Daemon::initDb()
 {
    static int initial = yes;
    int status {success};
@@ -901,6 +1300,18 @@ int P4d::initDb()
    status += selectAllPellets->prepare();
 
    // ------------------
+   // select script by path
+
+   selectScriptByPath = new cDbStatement(tableScripts);
+
+   selectScriptByPath->build("select ");
+   selectScriptByPath->bindAllOut();
+   selectScriptByPath->build(" from %s where ", tableScripts->TableName());
+   selectScriptByPath->bind("PATH", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectScriptByPath->prepare();
+
+   // ------------------
 
    if (status == success)
       tell(eloAlways, "Connection to database established");
@@ -916,13 +1327,12 @@ int P4d::initDb()
       }
    }
 
-   readConfiguration();
    updateScripts();
 
    return status;
 }
 
-int P4d::exitDb()
+int Daemon::exitDb()
 {
    delete tableSamples;               tableSamples = nullptr;
    delete tablePeaks;                 tablePeaks = nullptr;
@@ -962,20 +1372,56 @@ int P4d::exitDb()
    delete selectStateDuration;        selectStateDuration = nullptr;
    delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
    delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
+   delete selectScriptByPath;         selectScriptByPath = nullptr;
+
    delete connection; connection = nullptr;
 
    return done;
 }
 
 //***************************************************************************
+// Init one wire sensors
+//***************************************************************************
+
+int Daemon::initW1()
+{
+   int count {0};
+   int added {0};
+   int modified {0};
+
+   for (const auto& it : w1Sensors)
+   {
+      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C", "", true);
+
+      if (res == 1)
+         added++;
+      else if (res == 2)
+         modified++;
+
+      count++;
+   }
+
+   tell(eloAlways, "Found %d one wire sensors, added %d, modified %d", count, added, modified);
+
+   return success;
+}
+
+//***************************************************************************
 // Read Configuration
 //***************************************************************************
 
-int P4d::readConfiguration()
+int Daemon::readConfiguration(bool initial)
 {
    char* webUser {nullptr};
    char* webPass {nullptr};
    md5Buf defaultPwd;
+
+   // init configuration
+
+   if (argLoglevel != na)
+      loglevel = argLoglevel;
+   else
+      getConfigItem("loglevel", loglevel, 1);
 
    // init default web user and password
 
@@ -988,11 +1434,10 @@ int P4d::readConfiguration()
 
    // init configuration
 
-   getConfigItem("loglevel", loglevel, 1);
    getConfigItem("interval", interval, 60);
    getConfigItem("consumptionPerHour", consumptionPerHour, 0);
 
-   getConfigItem("webPort", webPort, 1111);
+   getConfigItem("webPort", webPort, webPort);
    getConfigItem("webUrl", webUrl);
    getConfigItem("webSsl", webSsl);
 
@@ -1043,8 +1488,19 @@ int P4d::readConfiguration()
 
    getConfigItem("chart", chartSensors, "");
 
+   std::string url = mqttUrl ? mqttUrl : "";
+   getConfigItem("mqttUrl", mqttUrl);
+
+   if (url != mqttUrl)
+      mqttDisconnect();
+
+   url = mqttHassUrl ? mqttHassUrl : "";
+   getConfigItem("mqttHassUrl", mqttHassUrl);
+
+   if (url != mqttHassUrl)
+      mqttDisconnect();
+
    getConfigItem("mqttDataTopic", mqttDataTopic, "p4d2mqtt/sensor/<NAME>/state");
-   getConfigItem("mqttUrl", mqttUrl, "");          // "tcp://127.0.0.1:1883";
    getConfigItem("mqttUser", mqttUser, nullptr);
    getConfigItem("mqttPassword", mqttPassword, nullptr);
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
@@ -1053,7 +1509,7 @@ int P4d::readConfiguration()
    if (mqttDataTopic[strlen(mqttDataTopic)-1] == '/')
       mqttDataTopic[strlen(mqttDataTopic)-1] = '\0';
 
-   if (isEmpty(mqttDataTopic) || isEmpty(mqttUrl))
+   if (isEmpty(mqttDataTopic) || isEmpty(mqttHassUrl))
       mqttInterfaceStyle = misNone;
    else if (strstr(mqttDataTopic, "<NAME>"))
       mqttInterfaceStyle = misMultiTopic;
@@ -1070,16 +1526,11 @@ int P4d::readConfiguration()
    return done;
 }
 
-int P4d::applyConfigurationSpecials()
-{
-   return done;
-}
-
 //***************************************************************************
 // Initialize
 //***************************************************************************
 
-int P4d::initialize(int truncate)
+int Daemon::initialize(bool truncate)
 {
    sem->p();
 
@@ -1131,7 +1582,7 @@ int P4d::initialize(int truncate)
 // Setup
 //***************************************************************************
 
-int P4d::setup()
+int Daemon::setup()
 {
    if (!connection)
       return fail;
@@ -1173,7 +1624,7 @@ int P4d::setup()
 // Update Conf Tables
 //***************************************************************************
 
-int P4d::updateSchemaConfTable()
+int Daemon::updateSchemaConfTable()
 {
    const int step = 20;
    int y = 50;
@@ -1215,7 +1666,7 @@ int P4d::updateSchemaConfTable()
 // Update Value Facts
 //***************************************************************************
 
-int P4d::initValueFacts()
+int Daemon::initValueFacts()
 {
    int status {success};
    Fs::ValueSpec v;
@@ -1437,56 +1888,6 @@ int P4d::initValueFacts()
 
    tell(eloAlways, "Added %d user defined values", added);
 
-   // ---------------------------------
-   // add one wire sensor data
-
-   if (w1.scan() == success)
-   {
-      W1::SensorList* list = w1.getList();
-
-      // yes, we have one-wire sensors
-
-      count = 0;
-      added = 0;
-      modified = 0;
-
-      for (W1::SensorList::iterator it = list->begin(); it != list->end(); ++it)
-      {
-         // update table
-
-         tableValueFacts->clear();
-         tableValueFacts->setValue("ADDRESS", (int)W1::toId(it->first.c_str()));
-         tableValueFacts->setValue("TYPE", "W1");
-
-         if (!tableValueFacts->find())
-         {
-            tableValueFacts->setValue("NAME", it->first.c_str());
-            tableValueFacts->setValue("STATE", "D");
-            tableValueFacts->setValue("UNIT", "°C");
-            tableValueFacts->setValue("FACTOR", 1);
-            tableValueFacts->setValue("TITLE", it->first.c_str());
-            tableValueFacts->setValue("MAXSCALE", 300);
-
-            tableValueFacts->store();
-            added++;
-         }
-         else
-         {
-            if (tableValueFacts->getValue("MAXSCALE")->isNull())
-               tableValueFacts->setValue("MAXSCALE", 300);
-
-            if (tableValueFacts->getValue("UNIT")->hasValue("°"))
-               tableValueFacts->setValue("UNIT", "°C");
-
-            tableValueFacts->store();
-            modified++;
-         }
-         count++;
-      }
-
-      tell(eloAlways, "Found %d one wire sensors, added %d, modified %d", count, added, modified);
-   }
-
    return success;
 }
 
@@ -1494,7 +1895,7 @@ int P4d::initValueFacts()
 // Update Script Table
 //***************************************************************************
 
-int P4d::updateScripts()
+int Daemon::updateScripts()
 {
    char* scriptPath = 0;
    DIR* dir;
@@ -1539,7 +1940,7 @@ int P4d::updateScripts()
 // Initialize Menu Structure
 //***************************************************************************
 
-int P4d::initMenu(bool updateParameters)
+int Daemon::initMenu(bool updateParameters)
 {
    int status;
    Fs::MenuItem m;
@@ -1615,7 +2016,7 @@ int P4d::initMenu(bool updateParameters)
 // Update Time Range Data
 //***************************************************************************
 
-int P4d::updateTimeRangeData()
+int Daemon::updateTimeRangeData()
 {
    Fs::TimeRanges t;
    int status;
@@ -1660,7 +2061,7 @@ int P4d::updateTimeRangeData()
 // Store
 //***************************************************************************
 
-int P4d::store(time_t now, const char* name, const char* title, const char* unit,
+int Daemon::store(time_t now, const char* name, const char* title, const char* unit,
                const char* type, int address, double value,
                uint factor, uint groupid, const char* text)
 {
@@ -1715,7 +2116,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
-      mqttPublishSensor(name, title, unit, theValue, text, initialRun /*forceConfig*/);
+      mqttPublishSensor(iotSensor, name, title, unit, theValue, text, initialRun /*forceConfig*/);
 
    return success;
 }
@@ -1724,7 +2125,7 @@ int P4d::store(time_t now, const char* name, const char* title, const char* unit
 // Schedule Time Sync In
 //***************************************************************************
 
-void P4d::scheduleTimeSyncIn(int offset)
+void Daemon::scheduleTimeSyncIn(int offset)
 {
    struct tm tm = {0};
    time_t now;
@@ -1745,7 +2146,7 @@ void P4d::scheduleTimeSyncIn(int offset)
 // standby
 //***************************************************************************
 
-int P4d::standby(int t)
+int Daemon::standby(int t)
 {
    time_t end = time(0) + t;
 
@@ -1758,7 +2159,7 @@ int P4d::standby(int t)
    return done;
 }
 
-int P4d::standbyUntil(time_t until)
+int Daemon::standbyUntil(time_t until)
 {
    while (time(0) < until && !doShutDown())
    {
@@ -1773,7 +2174,7 @@ int P4d::standbyUntil(time_t until)
 // Meanwhile
 //***************************************************************************
 
-int P4d::meanwhile()
+int Daemon::meanwhile()
 {
    if (!initialized)
       return done;
@@ -1785,7 +2186,7 @@ int P4d::meanwhile()
 
    dispatchClientRequest();
 
-   if (!isEmpty(mqttUrl))
+   if (!isEmpty(mqttHassUrl))
       performMqttRequests();
 
    return done;
@@ -1795,7 +2196,7 @@ int P4d::meanwhile()
 // Loop
 //***************************************************************************
 
-int P4d::loop()
+int Daemon::loop()
 {
    int status;
    time_t nextStateAt {0};
@@ -1840,7 +2241,7 @@ int P4d::loop()
          break;
 
       meanwhile();
-      standbyUntil(min(nextStateAt, nextAt));
+      standbyUntil(min(nextStateAt, nextRefreshAt));
 
       // aggregate
 
@@ -1874,15 +2275,15 @@ int P4d::loop()
       {
          mailBodyHtml = "";
          lastState = currentState.state;
-         nextAt = time(0);              // force on state change
+         nextRefreshAt = time(0);              // force on state change
          tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
       }
 
-      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
 
       // work expected?
 
-      if (time(0) < nextAt)
+      if (time(0) < nextRefreshAt)
          continue;
 
       // check serial connection
@@ -1904,8 +2305,8 @@ int P4d::loop()
 
       // perform update
 
-      nextAt = time(0) + interval;
-      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextAt;
+      nextRefreshAt = time(0) + interval;
+      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
       calcStateDuration();
 
       {
@@ -1938,7 +2339,7 @@ int P4d::loop()
 // Update State
 //***************************************************************************
 
-int P4d::updateState(Status* state)
+int Daemon::updateState(Status* state)
 {
    static time_t nextReportAt = 0;
 
@@ -2004,15 +2405,22 @@ int P4d::updateState(Status* state)
 // Update
 //***************************************************************************
 
-int P4d::update(bool webOnly, long client)
+int Daemon::update(bool webOnly, long client)
 {
-   int status;
-   int count = 0;
+   static size_t w1Count = 0;
    time_t now = time(0);
+   int count = 0;
+   int status;
    char num[100];
 
    if (!webOnly)
-      w1.update();
+   {
+      if (w1Count < w1Sensors.size())
+      {
+         initW1();
+         w1Count = w1Sensors.size();
+      }
+   }
 
    tell(eloDetail, "Reading values ...");
 
@@ -2074,7 +2482,7 @@ int P4d::update(bool webOnly, long client)
          double theValue = value / factor;
 
          json_object_set_new(ojData, "value", json_real(theValue));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, theValue)));
+         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
 
          if (!webOnly)
          {
@@ -2115,7 +2523,7 @@ int P4d::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -2136,7 +2544,7 @@ int P4d::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageOf(orgTitle, title, v.state)));
+         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -2168,16 +2576,43 @@ int P4d::update(bool webOnly, long client)
 
       else if (tableValueFacts->hasValue("TYPE", "W1"))
       {
-         double value = w1.valueOf(name);
+         bool w1Exist = existW1(name);
+         time_t w1Last {0};
+         double w1Value {0};
 
-         json_object_set_new(ojData, "value", json_real(value));
+         if (w1Exist)
+            w1Value = valueOfW1(name, w1Last);
 
-         if (!webOnly)
+         // exist and updated at least once in last 5 minutes?
+
+         if (w1Exist && w1Last > time(0)-300)
          {
-            store(now, name, title, unit, type, addr, value, factor, groupid);
-            sprintf(num, "%.2f%s", value / factor, unit);
-            addParameter2Mail(title, num);
+            json_object_set_new(ojData, "value", json_real(w1Value));
+
+            if (!webOnly)
+               store(now, name, title, unit, type, addr, w1Value, factor, groupid);
+            // store(now, name, title, unit, type, addr, w1Value);
          }
+         else
+         {
+            if (!w1Exist)
+               tell(eloAlways, "Warning: W1 sensor '%s' missing", name);
+            else
+               tell(eloAlways, "Warning: Data of W1 sensor '%s' seems to be to old (%s)", name, l2pTime(w1Last).c_str());
+
+            json_object_set_new(ojData, "text", json_string("missing sensor"));
+         }
+
+         // double value = w1.valueOf(name);
+
+         // json_object_set_new(ojData, "value", json_real(value));
+
+         // if (!webOnly)
+         // {
+         //    store(now, name, title, unit, type, addr, value, factor, groupid);
+         //    sprintf(num, "%.2f%s", value / factor, unit);
+         //    addParameter2Mail(title, num);
+         // }
       }
 
       else if (tableValueFacts->hasValue("TYPE", "SD"))   // state duration
@@ -2295,7 +2730,7 @@ int P4d::update(bool webOnly, long client)
 // Calc State Duration
 //***************************************************************************
 
-int P4d::calcStateDuration()
+int Daemon::calcStateDuration()
 {
    time_t beginTime {0};
    int thisState = {-1};
@@ -2370,7 +2805,7 @@ int P4d::calcStateDuration()
 // Get Script Sensor
 //***************************************************************************
 
-std::string P4d::getScriptSensor(int address)
+std::string Daemon::getScriptSensor(int address)
 {
    char* cmd {nullptr};
 
@@ -2390,7 +2825,7 @@ std::string P4d::getScriptSensor(int address)
 // After Update
 //***************************************************************************
 
-void P4d::afterUpdate()
+void Daemon::afterUpdate()
 {
    char* path = 0;
 
@@ -2410,7 +2845,7 @@ void P4d::afterUpdate()
 //   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
-int P4d::dispatchMqttCommandRequest(const char* jString)
+int Daemon::dispatchMqttCommandRequest(const char* jString)
 {
    json_error_t error;
    json_t* jData = json_loads(jString, 0, &error);
@@ -2529,7 +2964,7 @@ int P4d::dispatchMqttCommandRequest(const char* jString)
 // Sensor Alert Check
 //***************************************************************************
 
-void P4d::sensorAlertCheck(time_t now)
+void Daemon::sensorAlertCheck(time_t now)
 {
    tableSensorAlert->clear();
    tableSensorAlert->setValue("KIND", "M");
@@ -2551,7 +2986,7 @@ void P4d::sensorAlertCheck(time_t now)
 // Perform Alert Check
 //***************************************************************************
 
-int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
+int Daemon::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
 {
    int alert = 0;
 
@@ -2716,7 +3151,7 @@ int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
 // Add Parameter To Mail
 //***************************************************************************
 
-void P4d::addParameter2Mail(const char* name, const char* value)
+void Daemon::addParameter2Mail(const char* name, const char* value)
 {
    if (stateChanged)
       mailBodyHtml += "        <tr><td>" + std::string(name) + "</td><td>" + std::string(value) + "</td></tr>\n";
@@ -2726,7 +3161,7 @@ void P4d::addParameter2Mail(const char* name, const char* value)
 // Schedule Aggregate
 //***************************************************************************
 
-int P4d::scheduleAggregate()
+int Daemon::scheduleAggregate()
 {
    struct tm tm = { 0 };
    time_t now;
@@ -2764,7 +3199,7 @@ int P4d::scheduleAggregate()
 // Aggregate
 //***************************************************************************
 
-int P4d::aggregate()
+int Daemon::aggregate()
 {
    char* stmt = 0;
    time_t history = time(0) - (aggregateHistory * tmeSecondsPerDay);
@@ -2821,7 +3256,7 @@ int P4d::aggregate()
 // Update Errors
 //***************************************************************************
 
-int P4d::updateErrors()
+int Daemon::updateErrors()
 {
    int status;
    Fs::ErrorInfo e;
@@ -2907,7 +3342,7 @@ int P4d::updateErrors()
    return success;
 }
 
-int P4d::updateParameter(cDbTable* tableMenu)
+int Daemon::updateParameter(cDbTable* tableMenu)
 {
    int type = tableMenu->getIntValue("TYPE");
    int paddr = tableMenu->getIntValue("ADDRESS");
@@ -3055,7 +3490,7 @@ int P4d::updateParameter(cDbTable* tableMenu)
 // Send Mail
 //***************************************************************************
 
-int P4d::sendAlertMail(const char* to)
+int Daemon::sendAlertMail(const char* to)
 {
    // check
 
@@ -3097,7 +3532,7 @@ int P4d::sendAlertMail(const char* to)
 // Send Mail
 //***************************************************************************
 
-int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
+int Daemon::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
 {
    char* sensor = 0;
 
@@ -3175,7 +3610,7 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
 // Send Error Mail
 //***************************************************************************
 
-int P4d::sendErrorMail()
+int Daemon::sendErrorMail()
 {
    std::string body = "";
    const char* subject = "Heizung: STÖRUNG";
@@ -3249,7 +3684,7 @@ int P4d::sendErrorMail()
 // Send State Mail
 //***************************************************************************
 
-int P4d::sendStateMail()
+int Daemon::sendStateMail()
 {
    std::string subject = "Heizung - Status: " + std::string(currentState.stateinfo);
 
@@ -3293,7 +3728,7 @@ int P4d::sendStateMail()
    return result;
 }
 
-int P4d::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
+int Daemon::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
 {
    char* command = {nullptr};
    int result {0};
@@ -3314,7 +3749,7 @@ int P4d::sendMail(const char* receiver, const char* subject, const char* body, c
 // Is Mail State
 //***************************************************************************
 
-int P4d::isMailState()
+int Daemon::isMailState()
 {
    int result = no;
    char* mailStates = 0;
@@ -3342,7 +3777,7 @@ int P4d::isMailState()
 // Load Html Header
 //***************************************************************************
 
-int P4d::loadHtmlHeader()
+int Daemon::loadHtmlHeader()
 {
    char* file;
 
@@ -3405,7 +3840,64 @@ int P4d::loadHtmlHeader()
 // Add Value Fact
 //***************************************************************************
 
-int P4d::addValueFact(int addr, const char* type, int factor, const char* name,
+int Daemon::addValueFact(int addr, const char* type, const char* name, const char* unit,
+                        WidgetType widgetType, int minScale, int maxScale, int rights, const char* choices)
+{
+   if (maxScale == na)
+      maxScale = unit[0] == '%' ? 100 : 45;
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("ADDRESS", addr);
+   tableValueFacts->setValue("TYPE", type);
+
+   if (!tableValueFacts->find())
+   {
+      tell(0, "Add ValueFact '%ld' '%s'", tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
+
+      tableValueFacts->setValue("NAME", name);
+      tableValueFacts->setValue("TITLE", name);
+      tableValueFacts->setValue("RIGHTS", rights);
+      tableValueFacts->setValue("STATE", "D");
+      tableValueFacts->setValue("UNIT", unit);
+
+      if (!isEmpty(choices))
+         tableValueFacts->setValue("CHOICES", choices);
+
+      char* opt {nullptr};
+      asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
+               unit, maxScale, minScale, 0, getImageFor(name, true), getImageFor(name, false), widgetType);
+      tableValueFacts->setValue("WIDGETOPT", opt);
+      free(opt);
+
+      tableValueFacts->store();
+      return 1;                               // 1 for 'added'
+   }
+
+   tableValueFacts->clearChanged();
+
+   tableValueFacts->setValue("NAME", name);
+   tableValueFacts->setValue("TITLE", name);
+
+   if (!isEmpty(choices))
+      tableValueFacts->setValue("CHOICES", choices);
+
+   if (tableValueFacts->getValue("RIGHTS")->isNull())
+      tableValueFacts->setValue("RIGHTS", rights);
+
+   if (tableValueFacts->getChanges())
+   {
+      tableValueFacts->store();
+      return 2;                                // 2 for 'modified'
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Add Value Fact
+//***************************************************************************
+
+int Daemon::addValueFact(int addr, const char* type, int factor, const char* name,
                       const char* unit, const char* title, bool active, int maxScale)
 {
    if (maxScale == na)
@@ -3455,7 +3947,7 @@ int P4d::addValueFact(int addr, const char* type, int factor, const char* name,
 // Stored Parameters
 //***************************************************************************
 
-int P4d::getConfigItem(const char* name, char*& value, const char* def)
+int Daemon::getConfigItem(const char* name, char*& value, const char* def)
 {
    free(value);
    value = nullptr;
@@ -3465,11 +3957,13 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
    tableConfig->setValue("NAME", name);
 
    if (tableConfig->find())
+   {
       value = strdup(tableConfig->getStrValue("VALUE"));
+   }
    else if (def)  // only if not a nullptr
    {
       value = strdup(def);
-      setConfigItem(name, value);  // store the default (may be an empty string)
+      setConfigItem(name, value);  // store the default
    }
 
    tableConfig->reset();
@@ -3477,9 +3971,9 @@ int P4d::getConfigItem(const char* name, char*& value, const char* def)
    return success;
 }
 
-int P4d::setConfigItem(const char* name, const char* value)
+int Daemon::setConfigItem(const char* name, const char* value)
 {
-   tell(eloAlways, "Storing '%s' with value '%s'", name, value);
+   tell(2, "Debug: Storing '%s' with value '%s'", name, value);
    tableConfig->clear();
    tableConfig->setValue("OWNER", myName());
    tableConfig->setValue("NAME", name);
@@ -3488,7 +3982,12 @@ int P4d::setConfigItem(const char* name, const char* value)
    return tableConfig->store();
 }
 
-int P4d::getConfigItem(const char* name, int& value, int def)
+int Daemon::getConfigItem(const char* name, int& value, int def)
+{
+   return getConfigItem(name, (long&)value, (long)def);
+}
+
+int Daemon::getConfigItem(const char* name, long& value, long def)
 {
    char* txt {nullptr};
 
@@ -3509,7 +4008,16 @@ int P4d::getConfigItem(const char* name, int& value, int def)
    return success;
 }
 
-int P4d::getConfigItem(const char* name, double& value, double def)
+int Daemon::setConfigItem(const char* name, long value)
+{
+   char txt[16];
+
+   snprintf(txt, sizeof(txt), "%ld", value);
+
+   return setConfigItem(name, txt);
+}
+
+int Daemon::getConfigItem(const char* name, double& value, double def)
 {
    char* txt {nullptr};
 
@@ -3517,7 +4025,7 @@ int P4d::getConfigItem(const char* name, double& value, double def)
 
    if (!isEmpty(txt))
    {
-      std::string s = strReplace(".", ",", txt);
+      std::string s = strReplace(".", ",", txt);  // #TODO needed ??
       value = strtod(s.c_str(), nullptr);
    }
    else if (isEmpty(txt) && def != na)
@@ -3526,14 +4034,23 @@ int P4d::getConfigItem(const char* name, double& value, double def)
       setConfigItem(name, value);
    }
    else
-      value = 0;
+      value = 0.0;
 
    free(txt);
 
    return success;
 }
 
-int P4d::getConfigItem(const char* name, bool& value, bool def)
+int Daemon::setConfigItem(const char* name, double value)
+{
+   char txt[16+TB];
+
+   snprintf(txt, sizeof(txt), "%.2f", value);
+
+   return setConfigItem(name, txt);
+}
+
+int Daemon::getConfigItem(const char* name, bool& value, bool def)
 {
    char* txt {nullptr};
 
@@ -3552,11 +4069,426 @@ int P4d::getConfigItem(const char* name, bool& value, bool def)
    return success;
 }
 
-int P4d::setConfigItem(const char* name, int value)
+int Daemon::setConfigItem(const char* name, bool value)
 {
-   char txt[16] = "";
+   char txt[16];
 
    snprintf(txt, sizeof(txt), "%d", value);
 
    return setConfigItem(name, txt);
+}
+
+//***************************************************************************
+// Get Config Time Range Item
+//***************************************************************************
+
+int Daemon::getConfigTimeRangeItem(const char* name, std::vector<Range>& ranges)
+{
+   char* tmp {nullptr};
+
+   getConfigItem(name, tmp, "");
+   ranges.clear();
+
+   for (const char* r = strtok(tmp, ","); r; r = strtok(0, ","))
+   {
+      uint fromHH, fromMM, toHH, toMM;
+
+      if (sscanf(r, "%u:%u-%u:%u", &fromHH, &fromMM, &toHH, &toMM) == 4)
+      {
+         uint from = fromHH*100 + fromMM;
+         uint to = toHH*100 + toMM;
+
+         ranges.push_back({from, to});
+         tell(3, "range: %d - %d", from, to);
+      }
+      else
+      {
+         tell(0, "Error: Unexpected range '%s' for '%s'", r, name);
+      }
+   }
+
+   free(tmp);
+
+   return success;
+}
+
+//***************************************************************************
+// Get Image For
+//***************************************************************************
+
+const char* Daemon::getImageFor(const char* title, int value)
+{
+   const char* imagePath = "img/icon/unknown.png";
+
+   if (strcasestr(title, "Pump"))
+      imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
+   else if (strcasestr(title, "Steckdose"))
+      imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
+   else if (strcasestr(title, "UV-C"))
+      imagePath = value ? "img/icon/uvc-on.png" : "img/icon/uvc-off.png";
+   else if (strcasestr(title, "Licht") || strcasestr(title, "Light"))
+      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
+   else if (strcasestr(title, "Shower") || strcasestr(title, "Dusche"))
+      imagePath = value ? "img/icon/shower-on.png" : "img/icon/shower-off.png";
+   else
+      imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
+
+   return imagePath;
+}
+
+const char* Daemon::getStateImage(int state)
+{
+   static char result[100] = "";
+   const char* image {nullptr};
+
+   if (state <= 0)
+      image = "state-error.gif";
+   else if (state == 1)
+      image = "state-fireoff.gif";
+   else if (state == 2)
+      image = "state-heatup.gif";
+   else if (state == 3)
+      image = "state-fire.gif";
+   else if (state == 4)
+      image = "/state/state-firehold.gif";
+   else if (state == 5)
+      image = "state-fireoff.gif";
+   else if (state == 6)
+      image = "state-dooropen.gif";
+   else if (state == 7)
+      image = "state-preparation.gif";
+   else if (state == 8)
+      image = "state-warmup.gif";
+   else if (state == 9)
+      image = "state-heatup.gif";
+   else if (state == 15 || state == 70 || state == 69)
+      image = "state-clean.gif";
+   else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
+      image = "state-wait.gif";
+   else if (state == 60 || state == 61 || state == 72)
+      image = "state-shfire.png";
+
+   if (image)
+      sprintf(result, "img/state/%s/%s", iconSet, image);
+   else
+      sprintf(result, "img/type/heating-%s.png", heatingType);
+
+   return result;
+}
+
+//***************************************************************************
+// Digital IO Stuff
+//***************************************************************************
+
+int Daemon::toggleIo(uint addr, const char* type)
+{
+   cDbRow* fact = valueFactOf(type, addr);
+
+   if (!fact)
+      return fail;
+
+   const char* name = fact->getStrValue("NAME");
+   const char* title = fact->getStrValue("USRTITLE");
+
+   if ((isEmpty(title)))
+      title = fact->getStrValue("TITLE");
+
+   if (strcmp(type, "DO") == 0)
+   {
+      gpioWrite(addr, !digitalOutputStates[addr].state);
+   }
+   else if (strcmp(type, "SC") == 0)
+   {
+      callScript(addr, "toggle", name, title);
+   }
+
+   return success;
+}
+
+int Daemon::toggleIoNext(uint pin)
+{
+   if (digitalOutputStates[pin].state)
+   {
+      toggleIo(pin, "DO");
+      usleep(300000);
+      toggleIo(pin, "DO");
+      return success;
+   }
+
+   gpioWrite(pin, true);
+
+   return success;
+}
+
+void Daemon::pin2Json(json_t* ojData, int pin)
+{
+   json_object_set_new(ojData, "address", json_integer(pin));
+   json_object_set_new(ojData, "type", json_string("DO"));
+   json_object_set_new(ojData, "name", json_string(digitalOutputStates[pin].name));
+   json_object_set_new(ojData, "title", json_string(digitalOutputStates[pin].title.c_str()));
+   json_object_set_new(ojData, "mode", json_string(digitalOutputStates[pin].mode == omManual ? "manual" : "auto"));
+   json_object_set_new(ojData, "options", json_integer(digitalOutputStates[pin].opt));
+   json_object_set_new(ojData, "value", json_integer(digitalOutputStates[pin].state));
+   json_object_set_new(ojData, "last", json_integer(digitalOutputStates[pin].last));
+   json_object_set_new(ojData, "next", json_integer(digitalOutputStates[pin].next));
+   json_object_set_new(ojData, "image", json_string(getImageFor(digitalOutputStates[pin].title.c_str(), digitalOutputStates[pin].state)));
+   json_object_set_new(ojData, "widgettype", json_integer(wtSymbol));  // #TODO get type from valuefacts
+}
+
+int Daemon::toggleOutputMode(uint pin)
+{
+   // allow mode toggle only if more than one option is given
+
+   if (digitalOutputStates[pin].opt & ooAuto && digitalOutputStates[pin].opt & ooUser)
+   {
+      OutputMode mode = digitalOutputStates[pin].mode == omAuto ? omManual : omAuto;
+      digitalOutputStates[pin].mode = mode;
+
+      storeStates();
+
+      json_t* oJson = json_array();
+      json_t* ojData = json_object();
+      json_array_append_new(oJson, ojData);
+      pin2Json(ojData, pin);
+
+      pushOutMessage(oJson, "update");
+   }
+
+   return success;
+}
+
+void Daemon::gpioWrite(uint pin, bool state, bool store)
+{
+   digitalOutputStates[pin].state = state;
+   digitalOutputStates[pin].last = time(0);
+   digitalOutputStates[pin].valid = true;
+
+   if (!state)
+      digitalOutputStates[pin].next = 0;
+
+   // invert the state on 'invertDO' - some relay board are active at 'false'
+
+   digitalWrite(pin, invertDO ? !state : state);
+
+   if (store)
+      storeStates();
+
+   performJobs();
+
+   // send update to WS
+   {
+      json_t* oJson = json_array();
+      json_t* ojData = json_object();
+      json_array_append_new(oJson, ojData);
+      pin2Json(ojData, pin);
+
+      pushOutMessage(oJson, "update");
+   }
+
+   mqttPublishSensor(iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "", false /*forceConfig*/);
+}
+
+bool Daemon::gpioRead(uint pin)
+{
+   digitalInputStates[pin] = digitalRead(pin);
+   return digitalInputStates[pin];
+}
+
+//***************************************************************************
+// Store/Load States to DB
+//  used to recover at restart
+//***************************************************************************
+
+int Daemon::storeStates()
+{
+   long value {0};
+   long mode {0};
+
+   for (const auto& output : digitalOutputStates)
+   {
+      if (output.second.state)
+         value += pow(2, output.first);
+
+      if (output.second.mode == omManual)
+         mode += pow(2, output.first);
+
+      setConfigItem("ioStates", value);
+      setConfigItem("ioModes", mode);
+
+      // tell(0, "state bit (%d): %s: %d [%ld]", output.first, output.second.name, output.second.state, value);
+   }
+
+   return done;
+}
+
+int Daemon::loadStates()
+{
+   long value {0};
+   long mode {0};
+
+   getConfigItem("ioStates", value, 0);
+   getConfigItem("ioModes", mode, 0);
+
+   tell(2, "Debug: Loaded iostates: %ld", value);
+
+   for (const auto& output : digitalOutputStates)
+   {
+      if (digitalOutputStates[output.first].opt & ooUser)
+      {
+         gpioWrite(output.first, value & (long)pow(2, output.first), false);
+         tell(0, "Info: IO %s/%d recovered to %d", output.second.name, output.first, output.second.state);
+      }
+   }
+
+   if (mode)
+   {
+      for (const auto& output : digitalOutputStates)
+      {
+         if (digitalOutputStates[output.first].opt & ooAuto && digitalOutputStates[output.first].opt & ooUser)
+         {
+            OutputMode m = mode & (long)pow(2, output.first) ? omManual : omAuto;
+            digitalOutputStates[output.first].mode = m;
+         }
+      }
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// W1 Stuff ...
+//***************************************************************************
+
+int Daemon::dispatchW1Msg(const char* message)
+{
+   json_error_t error;
+   json_t* jArray = json_loads(message, 0, &error);
+
+   if (!jArray)
+   {
+      tell(0, "Error: Can't parse json in '%s'", message);
+      return fail;
+   }
+
+   size_t index {0};
+   json_t* jValue {nullptr};
+
+   json_array_foreach(jArray, index, jValue)
+   {
+      const char* name = getStringFromJson(jValue, "name");
+      double value = getDoubleFromJson(jValue, "value");
+      time_t stamp = getIntFromJson(jValue, "time");
+
+      if (stamp < time(0)-300)
+      {
+         tell(eloAlways, "Skipping old (%ld seconds) w1 value", time(0)-stamp);
+         continue;
+      }
+
+      updateW1(name, value, stamp);
+   }
+
+   cleanupW1();
+   process();
+
+   return success;
+}
+
+void Daemon::updateW1(const char* id, double value, time_t stamp)
+{
+   tell(2, "w1: %s : %0.2f", id, value);
+
+   w1Sensors[id].value = value;
+   w1Sensors[id].last = stamp;
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("ADDRESS", (int)toW1Id(id));
+   tableValueFacts->setValue("TYPE", "W1");
+
+   if (tableValueFacts->find())
+   {
+      json_t* ojData = json_object();
+
+      sensor2Json(ojData, tableValueFacts);
+      json_object_set_new(ojData, "value", json_real(value));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "W1:0x%02x", toW1Id(id));
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
+
+   tableValueFacts->reset();
+}
+
+void Daemon::cleanupW1()
+{
+   uint detached {0};
+
+   for (auto it = w1Sensors.begin(); it != w1Sensors.end();)
+   {
+      if (it->second.last < time(0) - 5*tmeSecondsPerMinute)
+      {
+         tell(0, "Info: Missing sensor '%s', removing it from list", it->first.c_str());
+         detached++;
+         it = w1Sensors.erase(it--);
+      }
+      else
+         it++;
+   }
+
+   if (detached)
+   {
+      tell(0, "Info: %d w1 sensors detached, reseting power line to force a re-initialization", detached);
+      gpioWrite(pinW1Power, false);
+      sleep(2);
+      gpioWrite(pinW1Power, true);
+   }
+}
+
+bool Daemon::existW1(const char* id)
+{
+   if (isEmpty(id))
+      return false;
+
+   auto it = w1Sensors.find(id);
+
+   return it != w1Sensors.end();
+}
+
+double Daemon::valueOfW1(const char* id, time_t& last)
+{
+   last = 0;
+
+   if (isEmpty(id))
+      return 0;
+
+   auto it = w1Sensors.find(id);
+
+   if (it == w1Sensors.end())
+      return 0;
+
+   last = w1Sensors[id].last;
+
+   return w1Sensors[id].value;
+}
+
+uint Daemon::toW1Id(const char* name)
+{
+   const char* p;
+   int len = strlen(name);
+
+   // use 4 minor bytes as id
+
+   if (len <= 2)
+      return na;
+
+   if (len <= 8)
+      p = name;
+   else
+      p = name + (len - 8);
+
+   return strtoull(p, 0, 16);
 }

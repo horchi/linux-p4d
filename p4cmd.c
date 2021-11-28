@@ -11,7 +11,7 @@
 
 #include "lib/common.h"
 #include "p4io.h"
-#include "w1.h"
+// #include "w1.h"
 
 //***************************************************************************
 // Ask Confirm
@@ -56,7 +56,7 @@ enum UserCommand
    ucGetDo,
    ucGetAo,
    ucUser,
-   ucShowW1,
+//   ucShowW1,
    ucUnkonownList
 };
 
@@ -84,7 +84,7 @@ void showUsage(const char* bin)
    printf("     times    get time ranges of <addr>\n");
    printf("     getdo    show digital output at <addr>\n");
    printf("     getao    show analog output at <addr>\n");
-   printf("     w1       show data of all connected one wire sensors\n");
+//   printf("     w1       show data of all connected one wire sensors\n");
 }
 
 //***************************************************************************
@@ -129,8 +129,8 @@ int main(int argc, char** argv)
 
    if (strcasecmp(argv[1], "getv") == 0)
       cmd = ucGetValue;
-   else if (strcasecmp(argv[1], "w1") == 0)
-      cmd = ucShowW1;
+   // else if (strcasecmp(argv[1], "w1") == 0)
+   //    cmd = ucShowW1;
    else if (strcasecmp(argv[1], "getp") == 0)
       cmd = ucGetParameter;
    else if (strcasecmp(argv[1], "setp") == 0)
@@ -163,18 +163,18 @@ int main(int argc, char** argv)
       return 0;
    }
 
-   if (cmd == ucShowW1)
-   {
-      W1 w1;
+   // if (cmd == ucShowW1)
+   // {
+   //    W1 w1;
 
-      if (w1.scan() == success)
-      {
-         w1.update();
-         w1.show();
-      }
+   //    if (w1.scan() == success)
+   //    {
+   //       w1.update();
+   //       w1.show();
+   //    }
 
-      return 0;
-   }
+   //    return 0;
+   // }
 
    // parse options
 

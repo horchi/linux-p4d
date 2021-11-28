@@ -37,9 +37,7 @@ IP=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 if [ ${update} != 1 ]; then
    apt update || exit 1
    apt -y dist-upgrade || exit 1
-   apt -y install ssmtp || exit 1
    apt-get -y install locales || exit 1
-
    timedatectl set-timezone 'Europe/Berlin'
    dpkg-reconfigure --frontend noninteractive tzdata
 
@@ -61,7 +59,7 @@ if [ ${update} != 1 ]; then
    echo -e "${BLUE}- The installation is completed and will be available after reboot${NC}"
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>:1111${NC}"
-   echo -e "${BLUE}- Guess your IP is ${IP} use:${NC} ${BWHITE}http://${IP}:1111${NC}"
+   echo -e "${BLUE}- Your IP seems to be ${IP} therefore you can try:${NC} ${BWHITE}http://${IP}:1111${NC}"
    echo -e "${BLUE}- Default user/password is p4/p4-3200${NC}"
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- Added aliases for convenience:${NC}"
@@ -69,7 +67,6 @@ if [ ${update} != 1 ]; then
    echo -e "${BLUE}-  vp    - view p4d.log (abort with CTRL-C)${NC}"
    echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
    echo -e "${WHITE}- to permit p4d sending mails: ${NC}"
-   echo -e "${WHITE}- to permit poold sending mails: ${NC}"
    echo -e "${WHITE}-   setup your SMTP account in /etc/msmtprc properly${NC}"
    echo -e "${WHITE}-    #> ${CYAN}p4d-mail.sh 'Test Mail' 'just a test' text/plain your@mail.de${NC}"
    echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"

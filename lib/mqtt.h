@@ -55,11 +55,13 @@ class Mqtt
 
       // ...
 
-      virtual const char* getLastReadTopic()           { return lastReadTopic.c_str(); }
+      virtual std::string getLastReadTopic()           { return lastReadTopic; }
       virtual bool isRetained()                        { return retained; }
 
       void appendMessage(mqtt_response_publish* theMessage);
       size_t getCount()   { return receivedMessages.size(); }
+
+      const char* getTopic() { return theTopic.c_str(); }
 
    protected:
 

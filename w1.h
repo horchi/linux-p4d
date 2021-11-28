@@ -1,15 +1,21 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
+// Automation Control
 // File w1.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 07.02.2014  Jörg Wendel
+// Date 10.08.2020 - Jörg Wendel
 //***************************************************************************
+
+#pragma once
 
 #include <stdio.h>
 #include <map>
+#include <limits>
 
 #include "lib/common.h"
+#include "lib/mqtt.h"
+
+// #define W1_UDEF std::numeric_limits<double>::max()
 
 //***************************************************************************
 // Class W1
@@ -19,23 +25,39 @@ class W1
 {
    public:
 
-      typedef std::map<std::string, double> SensorList;
+      struct SensorData
+      {
+         double value;
+         std::vector<double> values;
+         bool active {false};
+      };
 
-      W1()  { w1Path = strdup("/sys/bus/w1/devices"); }
-      ~W1() { free(w1Path); }
+      typedef std::map<std::string, SensorData> SensorList;
 
-      int scan();
+      W1(const char* aUrl);
+      ~W1();
+
+      static void downF(int aSignal) { shutdown = true; }
+
+      int init() { return success; }
+      int loop();
       int show();
+      int scan();
       int update();
+      bool doShutDown() { return shutdown; }
 
-      SensorList* getList() { return &sensors; }
-
-      double valueOf(const char* id) { return sensors[id]; }
-
-      static unsigned int toId(const char* name);
+      const SensorList* getList()    { return &sensors; }
+      size_t getCount()              { return sensors.size(); }
 
    protected:
 
+      int mqttConnection();
+
       char* w1Path {nullptr};
       SensorList sensors;
+      const char* mqttUrl {nullptr};
+      const char* mqttTopic {nullptr};
+      Mqtt* mqttW1Writer {nullptr};
+
+      static bool shutdown;
 };

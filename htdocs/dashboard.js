@@ -8,6 +8,8 @@
  *
  */
 
+var gauge = null;
+
 function initDashboard(widgets, root)
 {
    if (!widgets) {

@@ -33,6 +33,7 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
 
 int jStringValid(const char* s);
 
+bool isElementSet(json_t* obj, const char* name);
 const char* getStringFromJson(json_t* obj, const char* name, const char* def = 0);
 int getIntFromJson(json_t* obj, const char* name, int def = na);
 int getBoolFromJson(json_t* obj, const char* name, bool def = false);

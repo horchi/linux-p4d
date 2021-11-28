@@ -30,7 +30,7 @@ char* cWebSock::httpPath {nullptr};
 cWebInterface* cWebSock::singleton {nullptr};
 
 //***************************************************************************
-// Init
+// Web Socket
 //***************************************************************************
 
 cWebSock::cWebSock(cWebInterface* aProcess, const char* aHttpPath)
@@ -46,7 +46,7 @@ cWebSock::~cWebSock()
    free(httpPath);
 }
 
-int cWebSock::init(int aPort, int aTimeout, bool ssl)
+int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 {
    lws_context_creation_info info {0};
 
@@ -92,10 +92,6 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
    // setup websocket context info
 
    memset(&info, 0, sizeof(info));
-   info.options = 0;
-   info.mounts = mounts;
-   info.gid = -1;
-   info.uid = -1;
    info.port = port;
    info.protocols = protocols;
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR < 4)
@@ -106,9 +102,18 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
 
    if (ssl)
    {
-      info.ssl_cert_filepath = "/etc/p4d/p4d.cert";
-      info.ssl_private_key_filepath = "/etc/p4d/p4d.key";
+      char* certFile {nullptr};
+      char* certKeyFile {nullptr};
+      asprintf(&certFile, "%s/" TARGET ".cert", confDir);
+      asprintf(&certKeyFile, "%s/" TARGET ".key", confDir);
+      tell(eloAlways, "Starting SSL mode with '%s' / '%s'", certFile, certKeyFile);
+
+      info.ssl_cert_filepath = certFile;
+      info.ssl_private_key_filepath = certKeyFile;
       info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT; // | LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
+
+      free(certFile);
+      free(certKeyFile);
    }
 
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
@@ -118,6 +123,11 @@ int cWebSock::init(int aPort, int aTimeout, bool ssl)
 #else
    info.ws_ping_pong_interval = timeout;
 #endif
+
+   info.gid = -1;
+   info.uid = -1;
+   info.options = 0;
+   info.mounts = mounts;
 
    // create libwebsocket context representing this server
 
@@ -184,7 +194,7 @@ void* cWebSock::syncFct(void* user)
    ThreadControl* threadCtl = (ThreadControl*)user;
    threadCtl->active = true;
 
-   tell(0, " :: started syncThread");
+   // tell(0, " :: started syncThread");
 
    while (!threadCtl->close)
    {
@@ -192,7 +202,7 @@ void* cWebSock::syncFct(void* user)
    }
 
    threadCtl->active = false;
-   printf(" :: stopped syncThread regular\n");
+   // printf(" :: stopped syncThread regular\n");
 
    return nullptr;
 }
@@ -207,7 +217,6 @@ int cWebSock::service(ThreadControl* threadCtl)
 
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
    lws_service(context, 0);   // timeout parameter is not supported by the lib anymore
-   usleep(10000);
 #else
    lws_service(context, 100);
 #endif
@@ -229,27 +238,22 @@ int cWebSock::service(ThreadControl* threadCtl)
 
 int cWebSock::performData(MsgType type)
 {
-   msgType = type;
+   int count {0};
 
    cMyMutexLock lock(&clientsMutex);
-   lws_callback_on_writable_all_protocol(context, &protocols[1]);
 
-   return done;
+   msgType = type;
 
-/* int count = 0;
    for (auto it = clients.begin(); it != clients.end(); ++it)
    {
       if (!it->second.messagesOut.empty())
-      {
          count++;
-         break;
-      }
    }
 
    if (count || msgType == mtPing)
       lws_callback_on_writable_all_protocol(context, &protocols[1]);
 
-   return done; */
+   return done;
 }
 
 //***************************************************************************
@@ -259,19 +263,21 @@ int cWebSock::performData(MsgType type)
 void getClientInfo(lws* wsi, std::string* clientInfo)
 {
    char clientName[100+TB] = "unknown";
-   char clientIp[50+TB] = "";
-
-   return;
+   // char clientIp[50+TB] = "";
 
    if (wsi)
    {
-      int fd;
+      // int fd {0};
+      // lws_get_peer_addresses take up to 10 seconds on some environments !!
+      // if ((fd = lws_get_socket_fd(wsi)))
+      //    lws_get_peer_addresses(wsi, fd, clientName, sizeof(clientName), clientIp, sizeof(clientIp));
 
-      if ((fd = lws_get_socket_fd(wsi)))
-         lws_get_peer_addresses(wsi, fd, clientName, sizeof(clientName), clientIp, sizeof(clientIp));
+      // we can use lws_get_peer_simple instead
+
+      lws_get_peer_simple(wsi, clientName, sizeof(clientName));
    }
 
-   *clientInfo = clientName + std::string("/") + clientIp;
+   *clientInfo = clientName; //  + std::string("/") + clientIp;
 }
 
 //***************************************************************************
@@ -283,7 +289,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
    SessionData* sessionData = (SessionData*)user;
    std::string clientInfo = "unknown";
 
-   tell(6, "DEBUG: 'callbackHttp' got (%d)", reason);
+   tell(4, "DEBUG: 'callbackHttp' got (%d)", reason);
 
    switch (reason)
    {
@@ -307,7 +313,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
       case LWS_CALLBACK_CLIENT_WRITEABLE:
       {
-         tell(3, "HTTP: Client writeable");
+         tell(2, "HTTP: Client writeable");
          break;
       }
 
@@ -321,7 +327,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
          if (!sessionData->dataPending)
          {
-            tell(2, "Info: No more session data pending");
+            tell(1, "Info: No more session data pending");
             return -1;
          }
 
@@ -340,7 +346,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          if (res < 0)
             tell(0, "Failed writing '%s'", sessionData->buffer+sizeLwsPreFrame);
          else
-            tell(3, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
+            tell(2, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
 
          free(sessionData->buffer);
          memset(sessionData, 0, sizeof(SessionData));
@@ -392,7 +398,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
                return -1;
             }
 
-            tell(3, "HTTP: Done, url: '%s'", url);
+            tell(2, "HTTP: Done, url: '%s'", url);
          }
 
          break;
@@ -462,7 +468,10 @@ int cWebSock::serveFile(lws* wsi, const char* path)
       else if (strcmp(suffix, "html") == 0)  mime = "text/html";
       else if (strcmp(suffix, "css") == 0)   mime = "text/css";
       else if (strcmp(suffix, "js") == 0)    mime = "application/javascript";
+      else if (strcmp(suffix, "map") == 0)   mime = "application/json";
    }
+
+   // printf("serve file '%s' with mime type '%s'\n", path, mime);
 
    return lws_serve_http_file(wsi, path, mime, 0, 0);
 }
@@ -475,7 +484,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 {
    std::string clientInfo = "unknown";
 
-   tell(6, "DEBUG: 'callback' got (%d)", reason);
+   tell(4, "DEBUG: 'callback' got (%d)", reason);
 
    switch (reason)
    {
@@ -518,15 +527,15 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
                const char* msg = clients[wsi].messagesOut.front().c_str();
                int msgSize = clients[wsi].messagesOut.front().length();
                int neededSize = sizeLwsFrame + msgSize;
-               unsigned char* newBuffer = 0;
+               unsigned char* newBuffer {nullptr};
 
                if (neededSize > clients[wsi].msgBufferSize)
                {
-                  tell(0, "Debug: re-allocate buffer to %d bytes", neededSize);
+                  // tell(0, "Debug: re-allocate buffer to %d bytes", neededSize);
 
                   if (!(newBuffer = (unsigned char*)realloc(clients[wsi].msgBuffer, neededSize)))
                   {
-                     tell(0, "Fatal: Can't allocate memory!");
+                     // tell(0, "Fatal: Can't allocate memory!");
                      return -1;
                   }
 
@@ -551,10 +560,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
                int pending = clients[wsi].msgBufferPayloadSize - clients[wsi].msgBufferSendOffset;
                int chunkSize = pending > maxChunk ? maxChunk : pending;
                int flags = lws_write_ws_flags(LWS_WRITE_TEXT, !clients[wsi].msgBufferSendOffset, pending <= maxChunk);
-
-               // tell(0, "----  lws_write chunk %d bytes [%.*s] flags (0x%02x)", chunkSize, chunkSize, p, flags);
                int res = lws_write(wsi, p, chunkSize, (lws_write_protocol)flags);
-               // tell(0, "----  lws_write result was %d", res);
 
                if (res < 0)
                {
@@ -646,6 +652,10 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
             singleton->pushInMessage(p);
             free(p);
          }
+/*         else
+         {
+            tell(1, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
+            } */
 
          json_decref(oData);
          free(message);
@@ -677,7 +687,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
       case LWS_CALLBACK_RECEIVE_PONG:                      // ping / pong
       {
-         tell(3, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
+         tell(2, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
          break;
       }
 
@@ -724,7 +734,7 @@ void cWebSock::atLogin(lws* wsi, const char* message, const char* clientInfo, js
 
 void cWebSock::atLogout(lws* wsi, const char* message, const char* clientInfo)
 {
-   tell(1, "%s '%s' (%p)", clientInfo, message, (void*)wsi);
+   tell(2, "%s '%s' (%p)", clientInfo, message, (void*)wsi);
 
    auto it = clients.find(wsi);
 
@@ -787,8 +797,8 @@ void cWebSock::pushOutMessage(const char* message, lws* wsi)
    {
       if (clients.find(wsi) != clients.end())
          clients[wsi].pushMessage(message);
-      else // if ((long)wsi != -1)
-         tell(0, "client 0x%lx not found! [%s]", (ulong)wsi, message);
+      else if ((ulong)wsi != (ulong)-1)
+         tell(0, "client %ld not found!", (ulong)wsi);
    }
    else
    {

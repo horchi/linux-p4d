@@ -1,26 +1,22 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
+// Automation Control
 // File wsactions.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 25.08.2020  Jörg Wendel
-//***************************************************************************
-
-//***************************************************************************
-// Include
+// Date 16.04.2020 - Jörg Wendel
 //***************************************************************************
 
 #include <dirent.h>
 #include <algorithm>
 
 #include "lib/json.h"
-#include "p4d.h"
+#include "daemon.h"
 
 //***************************************************************************
 // Dispatch Client Requests
 //***************************************************************************
 
-int P4d::dispatchClientRequest()
+int Daemon::dispatchClientRequest()
 {
    int status = fail;
    json_error_t error;
@@ -33,7 +29,7 @@ int P4d::dispatchClientRequest()
       // dispatch message like
       //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
 
-      tell(3, "DEBUG: Got '%s'", messagesIn.front().c_str());
+      tell(2, "DEBUG: Got '%s'", messagesIn.front().c_str());
       oData = json_loads(messagesIn.front().c_str(), 0, &error);
 
       // get the request
@@ -49,8 +45,6 @@ int P4d::dispatchClientRequest()
       if (checkRights(client, event, oObject))
       {
          // dispatch client request
-
-         tell(2, "<- event '%s' [%.100s..]", cWebService::toName(event), messagesIn.front().c_str());
 
          switch (event)
          {
@@ -68,7 +62,7 @@ int P4d::dispatchClientRequest()
             case evChartData:      status = performChartData(oObject, client);      break;
             case evUserConfig:     status = performUserConfig(oObject, client);     break;
             case evChangePasswd:   status = performPasswChange(oObject, client);    break;
-            case evResetPeaks:     status = resetPeaks(oObject, client);            break;
+            case evReset:          status = performReset(oObject, client);          break;
             case evMenu:           status = performMenu(oObject, client);           break;
             case evAlerts:         status = performAlerts(oObject, client);         break;
             case evSendMail:       status = performSendMail(oObject, client);       break;
@@ -82,7 +76,7 @@ int P4d::dispatchClientRequest()
             case evPellets:             status = performPellets(oObject, client);          break;
             case evPelletsAdd:          status = performPelletsAdd(oObject, client);       break;
             default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
-                          toName(event), messagesIn.front().c_str());
+                          cWebService::toName(event), messagesIn.front().c_str());
          }
       }
       else
@@ -99,9 +93,13 @@ int P4d::dispatchClientRequest()
    return status;
 }
 
-bool P4d::checkRights(long client, Event event, json_t* oObject)
+bool Daemon::checkRights(long client, Event event, json_t* oObject)
 {
-   uint rights = wsClients[(void*)client].rights;
+   uint rights = urView;
+   auto it = wsClients.find((void*)client);
+
+   if (it != wsClients.end())
+      rights = wsClients[(void*)client].rights;
 
    switch (event)
    {
@@ -117,7 +115,7 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
       case evChartData:           return rights & urView;
       case evUserConfig:          return rights & urAdmin;
       case evChangePasswd:        return true;   // check will done in performPasswChange()
-      case evResetPeaks:          return rights & urFullControl;
+      case evReset:               return rights & urFullControl;
       case evMenu:                return rights & urView;
       case evAlerts:              return rights & urSettings;
       case evStoreAlerts:         return rights & urSettings;
@@ -157,7 +155,7 @@ bool P4d::checkRights(long client, Event event, json_t* oObject)
 // WS Ping
 //***************************************************************************
 
-int P4d::performWebSocketPing()
+int Daemon::performWebSocketPing()
 {
    if (nextWebSocketPing < time(0))
    {
@@ -172,7 +170,7 @@ int P4d::performWebSocketPing()
 // Reply Result
 //***************************************************************************
 
-int P4d::replyResult(int status, const char* message, long client)
+int Daemon::replyResult(int status, const char* message, long client)
 {
    if (status != success)
       tell(0, "Error: Web request failed with '%s' (%d)", message, status);
@@ -189,7 +187,7 @@ int P4d::replyResult(int status, const char* message, long client)
 // Perform WS Client Login / Logout
 //***************************************************************************
 
-int P4d::performLogin(json_t* oObject)
+int Daemon::performLogin(json_t* oObject)
 {
    long client = getLongFromJson(oObject, "client");
    const char* user = getStringFromJson(oObject, "user", "");
@@ -289,7 +287,7 @@ int P4d::performLogin(json_t* oObject)
    return done;
 }
 
-int P4d::performLogout(json_t* oObject)
+int Daemon::performLogout(json_t* oObject)
 {
    long client = getLongFromJson(oObject, "client");
    tell(0, "Logout of client 0x%x", (unsigned int)client);
@@ -301,7 +299,7 @@ int P4d::performLogout(json_t* oObject)
 // Perform WS Token Request
 //***************************************************************************
 
-int P4d::performTokenRequest(json_t* oObject, long client)
+int Daemon::performTokenRequest(json_t* oObject, long client)
 {
    json_t* oJson = json_object();
    const char* user = getStringFromJson(oObject, "user", "");
@@ -353,7 +351,7 @@ int P4d::performTokenRequest(json_t* oObject, long client)
 // Perform Update TimeRanges
 //***************************************************************************
 
-int P4d::performUpdateTimeRanges(json_t* oObject, long client)
+int Daemon::performUpdateTimeRanges(json_t* oObject, long client)
 {
    int parent = getIntFromJson(oObject, "parent");
    updateTimeRangeData();
@@ -369,7 +367,7 @@ int P4d::performUpdateTimeRanges(json_t* oObject, long client)
 // Perform WS Init Tables
 //***************************************************************************
 
-int P4d::performInitTables(json_t* oObject, long client)
+int Daemon::performInitTables(json_t* oObject, long client)
 {
    const char* action = getStringFromJson(oObject, "action");
 
@@ -397,7 +395,7 @@ int P4d::performInitTables(json_t* oObject, long client)
 // Perform WS Syslog Request
 //***************************************************************************
 
-int P4d::performSyslog(long client)
+int Daemon::performSyslog(long client)
 {
    if (client == 0)
       return done;
@@ -434,7 +432,7 @@ int P4d::performSyslog(long client)
 // Perform WS Config Data Request
 //***************************************************************************
 
-int P4d::performConfigDetails(long client)
+int Daemon::performConfigDetails(long client)
 {
    if (client == 0)
       return done;
@@ -450,7 +448,7 @@ int P4d::performConfigDetails(long client)
 // Perform WS User Data Request
 //***************************************************************************
 
-int P4d::performUserDetails(long client)
+int Daemon::performUserDetails(long client)
 {
    if (client == 0)
    {
@@ -469,7 +467,7 @@ int P4d::performUserDetails(long client)
 // Perform Pellets Request
 //***************************************************************************
 
-int P4d::performPellets(json_t* oObject, long client)
+int Daemon::performPellets(json_t* oObject, long client)
 {
    uint stokerHhLast {0};
    time_t timeLast {0};
@@ -562,7 +560,7 @@ int P4d::performPellets(json_t* oObject, long client)
 // Perform Pellets Add Entry
 //***************************************************************************
 
-int P4d::performPelletsAdd(json_t* oObject, long client)
+int Daemon::performPelletsAdd(json_t* oObject, long client)
 {
    int id = getIntFromJson(oObject, "id", -1);
    bool del = getBoolFromJson(oObject, "delete", false);
@@ -598,7 +596,7 @@ int P4d::performPelletsAdd(json_t* oObject, long client)
 // Perform WS IO Setting Data Request
 //***************************************************************************
 
-int P4d::performIoSettings(json_t* oObject, long client)
+int Daemon::performIoSettings(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -619,7 +617,7 @@ int P4d::performIoSettings(json_t* oObject, long client)
 // Perform WS Groups Data Request
 //***************************************************************************
 
-int P4d::performGroups(long client)
+int Daemon::performGroups(long client)
 {
    if (client == 0)
       return done;
@@ -635,7 +633,7 @@ int P4d::performGroups(long client)
 // Perform WS Error Data Request
 //***************************************************************************
 
-int P4d::performErrors(long client)
+int Daemon::performErrors(long client)
 {
    if (client == 0)
       return done;
@@ -675,7 +673,7 @@ int P4d::performErrors(long client)
 // Perform WS Menu Request
 //***************************************************************************
 
-int P4d::performMenu(json_t* oObject, long client)
+int Daemon::performMenu(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -859,7 +857,7 @@ int P4d::performMenu(json_t* oObject, long client)
 // Perform WS Scehma Data
 //***************************************************************************
 
-int P4d::performSchema(json_t* oObject, long client)
+int Daemon::performSchema(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -911,7 +909,7 @@ int P4d::performSchema(json_t* oObject, long client)
 // Store Schema
 //***************************************************************************
 
-int P4d::storeSchema(json_t* oObject, long client)
+int Daemon::storeSchema(json_t* oObject, long client)
 {
    if (!client)
       return done;
@@ -969,7 +967,7 @@ int P4d::storeSchema(json_t* oObject, long client)
 // Perform WS Sensor Alert Request
 //***************************************************************************
 
-int P4d::performAlerts(json_t* oObject, long client)
+int Daemon::performAlerts(json_t* oObject, long client)
 {
    json_t* oArray = json_array();
 
@@ -1009,7 +1007,7 @@ int P4d::performAlerts(json_t* oObject, long client)
 // Perform Send Mail
 //***************************************************************************
 
-int P4d::performSendMail(json_t* oObject, long client)
+int Daemon::performSendMail(json_t* oObject, long client)
 {
    int alertid = getIntFromJson(oObject, "alertid", na);
 
@@ -1064,7 +1062,7 @@ int P4d::performSendMail(json_t* oObject, long client)
    return replyResult(success, "mail sended", client);
 }
 
-int P4d::performAlertTestMail(int id, long client)
+int Daemon::performAlertTestMail(int id, long client)
 {
    tell(eloDetail, "Test mail for alert (%d) requested", id);
 
@@ -1101,7 +1099,7 @@ int P4d::performAlertTestMail(int id, long client)
 // Perform WS Parameter Edit Request
 //***************************************************************************
 
-int P4d::performParEditRequest(json_t* oObject, long client)
+int Daemon::performParEditRequest(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1155,7 +1153,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
    return done;
 }
 
-int P4d::performTimeParEditRequest(json_t* oObject, long client)
+int Daemon::performTimeParEditRequest(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1206,7 +1204,7 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
 // Perform WS Parameter Store
 //***************************************************************************
 
-int P4d::performParStore(json_t* oObject, long client)
+int Daemon::performParStore(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1278,7 +1276,7 @@ int P4d::performParStore(json_t* oObject, long client)
    return done;
 }
 
-int P4d::performTimeParStore(json_t* oObject, long client)
+int Daemon::performTimeParStore(json_t* oObject, long client)
 {
    int status {success};
    int trAddr = getIntFromJson(oObject, "address", na);
@@ -1366,7 +1364,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 // Perform WS ChartData request
 //***************************************************************************
 
-int P4d::performChartData(json_t* oObject, long client)
+int Daemon::performChartData(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1509,7 +1507,7 @@ int P4d::performChartData(json_t* oObject, long client)
 // Store User Configuration
 //***************************************************************************
 
-int P4d::performUserConfig(json_t* oObject, long client)
+int Daemon::performUserConfig(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1600,7 +1598,7 @@ int P4d::performUserConfig(json_t* oObject, long client)
 // Perform password Change
 //***************************************************************************
 
-int P4d::performPasswChange(json_t* oObject, long client)
+int Daemon::performPasswChange(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -1635,7 +1633,7 @@ int P4d::performPasswChange(json_t* oObject, long client)
 // Reset Peaks
 //***************************************************************************
 
-int P4d::resetPeaks(json_t* obj, long client)
+int Daemon::performReset(json_t* obj, long client)
 {
    tablePeaks->truncate();
    setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
@@ -1651,7 +1649,7 @@ int P4d::resetPeaks(json_t* obj, long client)
 // Store Configuration
 //***************************************************************************
 
-int P4d::storeConfig(json_t* obj, long client)
+int Daemon::storeConfig(json_t* obj, long client)
 {
    const char* key {0};
    json_t* jValue {nullptr};
@@ -1684,7 +1682,7 @@ int P4d::storeConfig(json_t* obj, long client)
 
    // reload configuration
 
-   readConfiguration();
+   readConfiguration(false);
 
    json_t* oJson = json_object();
    config2Json(oJson);
@@ -1702,7 +1700,7 @@ int P4d::storeConfig(json_t* obj, long client)
    return done;
 }
 
-int P4d::storeIoSetup(json_t* array, long client)
+int Daemon::storeIoSetup(json_t* array, long client)
 {
    size_t index {0};
    json_t* jObj {nullptr};
@@ -1748,7 +1746,7 @@ int P4d::storeIoSetup(json_t* array, long client)
    return replyResult(success, "Konfiguration gespeichert", client);
 }
 
-int P4d::storeGroups(json_t* oObject, long client)
+int Daemon::storeGroups(json_t* oObject, long client)
 {
    const char* action = getStringFromJson(oObject, "action");
 
@@ -1820,7 +1818,7 @@ int P4d::storeGroups(json_t* oObject, long client)
 // Store Sensor Alerts
 //***************************************************************************
 
-int P4d::storeAlerts(json_t* oObject, long client)
+int Daemon::storeAlerts(json_t* oObject, long client)
 {
    const char* action = getStringFromJson(oObject, "action");
 
@@ -1885,7 +1883,7 @@ int P4d::storeAlerts(json_t* oObject, long client)
 // Chart Bookmarks
 //***************************************************************************
 
-int P4d::storeChartbookmarks(json_t* array, long client)
+int Daemon::storeChartbookmarks(json_t* array, long client)
 {
    char* bookmarks = json_dumps(array, JSON_REAL_PRECISION(4));
    setConfigItem("chartBookmarks", bookmarks);
@@ -1896,7 +1894,7 @@ int P4d::storeChartbookmarks(json_t* array, long client)
    return done; // replyResult(success, "Bookmarks gespeichert", client);
 }
 
-int P4d::performChartbookmarks(long client)
+int Daemon::performChartbookmarks(long client)
 {
    char* bookmarks {nullptr};
    getConfigItem("chartBookmarks", bookmarks, "{[]}");
@@ -1912,9 +1910,9 @@ int P4d::performChartbookmarks(long client)
 // Config 2 Json Stuff
 //***************************************************************************
 
-int P4d::config2Json(json_t* obj)
+int Daemon::config2Json(json_t* obj)
 {
-   for (const auto& it : configuration)
+   for (const auto& it : *getConfiguration())
    {
       tableConfig->clear();
       tableConfig->setValue("OWNER", myName());
@@ -1933,9 +1931,9 @@ int P4d::config2Json(json_t* obj)
 // Config Details 2 Json
 //***************************************************************************
 
-int P4d::configDetails2Json(json_t* obj)
+int Daemon::configDetails2Json(json_t* obj)
 {
-   for (const auto& it : configuration)
+   for (const auto& it : *getConfiguration())
    {
       if (it.internal)
          continue;
@@ -1965,7 +1963,7 @@ int P4d::configDetails2Json(json_t* obj)
    return done;
 }
 
-int P4d::configChoice2json(json_t* obj, const char* name)
+int Daemon::configChoice2json(json_t* obj, const char* name)
 {
    if (strcmp(name, "style") == 0)
    {
@@ -2127,7 +2125,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
 // User Details 2 Json
 //***************************************************************************
 
-int P4d::userDetails2Json(json_t* obj)
+int Daemon::userDetails2Json(json_t* obj)
 {
    for (int f = selectAllUser->find(); f; f = selectAllUser->fetch())
    {
@@ -2147,7 +2145,7 @@ int P4d::userDetails2Json(json_t* obj)
 // Value Facts 2 Json
 //***************************************************************************
 
-int P4d::valueFacts2Json(json_t* obj, bool filterActive)
+int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
 {
    tableValueFacts->clear();
 
@@ -2191,7 +2189,7 @@ int P4d::valueFacts2Json(json_t* obj, bool filterActive)
 // Groups 2 Json
 //***************************************************************************
 
-int P4d::groups2Json(json_t* obj)
+int Daemon::groups2Json(json_t* obj)
 {
    tableGroups->clear();
 
@@ -2213,7 +2211,7 @@ int P4d::groups2Json(json_t* obj)
 // Status 2 Json
 //***************************************************************************
 
-int P4d::daemonState2Json(json_t* obj)
+int Daemon::daemonState2Json(json_t* obj)
 {
    double averages[3] {0.0, 0.0, 0.0};
    char d[100];
@@ -2231,7 +2229,7 @@ int P4d::daemonState2Json(json_t* obj)
    return done;
 }
 
-int P4d::s3200State2Json(json_t* obj)
+int Daemon::s3200State2Json(json_t* obj)
 {
    json_object_set_new(obj, "time", json_integer(currentState.time));
    json_object_set_new(obj, "state", json_integer(currentState.state));
@@ -2248,7 +2246,7 @@ int P4d::s3200State2Json(json_t* obj)
 // Sensor 2 Json
 //***************************************************************************
 
-int P4d::sensor2Json(json_t* obj, cDbTable* table)
+int Daemon::sensor2Json(json_t* obj, cDbTable* table)
 {
    double peakMax {0.0};
    double peakMin {0.0};
@@ -2291,71 +2289,7 @@ int P4d::sensor2Json(json_t* obj, cDbTable* table)
    return done;
 }
 
-//***************************************************************************
-// Get Image Of
-//***************************************************************************
-
-const char* P4d::getImageOf(const char* title, const char* usrtitle, int value)
-{
-   const char* imagePath = "unknown.jpg";
-
-   if (strcasestr(title, "Pump") || strcasestr(usrtitle, "Pump"))
-      imagePath = value ? "img/icon/pump-up-on.gif" : "img/icon/pump-up-off.png";
-   else if (strcasestr(title, "Steckdose"))
-      imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
-   else if (strcasestr(title, "UV-C"))
-      imagePath = value ? "img/icon/uvc-on.png" : "img/icon/uvc-off.png";
-   else if (strcasestr(title, "Licht"))
-      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
-   else if (strcasestr(title, "Shower") || strcasestr(title, "Dusche"))
-      imagePath = value ? "img/icon/shower-on.png" : "img/icon/shower-off.png";
-   else
-      imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
-
-   return imagePath;
-}
-
-const char* P4d::getStateImage(int state)
-{
-   static char result[100] = "";
-   const char* image {nullptr};
-
-   if (state <= 0)
-      image = "state-error.gif";
-   else if (state == 1)
-      image = "state-fireoff.gif";
-   else if (state == 2)
-      image = "state-heatup.gif";
-   else if (state == 3)
-      image = "state-fire.gif";
-   else if (state == 4)
-      image = "/state/state-firehold.gif";
-   else if (state == 5)
-      image = "state-fireoff.gif";
-   else if (state == 6)
-      image = "state-dooropen.gif";
-   else if (state == 7)
-      image = "state-preparation.gif";
-   else if (state == 8)
-      image = "state-warmup.gif";
-   else if (state == 9)
-      image = "state-heatup.gif";
-   else if (state == 15 || state == 70 || state == 69)
-      image = "state-clean.gif";
-   else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
-      image = "state-wait.gif";
-   else if (state == 60 || state == 61 || state == 72)
-      image = "state-shfire.png";
-
-   if (image)
-      sprintf(result, "img/state/%s/%s", iconSet, image);
-   else
-      sprintf(result, "img/type/heating-%s.png", heatingType);
-
-   return result;
-}
-
-P4d::WidgetType P4d::getWidgetTypeOf(std::string type, std::string unit, uint address)
+Daemon::WidgetType Daemon::getWidgetTypeOf(std::string type, std::string unit, uint address)
 {
    if (type == "DI" || type == "DO")
       return wtSymbol;

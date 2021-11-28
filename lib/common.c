@@ -7,6 +7,7 @@
 
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <math.h>
 
 #ifdef USEUUID
 #  include <uuid/uuid.h>
@@ -26,6 +27,8 @@
 # include <vdr/thread.h>
 #endif
 
+#include <regex>
+
 #include "common.h"
 
 #ifdef VDR_PLUGIN
@@ -33,6 +36,7 @@
 #endif
 
 int loglevel = 1;
+int argLoglevel = 1;
 int logstdout = no;
 int logstamp = no;
 
@@ -150,6 +154,20 @@ int l2hhmm(time_t t)
    localtime_r(&t, &tm);
 
    return  tm.tm_hour * 100 + tm.tm_min;
+}
+
+time_t midnightOf(time_t t)
+{
+   struct tm tm;
+
+   localtime_r(&t, &tm);
+
+   tm.tm_hour = 0;
+   tm.tm_min = 0;
+   tm.tm_sec = 0;
+   tm.tm_isdst = -1;  // force DST auto detect
+
+   return mktime(&tm);
 }
 
 const char* toWeekdayName(uint day)
@@ -445,7 +463,16 @@ std::string strReplace(const std::string& what, double with, const std::string& 
 }
 
 //***************************************************************************
-//
+// isNan
+//***************************************************************************
+
+bool isNan(double value)
+{
+   return isnan(value);
+}
+
+//***************************************************************************
+// plural
 //***************************************************************************
 
 const char* plural(int n, const char* s)
@@ -808,6 +835,32 @@ int loadFromFile(const char* infile, MemoryStruct* data)
 }
 
 //***************************************************************************
+// Filesystem Stat
+//***************************************************************************
+
+#include <sys/statvfs.h>
+
+int fsStat(const char* mount, FsStat* stat)
+{
+   const unsigned int GB {1024 * 1024 * 1024};
+   struct statvfs statVFS;
+
+   if (statvfs(mount, &statVFS) != 0)
+      return fail;
+
+   stat->total = (double)(statVFS.f_blocks * statVFS.f_frsize);
+   stat->available = (double)(statVFS.f_bfree * statVFS.f_frsize);
+   stat->used = stat->total - stat->available;
+   stat->usedP = (stat->used / stat->total) * 100.0;
+
+   stat->total /= GB;
+   stat->available /= GB;
+   stat->used /= GB;
+
+   return success;
+}
+
+//***************************************************************************
 // TOOLS
 //***************************************************************************
 
@@ -873,9 +926,19 @@ int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool 
    return success;
 }
 
+bool fctImageSort(FileInfo& v1, FileInfo& v2)
+{
+   return v1.name < v2.name;
+}
+
+void sortFileList(FileList& list)
+{
+   std::sort(list.begin(), list.end(), fctImageSort);
+}
+
 int getFileList(const char* path, int type, const char* extensions, int recursion, FileList* dirs, int& count)
 {
-   DIR* dir;
+   DIR* dir {nullptr};
 
    if (!(dir = opendir(path)))
    {
@@ -884,13 +947,13 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
    }
 
 #ifndef HAVE_READDIR_R
-   dirent* pEntry;
+   dirent* pEntry {nullptr};
 
    while ((pEntry = readdir(dir)))
 #else
    dirent entry;
    dirent* pEntry = &entry;
-   dirent* res;
+   dirent* res {nullptr};
 
    // deprecated but the only reentrant with old libc!
 
@@ -901,7 +964,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 
       if (recursion && pEntry->d_type == DT_DIR && pEntry->d_name[0] != '.')
       {
-         char* buf;
+         char* buf {nullptr};
          asprintf(&buf, "%s/%s", path, pEntry->d_name);
          getFileList(buf, type, extensions, recursion, dirs, count);
          free(buf);
@@ -916,7 +979,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 
       if (extensions)
       {
-         const char* ext;
+         const char* ext {nullptr};
 
          if ((ext = strrchr(pEntry->d_name, '.')))
             ext++;
