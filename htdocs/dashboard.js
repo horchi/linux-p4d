@@ -17,7 +17,12 @@ function initDashboard(widgets, root)
       return;
    }
 
-   root.innerHTML = "";
+//   if (!update)
+//      $('#container').removeClass('hidden');
+
+   document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
+
+   var root = document.getElementById("widgetContainer");
 
    var elem = document.createElement("div");
    elem.className = "widget rounded-border";

@@ -1,7 +1,7 @@
 /*
  *  main.js
  *
- *  (c) 2021 Jörg Wendel
+ *  (c) 2020-2021 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -9,23 +9,29 @@
  */
 
 var WebSocketClient = window.WebSocketClient
-//  import WebSocketClient from "./websocket.js"
 
-var storagePrefix = "p4d";
+var onSmalDevice = false;
 var isActive = null;
 var socket = null;
 var config = {};
 var daemonState = {};
+var widgetTypes = {};
+var valueFacts = {};
+var images = [];
+var currentPage = "dashboard";
 var s3200State = {};
 var lastUpdate = "";   // #TODO - set to data age instead of receive time
-var documentName = "";
 var widgetCharts = {};
 var theChart = null;
-var theChartRange = 2;
+var theChartRange = 1;
 var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-theChartRange);
 var chartDialogSensor = "";
 var chartBookmarks = {};
+var allWidgets = [];
+var infoDialogTimer = null;
 var grouplist = {};
+
+var setupMode = false;
 
 function getCurentDocument()
 {
@@ -134,7 +140,7 @@ function dispatchMessage(message)
    var jMessage = JSON.parse(message);
    var event = jMessage.event;
    var rootList = document.getElementById("listContainer");
-   var rootDashboard = document.getElementById("widgetContainer");
+   var rootDashboard = document.getElementById("container");
    var rootConfig = document.getElementById("configContainer");
    var rootIoSetup = document.getElementById("ioSetupContainer");
    var rootGroupSetup = document.getElementById("groupContainer");
