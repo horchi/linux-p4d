@@ -213,7 +213,8 @@ int Daemon::performLogin(json_t* oObject)
       pushOutMessage(oJson, "token", client);
    }
 
-   tell(0, "Login of client 0x%x; user '%s'; type is %d", (unsigned int)client, user, wsClients[(void*)client].type);
+   tell(0, "Login of client 0x%x; user '%s'; type is %d; page %s", (unsigned int)client, user,
+        wsClients[(void*)client].type, wsClients[(void*)client].page.c_str());
    webSock->setClientType((lws*)client, wsClients[(void*)client].type);
 
    //

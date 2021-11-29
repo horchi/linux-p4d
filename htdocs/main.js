@@ -33,7 +33,7 @@ function getCurentDocument()
 
    var pagePathName = window.location.pathname;
    var pageName = pagePathName.substring(pagePathName.lastIndexOf("/") + 1).split('.');
-   return pageName[0].length > 0 ? pageName[0] : "index";
+   return pageName[0].length > 0 ? (pageName[0] == 'index' ? 'dashboard' : pageName[0]) : 'dashboard';
 }
 
 $('document').ready(function() {
@@ -82,7 +82,7 @@ function onSocketConnect(protocol)
       jsonRequest["name"] = "groups";
    else if (documentName == "chart")
       prepareChartRequest(jsonRequest, "", 0, 2, "chart");
-   else if (documentName == "index")  //  the 'dashboard'
+   else if (documentName == "dashboard")
       jsonRequest["name"] = "data";
    else if (documentName == "list")
       jsonRequest["name"] = "data";

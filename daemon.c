@@ -231,7 +231,7 @@ int Daemon::pushDataUpdate(const char* title, long client)
       auto cl = wsClients[(void*)client];
       json_t* oWsJson = json_array();
 
-      if (cl.page == "index")
+      if (cl.page == "dashboard")
       {
          if (addrsDashboard.size())
             for (const auto& sensor : addrsDashboard)
@@ -263,7 +263,7 @@ int Daemon::pushDataUpdate(const char* title, long client)
       {
          json_t* oWsJson = json_array();
 
-         if (cl.second.page == "index")
+         if (cl.second.page == "dashboard")
          {
             if (addrsDashboard.size())
                for (const auto& sensor : addrsDashboard)
