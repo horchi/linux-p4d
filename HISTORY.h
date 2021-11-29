@@ -116,7 +116,7 @@
   - change: Improved service menu style
   - added:  added display of parameter digits for service menu
   - added:  css style even for buttons of user edit page
-  - added:  new display and edit style for poolean parameter digits at the service menu
+  - added:  new display and edit style for boolean parameter digits at the service menu
   - added:  honor mix and max in edit dialog of service menu
   - change: improved parameter display of p4 tool
 

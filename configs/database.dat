@@ -68,11 +68,11 @@ Table valuefacts
    MAXSCALE             ""          maxscale             Int          4 Data,
    ORDER                ""          ord                  Int          4 Data,
    RES1                 "data type" res1                 Int          4 Data,
+   WIDGETOPT            ""  widgetopt            Ascii     1000 Data,
    RIGHTS   "needed control rights" rights       Int          0 Data,
 
    VALUE                ""          value                Float      122 Data,
 }
-
 
 // ----------------------------------------------------------------
 // Groups (Baugruppen)
@@ -248,39 +248,6 @@ Table sensoralert
    LASTALERT            ""  lastalert            Int         10 Data,
    MAXREPEAT            ""  maxrepeat            Int         10 Data   // [minutes]
 }
-
-// ----------------------------------------------------------------
-// Table HomeMatic System Variables
-// ----------------------------------------------------------------
-
-//Table hmsysvars
-//{
-//   ID                   ""  id                   UInt        11 Primary,
-//   INSSP                ""  inssp                Int          0 Meta,
-//   UPDSP                ""  updsp                Int          0 Meta,
-//
-//   NAME                 ""  name                 Ascii      100 Data,
-//   TYPE                 ""  type                 UInt         1 Data,
-//   UNIT                 ""  unit                 Ascii       10 Data,
-//   VISIBLE              ""  visible              UInt         1 Data,
-//   MIN                  ""  min                  Ascii      100 Data,
-//   MAX                  ""  max                  Ascii      100 Data,
-//
-//   TIME                 ""  time                 DateTime     0 Data,
-//   VALUE                ""  value                Ascii      100 Data,
-//
-//   ADDRESS              ""  address              UInt         4 Data,
-//   ATYPE                ""  atype                Ascii        2 Data
-//}
-//
-// ----------------------------------------------------------------
-// Indices for HomeMatic System Variables
-// ----------------------------------------------------------------
-
-//Index hmsysvars
-//{
-//   address             ""  ADDRESS ATYPE
-//}
 
 // ----------------------------------------------------------------
 // Table

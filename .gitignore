@@ -3,13 +3,17 @@
 *.a
 *.tgz
 *~
-p4
-p4d
 lib/t
 vg.log
 lib/tst
-dbchart
-mqt
 core
-w1mqtt
 
+mqt
+w1mqtt
+womod
+poold
+poolai
+p4d
+p4
+
+dbchart

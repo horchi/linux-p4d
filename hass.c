@@ -1,25 +1,31 @@
 //***************************************************************************
-// p4d / Linux - Heizungs Manager
+// Automation Control
 // File hass.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 // Date 04.11.2010 - 25.04.2020  Jörg Wendel
 //***************************************************************************
 
+#include <jansson.h>
+
 #include "lib/json.h"
 #include "daemon.h"
 
 //***************************************************************************
-// Push Value to Home Assistant
+// Push Value to MQTT for Home Automation Systems
 //***************************************************************************
 
 int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, const char* unit,
                               double value, const char* text, bool forceConfig)
 {
-   // check/prepare connection
+   // check/prepare reader/writer connection
 
-   if (mqttCheckConnection() != success)
-      return fail;
+   if (isEmpty(mqttHassUrl))
+      return done;
+
+   mqttCheckConnection();
+
+   // check if state topic already exists
 
    int status {success};
    MemoryStruct message;
@@ -32,13 +38,17 @@ int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, c
    sName = strReplace("ä", "ae", sName);
    sName = strReplace(" ", "_", sName);
 
-   // mqttDataTopic like "p4d2mqtt/sensor/<NAME>/state"
+   // mqttDataTopic like "XXX2mqtt/<TYPE>/<NAME>/state"
 
    std::string sDataTopic = mqttDataTopic;
    sDataTopic = strReplace("<NAME>", sName, sDataTopic);
+   sDataTopic = strReplace("<TYPE>", iot == iotLight ? "light" : "sensor", sDataTopic);
 
-   if (mqttHaveConfigTopic)
+   if (mqttHaveConfigTopic && !isEmpty(title))
    {
+      if (!mqttHassReader->isConnected())
+         return fail;
+
       // Interface description:
       //   https://www.home-assistant.io/docs/mqtt/discovery/
 
@@ -51,8 +61,11 @@ int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, c
 
       if (forceConfig || status == Mqtt::wrnTimeout)
       {
-         char* configTopic {0};
-         char* configJson {0};
+         char* configTopic {nullptr};
+         char* configJson {nullptr};
+
+         if (!mqttHassWriter->isConnected())
+            return fail;
 
          // topic don't exists -> create sensor
 
@@ -63,17 +76,41 @@ int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, c
                   strcmp(unit, "T") == 0)
             unit = "";
 
-         tell(1, "Info: Sensor '%s' not found at home assistants MQTT, sendig config message", sName.c_str());
+         tell(1, "Info: Sensor '%s' not found at home assistants MQTT, "
+              "sendig config message", sName.c_str());
 
-         asprintf(&configTopic, "homeassistant/%s/pool/%s/config", iot == iotLight ? "light" : "sensor", sName.c_str());
-         asprintf(&configJson, "{"
-                  "\"unit_of_measurement\" : \"%s\","
-                  "\"value_template\"      : \"{{ value_json.value }}\","
-                  "\"state_topic\"         : \"p4d2mqtt/sensor/%s/state\","
-                  "\"name\"                : \"%s\","
-                  "\"unique_id\"           : \"%s_p4d2mqtt\""
-                  "}",
-                  unit, sName.c_str(), title, sName.c_str());
+         asprintf(&configTopic, "homeassistant/%s/%s/%s/config",
+                  iot == iotLight ? "light" : "sensor", myTitle(), sName.c_str());
+
+         if (iot == iotLight)
+         {
+            char* cmdTopic {nullptr};
+            asprintf(&cmdTopic, TARGET "2mqtt/light/%s/set", sName.c_str());
+
+            asprintf(&configJson, "{"
+                     "\"state_topic\"         : \"" TARGET "2mqtt/light/%s/state\","
+                     "\"command_topic\"       : \"%s\","
+                     "\"name\"                : \"%s %s\","
+                     "\"unique_id\"           : \"%s_" TARGET "2mqtt\","
+                     "\"schema\"              : \"json\","
+                     "\"brightness\"          : \"false\""
+                     "}",
+                     sName.c_str(), cmdTopic, myTitle(), title, sName.c_str());
+
+            hassCmdTopicMap[cmdTopic] = name;
+            free(cmdTopic);
+         }
+         else
+         {
+            asprintf(&configJson, "{"
+                     "\"unit_of_measurement\" : \"%s\","
+                     "\"value_template\"      : \"{{ value_json.value }}\","
+                     "\"state_topic\"         : \"" TARGET "2mqtt/sensor/%s/state\","
+                     "\"name\"                : \"%s %s\","
+                     "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+                     "}",
+                     unit, sName.c_str(), title, myTitle(), sName.c_str());
+         }
 
          mqttHassWriter->writeRetained(configTopic, configJson);
 
@@ -86,28 +123,238 @@ int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, c
 
    // publish actual value
 
+   if (!mqttHassWriter->isConnected())
+      return fail;
+
    json_t* oValue = json_object();
 
-   if (!isEmpty(text))
+   if (iot == iotLight)
+   {
+      json_object_set_new(oValue, "state", json_string(value ? "ON" :"OFF"));
+      json_object_set_new(oValue, "brightness", json_integer(255));
+   }
+   else if (!isEmpty(text))
       json_object_set_new(oValue, "value", json_string(text));
    else
       json_object_set_new(oValue, "value", json_real(value));
 
    char* j = json_dumps(oValue, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(5));
-
    mqttHassWriter->writeRetained(sDataTopic.c_str(), j);
-
    json_decref(oValue);
 
    return success;
 }
 
 //***************************************************************************
+// Perform MQTT Requests
+//   - check 'mqttHassCommandReader' for commands of a home automation
+//   - check 'mqttReader' for data from the W1 service and the arduino, etc ...
+//      -> w1mqtt (W1 service) is running localy and provide data of the W1 sensors
+//      -> the arduino provide the values of his analog inputs
+//***************************************************************************
+
+int Daemon::performMqttRequests()
+{
+   static time_t lastMqttRead {0};
+   static time_t lastMqttRecover {0};
+
+   if (!lastMqttRead)
+      lastMqttRead = time(0);
+
+   mqttCheckConnection();
+
+   MemoryStruct message;
+
+   if (!isEmpty(mqttHassUrl) && mqttHassCommandReader->isConnected())
+   {
+      if (mqttHassCommandReader->read(&message, 10) == success)
+      {
+         json_error_t error;
+         json_t* jData = json_loads(message.memory, 0, &error);
+
+         if (!jData)
+         {
+            tell(0, "Error: Ignoring invalid json in '%s'", message.memory);
+            tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+                 error.text, error.source, error.line, error.column, error.position);
+            return fail;
+         }
+
+         tell(eloAlways, "<- (%s) [%s]", mqttHassCommandReader->getLastReadTopic().c_str(), message.memory);
+         dispatchMqttCommandRequest(jData, mqttHassCommandReader->getLastReadTopic().c_str());
+      }
+   }
+
+   if (!isEmpty(mqttUrl) && mqttReader->isConnected())
+   {
+      // tell(0, "Try reading topic '%s'", mqttReader->getTopic());
+
+      while (mqttReader->read(&message, 10) == success)
+      {
+         if (isEmpty(message.memory))
+            continue;
+
+         lastMqttRead = time(0);
+
+         std::string tp = mqttReader->getLastReadTopic();
+         tell(eloAlways, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
+
+         if (strcmp(tp.c_str(), TARGET "2mqtt/w1") == 0)
+            dispatchW1Msg(message.memory);
+         else if (strcmp(tp.c_str(), TARGET "2mqtt/arduino/out") == 0)
+            dispatchArduinoMsg(message.memory);
+      }
+   }
+
+   // last successful W1 read at least in last 5 minutes?
+
+   if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
+   {
+      lastMqttRecover = time(0);
+      tell(eloAlways, "Info: No update from MQTT since '%s', disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
+      mqttDisconnect();
+   }
+
+   return success;
+}
+
+//***************************************************************************
+// Check MQTT Disconnect
+//***************************************************************************
+
+int Daemon::mqttDisconnect()
+{
+   if (mqttReader)               mqttReader->disconnect();
+   if (mqttHassCommandReader)    mqttHassCommandReader->disconnect();
+   if (mqttHassWriter)           mqttHassWriter->disconnect();
+   if (mqttHassReader)           mqttHassReader->disconnect();
+
+   delete mqttReader;            mqttReader = nullptr;
+   delete mqttHassCommandReader; mqttHassCommandReader = nullptr;
+   delete mqttHassWriter;        mqttHassWriter = nullptr;
+   delete mqttHassReader;        mqttHassReader = nullptr;
+
+   return done;
+}
+
+//***************************************************************************
+// Check MQTT Connection and Connect
+//***************************************************************************
+
+int Daemon::mqttCheckConnection()
+{
+   bool renonnectNeeded {false};
+
+   if (!mqttReader)
+      mqttReader = new Mqtt();
+
+   if (!mqttHassCommandReader)
+      mqttHassCommandReader = new Mqtt();
+
+   if (!mqttHassWriter)
+      mqttHassWriter = new Mqtt();
+
+   if (!mqttHassReader)
+      mqttHassReader = new Mqtt();
+
+   if (!isEmpty(mqttHassUrl) && (!mqttHassCommandReader->isConnected() || !mqttHassWriter->isConnected() || !mqttHassReader->isConnected()))
+      renonnectNeeded = true;
+
+   if (!isEmpty(mqttUrl) && !mqttReader->isConnected())
+      renonnectNeeded = true;
+
+   if (!renonnectNeeded)
+      return success;
+
+   if (lastMqttConnectAt >= time(0) - 60)
+      return fail;
+
+   lastMqttConnectAt = time(0);
+
+   if (!isEmpty(mqttHassUrl))
+   {
+   if (!mqttHassCommandReader->isConnected())
+   {
+         if (mqttHassCommandReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
+      {
+         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
+      }
+         else
+         {
+            mqttHassCommandReader->subscribe(TARGET "2mqtt/light/+/set/#");
+      tell(0, "MQTT: Connecting command subscriber to '%s' succeeded", mqttHassUrl);
+         }
+   }
+
+      if (!mqttHassWriter->isConnected())
+   {
+         if (mqttHassWriter->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
+            tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttHassUrl);
+         else
+            tell(0, "MQTT: Connecting publisher to '%s' succeeded", mqttHassUrl);
+      }
+
+      if (!mqttHassReader->isConnected())
+      {
+         if (mqttHassReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
+            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
+         else
+            tell(0, "MQTT: Connecting subscriber to '%s' succeeded", mqttHassUrl);
+
+         // subscription is done in hassPush
+      }
+   }
+
+   if (!isEmpty(mqttUrl))
+   {
+      if (!mqttReader->isConnected())
+      {
+         if (mqttReader->connect(mqttUrl) != success)
+         {
+            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
+         }
+         else
+         {
+            mqttReader->subscribe(TARGET "2mqtt/w1");
+            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/w1");
+            mqttReader->subscribe(TARGET "2mqtt/arduino/out");
+            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/arduino/out");
+         }
+      }
+   }
+
+   return success;
+}
+
+//***************************************************************************
+// MQTT Write
+//***************************************************************************
+
+int Daemon::mqttWrite(json_t* obj, uint groupid)
+{
+   std::string sDataTopic = mqttDataTopic;
+
+   // check/prepare connection
+
+   if (mqttCheckConnection() != success)
+      return fail;
+
+   char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
+   tell(3, "Debug: JSON: [%s]", message);
+
+   if (mqttInterfaceStyle == misGroupedTopic)
+      sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
+
+   return mqttHassWriter->write(sDataTopic.c_str(), message);
+}
+
+
+//***************************************************************************
 // Json Add Value
 //***************************************************************************
 
 int Daemon::jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit,
-                      double theValue, uint groupid, const char* text, bool forceConfig)
+                         double theValue, uint groupid, const char* text, bool forceConfig)
 {
    std::string sName = name;
    bool newGroup {false};
@@ -156,192 +403,6 @@ int Daemon::jsonAddValue(json_t* obj, const char* name, const char* title, const
    else
    {
       json_object_set_new(obj, sName.c_str(), oSensor);
-   }
-
-   return success;
-}
-
-//***************************************************************************
-// MQTT Write
-//***************************************************************************
-
-int Daemon::mqttWrite(json_t* obj, uint groupid)
-{
-   std::string sDataTopic = mqttDataTopic;
-
-   // check/prepare connection
-
-   if (mqttCheckConnection() != success)
-      return fail;
-
-   char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
-   tell(3, "Debug: JSON: [%s]", message);
-
-   if (mqttInterfaceStyle == misGroupedTopic)
-      sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
-
-   return mqttHassWriter->write(sDataTopic.c_str(), message);
-}
-
-//***************************************************************************
-// Perform MQTT Requests
-//   - check 'mqttHassCommandReader' for commands of e.g. a home automation
-//***************************************************************************
-
-int Daemon::performMqttRequests()
-{
-   static time_t lastMqttRead {0};
-   static time_t lastMqttRecover {0};
-
-   if (!lastMqttRead)
-      lastMqttRead = time(0);
-
-   if (mqttCheckConnection() != success)
-      return fail;
-
-   MemoryStruct message;
-   std::string topic;
-
-   if (mqttHassCommandReader->read(&message, 10) == success)
-   {
-      topic = mqttHassCommandReader->getLastReadTopic();
-      tell(eloAlways, "<- (%s) [%s]", topic.c_str(), message.memory);
-
-      dispatchMqttCommandRequest(message.memory);
-   }
-
-   if (!isEmpty(mqttUrl) && mqttReader->isConnected())
-   {
-      // tell(0, "Try reading topic '%s'", mqttReader->getTopic());
-
-      while (mqttReader->read(&message, 10) == success)
-      {
-         if (isEmpty(message.memory))
-            continue;
-
-         lastMqttRead = time(0);
-
-         std::string tp = mqttReader->getLastReadTopic();
-         tell(eloAlways, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
-
-         if (strcmp(tp.c_str(), TARGET "2mqtt/w1") == 0)
-            dispatchW1Msg(message.memory);
-         // else if (strcmp(tp.c_str(), TARGET "2mqtt/arduino/out") == 0)
-         //    dispatchArduinoMsg(message.memory);
-      }
-   }
-
-   // last successful W1 read at least in last 5 minutes?
-
-   if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
-   {
-      lastMqttRecover = time(0);
-      tell(eloAlways, "Error: No update from poolMQTT since '%s', "
-           "disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
-      mqttDisconnect();
-   }
-
-   return success;
-}
-
-//***************************************************************************
-// Check MQTT Disconnect
-//***************************************************************************
-
-int Daemon::mqttDisconnect()
-{
-   if (mqttReader)               mqttReader->disconnect();
-   // if (mqttHassCommandReader)    mqttHassCommandReader->disconnect();
-   // if (mqttHassWriter)           mqttHassWriter->disconnect();
-   // if (mqttHassReader)           mqttHassReader->disconnect();
-
-   delete mqttReader;            mqttReader = nullptr;
-   // delete mqttHassCommandReader; mqttHassCommandReader = nullptr;
-   // delete mqttHassWriter;        mqttHassWriter = nullptr;
-   // delete mqttHassReader;        mqttHassReader = nullptr;
-
-   return done;
-}
-
-//***************************************************************************
-// Check MQTT Connection
-//***************************************************************************
-
-int Daemon::mqttCheckConnection()
-{
-   if (!mqttReader)
-      mqttReader = new Mqtt();
-
-   if (!mqttHassWriter)
-      mqttHassWriter = new Mqtt();
-
-   if (!mqttHassReader)
-      mqttHassReader = new Mqtt();
-
-   if (!mqttHassCommandReader)
-      mqttHassCommandReader = new Mqtt();
-
-   if (mqttHassCommandReader->isConnected() && mqttHassWriter->isConnected() && mqttHassReader->isConnected())
-      return success;
-
-   // if (lastMqttConnectAt >= time(0) - 60)
-   //    return fail;
-
-   // lastMqttConnectAt = time(0);
-
-   if (!mqttHassWriter->isConnected())
-   {
-      if (mqttHassWriter->connect(mqttHassUrl, mqttUser, mqttPassword) != success)
-      {
-         tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttHassUrl);
-         return fail;
-      }
-
-      tell(0, "MQTT: Connecting publisher to '%s' succeeded", mqttHassUrl);
-   }
-
-   if (!mqttHassCommandReader->isConnected())
-   {
-      if (mqttHassCommandReader->connect(mqttHassUrl) != success)
-      {
-         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
-         return fail;
-      }
-
-      mqttHassCommandReader->subscribe("mqtt2p4d/command");
-      tell(0, "MQTT: Connecting command subscriber to '%s' succeeded", mqttHassUrl);
-   }
-
-   if (mqttHaveConfigTopic)
-   {
-      if (!mqttHassReader->isConnected())
-      {
-         if (mqttHassReader->connect(mqttHassUrl, mqttUser, mqttPassword) != success)
-         {
-            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
-            return fail;
-         }
-
-         tell(0, "MQTT: Connecting subscriber to '%s' succeeded", mqttHassUrl);
-      }
-   }
-
-   if (!isEmpty(mqttUrl))
-   {
-      if (!mqttReader->isConnected())
-      {
-         if (mqttReader->connect(mqttUrl) != success)
-         {
-            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
-         }
-         else
-         {
-            mqttReader->subscribe(TARGET "2mqtt/w1");
-            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/w1");
-            mqttReader->subscribe(TARGET "2mqtt/arduino/out");
-            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/arduino/out");
-         }
-      }
    }
 
    return success;

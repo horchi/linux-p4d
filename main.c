@@ -55,7 +55,7 @@ int readConfig()
    char* name;
    char* fileName;
 
-   asprintf(&fileName, "%s/p4d.conf", confDir);
+   asprintf(&fileName, "%s/daemon.conf", confDir);
 
    if (!fileName || access(fileName, F_OK) != 0)
    {

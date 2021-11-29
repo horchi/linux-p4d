@@ -100,14 +100,12 @@ class Daemon : public FroelingService, public cWebInterface
 	   int loop();
 
       const char* myName() override  { return TARGET; }
+      virtual const char* myTitle()  { return "Daemon"; }
       static void downF(int aSignal) { shutdown = true; }
 
       // public interface for Python
 
       std::string sensorJsonStringOf(const char* type, uint address);
-
-      int setup();
-      int initialize(bool truncate = false);
 
    protected:
 
@@ -216,12 +214,15 @@ class Daemon : public FroelingService, public cWebInterface
 
       int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
       int updateState(Status* state);
+      void updateScriptSensors();
+      virtual void afterUpdate();
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
       int performWebSocketPing();
+      virtual int onLogin(const char* name, long client) { return done; };
       int dispatchClientRequest();
+      virtual int dispatchSpecialRequest(Event event, json_t* oObject, long client) { return ignore; }
       bool checkRights(long client, Event event, json_t* oObject);
-      void updateScriptSensors();
       int callScript(int addr, const char* command, const char* name, const char* title);
       std::string executePython(PySensor* pySensor, const char* command);
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
@@ -245,29 +246,16 @@ class Daemon : public FroelingService, public cWebInterface
       int sendStateMail();
       int isMailState();
       int loadHtmlHeader();
-      int sendErrorMail();
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
 
-      int calcStateDuration();
       void scheduleTimeSyncIn(int offset = 0);
-      int updateErrors();
       int updateParameter(cDbTable* tableMenu);
-      int dispatchMqttCommandRequest(const char* jString);
+      virtual int dispatchMqttCommandRequest(json_t* jData, const char* topic);
 
       void addParameter2Mail(const char* name, const char* value);
 
-      std::string getScriptSensor(int address);
-      void afterUpdate();
-      void sensorAlertCheck(time_t now);
-      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
-      int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
-      int sendAlertMail(const char* to);
-
-      int updateSchemaConfTable();
-      int initValueFacts();
-      int updateTimeRangeData();
-      int initMenu(bool updateParameters = false);
       int updateScripts();
+      virtual void onIoSettingsChange() {};
 
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
@@ -295,44 +283,27 @@ class Daemon : public FroelingService, public cWebInterface
       int pushInMessage(const char* data) override;
       std::queue<std::string> messagesIn;
       cMyMutex messagesInMutex;
-      cCondVar loopCondition;
-      cMyMutex loopMutex;
 
       int replyResult(int status, const char* message, long client);
       int performLogin(json_t* oObject);
       int performLogout(json_t* oObject);
-      int performInitTables(json_t* oObject, long client);
       int performTokenRequest(json_t* oObject, long client);
-      int performSyslog(long client);
+      int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performUserDetails(long client);
       int performIoSettings(json_t* oObject, long client);
       int performGroups(long client);
-      int performErrors(long client);
-      int performMenu(json_t* oObject, long client);
-      int performSchema(json_t* oObject, long client);
-      int performAlerts(json_t* oObject, long client);
       int performSendMail(json_t* oObject, long client);
-      int performAlertTestMail(int id, long client);
-      int performParEditRequest(json_t* oObject, long client);
-      int performTimeParEditRequest(json_t* oObject, long client);
-      int performParStore(json_t* oObject, long client);
-      int performTimeParStore(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
       int performUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);
       int storeConfig(json_t* obj, long client);
       int storeIoSetup(json_t* array, long client);
-      int storeAlerts(json_t* oObject, long client);
-      int storeSchema(json_t* oObject, long client);
       int storeGroups(json_t* array, long client);
       int performReset(json_t* obj, long client);
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);
-      int performUpdateTimeRanges(json_t* array, long client);
-      int performPellets(json_t* array, long client);
-      int performPelletsAdd(json_t* array, long client);
-
+      virtual int performAlertTestMail(int id, long client) { return done; }
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
       int configChoice2json(json_t* obj, const char* name);
@@ -357,9 +328,9 @@ class Daemon : public FroelingService, public cWebInterface
 
       // arduino
 
-      // int dispatchArduinoMsg(const char* message);
-      // int initArduino();
-      // void updateAnalogInput(const char* id, double value, time_t stamp);
+      int dispatchArduinoMsg(const char* message);
+      int initArduino();
+      void updateAnalogInput(const char* id, double value, time_t stamp);
 
       // W1
 
@@ -379,17 +350,12 @@ class Daemon : public FroelingService, public cWebInterface
       cDbTable* tableSamples {nullptr};
       cDbTable* tablePeaks {nullptr};
       cDbTable* tableValueFacts {nullptr};
-      cDbTable* tableGroups {nullptr};
-      cDbTable* tableMenu {nullptr};
-      cDbTable* tableErrors {nullptr};
-      cDbTable* tableSensorAlert {nullptr};
-      cDbTable* tableSchemaConf {nullptr};
       cDbTable* tableConfig {nullptr};
-      cDbTable* tableTimeRanges {nullptr};
       cDbTable* tableScripts {nullptr};
       cDbTable* tableUsers {nullptr};
-      cDbTable* tablePellets {nullptr};
+      cDbTable* tableGroups {nullptr};
 
+      cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
       cDbStatement* selectAllConfig {nullptr};
@@ -397,41 +363,18 @@ class Daemon : public FroelingService, public cWebInterface
       cDbStatement* selectMaxTime {nullptr};
       cDbStatement* selectSamplesRange {nullptr};     // for chart
       cDbStatement* selectSamplesRange60 {nullptr};   // for chart
-      cDbStatement* selectSamplesRange720 {nullptr};  // for chart
       cDbStatement* selectScriptByPath {nullptr};
-
-      cDbStatement* selectAllGroups {nullptr};
-      cDbStatement* selectAllMenuItems {nullptr};
-
-      cDbStatement* selectMenuItemsByParent {nullptr};
-      cDbStatement* selectMenuItemsByChild {nullptr};
-      cDbStatement* selectSensorAlerts {nullptr};
-      cDbStatement* selectAllSensorAlerts {nullptr};
-      cDbStatement* selectSchemaConfByState {nullptr};
-      cDbStatement* selectAllSchemaConf {nullptr};
-      cDbStatement* selectStokerHours {nullptr};
-      cDbStatement* selectSampleInRange {nullptr};    // for alert check
-      cDbStatement* selectStateDuration {nullptr};
-
-      cDbStatement* selectPendingErrors {nullptr};
-      cDbStatement* selectAllErrors {nullptr};
-      cDbStatement* selectScriptByName {nullptr};
-      cDbStatement* selectScript {nullptr};
-      cDbStatement* selectAllPellets {nullptr};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;
       cDbValue rangeTo;
-      cDbValue rangeEnd;
       cDbValue avgValue;
-      cDbValue endTime;
       cDbValue maxValue;
-      cDbValue minValue;
 
       time_t nextRefreshAt {0};
       time_t startedAt {0};
       time_t nextAggregateAt {0};
-
+      time_t lastSampleTime {0};
       Sem* sem {nullptr};
 
       P4Request* request {nullptr};
@@ -476,24 +419,27 @@ class Daemon : public FroelingService, public cWebInterface
       };
 
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
-      char* mqttUrl {nullptr};
-      char* mqttHassUrl {nullptr};
-      char* mqttUser {nullptr};
-      char* mqttPassword {nullptr};
-      time_t lastMqttConnectAt {0};
-      char* mqttDataTopic {nullptr};
-      int mqttHaveConfigTopic {yes};
-      json_t* oJson {nullptr};
-      std::map<int,Group> groups;
-
       Mqtt* mqttReader {nullptr};
       Mqtt* mqttHassWriter {nullptr};
       Mqtt* mqttHassReader {nullptr};
       Mqtt* mqttHassCommandReader {nullptr};
 
+      char* mqttUrl {nullptr};
+      char* mqttHassUrl {nullptr};
+      char* mqttHassUser {nullptr};
+      char* mqttHassPassword {nullptr};
+      char* mqttDataTopic {nullptr};
+      bool mqttHaveConfigTopic {true};
+      time_t lastMqttConnectAt {0};
+      std::map<std::string,std::string> hassCmdTopicMap; // 'topic' to 'name' map
+
+      json_t* oJson {nullptr};
+      std::map<int,Group> groups;
+
       // config
 
       int interval {60};
+      int arduinoInterval {10};
       int stateCheckInterval {10};
       char* knownStates {nullptr};
       double consumptionPerHour {0};
@@ -514,7 +460,6 @@ class Daemon : public FroelingService, public cWebInterface
       char* stateMailAtStates {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
-      int errorsPending {0};
       int tSync {no};
       char* iconSet {nullptr};
       time_t nextTimeSyncAt {0};
@@ -523,7 +468,6 @@ class Daemon : public FroelingService, public cWebInterface
 
       int invertDO {no};
 
-      char* sensorScript {nullptr};
       char* chartSensors {nullptr};
 
       // live data

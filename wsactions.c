@@ -18,7 +18,7 @@
 
 int Daemon::dispatchClientRequest()
 {
-   int status = fail;
+   int status {fail};
    json_error_t error;
    json_t *oData, *oObject;
 
@@ -54,7 +54,6 @@ int Daemon::dispatchClientRequest()
             // case evToggleIo:      status = toggleIo(addr, type);                   break;
             // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
             // case evToggleMode:    status = toggleOutputMode(addr);                 break;
-            case evInitTables:     status = performInitTables(oObject, client);     break;
             case evStoreConfig:    status = storeConfig(oObject, client);           break;
             case evIoSetup:        status = performIoSettings(oObject, client);     break;
             case evStoreIoSetup:   status = storeIoSetup(oObject, client);          break;
@@ -63,20 +62,15 @@ int Daemon::dispatchClientRequest()
             case evUserConfig:     status = performUserConfig(oObject, client);     break;
             case evChangePasswd:   status = performPasswChange(oObject, client);    break;
             case evReset:          status = performReset(oObject, client);          break;
-            case evMenu:           status = performMenu(oObject, client);           break;
-            case evAlerts:         status = performAlerts(oObject, client);         break;
             case evSendMail:       status = performSendMail(oObject, client);       break;
-            case evStoreAlerts:    status = storeAlerts(oObject, client);           break;
-            case evStoreSchema:    status = storeSchema(oObject, client);           break;
-            case evParEditRequest: status = performParEditRequest(oObject, client); break;
-            case evParStore:       status = performParStore(oObject, client);       break;
             case evChartbookmarks: status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client);     break;
-            case evUpdateTimeRanges:    status = performUpdateTimeRanges(oObject, client); break;
-            case evPellets:             status = performPellets(oObject, client);          break;
-            case evPelletsAdd:          status = performPelletsAdd(oObject, client);       break;
-            default: tell(0, "Error: Received unexpected client request '%s' at [%s]",
-                          cWebService::toName(event), messagesIn.front().c_str());
+            default:
+            {
+               if (dispatchSpecialRequest(event,oObject, client) == ignore)
+                  tell(0, "Error: Received unexpected client request '%s' at [%s]",
+                       cWebService::toName(event), messagesIn.front().c_str());
+            }
          }
       }
       else
@@ -106,8 +100,8 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evLogin:               return true;
       case evLogout:              return true;
       case evGetToken:            return true;
-      // case evToggleIoNext:        return rights & urControl;
-      // case evToggleMode:          return rights & urFullControl;
+      case evToggleIoNext:        return rights & urControl;
+      case evToggleMode:          return rights & urFullControl;
       case evStoreConfig:         return rights & urSettings;
       case evIoSetup:             return rights & urView;
       case evStoreIoSetup:        return rights & urSettings;
@@ -257,7 +251,7 @@ int Daemon::performLogin(json_t* oObject)
       if (strcmp(name, "data") == 0)
          update(true, client);     // push the data ('init')
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "syslog") == 0)
-         performSyslog(client);
+         performSyslog(0, client);
       else if (wsClients[(void*)client].rights & urSettings && strcmp(name, "configdetails") == 0)
          performConfigDetails(client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "userdetails") == 0)
@@ -268,20 +262,10 @@ int Daemon::performLogin(json_t* oObject)
          performIoSettings(nullptr, client);
       else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "groups") == 0)
          performGroups(client);
-      else if (strcmp(name, "errors") == 0)
-         performErrors(client);
-      else if (strcmp(name, "menu") == 0)
-         performMenu(0, client);
-      else if (strcmp(name, "schema") == 0)
-         performSchema(0, client);
-      else if (wsClients[(void*)client].rights & urControl && strcmp(name, "pellets") == 0)
-         performPellets(0, client);
-      else if (strcmp(name, "alerts") == 0)
-         performAlerts(0, client);
       else if (strcmp(name, "chartdata") == 0)
          performChartData(oRequest, client);
       else
-         replyResult(fail, "Unexpected request or insufficient rights", client);
+         onLogin(name, client);
    }
 
    return done;
@@ -348,62 +332,23 @@ int Daemon::performTokenRequest(json_t* oObject, long client)
 }
 
 //***************************************************************************
-// Perform Update TimeRanges
+// Perform Syslog Request
 //***************************************************************************
 
-int Daemon::performUpdateTimeRanges(json_t* oObject, long client)
+int Daemon::performSyslog(json_t* oObject, long client)
 {
-   int parent = getIntFromJson(oObject, "parent");
-   updateTimeRangeData();
-   replyResult(success, "... done", client);
+   const char* name {"/var/log/" TARGET ".log"};
 
-   json_t* oJson = json_object();
-   json_object_set_new(oJson, "parent", json_integer(parent));
-
-   return performMenu(oJson, client);
-}
-
-//***************************************************************************
-// Perform WS Init Tables
-//***************************************************************************
-
-int Daemon::performInitTables(json_t* oObject, long client)
-{
-   const char* action = getStringFromJson(oObject, "action");
-
-   if (isEmpty(action))
-      return replyResult(fail, "missing action", client);
-
-   if (strcmp(action, "valuefacts") == 0)
-   {
-      initValueFacts();
-      updateTimeRangeData();
-   }
-   else if (strcmp(action, "menu") == 0)
-   {
-      initMenu();
-   }
-   else if (strcmp(action, "menu-force") == 0)
-   {
-      initMenu(true);
-   }
-
-   return replyResult(success, "... init abgeschlossen!", client);
-}
-
-//***************************************************************************
-// Perform WS Syslog Request
-//***************************************************************************
-
-int Daemon::performSyslog(long client)
-{
    if (client == 0)
       return done;
 
+   const char* log = oObject ? getStringFromJson(oObject, "log") : nullptr;
    json_t* oJson = json_object();
-   const char* name = "/var/log/p4d.log";
    std::vector<std::string> lines;
    std::string result;
+
+   if (!isEmpty(log))
+      name = log;
 
    if (loadLinesFromFile(name, lines, false) == success)
    {
@@ -429,7 +374,7 @@ int Daemon::performSyslog(long client)
 }
 
 //***************************************************************************
-// Perform WS Config Data Request
+// Perform Config Data Request
 //***************************************************************************
 
 int Daemon::performConfigDetails(long client)
@@ -461,135 +406,6 @@ int Daemon::performUserDetails(long client)
    pushOutMessage(oJson, "userdetails", client);
 
    return done;
-}
-
-//***************************************************************************
-// Perform Pellets Request
-//***************************************************************************
-
-int Daemon::performPellets(json_t* oObject, long client)
-{
-   uint stokerHhLast {0};
-   time_t timeLast {0};
-   double tAmount {0.0};
-   double tPrice {0.0};
-   json_t* oJson = json_array();
-   double consumptionHLast {0.0};
-
-   tablePellets->clear();
-
-   for (int f = selectAllPellets->find(); f; f = selectAllPellets->fetch())
-   {
-      json_t* oData = json_object();
-      json_array_append_new(oJson, oData);
-
-      json_object_set_new(oData, "id", json_integer(tablePellets->getIntValue("ID")));
-      json_object_set_new(oData, "time", json_integer(tablePellets->getTimeValue("TIME")));
-      json_object_set_new(oData, "amount", json_integer(tablePellets->getIntValue("AMOUNT")));
-      json_object_set_new(oData, "price", json_real(tablePellets->getFloatValue("PRICE")));
-      json_object_set_new(oData, "comment", json_string(tablePellets->getStrValue("COMMENT")));
-
-      double amount = tablePellets->getIntValue("AMOUNT");
-      tAmount += tablePellets->getIntValue("AMOUNT");
-      tPrice += tablePellets->getFloatValue("PRICE");
-
-      // ...
-
-      minValue.clear();
-      tableSamples->clear();
-      tableSamples->setValue("TYPE", "VA");
-      tableSamples->setValue("ADDRESS", 0xad);
-      tableSamples->setValue("TIME", tablePellets->getTimeValue("TIME"));
-
-      if (!selectStokerHours->find())
-      {
-         tell(eloAlways, "Info: Sample for stoker hours not found!");
-         continue;
-      }
-
-      if (timeLast)
-      {
-         uint durationDays = (tablePellets->getTimeValue("TIME") - timeLast) / tmeSecondsPerDay;
-         json_object_set_new(oData, "duration", json_integer(durationDays));
-      }
-
-      uint stokerHh = minValue.getIntValue();   // is bound as int !!
-
-      tell(eloAlways, "Getankt: '%s' stokerH %d at '%s'",
-           l2pTime(tablePellets->getTimeValue("TIME")).c_str(),
-           stokerHh, l2pTime(tableSamples->getTimeValue("TIME")).c_str());
-
-      if (stokerHhLast && stokerHh-stokerHhLast > 0)
-      {
-         tell(eloAlways, "stokerHh delta => %d", stokerHh - stokerHhLast);
-         json_object_set_new(oData, "stokerHours", json_integer(stokerHh - stokerHhLast));
-         consumptionHLast = amount/(stokerHh-stokerHhLast);
-         json_object_set_new(oData, "consumptionH", json_real(consumptionHLast));
-      }
-
-      timeLast = tablePellets->getTimeValue("TIME");
-      stokerHhLast = stokerHh;
-   }
-
-   selectAllPellets->freeResult();
-
-   double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
-   char* hint;
-   asprintf(&hint, "consumption sice tankering by %.2f kg / stoker hour", consumptionH);
-   tell(eloAlways, "Calculating %s", hint);
-
-   json_t* oData = json_object();
-   json_array_append_new(oJson, oData);
-
-   json_object_set_new(oData, "id", json_integer(-1));
-   json_object_set_new(oData, "sum", json_boolean(true));
-   json_object_set_new(oData, "time", json_integer(time(0)));
-   json_object_set_new(oData, "amount", json_integer(tAmount));
-   json_object_set_new(oData, "price", json_real(tPrice));
-   json_object_set_new(oData, "comment", json_string("Total"));
-   json_object_set_new(oData, "consumptionHint", json_string(hint));
-   json_object_set_new(oData, "stokerHours", json_integer(vaValues[0xad] - stokerHhLast));
-   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaValues[0xad]-stokerHhLast)));
-
-   free(hint);
-
-   return pushOutMessage(oJson, "pellets", client);
-}
-
-//***************************************************************************
-// Perform Pellets Add Entry
-//***************************************************************************
-
-int Daemon::performPelletsAdd(json_t* oObject, long client)
-{
-   int id = getIntFromJson(oObject, "id", -1);
-   bool del = getBoolFromJson(oObject, "delete", false);
-
-   tablePellets->clear();
-   tablePellets->setValue("ID", id);
-
-   if (del)
-   {
-      if (!tablePellets->find())
-         return replyResult(success, "failed", client);
-
-      tablePellets->deleteWhere("id = %d", id);
-      performPellets(0, client);
-      return replyResult(success, "Eintrag gelöscht", client);
-   }
-
-   if (id >= 0 && !tablePellets->find())
-      return replyResult(success, "failed", client);
-
-   tablePellets->setValue("TIME", getLongFromJson(oObject, "time"));
-   tablePellets->setValue("AMOUNT", getIntFromJson(oObject, "amount"));
-   tablePellets->setValue("PRICE", getDoubleFromJson(oObject, "price"));
-   tablePellets->setValue("COMMENT", getStringFromJson(oObject, "comment"));
-   tablePellets->store();
-
-   performPellets(0, client);
-
-   return replyResult(success, "Eintrag gespeichert", client);
 }
 
 //***************************************************************************
@@ -625,380 +441,6 @@ int Daemon::performGroups(long client)
    json_t* oJson = json_array();
    groups2Json(oJson);
    pushOutMessage(oJson, "groups", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS Error Data Request
-//***************************************************************************
-
-int Daemon::performErrors(long client)
-{
-   if (client == 0)
-      return done;
-
-   json_t* oJson = json_array();
-
-   tableErrors->clear();
-
-   for (int f = selectAllErrors->find(); f; f = selectAllErrors->fetch())
-   {
-      json_t* oData = json_object();
-      json_array_append_new(oJson, oData);
-
-      time_t t = std::max(std::max(tableErrors->getTimeValue("TIME1"), tableErrors->getTimeValue("TIME4")), tableErrors->getTimeValue("TIME2"));
-      std::string strTime = l2pTime(t);
-      uint duration {0};
-
-      if (tableErrors->getValue("TIME2")->isNull())
-         duration = time(0) - tableErrors->getTimeValue("TIME1");
-      else
-         duration = tableErrors->getTimeValue("TIME2") - tableErrors->getTimeValue("TIME1");
-
-      json_object_set_new(oData, "state", json_string(tableErrors->getStrValue("STATE")));
-      json_object_set_new(oData, "text", json_string(tableErrors->getStrValue("TEXT")));
-      json_object_set_new(oData, "duration", json_integer(duration));
-      json_object_set_new(oData, "time", json_string(strTime.c_str()));
-   }
-
-   selectAllErrors->freeResult();
-
-   pushOutMessage(oJson, "errors", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS Menu Request
-//***************************************************************************
-
-int Daemon::performMenu(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   int parent {1};
-   int last {0};
-   char* title {nullptr};
-
-   if (oObject)
-      parent = getIntFromJson(oObject, "parent", 1);
-
-   json_t* oJson = json_object();
-   json_t* oArray = json_array();
-
-   tableMenu->clear();
-   tableMenu->setValue("CHILD", parent);
-
-   if (selectMenuItemsByChild->find())
-   {
-      last = tableMenu->getIntValue("PARENT");
-      title = strdup(tableMenu->getStrValue("title"));
-   }
-
-   selectMenuItemsByChild->freeResult();
-
-   tableMenu->clear();
-   tableMenu->setValue("PARENT", parent);
-
-   for (int f = selectMenuItemsByParent->find(); f; f = selectMenuItemsByParent->fetch())
-   {
-      int type = tableMenu->getIntValue("TYPE");
-      int address = tableMenu->getIntValue("ADDRESS");
-      int child = tableMenu->getIntValue("CHILD");
-      int digits = tableMenu->getIntValue("DIGITS");
-      char* title = strdup(tableMenu->getStrValue("TITLE"));
-
-      if (isEmpty(rTrim(title)))
-      {
-         free(title);
-         continue;
-      }
-
-      if (title[strlen(title)-1] == ':')
-         title[strlen(title)-1] = '\0';
-
-      bool timeGroup = (type == mstMenuChoice || type == mstMenu2) && strcmp(title, "Zeiten") == 0 && (child == 230 || child == 350 || child == 430 || child == 573);
-
-      if (type == mstBusValues || type == mstReset)
-         continue;
-
-      // this 3 'special' addresses takes a long while and don't deliver any usefull data
-
-      if (address == 9997 || address == 9998 || address == 9999)
-         continue;
-
-      updateParameter(tableMenu);
-
-      if (!child && tableMenu->getValue("VALUE")->isNull())
-         continue;
-
-      if (!timeGroup)
-      {
-         json_t* oData = json_object();
-         json_array_append_new(oArray, oData);
-
-         json_object_set_new(oData, "id", json_integer(tableMenu->getIntValue("ID")));
-         json_object_set_new(oData, "parent", json_integer(tableMenu->getIntValue("PARENT")));
-         json_object_set_new(oData, "child", json_integer(child));
-         json_object_set_new(oData, "type", json_integer(type));
-         json_object_set_new(oData, "address", json_integer(address));
-         json_object_set_new(oData, "title", json_string(title));
-         json_object_set_new(oData, "unit", json_string(tableMenu->getStrValue("UNIT")));
-         json_object_set_new(oData, "range", json_integer(na));
-         json_object_set_new(oData, "parent", json_integer(parent));
-         json_object_set_new(oData, "digits", json_integer(digits));
-
-         if (type == mstMesswert || type == mstMesswert1)
-            json_object_set_new(oData, "value", json_real(vaValues[address]));
-         else
-            json_object_set_new(oData, "value", json_string(tableMenu->getStrValue("VALUE")));
-
-         if (type == mstPar || type == mstParSet || type == mstParSet1 || type == mstParSet2 ||
-             type == mstParDig || type == mstParZeit)
-            json_object_set_new(oData, "editable", json_boolean(true));
-      }
-
-      else
-      {
-         int baseAddr {0};
-
-         switch (child)
-         {
-            case 230: baseAddr = 0x00 + (address * 7); break;   // Boiler 'n'
-            case 350: baseAddr = 0x38 + (address * 7); break;   // Heizkreis 'n'
-            case 430: baseAddr = 0xb6 + (address * 7); break;   // Puffer 'n'
-         // case ???: baseAddr = 0xd2 + (address * 7); break;   // Kessel
-            case 573: baseAddr = 0xd9 + (address * 7); break;   // Zirkulation
-         }
-
-         // updateTimeRangeData();
-
-         for (int wday = 0; wday < 7; wday++)
-         {
-            int trAddr = baseAddr + wday;
-            char* dayTitle {nullptr};
-            asprintf(&dayTitle, "Zeiten '%s'", toWeekdayName(wday));
-
-            tableTimeRanges->clear();
-            tableTimeRanges->setValue("ADDRESS", trAddr);
-
-            json_t* oData = json_object();
-            json_array_append_new(oArray, oData);
-
-            json_object_set_new(oData, "id", json_integer(0));
-            json_object_set_new(oData, "parent", json_integer(0));
-            json_object_set_new(oData, "child", json_integer(0));
-            json_object_set_new(oData, "type", json_integer(0));
-            json_object_set_new(oData, "address", json_integer(0));
-            json_object_set_new(oData, "title", json_string(dayTitle));
-            json_object_set_new(oData, "unit", json_string(""));
-            json_object_set_new(oData, "parent", json_integer(parent));
-
-            free(dayTitle);
-
-            if (tableTimeRanges->find())
-            {
-               for (int n = 1; n < 5; n++)
-               {
-                  char* rTitle {nullptr};
-                  char* value {nullptr};
-                  char* from {nullptr};
-                  char* to {nullptr};
-
-                  asprintf(&rTitle, "Range %d", n);
-                  asprintf(&from, "from%d", n);
-                  asprintf(&to, "to%d", n);
-                  asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
-
-                  json_t* oData = json_object();
-                  json_array_append_new(oArray, oData);
-
-                  json_object_set_new(oData, "id", json_integer(0));
-                  json_object_set_new(oData, "range", json_integer(n));
-                  json_object_set_new(oData, "parent", json_integer(0));
-                  json_object_set_new(oData, "child", json_integer(0));
-                  json_object_set_new(oData, "type", json_integer(0));
-                  json_object_set_new(oData, "address", json_integer(trAddr));
-                  json_object_set_new(oData, "title", json_string(rTitle));
-                  json_object_set_new(oData, "unit", json_string(""));
-                  json_object_set_new(oData, "value", json_string(value));
-                  json_object_set_new(oData, "editable", json_boolean(true));
-                  json_object_set_new(oData, "parent", json_integer(parent));
-
-                  free(rTitle);
-                  free(value);
-                  free(from);
-                  free(to);
-               }
-
-               tableTimeRanges->reset();
-            }
-         }
-      }
-
-      free(title);
-   }
-
-   selectMenuItemsByParent->freeResult();
-
-   json_object_set_new(oJson, "items", oArray);
-   json_object_set_new(oJson, "parent", json_integer(parent));
-   json_object_set_new(oJson, "last", json_integer(last));
-   json_object_set_new(oJson, "title", json_string(title));
-
-   pushOutMessage(oJson, "menu", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS Scehma Data
-//***************************************************************************
-
-int Daemon::performSchema(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   json_t* oArray = json_array();
-
-   tableSchemaConf->clear();
-
-   for (int f = selectAllSchemaConf->find(); f; f = selectAllSchemaConf->fetch())
-   {
-      tableValueFacts->clear();
-      tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
-      tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
-
-      if (!tableSchemaConf->hasValue("TYPE", "UC") && (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
-         continue;
-
-      json_t* oData = json_object();
-      json_array_append_new(oArray, oData);
-
-      addFieldToJson(oData, tableSchemaConf, "ADDRESS");
-      addFieldToJson(oData, tableSchemaConf, "TYPE");
-      addFieldToJson(oData, tableSchemaConf, "STATE");
-      addFieldToJson(oData, tableSchemaConf, "KIND");
-      addFieldToJson(oData, tableSchemaConf, "WIDTH");
-      addFieldToJson(oData, tableSchemaConf, "HEIGHT");
-      addFieldToJson(oData, tableSchemaConf, "SHOWUNIT");
-      addFieldToJson(oData, tableSchemaConf, "SHOWTITLE");
-      addFieldToJson(oData, tableSchemaConf, "USRTEXT");
-      addFieldToJson(oData, tableSchemaConf, "FUNCTION", true, "fct");
-
-      const char* properties = tableSchemaConf->getStrValue("PROPERTIES");
-      if (isEmpty(properties))
-         properties = "{}";
-      json_error_t error;
-      json_t* o = json_loads(properties, 0, &error);
-      json_object_set_new(oData, "properties", o);
-   }
-
-   selectAllSchemaConf->freeResult();
-
-   pushOutMessage(oArray, "schema", client);
-   update(true, client);     // push the data ('init')
-
-   return done;
-}
-
-//***************************************************************************
-// Store Schema
-//***************************************************************************
-
-int Daemon::storeSchema(json_t* oObject, long client)
-{
-   if (!client)
-      return done;
-
-   size_t index {0};
-   json_t* jObj {nullptr};
-
-   json_array_foreach(oObject, index, jObj)
-   {
-      int address = getIntFromJson(jObj, "address");
-      const char* type = getStringFromJson(jObj, "type");
-      int deleted = getBoolFromJson(jObj, "deleted");
-
-      tableSchemaConf->clear();
-      tableSchemaConf->setValue("ADDRESS", address);
-      tableSchemaConf->setValue("TYPE", type);
-
-      if (tableSchemaConf->find() && deleted)
-      {
-         tableSchemaConf->deleteWhere("%s = '%s' and %s = %d",
-                                      tableSchemaConf->getField("TYPE")->getName(), type,
-                                      tableSchemaConf->getField("ADDRESS")->getName(), address);
-         continue;
-      }
-
-      tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
-      tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
-      tableSchemaConf->setValue("KIND", getIntFromJson(jObj, "kind"));
-      tableSchemaConf->setValue("WIDTH", getIntFromJson(jObj, "width"));
-      tableSchemaConf->setValue("HEIGHT", getIntFromJson(jObj, "height"));
-      tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
-      tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
-      tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
-
-      json_t* jProp = json_object_get(jObj, "properties");
-      char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
-
-      if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
-         tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
-              type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
-      else
-         tableSchemaConf->setValue("PROPERTIES", p);
-
-      tableSchemaConf->store();
-      free(p);
-   }
-
-   tableSchemaConf->reset();
-   replyResult(success, "Konfiguration gespeichert", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS Sensor Alert Request
-//***************************************************************************
-
-int Daemon::performAlerts(json_t* oObject, long client)
-{
-   json_t* oArray = json_array();
-
-   tableSensorAlert->clear();
-
-   for (int f = selectAllSensorAlerts->find(); f; f = selectAllSensorAlerts->fetch())
-   {
-      json_t* oData = json_object();
-      json_array_append_new(oArray, oData);
-
-      json_object_set_new(oData, "id", json_integer(tableSensorAlert->getIntValue("ID")));
-      json_object_set_new(oData, "kind", json_string(tableSensorAlert->getStrValue("ID")));
-      json_object_set_new(oData, "subid", json_integer(tableSensorAlert->getIntValue("SUBID")));
-      json_object_set_new(oData, "lgop", json_integer(tableSensorAlert->getIntValue("LGOP")));
-      json_object_set_new(oData, "type", json_string(tableSensorAlert->getStrValue("TYPE")));
-      json_object_set_new(oData, "address", json_integer(tableSensorAlert->getIntValue("ADDRESS")));
-      json_object_set_new(oData, "state", json_string(tableSensorAlert->getStrValue("STATE")));
-      json_object_set_new(oData, "min", json_integer(tableSensorAlert->getIntValue("MIN")));
-      json_object_set_new(oData, "max", json_integer(tableSensorAlert->getIntValue("MAX")));
-      json_object_set_new(oData, "rangem", json_integer(tableSensorAlert->getIntValue("RANGEM")));
-      json_object_set_new(oData, "delta", json_integer(tableSensorAlert->getIntValue("DELTA")));
-      json_object_set_new(oData, "maddress", json_string(tableSensorAlert->getStrValue("MADDRESS")));
-      json_object_set_new(oData, "msubject", json_string(tableSensorAlert->getStrValue("MSUBJECT")));
-      json_object_set_new(oData, "mbody", json_string(tableSensorAlert->getStrValue("MBODY")));
-      json_object_set_new(oData, "maxrepeat", json_integer(tableSensorAlert->getIntValue("MAXREPEAT")));
-
-      //json_object_set_new(oData, "lastalert", json_integer(0));
-   }
-
-   selectAllSensorAlerts->freeResult();
-   pushOutMessage(oArray, "alerts", client);
 
    return done;
 }
@@ -1062,304 +504,6 @@ int Daemon::performSendMail(json_t* oObject, long client)
    return replyResult(success, "mail sended", client);
 }
 
-int Daemon::performAlertTestMail(int id, long client)
-{
-   tell(eloDetail, "Test mail for alert (%d) requested", id);
-
-   if (isEmpty(mailScript))
-      return replyResult(fail, "missing mail script", client);
-
-   if (!fileExists(mailScript))
-      return replyResult(fail, "mail script not found", client);
-
-   if (!selectMaxTime->find())
-      tell(eloAlways, "Warning: Got no result by 'select max(time) from samples'");
-
-   time_t  last = tableSamples->getTimeValue("TIME");
-   selectMaxTime->freeResult();
-
-   tableSensorAlert->clear();
-   tableSensorAlert->setValue("ID", id);
-
-   if (!tableSensorAlert->find())
-      return replyResult(fail, "requested alert ID not found", client);
-
-   alertMailBody = "";
-   alertMailSubject = "";
-
-   if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
-      return replyResult(fail, "send failed", client);
-
-   tableSensorAlert->reset();
-
-   return replyResult(success, "mail sended", client);
-}
-
-//***************************************************************************
-// Perform WS Parameter Edit Request
-//***************************************************************************
-
-int Daemon::performParEditRequest(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   int id = getIntFromJson(oObject, "id", na);
-   int parent = getIntFromJson(oObject, "parent", 1);
-
-   if (id == 0)
-      return performTimeParEditRequest(oObject, client);
-
-   tableMenu->clear();
-   tableMenu->setValue("ID", id);
-
-   if (!tableMenu->find())
-   {
-      tell(0, "Info: Id %d for 'pareditrequest' not found!", id);
-      return fail;
-   }
-
-   int type = tableMenu->getIntValue("TYPE");
-   unsigned int address = tableMenu->getIntValue("ADDRESS");
-   const char* title = tableMenu->getStrValue("TITLE");
-
-   tableMenu->reset();
-   sem->p();
-
-   ConfigParameter p(address);
-
-   if (request->getParameter(&p) == success)
-   {
-      cRetBuf value = p.toNice(type);
-
-      json_t* oJson = json_object();
-      json_object_set_new(oJson, "id", json_integer(id));
-      json_object_set_new(oJson, "type", json_integer(type));
-      json_object_set_new(oJson, "address", json_integer(address));
-      json_object_set_new(oJson, "title", json_string(title));
-      json_object_set_new(oJson, "unit", json_string(type == mstParZeit ? "Uhr" : p.unit));
-      json_object_set_new(oJson, "value", json_string(value));
-      json_object_set_new(oJson, "def", json_integer(p.rDefault));
-      json_object_set_new(oJson, "min", json_integer(p.rMin));
-      json_object_set_new(oJson, "max", json_integer(p.rMax));
-      json_object_set_new(oJson, "digits", json_integer(p.digits));
-      json_object_set_new(oJson, "parent", json_integer(parent));
-
-      pushOutMessage(oJson, "pareditrequest", client);
-   }
-
-   sem->v();
-
-   return done;
-}
-
-int Daemon::performTimeParEditRequest(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   int trAddr = getIntFromJson(oObject, "address", na);
-   int range = getIntFromJson(oObject, "range", na);
-   int parent = getIntFromJson(oObject, "parent", 1);
-
-   tableTimeRanges->clear();
-   tableTimeRanges->setValue("ADDRESS", trAddr);
-
-   if (!tableTimeRanges->find())
-   {
-      tell(0, "Info: Address %d or 'pareditrequest' in timetanges not found!", trAddr);
-      return fail;
-   }
-
-   char* rTitle {nullptr};
-   char* value {nullptr};
-   char* from {nullptr};
-   char* to {nullptr};
-
-   asprintf(&rTitle, "Range %d", range);
-   asprintf(&from, "from%d", range);
-   asprintf(&to, "to%d", range);
-
-   if (!tableTimeRanges->hasValue(from, "nn:nn") && !tableTimeRanges->hasValue(to, "nn:nn"))
-      asprintf(&value, "%s - %s", tableTimeRanges->getStrValue(from), tableTimeRanges->getStrValue(to));
-   else
-      asprintf(&value, "%s", "-");
-
-   json_t* oJson = json_object();
-   json_object_set_new(oJson, "id", json_integer(0));
-   json_object_set_new(oJson, "type", json_integer(mstParZeit));
-   json_object_set_new(oJson, "address", json_integer(trAddr));
-   json_object_set_new(oJson, "range", json_integer(range));
-   json_object_set_new(oJson, "title", json_string(rTitle));
-   json_object_set_new(oJson, "unit", json_string("Uhr"));
-   json_object_set_new(oJson, "value", json_string(value));
-   json_object_set_new(oJson, "parent", json_integer(parent));
-
-   pushOutMessage(oJson, "pareditrequest", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS Parameter Store
-//***************************************************************************
-
-int Daemon::performParStore(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   int id = getIntFromJson(oObject, "id", na);
-
-   if (id == 0)
-      return performTimeParStore(oObject, client);
-
-   json_t* oJson = json_object();
-   const char* value = getStringFromJson(oObject, "value");
-
-   tableMenu->clear();
-   tableMenu->setValue("ID", id);
-
-   if (!tableMenu->find())
-   {
-      replyResult(fail, "Parameter not found", client);
-      tell(0, "Info: Id %d for 'parstore' not found!", id);
-      return done;
-   }
-
-   int parent = tableMenu->getIntValue("PARENT");
-   int type = tableMenu->getIntValue("TYPE");
-   unsigned int address = tableMenu->getIntValue("ADDRESS");
-   ConfigParameter p(address);
-
-   sem->p();
-   request->getParameter(&p);
-   sem->v();
-
-   if (p.setValue(type, value) != success)
-   {
-      tableMenu->reset();
-      tell(eloAlways, "Set of parameter failed, wrong format");
-      return replyResult(fail, "Value format error", client);
-   }
-
-   {
-      int status {fail};
-      tell(eloAlways, "Storing value '%s/%s' for parameter at address 0x%x", value, p.toNice(type).string(), address);
-      sem->p();
-
-      if ((status = request->setParameter(&p)) == success)
-      {
-         tableMenu->setValue("VALUE", p.toNice(type));
-         tableMenu->setValue("UNIT", p.unit);
-         tableMenu->update();
-         json_object_set_new(oJson, "parent", json_integer(parent));
-         sem->v();
-
-         replyResult(status, "Parameter gespeichert", client);
-         return performMenu(oJson, client);
-      }
-
-      sem->v();
-      tell(eloAlways, "Set of parameter failed, error %d", status);
-
-      if (status == P4Request::wrnNonUpdate)
-         replyResult(status, "Value identical, ignoring request", client);
-      else if (status == P4Request::wrnOutOfRange)
-         replyResult(status, "Value out of range", client);
-      else
-         replyResult(status, "Serial communication error", client);
-   }
-
-   tableMenu->reset();
-
-   return done;
-}
-
-int Daemon::performTimeParStore(json_t* oObject, long client)
-{
-   int status {success};
-   int trAddr = getIntFromJson(oObject, "address", na);
-   int range = getIntFromJson(oObject, "range", na);
-   int parent = getIntFromJson(oObject, "parent", 1);
-   const char* value = getStringFromJson(oObject, "value");
-
-   tableTimeRanges->clear();
-   tableTimeRanges->setValue("ADDRESS", trAddr);
-
-   if (!tableTimeRanges->find() || range < 1)
-   {
-      replyResult(fail, "Parameter not found", client);
-      tell(0, "Info: Address %d for 'parstore' not found!", trAddr);
-      return done;
-   }
-
-   Fs::TimeRanges t(trAddr);
-   char fName[10+TB];
-   char tName[10+TB];
-   char valueFrom[100+TB];
-   char valueTo[100+TB];
-
-   // parse range and value from data
-
-   if (isEmpty(value))
-      value = "nn:nn - nn:nn";
-
-   if (sscanf(value, "%[^-]-%[^-]", valueFrom, valueTo) != 2)
-   {
-      replyResult(fail, "Parsing of value failed, wrong format!", client);
-      tell(eloAlways, "Parsing of value '%s' failed, wrong format!", value);
-      return done;
-   }
-
-   allTrim(valueFrom);
-   allTrim(valueTo);
-
-   // update struct with time ranges from table
-
-   for (int n = 0; n < 4; n++)
-   {
-      sprintf(fName, "FROM%d", n+1);
-      sprintf(tName, "TO%d", n+1);
-
-      status += t.setTimeRange(n, tableTimeRanges->getStrValue(fName), tableTimeRanges->getStrValue(tName));
-   }
-
-   // update the changed range with new value
-
-   status += t.setTimeRange(range-1, valueFrom, valueTo);
-
-   if (status != success)
-   {
-      replyResult(fail, "Set of time range parameter failed, wrong format", client);
-      tell(eloAlways, "Set of time range parameter failed, wrong format");
-   }
-
-   tell(4, "Value was: '%s'-'%s'", valueFrom, valueTo);
-   tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(range-1), range, t.address);
-
-   if (request->setTimeRanges(&t) != success)
-   {
-      replyResult(fail, "Set of time range parameter failed", client);
-      tell(eloAlways, "Set of time range parameter failed, error %d", status);
-   }
-
-   // update time range table
-
-   sprintf(fName, "FROM%d", range);
-   sprintf(tName, "TO%d", range);
-   tableTimeRanges->setValue(fName, t.getTimeRangeFrom(range-1));
-   tableTimeRanges->setValue(tName, t.getTimeRangeTo(range-1));
-   tableTimeRanges->update();
-
-   replyResult(status, "Parameter gespeichert", client);
-
-   json_t* oJson = json_object();
-   json_object_set_new(oJson, "parent", json_integer(parent));
-
-   return performMenu(oJson, client);
-}
-
 //***************************************************************************
 // Perform WS ChartData request
 //***************************************************************************
@@ -1376,17 +520,8 @@ int Daemon::performChartData(json_t* oObject, long client)
 
    // the id is one of {"chart" "chartwidget" "chartdialog"}
 
-   cDbStatement* select {nullptr};
    bool widget = strcmp(id, "chart") != 0;
-
-   if (widget)
-      select = selectSamplesRange60;
-   else if (range > 300)
-      select = selectSamplesRange720;
-   else if (range > 7)
-      select = selectSamplesRange60;
-   else
-      select = selectSamplesRange;
+   cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
 
    if (!widget)
       performChartbookmarks(client);
@@ -1740,7 +875,7 @@ int Daemon::storeIoSetup(json_t* array, long client)
       tell(3, "Debug: %s:%d - usrtitle: '%s'; scalemax: %d; state: %d", type, addr, usrTitle, maxScale, state);
    }
 
-   updateSchemaConfTable();
+   onIoSettingsChange();
    performIoSettings(nullptr, client);
 
    return replyResult(success, "Konfiguration gespeichert", client);
@@ -1812,71 +947,6 @@ int Daemon::storeGroups(json_t* oObject, long client)
    performGroups(client);
 
    return replyResult(success, "Konfiguration gespeichert", client);
-}
-
-//***************************************************************************
-// Store Sensor Alerts
-//***************************************************************************
-
-int Daemon::storeAlerts(json_t* oObject, long client)
-{
-   const char* action = getStringFromJson(oObject, "action");
-
-   if (strcmp(action, "delete") == 0)
-   {
-      int alertid = getIntFromJson(oObject, "alertid", na);
-
-      tableSensorAlert->deleteWhere("id = %d", alertid);
-
-      performAlerts(0, client);
-      replyResult(success, "Sensor Alert gelöscht", client);
-   }
-
-   else if (strcmp(action, "store") == 0)
-   {
-      json_t* array = json_object_get(oObject, "alerts");
-      size_t index {0};
-      json_t* jObj {nullptr};
-
-      json_array_foreach(array, index, jObj)
-      {
-         int id = getIntFromJson(jObj, "id", na);
-
-         tableSensorAlert->clear();
-
-         if (id != na)
-         {
-            tableSensorAlert->setValue("ID", id);
-
-            if (!tableSensorAlert->find())
-               continue;
-         }
-
-         tableSensorAlert->clearChanged();
-         tableSensorAlert->setValue("STATE", getStringFromJson(jObj, "state"));
-         tableSensorAlert->setValue("MAXREPEAT", getIntFromJson(jObj, "maxrepeat"));
-
-         tableSensorAlert->setValue("ADDRESS", getIntFromJson(jObj, "address"));
-         tableSensorAlert->setValue("TYPE", getStringFromJson(jObj, "type"));
-         tableSensorAlert->setValue("MIN", getIntFromJson(jObj, "min"));
-         tableSensorAlert->setValue("MAX", getIntFromJson(jObj, "max"));
-         tableSensorAlert->setValue("DELTA", getIntFromJson(jObj, "delta"));
-         tableSensorAlert->setValue("RANGEM", getIntFromJson(jObj, "rangem"));
-         tableSensorAlert->setValue("MADDRESS", getStringFromJson(jObj, "maddress"));
-         tableSensorAlert->setValue("MSUBJECT", getStringFromJson(jObj, "msubject"));
-         tableSensorAlert->setValue("MBODY", getStringFromJson(jObj, "mbody"));
-
-         if (id == na)
-            tableSensorAlert->insert();
-         else if (tableSensorAlert->getChanges())
-            tableSensorAlert->update();
-      }
-
-      performAlerts(0, client);
-      replyResult(success, "Konfiguration gespeichert", client);
-   }
-
-   return success;
 }
 
 //***************************************************************************
