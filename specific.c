@@ -593,6 +593,154 @@ int P4d::initMenu(bool updateParameters)
 }
 
 //***************************************************************************
+// Update Parameter
+//***************************************************************************
+
+int P4d::updateParameter(cDbTable* tableMenu)
+{
+   int type = tableMenu->getIntValue("TYPE");
+   int paddr = tableMenu->getIntValue("ADDRESS");
+   int child = tableMenu->getIntValue("CHILD");
+
+   tell(3, "Update parameter %d/%d ...", type, paddr);
+
+   sem->p();
+
+   if (type == mstFirmware)
+   {
+      Fs::Status s;
+
+      if (request->getStatus(&s) == success)
+      {
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", s.version);
+            tableMenu->setValue("UNIT", "");
+            tableMenu->update();
+         }
+      }
+   }
+
+   else if (type == mstDigOut || type == mstDigIn || type == mstAnlOut)
+   {
+      int status;
+      Fs::IoValue v(paddr);
+
+      if (type == mstDigOut)
+         status = request->getDigitalOut(&v);
+      else if (type == mstDigIn)
+         status = request->getDigitalIn(&v);
+      else
+         status = request->getAnalogOut(&v);
+
+      if (status == success)
+      {
+         char* buf = 0;
+
+         if (type == mstAnlOut)
+         {
+            if (v.mode == 0xff)
+               asprintf(&buf, "%d (A)", v.state);
+            else
+               asprintf(&buf, "%d (%d)", v.state, v.mode);
+         }
+         else
+            asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
+
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", buf);
+            tableMenu->setValue("UNIT", "");
+            tableMenu->update();
+         }
+
+         free(buf);
+      }
+   }
+
+   else if (type == mstMesswert || type == mstMesswert1)
+   {
+      int status;
+      Fs::Value v(paddr);
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("TYPE", "VA");
+      tableValueFacts->setValue("ADDRESS", paddr);
+
+      if (tableValueFacts->find())
+      {
+         double factor = tableValueFacts->getIntValue("FACTOR");
+         const char* unit = tableValueFacts->getStrValue("UNIT");
+         int dataType = tableValueFacts->getIntValue("RES1");
+
+         status = request->getValue(&v);
+
+         if (status == success)
+         {
+            char* buf = 0;
+            int value = dataType == 1 ? (word)v.value : (sword)v.value;
+
+            asprintf(&buf, "%.2f", value / factor);
+
+            if (tableMenu->find())
+            {
+               tableMenu->setValue("VALUE", buf);
+               tableMenu->setValue("UNIT", strcmp(unit, "°") == 0 ? "°C" : unit);
+               tableMenu->update();
+            }
+
+            free(buf);
+         }
+      }
+   }
+   else if (isGroup(type) || type == mstBusValues || type == mstReset || type == mstEmpty)
+   {
+      // nothing to do
+   }
+   else if (child)
+   {
+      // I have childs -> I have no value -> nothing to do
+   }
+   else if (paddr == 0 && type != mstPar)
+   {
+      // address 0 only for type mstPar
+   }
+   else if (paddr == 9997 || paddr == 9998 || paddr == 9999)
+   {
+      // this 3 'special' addresses takes a long while and don't deliver any usefull data
+   }
+   else
+   {
+      Fs::ConfigParameter p(paddr);
+
+      if (request->getParameter(&p) == success)
+      {
+         cRetBuf value = p.toNice(type);
+
+         if (tableMenu->find())
+         {
+            tableMenu->setValue("VALUE", value);
+            tableMenu->setValue("UNIT", strcmp(p.unit, "°") == 0 ? "°C" : p.unit);
+            tableMenu->setValue("DIGITS", p.digits);
+            tableMenu->setValue("MIN", p.rMin);
+            tableMenu->setValue("MAX", p.rMax);
+            tableMenu->setValue("DEF", p.rDefault);
+            tableMenu->setValue("FACTOR", p.getFactor());
+            tableMenu->setValue("PUB1", p.ub1);
+            tableMenu->setValue("PUB2", p.ub2);
+            tableMenu->setValue("PUB3", p.ub3);
+            tableMenu->setValue("PUW1", p.uw1);
+            tableMenu->update();
+         }
+      }
+   }
+
+   sem->v();
+
+   return done;
+}
+
+//***************************************************************************
 // Update Time Range Data
 //***************************************************************************
 
@@ -853,7 +1001,7 @@ int P4d::calcStateDuration()
       beginTime = eTime;
 
       addValueFact(thisState, "SD", 1, ("State_Duration_"+std::to_string(thisState)).c_str(),
-                   "min", (std::string(text)+" (Laufzeit/Tag)").c_str(), false, 2000);
+                   "min", wtChart, 0, 2000);
 
       selectStateDuration->freeResult();
       tableSamples->clear();
@@ -1187,28 +1335,6 @@ int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const 
 }
 
 //***************************************************************************
-// Hack - to be removed
-//***************************************************************************
-
-int P4d::onLogin(const char* name, long client)
-{
-   if (strcmp(name, "errors") == 0)
-      performErrors(client);
-   else if (strcmp(name, "menu") == 0)
-      performMenu(0, client);
-   else if (strcmp(name, "schema") == 0)
-      performSchema(0, client);
-   else if (wsClients[(void*)client].rights & urControl && strcmp(name, "pellets") == 0)
-      performPellets(0, client);
-   else if (strcmp(name, "alerts") == 0)
-      performAlerts(0, client);
-   else
-      replyResult(fail, "Unexpected request or insufficient rights", client);
-
-   return done;
-}
-
-//***************************************************************************
 // Dispatch Special Request
 //***************************************************************************
 
@@ -1223,12 +1349,13 @@ int P4d::dispatchSpecialRequest(Event event, json_t* oObject, long client)
       case evPellets:           status = performPellets(oObject, client);          break;
       case evPelletsAdd:        status = performPelletsAdd(oObject, client);       break;
       case evStoreAlerts:       status = storeAlerts(oObject, client);             break;
+      case evSchema:            status = performSchema(oObject, client);           break;
       case evStoreSchema:       status = storeSchema(oObject, client);             break;
       case evParEditRequest:    status = performParEditRequest(oObject, client);   break;
       case evParStore:          status = performParStore(oObject, client);         break;
       case evMenu:              status = performMenu(oObject, client);             break;
       case evAlerts:            status = performAlerts(oObject, client);           break;
-
+      case evErrors:            status = performErrors(client);                    break;
       default:                  return ignore;
    }
 
@@ -2069,7 +2196,7 @@ int P4d::performAlerts(json_t* oObject, long client)
 
 int P4d::storeAlerts(json_t* oObject, long client)
 {
-   const char* action = getStringFromJson(oObject, "action");
+   const char* action = getStringFromJson(oObject, "action", "");
 
    if (strcmp(action, "delete") == 0)
    {
@@ -2190,7 +2317,7 @@ int P4d::updateSchemaConfTable()
 // Update Value Facts
 //***************************************************************************
 
-int P4d::initValueFacts()
+int P4d::initValueFacts(bool truncate)
 {
    int status {success};
    Fs::ValueSpec v;
@@ -2206,6 +2333,9 @@ int P4d::initValueFacts()
       return fail;
    }
 
+   if (truncate)
+      tableValueFacts->truncate();
+
    // ---------------------------------
    // Add the sensor definitions delivered by the S 3200
 
@@ -2217,43 +2347,13 @@ int P4d::initValueFacts()
       tell(eloDebug, "%3d) 0x%04x '%s' %d '%s' (%04d) '%s'",
            count, v.address, v.name, v.factor, v.unit, v.type, v.description);
 
-      // update table
+      int res = addValueFact(v.address, "VA", v.factor, v.name, strcmp(v.unit, "°") == 0 ? "°C" : v.unit,
+                             wtMeter, 0, v.unit[0] == '%' ? 100 : 300);
 
-      tableValueFacts->clear();
-      tableValueFacts->setValue("ADDRESS", v.address);
-      tableValueFacts->setValue("TYPE", "VA");
-
-      if (!tableValueFacts->find())
-      {
-         tableValueFacts->setValue("NAME", v.name);
-         tableValueFacts->setValue("STATE", "D");
-         tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
-         tableValueFacts->setValue("FACTOR", v.factor);
-         tableValueFacts->setValue("TITLE", v.description);
-         tableValueFacts->setValue("RES1", v.type);
-         tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
-
-         tableValueFacts->store();
+      if (res == 1)
          added++;
-      }
-      else
-      {
-         tableValueFacts->clearChanged();
-         tableValueFacts->setValue("NAME", v.name);
-         tableValueFacts->setValue("UNIT", strcmp(v.unit, "°") == 0 ? "°C" : v.unit);
-         tableValueFacts->setValue("FACTOR", v.factor);
-         tableValueFacts->setValue("TITLE", v.description);
-         tableValueFacts->setValue("RES1", v.type);
-
-         if (tableValueFacts->getValue("MAXSCALE")->isNull())
-            tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
-
-         if (tableValueFacts->getChanges())
-         {
-            tableValueFacts->store();
-            modified++;
-         }
-      }
+      else if (res == 2)
+         modified++;
 
       count++;
    }
@@ -2297,56 +2397,39 @@ int P4d::initValueFacts()
 
    for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
    {
-      char* name = 0;
-      const char* type = 0;
+      char* name {nullptr};
+      const char* type {nullptr};
       int structType = tableMenu->getIntValue("TYPE");
       std::string sname = tableMenu->getStrValue("TITLE");
+      WidgetType widgetType = wtMeter;
 
       switch (structType)
       {
-         case mstDigOut: type = "DO"; break;
-         case mstDigIn:  type = "DI"; break;
-         case mstAnlOut: type = "AO"; break;
+         case mstDigOut: type = "DO"; widgetType = wtSymbol; break;
+         case mstDigIn:  type = "DI"; widgetType = wtSymbol; break;
+         case mstAnlOut: type = "AO"; widgetType = wtMeter;  break;
       }
 
       if (!type)
          continue;
 
-      // update table
-
-      tableValueFacts->clear();
-      tableValueFacts->setValue("ADDRESS", tableMenu->getIntValue("ADDRESS"));
-      tableValueFacts->setValue("TYPE", type);
-      tableValueFacts->clearChanged();
-
-      if (!tableValueFacts->find())
-      {
-         tableValueFacts->setValue("STATE", "D");
-         added++;
-         modified--;
-      }
+      removeCharsExcept(sname, nameChars);
+      asprintf(&name, "%s_0x%x", sname.c_str(), (int)tableMenu->getIntValue("ADDRESS"));
 
       const char* unit = tableMenu->getStrValue("UNIT");
 
       if (isEmpty(unit) && strcmp(type, "AO") == 0)
          unit = "%";
 
-      removeCharsExcept(sname, nameChars);
-      asprintf(&name, "%s_0x%x", sname.c_str(), (int)tableMenu->getIntValue("ADDRESS"));
+      int res = addValueFact(tableMenu->getIntValue("ADDRESS"), type, 1, name, unit,
+                             widgetType, 0, unit[0] == '%' ? 100 : 300);
 
-      tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("UNIT", unit);
-      tableValueFacts->setValue("FACTOR", 1);
-      tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
-
-      if (tableValueFacts->getValue("MAXSCALE")->isNull())
-         tableValueFacts->setValue("MAXSCALE", v.unit[0] == '%' ? 100 : 300);
-
-      if (tableValueFacts->getChanges())
-      {
-         tableValueFacts->store();
+      if (res == 1)
+         added++;
+      else if (res == 2)
          modified++;
-      }
+
+      // ?? tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
 
       free(name);
       count++;
@@ -2358,9 +2441,7 @@ int P4d::initValueFacts()
    // ---------------------------------
    // add value definitions for special data
 
-   count = 0;
-   added = 0;
-   modified = 0;
+   addValueFact(udState, "UD", 1, "Status", "zst", wtSymbol);
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
@@ -2368,15 +2449,12 @@ int P4d::initValueFacts()
 
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue("NAME", "Status");
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("UNIT", "zst");
-      tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Heizungsstatus");
-
       tableValueFacts->store();
-      added++;
    }
+
+   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", wtText);
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
@@ -2384,33 +2462,22 @@ int P4d::initValueFacts()
 
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue("NAME", "Betriebsmodus");
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("UNIT", "zst");
-      tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Betriebsmodus");
-
       tableValueFacts->store();
-      added++;
    }
 
+   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", wtText);
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
 
    if (!tableValueFacts->find())
    {
-      tableValueFacts->setValue("NAME", "Uhrzeit");
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("UNIT", "T");
-      tableValueFacts->setValue("FACTOR", 1);
       tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
-
       tableValueFacts->store();
-      added++;
    }
-
-   tell(eloAlways, "Added %d user defined values", added);
 
    return success;
 }

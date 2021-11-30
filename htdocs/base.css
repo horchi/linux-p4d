@@ -30,12 +30,6 @@ button:focus {
     padding: 4px 4px !important;
 }
 
-.content
-{
-    margin: 0px 5px 0px 5px;
-    background-color: var(--background);
-}
-
 .menuLogin > div {
     height: 2px;
     margin: 4px;
@@ -1178,13 +1172,6 @@ table.tableMultiCol tr:nth-child(odd)
     overflow: hidden;
     outline: none;
     cursor: pointer;
-}
-
-.widget-svg
-{
-    grid-area: main;
-    width: 100%;
-    align-self: center;
 }
 
 .widget > button > img

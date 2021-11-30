@@ -1,4 +1,3 @@
-
 /* WebsocketClient, usage:
    wsClient = new WebSocketClient({
    url: "ws://" + location.host,
@@ -78,6 +77,9 @@ window.WebSocketClient = function(opt)
             break;
          }
       };
+   }
+   this.close = function () {
+      client.ws.close();
    }
    this.reopen = function () {
       client.ws.onerror = client.ws.onclose = client.ws.onmessage = null;

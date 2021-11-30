@@ -57,19 +57,19 @@ class P4d : public Daemon
       void logReport() override;
       void onIoSettingsChange() override { updateSchemaConfTable(); }
 
-      int onLogin(const char* name, long client) override;
       int dispatchMqttCommandRequest(json_t* jData, const char* topic) override;
 
       std::list<ConfigItemDef>* getConfiguration() override { return &configuration; }
 
       int updateTimeRangeData();
       int initMenu(bool updateParameters = false);
+      int updateParameter(cDbTable* tableMenu);
       int calcStateDuration();
       void sensorAlertCheck(time_t now);
       int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
       int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
-      int initValueFacts();
+      int initValueFacts(bool truncate = false);
       int updateSchemaConfTable();
 
       // WS request

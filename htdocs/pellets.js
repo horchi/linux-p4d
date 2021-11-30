@@ -10,8 +10,9 @@
 
 function initPellets(pellets)
 {
-   console.log("pellets: ", JSON.stringify(pellets, undefined, 4));
+   // console.log("pellets: ", JSON.stringify(pellets, undefined, 4));
 
+   $('#container').removeClass('hidden');
    $('#container').html('');
 
    $('#container').append($('<div></div>')

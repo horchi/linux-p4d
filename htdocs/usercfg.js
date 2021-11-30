@@ -8,7 +8,7 @@
  *
  */
 
-// !!  sync this arry with UserRights of websock.h  !!
+// !! sync this arry with UserRights of websock.h !!
 
 var rights = [ "View",
                "Control",
@@ -19,8 +19,27 @@ var rights = [ "View",
 // -------------------------------
 // init
 
-function initUserConfig(users, root)
+function initUserConfig(users)
 {
+   $('#container').removeClass('hidden');
+
+   document.getElementById("container").innerHTML =
+      '<div id="userContainer" class="rounded-border inputTableConfig">' +
+      '<table class="tableMultiCol">' +
+      '  <thead>' +
+      '    <tr>' +
+      '      <td style="width:15%;">User</td>' +
+      '      <td style="width:32%;">Rights</td>' +
+      '      <td style="width:30%;"></td>' +
+      '    </tr>' +
+      '  </thead>' +
+      '  <tbody id="userTable">' +
+      '  </tbody>' +
+      '</table>' +
+      '<tbody id="ioOther"/>' +
+      '</div><br/>' +
+      '<div id="addUserDiv" class="rounded-border inputTableConfig"/>';
+
    var table = document.getElementById("userTable");
    table.innerHTML = "";
 
@@ -34,14 +53,13 @@ function initUserConfig(users, root)
          var checked = item.rights & Math.pow(2, b); // (2 ** b);
          html += "<input id=\"bit_" + item.user + b + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (checked ? "checked" : "") +
             '/><label for="bit_' + item.user + b + '">' + rights[b] + '</label>';
-         // html += "<span style=\"padding-right:20px; padding-left:5px;\">" + rights[b] + "</span>";
       }
       html += "</td>";
       html += "<td>";
-      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
-      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
-      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
-      html += "<button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
+      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
+      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
+      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
+      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
       html += "</td>";
 
       var elem = document.createElement("tr");
@@ -56,13 +74,27 @@ function initUserConfig(users, root)
    document.getElementById("addUserDiv").innerHTML = html;
 }
 
+function initUser()
+{
+   $('#container').removeClass('hidden');
+
+   document.getElementById("container").innerHTML =
+      '<div id="userContainer" class="rounded-border inputTableConfig">' +
+      '  <button class="rounded-border button2" onclick="doLogout()">Logout</button>' +
+      '  <br/><br/>' +
+      '  <span>Passwort: </span><input id="input_passwd" type="password" class="rounded-border input"/>' +
+      '  <span>wiederholen: </span><input id="input_passwd2" type="password" class="rounded-border input"/>' +
+      '  <button class="rounded-border button2" onclick="chpwd()">Speichern</button>' +
+      '</div>';
+}
+
 window.userConfig = function(user, action)
 {
    // console.log("userConfig(" + action + ", " + user + ")");
 
    if (action == "delete") {
       if (confirm("User '" + user + "' löschen?"))
-         socket.send({ "event": "userconfig", "object":
+         socket.send({ "event": "storeuserconfig", "object":
                        { "user": user,
                          "action": "del" }});
    }
@@ -73,7 +105,7 @@ window.userConfig = function(user, action)
             rightsMask += Math.pow(2, b); // 2 ** b;
       }
 
-      socket.send({ "event": "userconfig", "object":
+      socket.send({ "event": "storeuserconfig", "object":
                     { "user": user,
                       "action": "store",
                       "rights": rightsMask }});
@@ -82,13 +114,13 @@ window.userConfig = function(user, action)
       var passwd = prompt("neues Passwort", "");
       if (passwd && passwd != "")
          console.log("Reset password to: "+ passwd);
-         socket.send({ "event": "userconfig", "object":
+         socket.send({ "event": "storeuserconfig", "object":
                        { "user": user,
                          "passwd": $.md5(passwd),
                          "action": "resetpwd" }});
    }
    else if (action == "resettoken") {
-      socket.send({ "event": "userconfig", "object":
+      socket.send({ "event": "storeuserconfig", "object":
                     { "user": user,
                       "action": "resettoken" }});
    }
@@ -121,7 +153,7 @@ window.addUser = function()
 {
    // console.log("Add user: " + $("#input_user").val());
 
-   socket.send({ "event": "userconfig", "object":
+   socket.send({ "event": "storeuserconfig", "object":
                  { "user": $("#input_user").val(),
                    "passwd": $.md5($("#input_passwd").val()),
                    "action": "add" }

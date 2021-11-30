@@ -10,11 +10,14 @@
 
 var actualParent = 1;   // the current parent of the menu items (the level of the menu)
 
-function initMenu(menu, root)
+function initMenu(menu)
 {
    // console.log(JSON.stringify(menu, undefined, 4));
 
-   var menuButtons = root.querySelector("#menuButtons");
+   $('#container').removeClass('hidden');
+   document.getElementById("container").innerHTML = '<div id="menuButtons" class="menuButtonContainer"></div>';
+
+   var menuButtons = document.getElementById("menuButtons");
 
    menuButtons.innerHTML = "";
 
@@ -65,7 +68,7 @@ function initMenu(menu, root)
    }
 }
 
-function editMenuParameter(parameter, root)
+function editMenuParameter(parameter)
 {
    console.log(JSON.stringify(parameter, undefined, 4));
 

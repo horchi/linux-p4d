@@ -8,6 +8,7 @@
 
 #include <dirent.h>
 #include <algorithm>
+#include <cmath>
 
 #include "lib/json.h"
 #include "daemon.h"
@@ -29,7 +30,7 @@ int Daemon::dispatchClientRequest()
       // dispatch message like
       //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
 
-      tell(2, "DEBUG: Got '%s'", messagesIn.front().c_str());
+      tell(2, "<= '%s'", messagesIn.front().c_str());
       oData = json_loads(messagesIn.front().c_str(), 0, &error);
 
       // get the request
@@ -37,8 +38,8 @@ int Daemon::dispatchClientRequest()
       Event event = cWebService::toEvent(getStringFromJson(oData, "event", "<null>"));
       long client = getLongFromJson(oData, "client");
       oObject = json_object_get(oData, "object");
-      // int addr = getIntFromJson(oObject, "address");
-      // const char* type = getStringFromJson(oObject, "type");
+      int addr = getIntFromJson(oObject, "address");
+      const char* type = getStringFromJson(oObject, "type");
 
       // rights ...
 
@@ -48,22 +49,31 @@ int Daemon::dispatchClientRequest()
 
          switch (event)
          {
-            case evLogin:          status = performLogin(oObject);                  break;
-            case evLogout:         status = performLogout(oObject);                 break;
-            case evGetToken:       status = performTokenRequest(oObject, client);   break;
-            // case evToggleIo:      status = toggleIo(addr, type);                   break;
-            // case evToggleIoNext:  status = toggleIoNext(addr);                     break;
-            // case evToggleMode:    status = toggleOutputMode(addr);                 break;
-            case evStoreConfig:    status = storeConfig(oObject, client);           break;
-            case evIoSetup:        status = performIoSettings(oObject, client);     break;
-            case evStoreIoSetup:   status = storeIoSetup(oObject, client);          break;
-            case evGroupConfig:    status = storeGroups(oObject, client);           break;
-            case evChartData:      status = performChartData(oObject, client);      break;
-            case evUserConfig:     status = performUserConfig(oObject, client);     break;
-            case evChangePasswd:   status = performPasswChange(oObject, client);    break;
-            case evReset:          status = performReset(oObject, client);          break;
-            case evSendMail:       status = performSendMail(oObject, client);       break;
-            case evChartbookmarks: status = performChartbookmarks(client);          break;
+            case evLogin:           status = performLogin(oObject);                  break;
+            case evLogout:          status = performLogout(oObject);                 break;
+            case evInit:
+            case evPageChange:      status = performPageChange(oObject, client);     break;
+            case evData:            status = update(true, client);                   break;
+            case evGetToken:        status = performTokenRequest(oObject, client);   break;
+            case evToggleIo:        status = toggleIo(addr, type);                   break;
+            case evToggleIoNext:    status = toggleIoNext(addr);                     break;
+            case evToggleMode:      status = toggleOutputMode(addr);                 break;
+            case evStoreConfig:     status = storeConfig(oObject, client);           break;
+            case evSetup:           status = performConfigDetails(client);           break;
+
+            case evStoreIoSetup:    status = storeIoSetup(oObject, client);          break;
+            case evChartData:       status = performChartData(oObject, client);      break;
+            case evUserDetails:     status = performUserDetails(client);             break;
+            case evStoreUserConfig: status = storeUserConfig(oObject, client);       break;
+            case evChangePasswd:    status = performPasswChange(oObject, client);    break;
+            case evGroups:          status = performGroups(client);                  break;
+            case evGroupConfig:     status = storeGroups(oObject, client);           break;
+
+            case evReset:           status = performReset(oObject, client);          break;
+            case evSendMail:        status = performSendMail(oObject, client);       break;
+            case evSyslog:          status = performSyslog(oObject, client);         break;
+            case evForceRefresh:    status = update(true, client);                   break;
+            case evChartbookmarks:  status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client);     break;
             default:
             {
@@ -75,6 +85,9 @@ int Daemon::dispatchClientRequest()
       }
       else
       {
+         if (client == na)
+            tell(0, "Insufficient rights to '%s', missing login", getStringFromJson(oData, "event", "<null>"));
+         else
          tell(0, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
               wsClients[(void*)client].user.c_str());
          replyResult(fail, "Insufficient rights", client);
@@ -100,29 +113,42 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evLogin:               return true;
       case evLogout:              return true;
       case evGetToken:            return true;
+      case evData:                return true;
+      case evInit:                return true;
+      case evPageChange:          return true;
       case evToggleIoNext:        return rights & urControl;
       case evToggleMode:          return rights & urFullControl;
       case evStoreConfig:         return rights & urSettings;
-      case evIoSetup:             return rights & urView;
+      case evSetup:               return rights & urView;
       case evStoreIoSetup:        return rights & urSettings;
       case evGroupConfig:         return rights & urSettings;
       case evChartData:           return rights & urView;
-      case evUserConfig:          return rights & urAdmin;
+      case evStoreUserConfig:     return rights & urAdmin;
+      case evUserDetails:         return rights & urAdmin;
       case evChangePasswd:        return true;   // check will done in performPasswChange()
       case evReset:               return rights & urFullControl;
+      case evSendMail:            return rights & urSettings;
+      case evSyslog:              return rights & urAdmin;
+      case evForceRefresh:        return true;
+
+      case evChartbookmarks:      return rights & urView;
+      case evStoreChartbookmarks: return rights & urSettings;
+
       case evMenu:                return rights & urView;
       case evAlerts:              return rights & urSettings;
       case evStoreAlerts:         return rights & urSettings;
+      case evGroups:              return rights & urSettings;
+      case evSchema:              return rights & urView;
       case evStoreSchema:         return rights & urSettings;
       case evParEditRequest:      return rights & urFullControl;
       case evParStore:            return rights & urFullControl;
-      case evSendMail:            return rights & urSettings;
-      case evChartbookmarks:      return rights & urView;
-      case evStoreChartbookmarks: return rights & urSettings;
+
       case evInitTables:          return rights & urSettings;
       case evUpdateTimeRanges:    return rights & urFullControl;
       case evPellets:             return rights & urControl;
       case evPelletsAdd:          return rights & urFullControl;
+      case evErrors:              return rights & urView;
+
       default: break;
    }
 
@@ -178,6 +204,35 @@ int Daemon::replyResult(int status, const char* message, long client)
 }
 
 //***************************************************************************
+// Reply Result - the new version!!!
+//***************************************************************************
+/*
+int Daemon::replyResult(int status, long client, const char* format, ...)
+{
+   if (!client)
+      return done;
+
+   char* message {nullptr};
+   va_list ap;
+
+   va_start(ap, format);
+   vasprintf(&message, format, ap);
+   va_end(ap);
+
+   if (status != success)
+      tell(0, "Error: Requested web action failed with '%s' (%d)", message, status);
+
+   json_t* oJson = json_object();
+   json_object_set_new(oJson, "status", json_integer(status));
+   json_object_set_new(oJson, "message", json_string(message));
+   pushOutObject(job, oJson, "result", client);
+
+   free(message);
+
+   return status;
+}
+*/
+//***************************************************************************
 // Perform WS Client Login / Logout
 //***************************************************************************
 
@@ -187,13 +242,14 @@ int Daemon::performLogin(json_t* oObject)
    const char* user = getStringFromJson(oObject, "user", "");
    const char* token = getStringFromJson(oObject, "token", "");
    const char* page = getStringFromJson(oObject, "page", "");
-   json_t* aRequests = json_object_get(oObject, "requests");
 
    tableUsers->clear();
    tableUsers->setValue("USER", user);
 
    wsClients[(void*)client].user = user;
    wsClients[(void*)client].page = page;
+
+   // tell(eloAlways, "Now %zu clients in list", wsClients.size());
 
    if (tableUsers->find() && tableUsers->hasValue("TOKEN", token))
    {
@@ -224,8 +280,20 @@ int Daemon::performLogin(json_t* oObject)
    pushOutMessage(oJson, "config", client);
 
    oJson = json_object();
+   widgetTypes2Json(oJson);
+   pushOutMessage(oJson, "widgettypes", client);
+
+   oJson = json_object();
    daemonState2Json(oJson);
    pushOutMessage(oJson, "daemonstate", client);
+
+   oJson = json_object();
+   valueFacts2Json(oJson, false);
+   pushOutMessage(oJson, "valuefacts", client);
+
+   oJson = json_array();
+   images2Json(oJson);
+   pushOutMessage(oJson, "images", client);
 
    oJson = json_object();
    s3200State2Json(oJson);
@@ -235,39 +303,20 @@ int Daemon::performLogin(json_t* oObject)
    groups2Json(oJson);
    pushOutMessage(oJson, "grouplist", client);
 
-   // perform requests
+   update(true, client);
 
-   size_t index {0};
-   json_t* oRequest {nullptr};
+   return done;
+}
 
-   json_array_foreach(aRequests, index, oRequest)
-   {
-      const char* name = getStringFromJson(oRequest, "name");
+//***************************************************************************
+// Perform Page Change
+//***************************************************************************
 
-      if (isEmpty(name))
-         continue;
+int Daemon::performPageChange(json_t* oObject, long client)
+{
+   const char* page = getStringFromJson(oObject, "page", "");
 
-      tell(0, "Got request '%s/%s' (client 0x%lx, rights %d)", name, page, client, wsClients[(void*)client].rights);
-
-      if (strcmp(name, "data") == 0)
-         update(true, client);     // push the data ('init')
-      else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "syslog") == 0)
-         performSyslog(0, client);
-      else if (wsClients[(void*)client].rights & urSettings && strcmp(name, "configdetails") == 0)
-         performConfigDetails(client);
-      else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "userdetails") == 0)
-         performUserDetails(client);
-      else if (strcmp(name, "userdetails") == 0 && strcmp(page, "user") == 0)
-         performUserDetails(client);
-      else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "iosettings") == 0)
-         performIoSettings(nullptr, client);
-      else if (wsClients[(void*)client].rights & urAdmin && strcmp(name, "groups") == 0)
-         performGroups(client);
-      else if (strcmp(name, "chartdata") == 0)
-         performChartData(oRequest, client);
-      else
-         onLogin(name, client);
-   }
+   wsClients[(void*)client].page = page;
 
    return done;
 }
@@ -343,7 +392,7 @@ int Daemon::performSyslog(json_t* oObject, long client)
    if (client == 0)
       return done;
 
-   const char* log = oObject ? getStringFromJson(oObject, "log") : nullptr;
+   const char* log = getStringFromJson(oObject, "log");
    json_t* oJson = json_object();
    std::vector<std::string> lines;
    std::string result;
@@ -397,10 +446,7 @@ int Daemon::performConfigDetails(long client)
 int Daemon::performUserDetails(long client)
 {
    if (client == 0)
-   {
-      tell(eloAlways, "Abort 'userdetails' request, missing client");
       return done;
-   }
 
    json_t* oJson = json_array();
    userDetails2Json(oJson);
@@ -514,7 +560,7 @@ int Daemon::performChartData(json_t* oObject, long client)
    if (client == 0)
       return done;
 
-   int range = getIntFromJson(oObject, "range", 3);                // Anzahl der Tage
+   double range = getDoubleFromJson(oObject, "range", 1);          // Anzahl der Tage
    time_t rangeStart = getLongFromJson(oObject, "start", 0);       // Start Datum (unix timestamp)
    const char* sensors = getStringFromJson(oObject, "sensors");    // Kommata getrennte Liste der Sensoren
    const char* id = getStringFromJson(oObject, "id", "");
@@ -529,14 +575,14 @@ int Daemon::performChartData(json_t* oObject, long client)
 
    if (strcmp(id, "chart") == 0 && !isEmpty(sensors))
    {
-      tell(0, "storing sensors '%s' for chart", sensors);
+      tell(2, "storing sensors '%s' for chart", sensors);
       setConfigItem("chart", sensors);
       getConfigItem("chart", chartSensors);
    }
    else if (isEmpty(sensors))
       sensors = chartSensors;
 
-   tell(eloDetail, "Selecting chart data for sendors '%s' with range %d ..", sensors, range);
+   tell(eloInfo, "Selecting chart data for sensors '%s' with range %.1f ..", sensors, range);
 
    std::vector<std::string> sList;
 
@@ -550,7 +596,7 @@ int Daemon::performChartData(json_t* oObject, long client)
       rangeStart = time(0) - (range*tmeSecondsPerDay);
 
    rangeFrom.setValue(rangeStart);
-   rangeTo.setValue(rangeStart + (range*tmeSecondsPerDay));
+   rangeTo.setValue(rangeStart + (int)(range*tmeSecondsPerDay));
 
    tableValueFacts->clear();
    tableValueFacts->setValue("STATE", "A");
@@ -610,6 +656,9 @@ int Daemon::performChartData(json_t* oObject, long client)
 
       for (int f = select->find(); f; f = select->fetch())
       {
+         // tell(eloAlways, "0x%x: '%s' : %0.2f", (uint)tableSamples->getStrValue("ADDRESS"),
+         //      xmlTime.getStrValue(), tableSamples->getFloatValue("VALUE"));
+
          json_t* oRow = json_object();
          json_array_append_new(oData, oRow);
 
@@ -618,8 +667,11 @@ int Daemon::performChartData(json_t* oObject, long client)
          if (tableValueFacts->hasValue("TYPE", "DO"))
             json_object_set_new(oRow, "y", json_integer(maxValue.getIntValue()*10));
          else
+         {
+            // double avg = avgValue.getFloatValue();
+            // avg = std::llround(avg*20) / 20.0;                  // round to .05
             json_object_set_new(oRow, "y", json_real(avgValue.getFloatValue()));
-
+         }
          count++;
       }
 
@@ -633,8 +685,35 @@ int Daemon::performChartData(json_t* oObject, long client)
    json_object_set_new(oMain, "rows", oJson);
    json_object_set_new(oMain, "id", json_string(id));
    selectActiveValueFacts->freeResult();
-   tell(eloDetail, ".. done");
+   tell(eloDebug, ".. done");
    pushOutMessage(oMain, "chartdata", client);
+
+   return done;
+}
+
+//***************************************************************************
+// Chart Bookmarks
+//***************************************************************************
+
+int Daemon::storeChartbookmarks(json_t* array, long client)
+{
+   char* bookmarks = json_dumps(array, JSON_REAL_PRECISION(4));
+   setConfigItem("chartBookmarks", bookmarks);
+   free(bookmarks);
+
+   performChartbookmarks(client);
+
+   return done; // replyResult(success, "Bookmarks gespeichert", client);
+}
+
+int Daemon::performChartbookmarks(long client)
+{
+   char* bookmarks {nullptr};
+   getConfigItem("chartBookmarks", bookmarks, "{[]}");
+   json_error_t error;
+   json_t* oJson = json_loads(bookmarks, 0, &error);
+   pushOutMessage(oJson, "chartbookmarks", client);
+   free(bookmarks);
 
    return done;
 }
@@ -643,7 +722,7 @@ int Daemon::performChartData(json_t* oObject, long client)
 // Store User Configuration
 //***************************************************************************
 
-int Daemon::performUserConfig(json_t* oObject, long client)
+int Daemon::storeUserConfig(json_t* oObject, long client)
 {
    if (client == 0)
       return done;
@@ -766,17 +845,22 @@ int Daemon::performPasswChange(json_t* oObject, long client)
 }
 
 //***************************************************************************
-// Reset Peaks
+// Perform Reset
 //***************************************************************************
 
 int Daemon::performReset(json_t* obj, long client)
 {
-   tablePeaks->truncate();
-   setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
+   std::string what = getStringFromJson(obj, "what");
 
-   json_t* oJson = json_object();
-   config2Json(oJson);
-   pushOutMessage(oJson, "config", client);
+   if (what == "peaks")
+   {
+      tablePeaks->truncate();
+      setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
+
+      json_t* oJson = json_object();
+      config2Json(oJson);
+      pushOutMessage(oJson, "config", client);
+   }
 
    return replyResult(success, "Peaks zurückgesetzt", client);
 }
@@ -787,10 +871,11 @@ int Daemon::performReset(json_t* obj, long client)
 
 int Daemon::storeConfig(json_t* obj, long client)
 {
-   const char* key {0};
+   const char* key {nullptr};
    json_t* jValue {nullptr};
    int oldWebPort = webPort;
    char* oldStyle {nullptr};
+   int count {0};
 
    getConfigItem("style", oldStyle, "");
 
@@ -798,6 +883,7 @@ int Daemon::storeConfig(json_t* obj, long client)
    {
       tell(3, "Debug: Storing config item '%s' with '%s'", key, json_string_value(jValue));
       setConfigItem(key, json_string_value(jValue));
+      count++;
    }
 
    // create link for the stylesheet
@@ -825,16 +911,20 @@ int Daemon::storeConfig(json_t* obj, long client)
    pushOutMessage(oJson, "config", client);
 
    if (oldWebPort != webPort)
-      replyResult(success, "Konfiguration gespeichert. Der Web Port wurde geändert, bitte p4d neu Starten!", client);
-   else if (strcmp(name, oldStyle) != 0)
+      replyResult(success, "Konfiguration gespeichert. Web Port geändert, bitte " TARGET " neu Starten!", client);
+   else if (!isEmpty(name) && strcmp(name, oldStyle) != 0)
       replyResult(success, "Konfiguration gespeichert. Das Farbschema wurde geändert, mit STRG-Umschalt-r neu laden!", client);
-   else
+   else if (count > 1)  // on drag&drop its only one parameter
       replyResult(success, "Konfiguration gespeichert", client);
 
    free(oldStyle);
 
    return done;
 }
+
+//***************************************************************************
+// Store IO Setup
+//***************************************************************************
 
 int Daemon::storeIoSetup(json_t* array, long client)
 {
@@ -845,10 +935,7 @@ int Daemon::storeIoSetup(json_t* array, long client)
    {
       int addr = getIntFromJson(jObj, "address");
       const char* type = getStringFromJson(jObj, "type");
-      int state = getIntFromJson(jObj, "state");
-      const char* usrTitle = getStringFromJson(jObj, "usrtitle", "");
-      int maxScale = getIntFromJson(jObj, "scalemax");
-      int groupid = getIntFromJson(jObj, "groupid");
+      bool state = getBoolFromJson(jObj, "state");
 
       tableValueFacts->clear();
       tableValueFacts->setValue("ADDRESS", addr);
@@ -858,29 +945,42 @@ int Daemon::storeIoSetup(json_t* array, long client)
          continue;
 
       tableValueFacts->clearChanged();
-      tableValueFacts->setValue("STATE", state ? "A" : "D");
-      tableValueFacts->setValue("USRTITLE", usrTitle);
 
-      if (maxScale >= 0)
-         tableValueFacts->setValue("MAXSCALE", maxScale);
+      if (isElementSet(jObj, "state"))
+         tableValueFacts->setValue("STATE", state ? "A" : "D");
+      if (isElementSet(jObj, "usrtitle"))
+         tableValueFacts->setValue("USRTITLE", getStringFromJson(jObj, "usrtitle"));
+      if (isElementSet(jObj, "unit"))
+         tableValueFacts->setValue("UNIT", getStringFromJson(jObj, "unit"));
 
-      if (groupid >= 0)
-         tableValueFacts->setValue("GROUPID", groupid);
+      if (isElementSet(jObj, "widget"))
+      {
+         json_t* oWidgetOptions = getObjectFromJson(jObj, "widget");
+
+         if (oWidgetOptions)
+         {
+            char* widgetOptions = json_dumps(oWidgetOptions, JSON_REAL_PRECISION(4));
+            tableValueFacts->setValue("WIDGETOPT", widgetOptions);
+         }
+      }
 
       if (tableValueFacts->getChanges())
       {
          tableValueFacts->store();
-         tell(2, "STORED %s:%d - usrtitle: '%s'; scalemax: %d; state: %d", type, addr, usrTitle, maxScale, state);
+         tell(2, "STORED valuefact for %s:%d", type, addr);
       }
-
-      tell(3, "Debug: %s:%d - usrtitle: '%s'; scalemax: %d; state: %d", type, addr, usrTitle, maxScale, state);
    }
 
-   onIoSettingsChange();
-   performIoSettings(nullptr, client);
+   json_t* oJson = json_object();
+   valueFacts2Json(oJson, false);
+   pushOutMessage(oJson, "valuefacts", client);
 
    return replyResult(success, "Konfiguration gespeichert", client);
 }
+
+//***************************************************************************
+// Store Groups
+//***************************************************************************
 
 int Daemon::storeGroups(json_t* oObject, long client)
 {
@@ -951,34 +1051,7 @@ int Daemon::storeGroups(json_t* oObject, long client)
 }
 
 //***************************************************************************
-// Chart Bookmarks
-//***************************************************************************
-
-int Daemon::storeChartbookmarks(json_t* array, long client)
-{
-   char* bookmarks = json_dumps(array, JSON_REAL_PRECISION(4));
-   setConfigItem("chartBookmarks", bookmarks);
-   free(bookmarks);
-
-   performChartbookmarks(client);
-
-   return done; // replyResult(success, "Bookmarks gespeichert", client);
-}
-
-int Daemon::performChartbookmarks(long client)
-{
-   char* bookmarks {nullptr};
-   getConfigItem("chartBookmarks", bookmarks, "{[]}");
-   json_error_t error;
-   json_t* oJson = json_loads(bookmarks, 0, &error);
-   pushOutMessage(oJson, "chartbookmarks", client);
-   free(bookmarks);
-
-   return done;
-}
-
-//***************************************************************************
-// Config 2 Json Stuff
+// Config 2 Json
 //***************************************************************************
 
 int Daemon::config2Json(json_t* obj)
@@ -1100,15 +1173,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
          json_t* oArray = json_array();
 
          for (const auto& opt : options)
-         {
-            // if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
-            //    continue;
-
-            // char* p = strdup(strchr(opt.name.c_str(), '-'));
-            // *(strrchr(p, '.')) = '\0';
             json_array_append_new(oArray, json_string(opt.name.c_str()));
-            // free(p);
-         }
 
          json_object_set_new(obj, "options", oArray);
       }
@@ -1225,19 +1290,33 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       if (filterActive && !tableValueFacts->hasValue("STATE", "A"))
          continue;
 
+      char* key {nullptr};
+      asprintf(&key, "%s:%lu", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       json_t* oData = json_object();
-      json_array_append_new(obj, oData);
+      json_object_set_new(obj, key, oData);
+      free(key);
 
       json_object_set_new(oData, "address", json_integer((ulong)tableValueFacts->getIntValue("ADDRESS")));
       json_object_set_new(oData, "type", json_string(tableValueFacts->getStrValue("TYPE")));
-      json_object_set_new(oData, "state", json_integer(tableValueFacts->hasValue("STATE", "A")));
+      json_object_set_new(oData, "state", json_boolean(tableValueFacts->hasValue("STATE", "A")));
       json_object_set_new(oData, "name", json_string(tableValueFacts->getStrValue("NAME")));
       json_object_set_new(oData, "title", json_string(tableValueFacts->getStrValue("TITLE")));
       json_object_set_new(oData, "usrtitle", json_string(tableValueFacts->getStrValue("USRTITLE")));
       json_object_set_new(oData, "unit", json_string(tableValueFacts->getStrValue("UNIT")));
-      json_object_set_new(oData, "scalemax", json_integer(tableValueFacts->getIntValue("MAXSCALE")));
-      json_object_set_new(oData, "value", json_real(tableValueFacts->getFloatValue("VALUE")));
 
+      if (!tableValueFacts->getValue("CHOICES")->isNull())
+         json_object_set_new(oData, "choices", json_string(tableValueFacts->getStrValue("CHOICES")));
+
+      const char* widgetOptions = tableValueFacts->getStrValue("WIDGETOPT");
+      if (isEmpty(widgetOptions))
+         widgetOptions = "{}";
+      json_error_t error;
+      json_t* oWidgetOptions = json_loads(widgetOptions, 0, &error);
+      if (oWidgetOptions)
+         json_object_set_new(oData, "widget", oWidgetOptions);
+      else
+         tell(1, "Error decoding json: %s (%s, line %d column %d, position %d) [%s]",
+              error.text, error.source, error.line, error.column, error.position, widgetOptions);
 
       tableGroups->clear();
       tableGroups->setValue("ID", tableValueFacts->getIntValue("GROUPID"));
@@ -1279,7 +1358,19 @@ int Daemon::groups2Json(json_t* obj)
 }
 
 //***************************************************************************
-// Status 2 Json
+// Widget Types 2 Json
+//***************************************************************************
+
+int Daemon::widgetTypes2Json(json_t* obj)
+{
+   for (int type = wtUnknown+1; type < wtCount; type++)
+      json_object_set_new(obj, toName((WidgetType)type), json_integer(type));
+
+   return done;
+}
+
+//***************************************************************************
+// Daemon Status 2 Json
 //***************************************************************************
 
 int Daemon::daemonState2Json(json_t* obj)
@@ -1326,12 +1417,6 @@ int Daemon::sensor2Json(json_t* obj, cDbTable* table)
    tablePeaks->setValue("ADDRESS", table->getIntValue("ADDRESS"));
    tablePeaks->setValue("TYPE", table->getStrValue("TYPE"));
 
-   json_object_set_new(obj, "widgettype", json_integer(
-      getWidgetTypeOf(
-         table->getStrValue("TYPE"),
-         tableValueFacts->getStrValue("UNIT"),
-         table->getIntValue("ADDRESS"))));
-
    if (tablePeaks->find())
    {
       peakMax = tablePeaks->getFloatValue("MAX");
@@ -1351,7 +1436,7 @@ int Daemon::sensor2Json(json_t* obj, cDbTable* table)
 
    const char* unit = table->getStrValue("UNIT");
    json_object_set_new(obj, "unit", json_string(strcmp(unit, "°") == 0 ? "°C" : unit));
-   json_object_set_new(obj, "scalemax", json_integer(table->getIntValue("MAXSCALE")));
+
    json_object_set_new(obj, "rights", json_integer(table->getIntValue("RIGHTS")));
 
    json_object_set_new(obj, "peak", json_real(peakMax));
@@ -1360,28 +1445,73 @@ int Daemon::sensor2Json(json_t* obj, cDbTable* table)
    return done;
 }
 
-Daemon::WidgetType Daemon::getWidgetTypeOf(std::string type, std::string unit, uint address)
+//***************************************************************************
+// images2Json
+//***************************************************************************
+
+int Daemon::images2Json(json_t* obj)
 {
-   if (type == "DI" || type == "DO")
-      return wtSymbol;
+   FileList images;
+   int count {0};
+   char* path {nullptr};
 
-   if (type == "UD" && address == udState)
-      return wtSymbol;
+   json_array_append_new(obj, json_string(""));
+   asprintf(&path, "%s/img/icon", httpPath);
 
-   if (type == "UD")
-      return wtText;
+   if (getFileList(path, DT_REG, nullptr, false, &images, count) == success)
+   {
+      sortFileList(images);
 
-   if (type == "AO")
-      return wtChart;
+      for (const auto& img : images)
+      {
+         char* imgPath {nullptr};
+         asprintf(&imgPath, "img/icon/%s", img.name.c_str());
+         json_array_append_new(obj, json_string(imgPath));
+         free(imgPath);
+      }
+   }
 
-   if (type == "SD")
-      return wtChart;
+   free(path);
 
-   if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A" || unit == "U") // Volt/Ampere/Prozent/Temperatur/Umin
-      return wtChart;
-
-   if (!unit.length())
-      return wtSymbol;
-
-   return wtValue;
+   return done;
 }
+
+//***************************************************************************
+// Web File Exists
+//***************************************************************************
+
+bool Daemon::webFileExists(const char* file, const char* base)
+{
+   char* path {nullptr};
+   asprintf(&path, "%s/%s/%s", httpPath, base ? base : "", file);
+   bool exist = fileExists(path);
+   free(path);
+
+   return exist;
+}
+
+// Daemon::WidgetType Daemon::getWidgetTypeOf(std::string type, std::string unit, uint address)
+// {
+//    if (type == "DI" || type == "DO")
+//       return wtSymbol;
+
+//    if (type == "UD" && address == udState)
+//       return wtSymbol;
+
+//    if (type == "UD")
+//       return wtText;
+
+//    if (type == "AO")
+//       return wtChart;
+
+//    if (type == "SD")
+//       return wtChart;
+
+//    if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A" || unit == "U") // Volt/Ampere/Prozent/Temperatur/Umin
+//       return wtChart;
+
+//    if (!unit.length())
+//       return wtSymbol;
+
+//    return wtValue;
+// }

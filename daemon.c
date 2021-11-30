@@ -40,14 +40,17 @@ const char* cWebService::events[] =
    "togglemode",
    "storeconfig",
    "gettoken",
-   "iosetup",
+   "setup",
    "storeiosetup",
    "chartdata",
    "logmessage",
-   "userconfig",
+
+   "userdetails",
    "storeuserconfig",
    "changepasswd",
+
    "reset",
+   "groups",
    "groupconfig",
    "chartbookmarks",
    "storechartbookmarks",
@@ -62,6 +65,7 @@ const char* cWebService::events[] =
    "alerts",
    "storealerts",
    "inittables",
+   "schema",
    "storeschema",
    "updatetimeranges",
    "pellets",
@@ -253,6 +257,7 @@ int Daemon::pushDataUpdate(const char* title, long client)
       {
          for (auto sj : jsonSensorList)           // #TODO - send visible instead of all??
             json_array_append(oWsJson, sj.second);
+         title = "schemainit";
       }
 
       pushOutMessage(oWsJson, title, client);
@@ -285,6 +290,7 @@ int Daemon::pushDataUpdate(const char* title, long client)
          {
             for (auto& sj : jsonSensorList)          // #TODO - send visible instead of all??
                json_array_append(oWsJson, sj.second);
+            title = "schemainit";
          }
 
          pushOutMessage(oWsJson, title, (long)cl.first);
@@ -461,7 +467,7 @@ int Daemon::initOutput(uint pin, int opt, OutputMode mode, const char* name, uin
 
    pinMode(pin, OUTPUT);
    gpioWrite(pin, false, false);
-   addValueFact(pin, "DO", name, "", wtSymbol, 0, 0, urControl);
+   addValueFact(pin, "DO", 1, name, "", wtSymbol, 0, 0, urControl);
 
    return done;
 }
@@ -475,7 +481,7 @@ int Daemon::initInput(uint pin, const char* name)
    pinMode(pin, INPUT);
 
    if (!isEmpty(name))
-      addValueFact(pin, "DI", name, "", wtSymbol, 0, 0);
+      addValueFact(pin, "DI", 1, name, "", wtSymbol, 0, 0);
 
    digitalInputStates[pin] = gpioRead(pin);
 
@@ -559,7 +565,7 @@ int Daemon::initScripts()
 
          selectScriptByPath->freeResult();
 
-         addValueFact(addr, "SC", !isEmpty(title) ? title : script.name.c_str(), unit,
+         addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
                       kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
                       0, 0, urControl, choices);
 
@@ -1082,7 +1088,7 @@ int Daemon::initW1()
 
    for (const auto& it : w1Sensors)
    {
-      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C", "", true);
+      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C", wtMeter);
 
       if (res == 1)
          added++;
@@ -1157,6 +1163,7 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript);
+   getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
 
@@ -1214,8 +1221,6 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
                const char* type, int address, double value,
                uint factor, uint groupid, const char* text)
 {
-   // static time_t lastHmFailAt = 0;
-
    double theValue = value / (double)factor;
 
    if (strcmp(type, "VA") == 0)
@@ -1260,12 +1265,14 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
 
    // Home Assistant
 
+   IoType iot = strcmp(type, "DO") == 0 ? iotLight : iotSensor;
+
    if (mqttInterfaceStyle == misSingleTopic)
       jsonAddValue(oJson, name, title, unit, theValue, groupid, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
-      mqttPublishSensor(iotSensor, name, title, unit, theValue, text, initialRun /*forceConfig*/);
+      mqttPublishSensor(iot, name, title, unit, theValue, text, initialRun /*forceConfig*/);
 
    return success;
 }
@@ -1536,8 +1543,8 @@ int Daemon::update(bool webOnly, long client)
 {
    static size_t w1Count {0};
    int count {0};
-   int status;
-   char num[100];
+   int status {success};
+   char num[100] {'\0'};
 
    if (!webOnly)
    {
@@ -1718,7 +1725,6 @@ int Daemon::update(bool webOnly, long client)
 
             if (!webOnly)
                store(lastSampleTime, name, title, unit, type, addr, w1Value, factor, groupid);
-            // store(lastSampleTime, name, title, unit, type, addr, w1Value);
          }
          else
          {
@@ -1729,17 +1735,6 @@ int Daemon::update(bool webOnly, long client)
 
             json_object_set_new(ojData, "text", json_string("missing sensor"));
          }
-
-         // double value = w1.valueOf(name);
-
-         // json_object_set_new(ojData, "value", json_real(value));
-
-         // if (!webOnly)
-         // {
-         //    store(lastSampleTime, name, title, unit, type, addr, value, factor, groupid);
-         //    sprintf(num, "%.2f%s", value / factor, unit);
-         //    addParameter2Mail(title, num);
-         // }
       }
 
       else if (tableValueFacts->hasValue("TYPE", "SD"))   // state duration
@@ -1821,8 +1816,6 @@ int Daemon::update(bool webOnly, long client)
 
    pushDataUpdate(webOnly ? "init" : "all", client);
 
-   tell(1, "MQTT InterfaceStyle is %d", mqttInterfaceStyle);
-
    // MQTT
 
    if (mqttInterfaceStyle == misSingleTopic)
@@ -1899,37 +1892,6 @@ void Daemon::afterUpdate()
 }
 
 //***************************************************************************
-// Dispatch Mqtt Command Request
-//   Format: {"state": "OFF", "brightness": 255}
-//***************************************************************************
-
-int Daemon::dispatchMqttCommandRequest(json_t* jData, const char* topic)
-{
-   auto it = hassCmdTopicMap.find(topic);
-
-   if (it != hassCmdTopicMap.end())
-   {
-      const char* state = getStringFromJson(jData, "state", "");
-
-      if (isEmpty(state))
-         return fail;
-
-      for (auto itOutput = digitalOutputStates.begin(); itOutput != digitalOutputStates.end(); ++itOutput)
-      {
-         bool bState = strcmp(state, "ON") == 0;
-
-         if (strcmp(it->second.c_str(), itOutput->second.name) == 0)
-         {
-            gpioWrite(itOutput->first, bState);
-            break;
-         }
-      }
-   }
-
-   return success;
-}
-
-//***************************************************************************
 // Add Parameter To Mail
 //***************************************************************************
 
@@ -1946,7 +1908,7 @@ void Daemon::addParameter2Mail(const char* name, const char* value)
 int Daemon::scheduleAggregate()
 {
    struct tm tm = { 0 };
-   time_t now;
+   time_t now {0};
 
    if (!aggregateHistory)
    {
@@ -1983,9 +1945,9 @@ int Daemon::scheduleAggregate()
 
 int Daemon::aggregate()
 {
-   char* stmt = 0;
+   char* stmt {nullptr};
    time_t history = time(0) - (aggregateHistory * tmeSecondsPerDay);
-   int aggCount = 0;
+   int aggCount {0};
 
    asprintf(&stmt,
             "replace into samples "
@@ -2034,150 +1996,6 @@ int Daemon::aggregate()
    return success;
 }
 
-int Daemon::updateParameter(cDbTable* tableMenu)
-{
-   int type = tableMenu->getIntValue("TYPE");
-   int paddr = tableMenu->getIntValue("ADDRESS");
-   int child = tableMenu->getIntValue("CHILD");
-
-   tell(3, "Update parameter %d/%d ...", type, paddr);
-
-   sem->p();
-
-   if (type == mstFirmware)
-   {
-      Fs::Status s;
-
-      if (request->getStatus(&s) == success)
-      {
-         if (tableMenu->find())
-         {
-            tableMenu->setValue("VALUE", s.version);
-            tableMenu->setValue("UNIT", "");
-            tableMenu->update();
-         }
-      }
-   }
-
-   else if (type == mstDigOut || type == mstDigIn || type == mstAnlOut)
-   {
-      int status;
-      Fs::IoValue v(paddr);
-
-      if (type == mstDigOut)
-         status = request->getDigitalOut(&v);
-      else if (type == mstDigIn)
-         status = request->getDigitalIn(&v);
-      else
-         status = request->getAnalogOut(&v);
-
-      if (status == success)
-      {
-         char* buf = 0;
-
-         if (type == mstAnlOut)
-         {
-            if (v.mode == 0xff)
-               asprintf(&buf, "%d (A)", v.state);
-            else
-               asprintf(&buf, "%d (%d)", v.state, v.mode);
-         }
-         else
-            asprintf(&buf, "%s (%c)", v.state ? "on" : "off", v.mode);
-
-         if (tableMenu->find())
-         {
-            tableMenu->setValue("VALUE", buf);
-            tableMenu->setValue("UNIT", "");
-            tableMenu->update();
-         }
-
-         free(buf);
-      }
-   }
-
-   else if (type == mstMesswert || type == mstMesswert1)
-   {
-      int status;
-      Fs::Value v(paddr);
-
-      tableValueFacts->clear();
-      tableValueFacts->setValue("TYPE", "VA");
-      tableValueFacts->setValue("ADDRESS", paddr);
-
-      if (tableValueFacts->find())
-      {
-         double factor = tableValueFacts->getIntValue("FACTOR");
-         const char* unit = tableValueFacts->getStrValue("UNIT");
-         int dataType = tableValueFacts->getIntValue("RES1");
-
-         status = request->getValue(&v);
-
-         if (status == success)
-         {
-            char* buf = 0;
-            int value = dataType == 1 ? (word)v.value : (sword)v.value;
-
-            asprintf(&buf, "%.2f", value / factor);
-
-            if (tableMenu->find())
-            {
-               tableMenu->setValue("VALUE", buf);
-               tableMenu->setValue("UNIT", strcmp(unit, "°") == 0 ? "°C" : unit);
-               tableMenu->update();
-            }
-
-            free(buf);
-         }
-      }
-   }
-   else if (isGroup(type) || type == mstBusValues || type == mstReset || type == mstEmpty)
-   {
-      // nothing to do
-   }
-   else if (child)
-   {
-      // I have childs -> I have no value -> nothing to do
-   }
-   else if (paddr == 0 && type != mstPar)
-   {
-      // address 0 only for type mstPar
-   }
-   else if (paddr == 9997 || paddr == 9998 || paddr == 9999)
-   {
-      // this 3 'special' addresses takes a long while and don't deliver any usefull data
-   }
-   else
-   {
-      Fs::ConfigParameter p(paddr);
-
-      if (request->getParameter(&p) == success)
-      {
-         cRetBuf value = p.toNice(type);
-
-         if (tableMenu->find())
-         {
-            tableMenu->setValue("VALUE", value);
-            tableMenu->setValue("UNIT", strcmp(p.unit, "°") == 0 ? "°C" : p.unit);
-            tableMenu->setValue("DIGITS", p.digits);
-            tableMenu->setValue("MIN", p.rMin);
-            tableMenu->setValue("MAX", p.rMax);
-            tableMenu->setValue("DEF", p.rDefault);
-            tableMenu->setValue("FACTOR", p.getFactor());
-            tableMenu->setValue("PUB1", p.ub1);
-            tableMenu->setValue("PUB2", p.ub2);
-            tableMenu->setValue("PUB3", p.ub3);
-            tableMenu->setValue("PUW1", p.uw1);
-            tableMenu->update();
-         }
-      }
-   }
-
-   sem->v();
-
-   return done;
-}
-
 //***************************************************************************
 // Send State Mail
 //***************************************************************************
@@ -2193,7 +2011,7 @@ int Daemon::sendStateMail()
 
    // HTML mail
 
-   char* html = 0;
+   char* html {nullptr};
 
    loadHtmlHeader();
 
@@ -2228,7 +2046,7 @@ int Daemon::sendStateMail()
 
 int Daemon::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
 {
-   char* command = {nullptr};
+   char* command {nullptr};
    int result {0};
 
    asprintf(&command, "%s '%s' '%s' '%s' '%s'", mailScript, subject, body, mimeType, receiver);
@@ -2277,7 +2095,7 @@ int Daemon::isMailState()
 
 int Daemon::loadHtmlHeader()
 {
-   char* file;
+   char* file {nullptr};
 
    // load only once at first call
 
@@ -2328,8 +2146,7 @@ int Daemon::loadHtmlHeader()
                      "        border: 1px solid #D2D2D2;\n"
                      "      }\n"
                      "      </style>\n"
-                     "  </head>\n");
-   htmlHeader.append('\0');
+                     "  </head>\n\0");
 
    return success;
 }
@@ -2338,7 +2155,7 @@ int Daemon::loadHtmlHeader()
 // Add Value Fact
 //***************************************************************************
 
-int Daemon::addValueFact(int addr, const char* type, const char* name, const char* unit,
+int Daemon::addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
                         WidgetType widgetType, int minScale, int maxScale, int rights, const char* choices)
 {
    if (maxScale == na)
@@ -2354,6 +2171,7 @@ int Daemon::addValueFact(int addr, const char* type, const char* name, const cha
 
       tableValueFacts->setValue("NAME", name);
       tableValueFacts->setValue("TITLE", name);
+      tableValueFacts->setValue("FACTOR", factor);
       tableValueFacts->setValue("RIGHTS", rights);
       tableValueFacts->setValue("STATE", "D");
       tableValueFacts->setValue("UNIT", unit);
@@ -2375,12 +2193,22 @@ int Daemon::addValueFact(int addr, const char* type, const char* name, const cha
 
    tableValueFacts->setValue("NAME", name);
    tableValueFacts->setValue("TITLE", name);
+   tableValueFacts->setValue("FACTOR", factor);
 
    if (!isEmpty(choices))
       tableValueFacts->setValue("CHOICES", choices);
 
    if (tableValueFacts->getValue("RIGHTS")->isNull())
       tableValueFacts->setValue("RIGHTS", rights);
+
+   if (tableValueFacts->getValue("WIDGETOPT")->isNull())
+   {
+      char* opt {nullptr};
+      asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
+               unit, maxScale, minScale, 0, getImageFor(name, true), getImageFor(name, false), widgetType);
+      tableValueFacts->setValue("WIDGETOPT", opt);
+      free(opt);
+   }
 
    if (tableValueFacts->getChanges())
    {
@@ -2392,57 +2220,38 @@ int Daemon::addValueFact(int addr, const char* type, const char* name, const cha
 }
 
 //***************************************************************************
-// Add Value Fact
+// Dispatch Mqtt Command Request
+//   Format: {"state": "OFF", "brightness": 255}
 //***************************************************************************
 
-int Daemon::addValueFact(int addr, const char* type, int factor, const char* name,
-                      const char* unit, const char* title, bool active, int maxScale)
+int Daemon::dispatchMqttCommandRequest(json_t* jData, const char* topic)
 {
-   if (maxScale == na)
-      maxScale = unit[0] == '%' ? 100 : 45;
+   auto it = hassCmdTopicMap.find(topic);
 
-   tableValueFacts->clear();
-   tableValueFacts->setValue("ADDRESS", addr);
-   tableValueFacts->setValue("TYPE", type);
-
-   if (!tableValueFacts->find())
+   if (it != hassCmdTopicMap.end())
    {
-      tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("STATE", active ? "A" : "D");
-      tableValueFacts->setValue("UNIT", unit);
-      tableValueFacts->setValue("TITLE", title);
-      tableValueFacts->setValue("FACTOR", factor);
-      tableValueFacts->setValue("MAXSCALE", maxScale);
+      const char* state = getStringFromJson(jData, "state", "");
 
-      tableValueFacts->store();
-      tell(2, "Inserted valuefact %s:%d", type, addr);
-      return 1;    // 1 for 'added'
-   }
-   else
-   {
-      tableValueFacts->clearChanged();
+      if (isEmpty(state))
+         return fail;
 
-      tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("UNIT", unit);
-      tableValueFacts->setValue("TITLE", title);
-      tableValueFacts->setValue("FACTOR", factor);
-
-      if (tableValueFacts->getValue("MAXSCALE")->isNull())
-         tableValueFacts->setValue("MAXSCALE", maxScale);
-
-      if (tableValueFacts->getChanges())
+      for (auto itOutput = digitalOutputStates.begin(); itOutput != digitalOutputStates.end(); ++itOutput)
       {
-         tableValueFacts->store();
-         tell(2, "Updated valuefact %s:%d", type, addr);
-         return 2;  // 2 for 'modified'
+         bool bState = strcmp(state, "ON") == 0;
+
+         if (strcmp(it->second.c_str(), itOutput->second.name) == 0)
+         {
+            gpioWrite(itOutput->first, bState);
+            break;
+         }
       }
    }
 
-   return fail;
+   return success;
 }
 
 //***************************************************************************
-// Stored Parameters
+// Config Data
 //***************************************************************************
 
 int Daemon::getConfigItem(const char* name, char*& value, const char* def)
@@ -2522,10 +2331,7 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
    getConfigItem(name, txt);
 
    if (!isEmpty(txt))
-   {
-      std::string s = strReplace(".", ",", txt);  // #TODO needed ??
-      value = strtod(s.c_str(), nullptr);
-   }
+      value = strtod(txt, nullptr);
    else if (isEmpty(txt) && def != na)
    {
       value = def;
@@ -2790,6 +2596,37 @@ bool Daemon::gpioRead(uint pin)
 {
    digitalInputStates[pin] = digitalRead(pin);
    return digitalInputStates[pin];
+}
+
+//***************************************************************************
+// Publish Special Value
+//***************************************************************************
+
+void Daemon::publishSpecialValue(int addr)
+{
+   cDbRow* fact = valueFactOf("SP", addr);
+
+   if (fact)
+   {
+      json_t* ojData = json_object();
+
+      sensor2Json(ojData, tableValueFacts);
+
+      if (spSensors[addr].kind == "text")
+         json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
+      else if (spSensors[addr].kind == "value")
+         json_object_set_new(ojData, "value", json_real(spSensors[addr].value));
+
+      if (spSensors[addr].disabled)
+         json_object_set_new(ojData, "disabled", json_boolean(true));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "SP:0x%02x", addr);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
 }
 
 //***************************************************************************

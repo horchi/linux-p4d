@@ -198,9 +198,9 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int readConfiguration(bool initial);
       virtual int applyConfigurationSpecials() { return done; }
 
-      int addValueFact(int addr, const char* type, int factor, const char* name,
-                       const char* unit, const char* title, bool active, int maxScale = na);
-      int addValueFact(int addr, const char* type, const char* name, const char* unit,
+      // int addValueFact(int addr, const char* type, int factor, const char* name,
+      //                  const char* unit, const char* title, bool active, int maxScale = na);
+      int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
                        WidgetType widgetType, int minScale = 0, int maxScale = na, int rights = 0, const char* choices = nullptr);
 
       int initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights = urControl);
@@ -219,7 +219,6 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
       int performWebSocketPing();
-      virtual int onLogin(const char* name, long client) { return done; };
       int dispatchClientRequest();
       virtual int dispatchSpecialRequest(Event event, json_t* oObject, long client) { return ignore; }
       bool checkRights(long client, Event event, json_t* oObject);
@@ -249,7 +248,6 @@ class Daemon : public FroelingService, public cWebInterface
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
 
       void scheduleTimeSyncIn(int offset = 0);
-      int updateParameter(cDbTable* tableMenu);
       virtual int dispatchMqttCommandRequest(json_t* jData, const char* topic);
 
       void addParameter2Mail(const char* name, const char* value);
@@ -288,6 +286,7 @@ class Daemon : public FroelingService, public cWebInterface
       int performLogin(json_t* oObject);
       int performLogout(json_t* oObject);
       int performTokenRequest(json_t* oObject, long client);
+      int performPageChange(json_t* oObject, long client);
       int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performUserDetails(long client);
@@ -295,6 +294,7 @@ class Daemon : public FroelingService, public cWebInterface
       int performGroups(long client);
       int performSendMail(json_t* oObject, long client);
       int performChartData(json_t* oObject, long client);
+      int storeUserConfig(json_t* oObject, long client);
       int performUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);
       int storeConfig(json_t* obj, long client);
@@ -304,16 +304,22 @@ class Daemon : public FroelingService, public cWebInterface
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);
       virtual int performAlertTestMail(int id, long client) { return done; }
+
+      int widgetTypes2Json(json_t* obj);
       int config2Json(json_t* obj);
       int configDetails2Json(json_t* obj);
       int configChoice2json(json_t* obj, const char* name);
+      // int valueFacts2Json(json_t* obj);
       int userDetails2Json(json_t* obj);
       int valueFacts2Json(json_t* obj, bool filterActive);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
       int s3200State2Json(json_t* obj);
       int sensor2Json(json_t* obj, cDbTable* table);
+      int images2Json(json_t* obj);
       void pin2Json(json_t* ojData, int pin);
+      void publishSpecialValue(int addr);
+      bool webFileExists(const char* file, const char* base = nullptr);
 
       const char* getImageFor(const char* title, int value);
       const char* getStateImage(int state);
@@ -321,7 +327,7 @@ class Daemon : public FroelingService, public cWebInterface
       int toggleIoNext(uint pin);
       int toggleOutputMode(uint pin);
 
-      WidgetType getWidgetTypeOf(std::string type, std::string unit, uint address);
+   // WidgetType getWidgetTypeOf(std::string type, std::string unit, uint address);
 
       virtual int storeStates();
       virtual int loadStates();

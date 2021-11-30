@@ -55,13 +55,15 @@ function getItemDef(id)
    return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
 }
 
-function initSchema(schemaData, root)
+function initSchema(schemaData)
 {
    // console.log(JSON.stringify(schemaData, undefined, 4));
 
-   schemaRoot = root;
    lastSchemadata = schemaData;
-   root.innerHTML = "";
+
+   $('#container').removeClass('hidden');
+   document.getElementById("container").innerHTML = '<div id="schemaContainer" class="rounded-border schemaBox">';
+   schemaRoot = document.getElementById("schemaContainer");
 
    var image = document.createElement("img");
    image.setAttribute("src", "img/schema/schema-" + config.schema + ".png");
@@ -72,7 +74,7 @@ function initSchema(schemaData, root)
       image.setAttribute("ondragover", "allowDropSValue(event)");
    }
 
-   root.appendChild(image);
+   schemaRoot.appendChild(image);
 
    for (var i = 0; i < schemaData.length; i++) {
       if (!lastSchemadata[i].deleted)
@@ -134,7 +136,7 @@ function initSchemaElement(item, tabindex)
    schemaRoot.appendChild(div);
 }
 
-function updateSchema(data, root)
+function updateSchema(data)
 {
    if (data.length == 0)
       return ;

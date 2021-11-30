@@ -8,9 +8,25 @@
  *
  */
 
-function initGroupSetup(groups, root)
+function initGroupSetup(groups)
 {
    // console.log(JSON.stringify(groups, undefined, 4));
+
+   $('#container').removeClass('hidden');
+   document.getElementById("container").innerHTML =
+      '<div class="rounded-border seperatorTitle1">Baugruppen</div>' +
+      '  <table class="tableMultiCol">' +
+      '    <thead>' +
+      '      <tr>' +
+      '        <td style="width:50%;">Baugruppe</td>' +
+      '        <td style="width:30%;"></td>' +
+      '      </tr>' +
+      '    </thead>' +
+      '    <tbody id="groups">' +
+      '    </tbody>' +
+      '  </table>' +
+      '</div><br/>' +
+      '<div id="addGroupDiv" class="rounded-border inputTableConfig"/>';
 
    tableRoot = document.getElementById("groups");
    tableRoot.innerHTML = "";
@@ -39,7 +55,7 @@ function initGroupSetup(groups, root)
 window.storeGroups = function()
 {
    var jsonArray = [];
-   var rootSetup = document.getElementById("groupContainer");
+   var rootSetup = document.getElementById("container");
    var elements = rootSetup.querySelectorAll("[id^='row_']");
 
    // console.log("storeGroups");

@@ -68,8 +68,9 @@ Table valuefacts
    MAXSCALE             ""          maxscale             Int          4 Data,
    ORDER                ""          ord                  Int          4 Data,
    RES1                 "data type" res1                 Int          4 Data,
-   WIDGETOPT            ""  widgetopt            Ascii     1000 Data,
-   RIGHTS   "needed control rights" rights       Int          0 Data,
+   CHOICES              ""          choices              Ascii      250 Data,
+   WIDGETOPT            ""          widgetopt            Ascii     1000 Data,
+   RIGHTS   "needed control rights" rights               Int          0 Data,
 
    VALUE                ""          value                Float      122 Data,
 }

@@ -313,7 +313,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
       case LWS_CALLBACK_CLIENT_WRITEABLE:
       {
-         tell(2, "HTTP: Client writeable");
+         tell(4, "HTTP: Client writeable");
          break;
       }
 
@@ -346,7 +346,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          if (res < 0)
             tell(0, "Failed writing '%s'", sessionData->buffer+sizeLwsPreFrame);
          else
-            tell(2, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
+            tell(3, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
 
          free(sessionData->buffer);
          memset(sessionData, 0, sizeof(SessionData));
@@ -548,7 +548,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
                clients[wsi].msgBufferSendOffset = 0;
                clients[wsi].messagesOut.pop();  // remove sent message
 
-               tell(3, "DEBUG: Write (%d) -> %.*s -> to '%s' (%p)\n", msgSize, msgSize,
+               tell(2, "=> (%d) %.*s -> to '%s' (%p)\n", msgSize, msgSize,
                     clients[wsi].msgBuffer+sizeLwsPreFrame, clientInfo.c_str(), (void*)wsi);
             }
 
@@ -589,7 +589,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          json_error_t error;
          Event event;
 
-         tell(3, "DEBUG: 'LWS_CALLBACK_RECEIVE' [%.*s]", (int)len, (const char*)in);
+         tell(4, "DEBUG: 'LWS_CALLBACK_RECEIVE' [%.*s]", (int)len, (const char*)in);
 
          {
             cMyMutexLock lock(&clientsMutex);
@@ -601,7 +601,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
             if (!lws_is_final_fragment(wsi))
             {
-               tell(3, "DEBUG: Got %zd bytes, have now %zd -> more to get", len, clients[wsi].buffer.length());
+               tell(4, "DEBUG: Got %zd bytes, have now %zd -> more to get", len, clients[wsi].buffer.length());
                break;
             }
 
@@ -623,7 +623,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          event = cWebService::toEvent(strEvent);
          oObject = json_object_get(oData, "object");
 
-         tell(3, "DEBUG: Got '%s'", message);
+         tell(3, "GOT '%s'", message);
 
          if (event == evLogin)                              // { "event" : "login", "object" : { "type" : "foo" } }
          {
@@ -631,7 +631,6 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          }
          else if (event == evLogout)                         // { "event" : "logout", "object" : { } }
          {
-            tell(3, "DEBUG: Got '%s'", message);
             clients[wsi].cleanupMessageQueue();
          }
          else if (event == evGetToken)                       // { "event" : "gettoken", "object" : { "user" : "" : "password" : md5 } }
@@ -687,7 +686,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
       case LWS_CALLBACK_RECEIVE_PONG:                      // ping / pong
       {
-         tell(2, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
+         tell(4, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
          break;
       }
 

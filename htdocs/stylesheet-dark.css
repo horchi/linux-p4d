@@ -15,6 +15,7 @@
     --light3: #403d3d;
     --light4: white;
     --blue: #2177AD;
+    --blueshade: #495b67;
 
     --caption1: #292929;
     --caption2: #565353;
@@ -52,5 +53,5 @@ Body
 
 .content
 {
-    margin: 5px;
+    margin: 2px;
 }

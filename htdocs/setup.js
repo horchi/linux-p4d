@@ -8,10 +8,21 @@
  *
  */
 
-function initConfig(configuration, root)
+function initConfig(configuration)
 {
-   var lastCat = "";
+   $('#container').removeClass('hidden');
 
+   $("#container").height($(window).height() - $("#menu").height() - 8);
+
+   window.onresize = function() {
+      $("#container").height($(window).height() - $("#menu").height() - 8);
+   };
+
+   document.getElementById("container").innerHTML =
+      '<div id="setupContainer" class="rounded-border inputTableConfig">';
+
+   var root = document.getElementById("setupContainer");
+   var lastCat = "";
    root.innerHTML = "";
 
    $('#btnInitMenu').bind('click', function(event) {
@@ -126,7 +137,6 @@ function initConfig(configuration, root)
             '" data-value="' + item.value + '" type="text" value=""/>\n';
          html += '</span>\n';
 
-
          break;
       }
 
@@ -153,18 +163,23 @@ function initTables(what)
    socket.send({ "event" : "inittables", "object" : { "action" : what } });
 }
 
-window.storeConfig = function()
+function storeConfig()
 {
    var jsonObj = {};
-   var rootConfig = document.getElementById("configContainer");
+   var rootConfig = document.getElementById("container");
 
    console.log("storeSettings");
 
    var elements = rootConfig.querySelectorAll("[id^='input_']");
 
    for (var i = 0; i < elements.length; i++) {
-      var name = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
+      var name = elements[i].id.substring(elements[i].id.indexOf("_") + 1); {
+         if (elements[i].getAttribute('type') == 'number' && elements[i].getAttribute('step') != undefined &&
+             Number.isInteger(elements[i].getAttribute('step')) && elements[i].value != '')
+            jsonObj[name] = parseFloat(elements[i].value).toLocaleString("de-DE");
+         else
       jsonObj[name] = elements[i].value;
+      }
    }
 
    var elements = rootConfig.querySelectorAll("[id^='checkbox_']");
@@ -181,7 +196,7 @@ window.storeConfig = function()
       if (name.match("0From$")) {
          name = name.substring(0, name.indexOf("0From"));
          jsonObj[name] = toTimeRangesString("range_" + name);
-         console.log("value: " + jsonObj[name]);
+         // console.log("value: " + jsonObj[name]);
       }
    }
 
@@ -201,6 +216,25 @@ window.storeConfig = function()
    socket.send({ "event" : "storeconfig", "object" : jsonObj });
 }
 
+function toTimeRangesString(base)
+{
+   var times = "";
+
+   for (var i = 0; i < 10; i++) {
+      var id = "#" + base + i;
+
+      if ($(id + "From") && $(id + "From").val() && $(id + "To") && $(id + "To").val()) {
+         if (times != "") times += ",";
+         times += $(id + "From").val() + "-" + $(id + "To").val();
+      }
+      else {
+         break;
+      }
+   }
+
+   return times;
+}
+
 window.resetPeaks = function()
 {
    socket.send({ "event" : "reset", "object" : { "what" : "peaks" } });
@@ -213,68 +247,85 @@ function filterIoSetup()
    filterActive = !filterActive;
    console.log("filterIoSetup: " + filterActive);
 
-   $("#filterIoSetup").html(filterActive ? "Filter [aktive]" : "Filter [alle]");
-   socket.send({ "event" : "iosetup", "object" : { "filter" : filterActive } });
+   $("#filterIoSetup").html(filterActive ? "[aktive]" : "[alle]");
+   initIoSetup(valueFacts);
+   // socket.send({ "event" : "iosetup", "object" : { "filter" : filterActive } });
 }
 
-function initIoSetup(valueFacts, root)
+function tableHeadline(title, id)
+{
+   return '  <div class="rounded-border seperatorTitle1">' + title + '</div>' +
+      '  <table class="tableMultiCol">' +
+      '    <thead>' +
+      '      <tr>' +
+      '        <td style="width:20%;">Name</td>' +
+      '        <td style="width:25%;">Bezeichnung</td>' +
+      '        <td style="width:4%;">Einheit</td>' +
+      '        <td style="width:3%;">Aktiv</td>' +
+      '        <td style="width:8%;">ID</td>' +
+      '      </tr>' +
+      '    </thead>' +
+      '    <tbody id="' + id + '">' +
+      '    </tbody>' +
+      '  </table>';
+}
+
+function initIoSetup(valueFacts)
 {
    // console.log(JSON.stringify(valueFacts, undefined, 4));
+
+   $('#container').removeClass('hidden');
+
+   document.getElementById("container").innerHTML =
+      '<div id="ioSetupContainer">' +
+      tableHeadline('Messwerte', 'ioValues') +
+      tableHeadline('Status Laufzeiten', 'ioStateDurations') +
+      tableHeadline('Digitale Ausgänge', 'ioDigitalOut') +
+      tableHeadline('Digitale Eingänge', 'ioDigitalIn') +
+      tableHeadline('One Wire Sensoren', 'ioOneWire') +
+      tableHeadline('Skripte', 'ioScripts') +
+      tableHeadline('Analog Ausgänge', 'ioAnalogOut') +
+      tableHeadline('Analog Eingänge (arduino)', 'ioAnalog') +
+      tableHeadline('Weitere Sensoren', 'ioOther') +
+      '</div>';
+
+   var root = document.getElementById("ioSetupContainer");
 
    document.getElementById("ioValues").innerHTML = "";
    document.getElementById("ioStateDurations").innerHTML = "";
    document.getElementById("ioDigitalOut").innerHTML = "";
    document.getElementById("ioDigitalIn").innerHTML = "";
-   document.getElementById("ioAnalogOut").innerHTML = "";
    document.getElementById("ioOneWire").innerHTML = "";
    document.getElementById("ioOther").innerHTML = "";
+   document.getElementById("ioAnalogOut").innerHTML = "";
+   document.getElementById("ioAnalog").innerHTML = "";
    document.getElementById("ioScripts").innerHTML = "";
 
-   for (var i = 0; i < valueFacts.length; i++) {
-      var item = valueFacts[i];
+   for (var key in valueFacts) {
+      var item = valueFacts[key];
+
+      if (!item.state && filterActive)
+         continue;
+
       var root = null;
-
       var usrtitle = item.usrtitle != null ? item.usrtitle : "";
-      var html = "<td id=\"row_" + item.type + item.address + "\" data-address=\"" + item.address + "\" data-type=\"" + item.type + "\" >" + item.title + "</td>";
-      html += "<td class=\"tableMultiColCell\">";
-      html += "  <input id=\"usrtitle_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"text\" value=\"" + usrtitle + "\"/>";
-      html += "</td>";
-      if (item.type != "DO" && item.type != "SC")
-         html += "<td class=\"tableMultiColCell\"><input id=\"scalemax_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"number\" value=\"" + item.scalemax + "\"/></td>";
-      else
-         html += "<td class=\"tableMultiColCell\"></td>";
-      html += "<td style=\"text-align:center;\">" + item.unit + "</td>";
-      html += "<td><input id=\"state_" + item.type + item.address + "\" class=\"rounded-border inputSetting\" type=\"checkbox\" " + (item.state == 1 ? "checked" : "") + ' /><label for="state_' + item.type + item.address + '"></label></td>';
-      html += "<td>" + item.type + ":0x" + ((item.address)>>>0).toString(16).padStart(2, '0') + "</td>";
 
-      if (item.type == "VA")
-         html += "<td>" + item.value + item.unit + "</td>";
-
-      if (item.type != "SD") {
-         html += '<td>\n';
-         html += '  <select id="group_' + item.type + item.address + '" class="rounded-border inputSetting" name="group">\n';
-
-         if (grouplist != null) {
-            for (var g = 0; g < grouplist.length; g++) {
-               var group = grouplist[g];
-               var sel = item.groupid == group.id ? 'SELECTED' : '';
-               html += '    <option value="' + group.id + '" ' + sel + '>' + group.name + '</option>\n';
-            }
-         }
-
-         html += '  </select>\n';
-         html += '</td>\n';
-      }
+      var html = '<td id="row_' + item.type + item.address + '" data-address="' + item.address + '" data-type="' + item.type + '" >' + item.title + '</td>';
+      html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + usrtitle + '"/></td>';
+      html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + item.unit + '"/></td>';
+      html += '<td><input id="state_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.state ? 'checked' : '') + ' /><label for="state_' + item.type + item.address + '"></label></td>';
+      html += '<td>' + item.type + ':0x' + item.address.toString(16).padStart(2, '0') + '</td>';
 
       switch (item.type) {
-         case 'VA': root = document.getElementById("ioValues");        break
-         case 'DI': root = document.getElementById("ioDigitalIn");     break
-         case 'DO': root = document.getElementById("ioDigitalOut");    break
-         case 'AO': root = document.getElementById("ioAnalogOut");     break
-         case 'W1': root = document.getElementById("ioOneWire");       break
-         case 'SP': root = document.getElementById("ioOther");         break
-         case 'SC': root = document.getElementById("ioScripts");       break
+         case 'VA': root = document.getElementById("ioValues");     break
          case 'SD': root = document.getElementById("ioStateDurations"); break
+         case 'DO': root = document.getElementById("ioDigitalOut"); break
+         case 'DI': root = document.getElementById("ioDigitalIn");  break
+         case 'W1': root = document.getElementById("ioOneWire");    break
+         case 'SP': root = document.getElementById("ioOther");      break
+         case 'AO': root = document.getElementById("ioAnalogOut");  break
+         case 'AI': root = document.getElementById("ioAnalog");     break
+         case 'SC': root = document.getElementById("ioScripts");    break
       }
 
       if (root != null)
@@ -286,27 +337,7 @@ function initIoSetup(valueFacts, root)
    }
 }
 
-function toTimeRangesString(base)
-{
-   var times = "";
-
-   for (var i = 0; i < 10; i++) {
-      var id = "#" + base + i;
-
-      if ($(id + "From") && $(id + "From").val() && $(id + "To") && $(id + "To").val()) {
-         if (times != "")
-            times += ",";
-         times += $(id + "From").val() + "-" + $(id + "To").val();
-      }
-      else {
-         break;
-      }
-   }
-
-   return times;
-}
-
-window.storeIoSetup = function()
+function storeIoSetup()
 {
    var jsonArray = [];
    var rootSetup = document.getElementById("ioSetupContainer");
@@ -318,15 +349,12 @@ window.storeIoSetup = function()
       var jsonObj = {};
       var type = $(elements[i]).data("type");
       var address = $(elements[i]).data("address");
-      // console.log("  loop for: " + type + ":" + address);
-      // console.log("   - usrtitle: " + $("#usrtitle_" + type + address).val());
 
       jsonObj["type"] = type;
       jsonObj["address"] = address;
-      if ($("#scalemax_" + type + address).length)
-         jsonObj["scalemax"] = parseInt($("#scalemax_" + type + address).val());
       jsonObj["usrtitle"] = $("#usrtitle_" + type + address).val();
-      jsonObj["state"] = $("#state_" + type + address).is(":checked") ? 1 : 0;
+      jsonObj["unit"] = $("#unit_" + type + address).val();
+      jsonObj["state"] = $("#state_" + type + address).is(":checked");
 
       if (type != 'SD')
          jsonObj["groupid"] = parseInt($("#group_" + type + address).val());

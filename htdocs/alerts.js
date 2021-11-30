@@ -8,10 +8,11 @@
  *
  */
 
-function initAlerts(alerts, root)
+function initAlerts(alerts)
 {
-   var root = document.getElementById("alertContainer");
-   root.innerHTML = "";
+   $('#container').removeClass('hidden');
+   var root = document.getElementById("container");
+   root.innerHTML = '<div class="rounded-border seperatorTitle1">Sensor Alerts</div>';
 
    for (var i = 0; i < alerts.length; i++)
    {
@@ -104,7 +105,7 @@ function printAlert(item)
    return html;
 }
 
-window.storeAlerts = function()
+function storeAlerts()
 {
    var jsonArray = [];
    var alertContainer = document.getElementById("alertContainer");
@@ -140,10 +141,12 @@ window.storeAlerts = function()
    socket.send({ "event" : "storealerts", "object" : { "action" : "store", "alerts" : jsonArray } });
 }
 
-function deleteAlert(alertId) {
+function deleteAlert(alertId)
+{
    socket.send({ "event" : "storealerts", "object" : { "action" : "delete", "alertid" : alertId } });
 }
 
-function sendAlertMail(alertId) {
+function sendAlertMail(alertId)
+{
    socket.send({ "event" : "sendmail", "object" : { "alertid" : alertId} });
 }

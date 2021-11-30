@@ -12,8 +12,10 @@
     <link rel="icon" href="img/icon.png" type="image/png"/>
     <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/icon.png" type="image/png"/>
+
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1/jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="jquery/autocomplete.css">
+    <link rel="stylesheet" type="text/css" href="jquery/spectrum.css">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
     <link rel="stylesheet" type="text/css" href="scrollbar.css">
 
@@ -21,6 +23,8 @@
     <script src="jquery/jquery-ui-1.12.1/jquery-ui.min.js"></script>
     <script src="jquery/jquery.md5.js"></script>
     <script src="jquery/jquery.browser.min.js"></script>
+    <script src="jquery/spectrum.js"></script>
+    <script src="jquery/autocomplete.js"></script>
     <script src="jquery/Moment.js"></script>
     <script src="jquery/Chart.min.js"></script>
     <script src="jquery/canvas-gauges-master/gauge.min.js"></script>
@@ -29,6 +33,16 @@
     <script type="text/javascript" src="websocket.js"></script>
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="dashboard.js"></script>
+    <script type="text/javascript" src="list.js"></script>
+    <script type="text/javascript" src="chart.js"></script>
+    <script type="text/javascript" src="setup.js"></script>
+    <script type="text/javascript" src="usercfg.js"></script>
+    <script type="text/javascript" src="schema.js"></script>
+    <script type="text/javascript" src="groups.js"></script>
+    <script type="text/javascript" src="alerts.js"></script>
+    <script type="text/javascript" src="menu.js"></script>
+    <script type="text/javascript" src="pellets.js"></script>
+
 <!--    <script type="text/javascript" src="ph.js"></script> -->
 <!--    <script type="text/javascript" src="vdr.js"></script> -->
 
@@ -37,13 +51,13 @@
   <body>
 
     <div id="menu" class="menu">
-      <nav id="navMenu"/>
-      <div id="infoBox" class="rounded-border infoBox hidden"/>
+      <nav id="navMenu"></div>
+      <div id="infoBox" class="rounded-border infoBox hidden"></div>
     </div>
 
     <div id="content" class="content">
-      <div id="stateContainer" class="stateInfo"/>
-      <div id="container" class="container"/>
+      <div id="stateContainer" class="stateInfo"></div>
+      <div id="container" class="container"></div>
     </div>
 
     <dialog role="dialog">
