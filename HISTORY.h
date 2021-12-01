@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.7.8"
-#define VERSION_DATE "10.05.2021"
+#define _VERSION     "0.8.0"
+#define VERSION_DATE "01.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-01:  version 0.8.0
+  - change: Redesign of web frontend
+  - change: Merging with my other sources (woold/womod)
 
 2021-05-10:  version 0.7.8
   - change: Removed MQTT recover improvement of 0.7.4

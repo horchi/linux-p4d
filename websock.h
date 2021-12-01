@@ -50,14 +50,16 @@ class cWebService
          evSendMail,
          evSyslog,
          evForceRefresh,
+         evList,
+         evAlerts,
 
          evErrors,
          evMenu,
          evParEditRequest,
          evParStore,
-         evAlerts,
          evStoreAlerts,
          evInitTables,
+
          evSchema,
          evStoreSchema,
          evUpdateTimeRanges,

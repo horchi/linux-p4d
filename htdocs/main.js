@@ -107,14 +107,18 @@ async function showInfoDialog(object)
 
    if (object.status == -1) {
       titleMsg = "Error";
+      message = message.replace(/\n/g, "<br/>");
       $('#infoBox').addClass('error-border');
    }
-   else if (object.status < -1)
+   else if (object.status < -1) {
+      message = message.replace(/\n/g, "<br/>");
       titleMsg = "Information (" + object.status + ")";
+      $('#infoBox').addClass('error-border');
+   }
    else if (object.status == 1) {
       var array = message.split("#:#");
       titleMsg = array[0];
-      message = array[1];
+      message = array[1].replace(/\n/g, "<br/>");;
    }
 
    var msDuration = 2000;
@@ -123,20 +127,20 @@ async function showInfoDialog(object)
    var align = "center";
 
    if (object.status != 0) {
-      msDuration = 8000;
+      msDuration = 30000;
       cls = "";
       align = "left";
    }
 
-   $('#infoBox').removeClass('hidden');
-
    var progress = ($('<div></div>')
                    .addClass('progress-smaller')
+                   .css('margin-right', '15px')
                    .click(function() { hideInfoDialog(); }));
 
    $('#infoBox').append($('<div></div>')
                         .css('overflow', 'hidden')
                         .css('display', 'inline-flex')
+                        .css('align-items', 'center')
                         .click(function() {
                            clearTimeout(infoDialogTimer);
                            infoDialogTimer = null;
@@ -146,6 +150,7 @@ async function showInfoDialog(object)
                         .append($('<span></span>')
                                 .append($('<button></button>')
                                         .attr('id', 'progressButton')
+                                        .css('margin-right', '15px')
                                         .addClass('rounded-border')
                                         .addClass('hidden')
                                         .click(function() { hideInfoDialog(); })
@@ -153,10 +158,16 @@ async function showInfoDialog(object)
                         .append($('<span></span>')
                                 .append(progress))
                         .append($('<span></span>')
-                                .css('margin-left', '10px')
-                                .css('align-self', 'center')
-                                .html(titleMsg + ' ' + message)
-                               ));
+                                .append($('<span></span>')
+                                        .css('font-weight', 'bold')
+                                        .html(titleMsg))
+                                .append($('<br></br>')
+                                        .addClass(titleMsg == '' ? 'hidden' : ''))
+                                .append($('<span></span>')
+                                        .html(message)))
+                       );
+
+   $('#infoBox').addClass('infoBox-active');
 
    infoDialogTimer = setTimeout(function() {
       hideInfoDialog();
@@ -167,8 +178,11 @@ function hideInfoDialog()
 {
    infoDialogTimer = null;
 
+   if ($('#progressDiv') != null)
+      $('#progressDiv').css("visibility", "hidden");
+
    $('#infoBox').html('');
-   $('#infoBox').addClass('hidden');
+   $('#infoBox').removeClass('infoBox-active');
    $('#infoBox').removeClass('error-border');
 }
 
@@ -185,10 +199,12 @@ async function hideProgressDialog()
 
 async function showProgressDialog()
 {
-   hideProgressDialog();
+   while (progressDialog)
+      await sleep(100);
 
-   var msDuration = 30000;   // timeout 30 seconds
-   var form = document.createElement("form");
+   var msDuration = 300000;   // timeout 5 minutes
+
+   var form = document.createElement("div");
    form.style.overflow = "hidden";
    var div = document.createElement("div");
    form.appendChild(div);
@@ -202,11 +218,12 @@ async function showProgressDialog()
       title: "",
 		modal: true,
       resizable: false,
-		closeOnEscape: false,
+		closeOnEscape: true,
       minHeight: "0px",
       hide: "fade",
       open: function() {
-         progressDialog = $(this); setTimeout(function() {
+         progressDialog = $(this);
+         setTimeout(function() {
             if (progressDialog)
                progressDialog.dialog('close');
             progressDialog = null }, msDuration);
@@ -230,7 +247,7 @@ function dispatchMessage(message)
       hideProgressDialog();
       showInfoDialog(jMessage.object);
    }
-   else if ((event == "update" || event == "all")) {
+   else if ((event == "updatedashboard" || event == "alldashboard") && currentPage == 'dashboard') {
       if (event == "all") {
          allWidgets = jMessage.object;
          console.log("set allWidgets with " + Object.keys(allWidgets).length + " elements")
@@ -242,24 +259,28 @@ function dispatchMessage(message)
                if (jMessage.object[i].name == allWidgets[w].name) {
                   allWidgets[w] = jMessage.object[i];
                }
-             }
+            }
          }
          console.log("  <- size now " + Object.keys(allWidgets).length + " elements");
       }
-      if (currentPage == 'dashboard')
-         updateDashboard(jMessage.object, event == "all");
-      else if (currentPage == 'list')
+      updateDashboard(jMessage.object, event == "all");
+   }
+   else if ((event == "updatelist" || event == "alllist") && currentPage == 'list') {
       updateList(jMessage.object);
    }
-   else if (event == "init" && (currentPage == 'dashboard' || currentPage == 'list')) {
+   else if ((event == "updateschema" || event == "allschema") && currentPage == 'schema') {
+      updateSchema(jMessage.object);
+   }
+   else if (event == "initdashboard" && currentPage == 'dashboard') {
       allWidgets = jMessage.object;
       console.log("init allWidgets with " + Object.keys(allWidgets).length + " elements")
-      if (currentPage == 'dashboard')
-         initDashboard();
-      else if (currentPage == 'list')
-         initList();
+      initDashboard();
    }
-   else if (event == "schemainit" && currentPage == 'schema') {
+   else if (event == "initlist" && currentPage == 'list') {
+      console.log("init allWidgets with " + Object.keys(jMessage.object).length + " elements")
+      initList(jMessage.object);
+   }
+   else if (event == "initschema" && currentPage == 'schema') {
       console.log("got schema widgets with " + Object.keys(jMessage.object).length + " elements")
       updateSchema(jMessage.object);
    }
@@ -344,10 +365,6 @@ function dispatchMessage(message)
       hideProgressDialog();
       initPellets(jMessage.object);
    }
-//   else if ((event == "init" || event == "update" || event == "all")) {
-//      updateSchema(jMessage.object);
-//      hideProgressDialog();
-//   }
    else if (event == "schema") {
       initSchema(jMessage.object);
    }
@@ -386,16 +403,6 @@ function prepareMenu()
 
    // buttons below menu
 
-   if (currentPage == "schema") {
-      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
-         html += "<div class=\"confirmDiv\">";
-         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
-         html += "</div>";
-      }
-   }
-
    if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div>";
@@ -409,6 +416,37 @@ function prepareMenu()
       }
    }
 
+   if (currentPage == "setup") {
+      html += "<div class=\"confirmDiv\">";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" title=\"Letzter Reset: " + config.peakResetAt + "\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
+      html += "  <button id='btnInitMenu' class='rounded-border buttonOptions'>Init Service Menü</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Sensoren</button>";
+      html += "</div>";
+   }
+   else if (currentPage == "iosetup") {
+      html += "<div class=\"confirmDiv\">";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeIoSetup()\">Speichern</button>";
+      html += "  <button class=\"rounded-border buttonOptions\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">[alle]</button>";
+      html += '  <input id="incSearchName" class="input rounded-border clearableOD" placeholder="filter..." type="search" oninput="doIncrementalFilterIoSetup()"</input>';
+      html += "</div>";
+   }
+   else if (currentPage == "groups") {
+      html += "<div class=\"confirmDiv\">";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeGroups()\">Speichern</button>";
+      html += "</div>";
+   }
+   else if (currentPage == "alerts") {
+      html += "<div class=\"confirmDiv\">";
+      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeAlerts()\">Speichern</button>";
+      html += "</div>";
+   }
+
+   else if (currentPage == "login") {
+      html += '<div id="confirm" class="confirmDiv"/>';
+   }
+
    if (currentPage == "menu") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div class=\"confirmDiv\">";
@@ -417,34 +455,14 @@ function prepareMenu()
       }
    }
 
-   if (currentPage == "setup") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" title=\"Letzter Reset: " + config.peakResetAt + "\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
-      html += "  <button id='btnInitMenu' class='rounded-border buttonOptions'>Init Service Menü</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Messwerte</button>";
-      html += "</div>";
-   }
-   else if (currentPage == "iosetup") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeIoSetup()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">[alle]</button>";
-      html += "</div>";
-   }
-   else if (currentPage == "alerts") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeAlerts()\">Speichern</button>";
-      html += "</div>";
-   }
-   else if (currentPage == "groups") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeGroups()\">Speichern</button>";
-      html += "</div>";
-   }
-
-   else if (currentPage == "login") {
-      html += '<div id="confirm" class="confirmDiv"/>';
+   if (currentPage == "schema") {
+      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
+         html += "<div class=\"confirmDiv\">";
+         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
+         html += "</div>";
+      }
    }
 
    $("#navMenu").html(html);
@@ -549,7 +567,7 @@ function mainMenuSel(what)
       event = "syslog";
    }
    else if (currentPage == "list")
-      initList();
+      event = "list";
    else if (currentPage == "dashboard")
       initDashboard();
    else if (currentPage == "vdr")
@@ -558,12 +576,12 @@ function mainMenuSel(what)
       event = "chartdata";
       prepareChartRequest(jsonRequest, "", theChartStart, theChartRange, "chart");
    }
-   else if (currentPage == "schema")
-      event = "schema";
-   else if (currentPage == "alerts")
-      event = "alerts";
    else if (currentPage == "groups")
       event = "groups";
+   else if (currentPage == "alerts")
+      event = "alerts";
+   else if (currentPage == "schema")
+      event = "schema";
    else if (currentPage == "menu")
       event = "menu";
    else if (currentPage == "errors")

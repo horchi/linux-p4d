@@ -249,12 +249,16 @@ function filterIoSetup()
 
    $("#filterIoSetup").html(filterActive ? "[aktive]" : "[alle]");
    initIoSetup(valueFacts);
-   // socket.send({ "event" : "iosetup", "object" : { "filter" : filterActive } });
+}
+
+function doIncrementalFilterIoSetup()
+{
+   initIoSetup(valueFacts);
 }
 
 function tableHeadline(title, id)
 {
-   return '  <div class="rounded-border seperatorTitle1">' + title + '</div>' +
+   return '  <div class="rounded-border seperatorFold">' + title + '</div>' +
       '  <table class="tableMultiCol">' +
       '    <thead>' +
       '      <tr>' +
@@ -263,6 +267,7 @@ function tableHeadline(title, id)
       '        <td style="width:4%;">Einheit</td>' +
       '        <td style="width:3%;">Aktiv</td>' +
       '        <td style="width:8%;">ID</td>' +
+      '        <td style="width:15%;">Gruppe</td>' +
       '      </tr>' +
       '    </thead>' +
       '    <tbody id="' + id + '">' +
@@ -301,20 +306,37 @@ function initIoSetup(valueFacts)
    document.getElementById("ioAnalog").innerHTML = "";
    document.getElementById("ioScripts").innerHTML = "";
 
+   var filterExpression = null;
+
+   if ($("#incSearchName").val() != "")
+      filterExpression = new RegExp($("#incSearchName").val());
+
    for (var key in valueFacts) {
       var item = valueFacts[key];
+      var root = null;
+      var usrtitle = item.usrtitle != null ? item.usrtitle : "";
 
       if (!item.state && filterActive)
          continue;
 
-      var root = null;
-      var usrtitle = item.usrtitle != null ? item.usrtitle : "";
+      if (filterExpression != null && !filterExpression.test(item.title) && !filterExpression.test(usrtitle))
+         continue;
 
       var html = '<td id="row_' + item.type + item.address + '" data-address="' + item.address + '" data-type="' + item.type + '" >' + item.title + '</td>';
       html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + usrtitle + '"/></td>';
       html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + item.unit + '"/></td>';
       html += '<td><input id="state_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.state ? 'checked' : '') + ' /><label for="state_' + item.type + item.address + '"></label></td>';
       html += '<td>' + item.type + ':0x' + item.address.toString(16).padStart(2, '0') + '</td>';
+
+      html += '<td><select id="group_' + item.type + item.address + '" class="rounded-border inputSetting" name="group">';
+      if (grouplist != null) {
+         for (var g = 0; g < grouplist.length; g++) {
+            var group = grouplist[g];
+            var sel = item.groupid == group.id ? 'SELECTED' : '';
+            html += '    <option value="' + group.id + '" ' + sel + '>' + group.name + '</option>';
+         }
+      }
+      html += '  </select></td>';
 
       switch (item.type) {
          case 'VA': root = document.getElementById("ioValues");     break
@@ -355,9 +377,7 @@ function storeIoSetup()
       jsonObj["usrtitle"] = $("#usrtitle_" + type + address).val();
       jsonObj["unit"] = $("#unit_" + type + address).val();
       jsonObj["state"] = $("#state_" + type + address).is(":checked");
-
-      if (type != 'SD')
-         jsonObj["groupid"] = parseInt($("#group_" + type + address).val());
+      jsonObj["groupid"] = parseInt($("#group_" + type + address).val());
 
       jsonArray[i] = jsonObj;
    }

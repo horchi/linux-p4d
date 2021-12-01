@@ -5,7 +5,7 @@
 
 include Make.config
 
-HISTFILE    = "HISTORY.h"
+HISTFILE = "HISTORY.h"
 
 LIBS += $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid
 
@@ -102,6 +102,7 @@ install-config:
 	   chmod a+rx $(CONFDEST); \
 	fi
 	install --mode=755 -D ./configs/sysctl $(CONFDEST)/scripts.d
+	install --mode=755 -D ./configs/example.sh $(CONFDEST)/scripts.d
 	if ! test -f $(DESTDIR)/etc/msmtprc; then \
 	   install --mode=644 -D ./configs/msmtprc $(DESTDIR)/etc/; \
 	fi
@@ -173,7 +174,7 @@ upload:
 
 build-deb:
 	rm -rf $(DEB_DEST)
-	make -s install-$(TARGET) DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
+	make -s install-daemon DESTDIR=$(DEB_DEST) PREFIX=/usr INIT_AFTER=mysql.service
 	make -s install-web DESTDIR=$(DEB_DEST) PREFIX=/usr
 	dpkg-deb --build $(DEB_BASE_DIR)/$(TARGET)-$(VERSION)
 
@@ -244,4 +245,3 @@ showv:
 	@echo "  Version: $(VERSION)"
 	@echo "  Change:"
 	@echo -n "   $(LASTCOMMENT)"
-

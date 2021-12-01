@@ -33,9 +33,11 @@ function initDashboard(update = false)
    for (var i = 0; i < allWidgets.length; i++)
       initWidget(allWidgets[i], null);
 
+   // additional setup elements
+
    if (setupMode) {
-      var fact = {
-         "address": 999,
+      var factAdd = {
+         "address": 998,
          "type": "SP",
          "state": true,
          "name": "add",
@@ -43,11 +45,27 @@ function initDashboard(update = false)
          "widget": {
             "imgon": "",
             "imgoff": "",
+            "widgettype": 998
+         }
+      }
+
+      initWidget({"address": 998, "type": "SP"}, factAdd);
+
+      var factDel = {
+         "address": 999,
+         "type": "SP",
+         "state": true,
+         "name": "del",
+         "title": "del",
+         "widget": {
+            "imgon": "",
+            "imgoff": "",
             "widgettype": 999
          }
       }
 
-      initWidget({"address": 999, "type": "SP"}, fact);
+      initWidget({"address": 999, "type": "SP"}, factDel);
+
    }
 
    updateDashboard(allWidgets, true);
@@ -60,7 +78,7 @@ function initWidget(widget, fact)
    if (fact == null)
       fact = valueFacts[widget.type + ":" + widget.address];
 
-   console.log("initWidget " + widget.name);
+   // console.log("initWidget " + widget.name);
 
    if (fact == null || fact == undefined) {
       console.log("Fact for widget '" + widget.type + ":" + widget.address + "' not found, ignoring");
@@ -85,8 +103,12 @@ function initWidget(widget, fact)
    }
 
    elem.innerHTML = "";
+   var marginPadding = 8;
+   console.log("clientWidth: " + elem.clientWidth);
+   elem.style.width = elem.clientWidth * fact.widget.widthfactor + ((fact.widget.widthfactor-1) * marginPadding) + 'px';
+   // elem.style.width = elem.clientWidth * fact.widget.widthfactor  + 'px';
 
-   if (setupMode) {
+   if (setupMode && fact.widget.widgettype < 900) {
       elem.setAttribute('draggable', true);
       elem.dataset.droppoint = true;
       elem.addEventListener('dragstart', function(event) {dragWidget(event)}, false);
@@ -116,7 +138,6 @@ function initWidget(widget, fact)
 
       case 1:          // Chart
          elem.className = "widgetChart rounded-border";
-
          var eTitle = document.createElement("div");
          eTitle.className = "widget-title";
          eTitle.innerHTML = title + editButton;
@@ -311,12 +332,22 @@ function initWidget(widget, fact)
          elem.innerHTML = html;
          break;
 
-      case 999:     // 999 (Add Widget)
+      case 998:     // 998 (Add Widget)
          var html = '<div class="widget-title"></div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">+</div>';
          elem.className = "widgetPlain rounded-border";
          elem.addEventListener('click', function(event) {addWidget();}, false);
          elem.innerHTML = html;
+         break;
+
+      case 999:     // 999 (Del Widget)
+         var html = '<div class="widget-title"></div>';
+         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">-</div>';
+         elem.className = "widgetPlain rounded-border";
+         elem.innerHTML = html;
+         elem.title = 'Zum Löschen hier ablegen';
+         elem.addEventListener('dragover', function(event) {event.preventDefault()}, false);
+         elem.addEventListener('drop', function(event) {deleteWidget(event)}, false);
          break;
 
       default:   // type 2(Text), 3(Value)
@@ -344,7 +375,7 @@ function updateWidget(sensor, refresh, fact)
    if (fact == null)
       fact = valueFacts[sensor.type + ":" + sensor.address];
 
-   console.log("updateWidget " + sensor.name + " of type " + fact.widget.widgettype);
+   // console.log("updateWidget " + sensor.name + " of type " + fact.widget.widgettype);
    // console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
 
    if (fact == null || fact == undefined) {
@@ -623,8 +654,32 @@ function dropWidget(ev)
    var list = '';
    $('#widgetContainer > div').each(function () {
       var sensor = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-      // console.log(" add " + sensor + " for sensor " + $(this).attr('id'));
-      list += sensor + ',';
+      if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7') {
+         // console.log(" add " + sensor + " for sensor " + $(this).attr('id'));
+         list += sensor + ',';
+      }
+   });
+
+   socket.send({ "event" : "storeconfig", "object" : { "addrsDashboard" : list } });
+   console.log(" - " + list);
+}
+
+function deleteWidget(ev)
+{
+   ev.preventDefault();
+   var target = ev.target;
+
+   var sourceId = document.getElementById(ev.dataTransfer.getData("source")).getAttribute('id');
+   sourceId = sourceId.substring(sourceId.indexOf("_") + 1);
+   console.log("delete widget " + sourceId);
+
+   document.getElementById(ev.dataTransfer.getData("source")).remove();
+
+   var list = '';
+   $('#widgetContainer > div').each(function () {
+      var sensor = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
+      if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7' && sensor != sourceId)
+         list += sensor + ',';
    });
 
    socket.send({ "event" : "storeconfig", "object" : { "addrsDashboard" : list } });
@@ -799,7 +854,6 @@ function widgetSetup(key)
                                           .attr('id', 'imgoff')
                                          )))
 
-
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
@@ -817,6 +871,22 @@ function widgetSetup(key)
                                   .append($('<label></label>')
                                           .prop('for', 'peak')
                                          )))
+
+                  .append($('<div></div>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '25%')
+                                  .css('text-align', 'end')
+                                  .css('align-self', 'center')
+                                  .css('margin-right', '10px')
+                                  .html('Breite'))
+                          .append($('<span></span>')
+                                  .append($('<select></select>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('id', 'widthfactor')
+                                          .val(item.widget.unit)
+                                         )))
+
                  );
 
    var widget = null;
@@ -856,6 +926,12 @@ function widgetSetup(key)
                                .attr('selected', item.widget.imgon == images[img]));
          }
 
+         for (var w = 1.0; w <= 2.0; w += 0.5)
+            $('#widthfactor').append($('<option></option>')
+                                     .val(w)
+                                     .html(w)
+                                     .attr('selected', item.widget.widthfactor == w));
+
          if (widget != null) {
             initWidget(widget, null);
             updateWidget(widget, false);
@@ -882,7 +958,7 @@ function widgetSetup(key)
                fact.widget.imgoff = $("#imgoff").val();
                fact.widget.widgettype = parseInt($("#widgettype").val());
                fact.widget.showpeak = $("#peak").is(':checked');
-
+               fact.widget.widthfactor = $("#widthfactor").val();
                initWidget(widget, fact);
                updateWidget(widget, true, fact);
             }
@@ -902,6 +978,7 @@ function widgetSetup(key)
                fact.widget.imgoff = $("#imgoff").val();
                fact.widget.widgettype = parseInt($("#widgettype").val());
                fact.widget.showpeak = $("#peak").is(':checked');
+               fact.widget.widthfactor = $("#widthfactor").val();
 
                initWidget(widget, fact);
                updateWidget(widget, true, fact);
@@ -929,6 +1006,8 @@ function widgetSetup(key)
                jsonObj["widget"]["imgon"] = $("#imgon").val();
             if ($("#imgoff").length)
                jsonObj["widget"]["imgoff"] = $("#imgoff").val();
+
+            jsonObj["widget"]["widthfactor"] = parseFloat($("#widthfactor").val());
             jsonObj["widget"]["widgettype"] = parseInt($("#widgettype").val());
             jsonObj["widget"]["showpeak"] = $("#peak").is(':checked');
 

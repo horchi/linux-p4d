@@ -68,6 +68,7 @@ int Daemon::dispatchClientRequest()
             case evChangePasswd:    status = performPasswChange(oObject, client);    break;
             case evGroups:          status = performGroups(client);                  break;
             case evGroupConfig:     status = storeGroups(oObject, client);           break;
+            case evList:            status = update(true, client);                   break;
 
             case evReset:           status = performReset(oObject, client);          break;
             case evSendMail:        status = performSendMail(oObject, client);       break;
@@ -138,6 +139,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evAlerts:              return rights & urSettings;
       case evStoreAlerts:         return rights & urSettings;
       case evGroups:              return rights & urSettings;
+      case evList:                return rights & urView;
       case evSchema:              return rights & urView;
       case evStoreSchema:         return rights & urSettings;
       case evParEditRequest:      return rights & urFullControl;
@@ -451,27 +453,6 @@ int Daemon::performUserDetails(long client)
    json_t* oJson = json_array();
    userDetails2Json(oJson);
    pushOutMessage(oJson, "userdetails", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Perform WS IO Setting Data Request
-//***************************************************************************
-
-int Daemon::performIoSettings(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   bool filterActive = false;
-
-   if (oObject)
-      filterActive = getBoolFromJson(oObject, "filter", false);
-
-   json_t* oJson = json_array();
-   valueFacts2Json(oJson, filterActive);
-   pushOutMessage(oJson, "valuefacts", client);
 
    return done;
 }

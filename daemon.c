@@ -57,14 +57,16 @@ const char* cWebService::events[] =
    "sendmail",
    "syslog",
    "forcerefresh",
+   "list",
+   "alerts",
 
    "errors",
    "menu",
    "pareditrequest",
    "parstore",
-   "alerts",
    "storealerts",
    "inittables",
+
    "schema",
    "storeschema",
    "updatetimeranges",
@@ -194,11 +196,11 @@ int Daemon::pushInMessage(const char* data)
 // Push Out Message (from daemon to WS)
 //***************************************************************************
 
-int Daemon::pushOutMessage(json_t* oContents, const char* title, long client)
+int Daemon::pushOutMessage(json_t* oContents, const char* event, long client)
 {
    json_t* obj = json_object();
 
-   addToJson(obj, "event", title);
+   addToJson(obj, "event", event);
    json_object_set_new(obj, "object", oContents);
 
    char* p = json_dumps(obj, JSON_REAL_PRECISION(4));
@@ -218,7 +220,7 @@ int Daemon::pushOutMessage(json_t* oContents, const char* title, long client)
    return done;
 }
 
-int Daemon::pushDataUpdate(const char* title, long client)
+int Daemon::pushDataUpdate(const char* event, long client)
 {
    // push all in the jsonSensorList to the 'interested' clients
 
@@ -257,10 +259,9 @@ int Daemon::pushDataUpdate(const char* title, long client)
       {
          for (auto sj : jsonSensorList)           // #TODO - send visible instead of all??
             json_array_append(oWsJson, sj.second);
-         title = "schemainit";
       }
 
-      pushOutMessage(oWsJson, title, client);
+      pushOutMessage(oWsJson, (event + cl.page).c_str(), client);
    }
    else
    {
@@ -290,10 +291,9 @@ int Daemon::pushDataUpdate(const char* title, long client)
          {
             for (auto& sj : jsonSensorList)          // #TODO - send visible instead of all??
                json_array_append(oWsJson, sj.second);
-            title = "schemainit";
          }
 
-         pushOutMessage(oWsJson, title, (long)cl.first);
+         pushOutMessage(oWsJson, (event + cl.second.page).c_str(), (long)cl.first);
       }
    }
 
@@ -481,7 +481,7 @@ int Daemon::initInput(uint pin, const char* name)
    pinMode(pin, INPUT);
 
    if (!isEmpty(name))
-      addValueFact(pin, "DI", 1, name, "", wtSymbol, 0, 0);
+      addValueFact(pin, "DI", 1, name, "", wtSymbol, name, 0, 0);
 
    digitalInputStates[pin] = gpioRead(pin);
 
@@ -565,8 +565,10 @@ int Daemon::initScripts()
 
          selectScriptByPath->freeResult();
 
+         auto tuple = split(script.name, '.');
          addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
                       kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
+                      tuple[0].c_str(),
                       0, 0, urControl, choices);
 
          tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
@@ -1157,8 +1159,8 @@ int Daemon::readConfiguration(bool initial)
    char* addrs {nullptr};
    getConfigItem("addrsDashboard", addrs, "");
    addrsDashboard = split(addrs, ',');
-   getConfigItem("addrsList", addrs, "");
-   addrsList = split(addrs, ',');
+   // getConfigItem("addrsList", addrs, "");
+   // addrsList = split(addrs, ',');
    free(addrs);
 
    getConfigItem("mail", mail, no);
@@ -1218,8 +1220,8 @@ int Daemon::readConfiguration(bool initial)
 //***************************************************************************
 
 int Daemon::store(time_t now, const char* name, const char* title, const char* unit,
-               const char* type, int address, double value,
-               uint factor, uint groupid, const char* text)
+                  const char* type, int address, double value,
+                  uint factor, uint groupid, const char* text)
 {
    double theValue = value / (double)factor;
 
@@ -1309,7 +1311,7 @@ int Daemon::standby(int t)
    while (time(0) < end && !doShutDown())
    {
       meanwhile();
-      usleep(50000);
+      usleep(5000);
    }
 
    return done;
@@ -1320,7 +1322,7 @@ int Daemon::standbyUntil(time_t until)
    while (time(0) < until && !doShutDown())
    {
       meanwhile();
-      usleep(50000);
+      usleep(5000);
    }
 
    return done;
@@ -1450,6 +1452,9 @@ int Daemon::loop()
       nextRefreshAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
 
+      updateScriptSensors();
+      process();
+
       {
          sem->p();
          update();
@@ -1541,13 +1546,14 @@ int Daemon::updateState(Status* state)
 
 int Daemon::update(bool webOnly, long client)
 {
-   static size_t w1Count {0};
    int count {0};
    int status {success};
    char num[100] {'\0'};
 
    if (!webOnly)
    {
+      static size_t w1Count {0};
+
       if (w1Count < w1Sensors.size())
       {
          initW1();
@@ -1556,7 +1562,7 @@ int Daemon::update(bool webOnly, long client)
    }
 
    lastSampleTime = time(0);
-   tell(eloDetail, "Reading values ...");
+   tell(eloDetail, "Update ...");
 
    tableValueFacts->clear();
    tableValueFacts->setValue("STATE", "A");
@@ -1574,11 +1580,12 @@ int Daemon::update(bool webOnly, long client)
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
-      int addr = tableValueFacts->getIntValue("ADDRESS");
+      uint addr = tableValueFacts->getIntValue("ADDRESS");
+      const char* type = tableValueFacts->getStrValue("TYPE");
       double factor = tableValueFacts->getIntValue("FACTOR");
       const char* title = tableValueFacts->getStrValue("TITLE");
       const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
-      const char* type = tableValueFacts->getStrValue("TYPE"); // VA, DI, ...
+
       int dataType = tableValueFacts->getIntValue("RES1");
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
@@ -1595,10 +1602,10 @@ int Daemon::update(bool webOnly, long client)
       }
 
       json_t* ojData = json_object();
-      char* tupel {nullptr};
-      asprintf(&tupel, "%s:0x%02x", type, addr);
-      jsonSensorList[tupel] = ojData;
-      free(tupel);
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", type, addr);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
 
       sensor2Json(ojData, tableValueFacts);
 
@@ -1807,14 +1814,14 @@ int Daemon::update(bool webOnly, long client)
    selectActiveValueFacts->freeResult();
 
    if (!webOnly)
-   {
       connection->commit();
-      tell(eloAlways, "Processed %d samples, state is '%s'", count, currentState.stateinfo);
-   }
 
    // send result to all connected WEBIF clients
 
    pushDataUpdate(webOnly ? "init" : "all", client);
+
+   if (!webOnly)
+      tell(eloAlways, "Updated %d samples", count);
 
    // MQTT
 
@@ -1899,6 +1906,24 @@ void Daemon::addParameter2Mail(const char* name, const char* value)
 {
    if (stateChanged)
       mailBodyHtml += "        <tr><td>" + std::string(name) + "</td><td>" + std::string(value) + "</td></tr>\n";
+}
+
+//***************************************************************************
+// Is In Time Range
+//***************************************************************************
+
+bool Daemon::isInTimeRange(const std::vector<Range>* ranges, time_t t)
+{
+   for (auto it = ranges->begin(); it != ranges->end(); ++it)
+   {
+      if (it->inRange(l2hhmm(t)))
+      {
+         tell(eloDebug, "Debug: %d in range '%d-%d'", l2hhmm(t), it->from, it->to);
+         return true;
+      }
+   }
+
+   return false;
 }
 
 //***************************************************************************
@@ -2156,7 +2181,8 @@ int Daemon::loadHtmlHeader()
 //***************************************************************************
 
 int Daemon::addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
-                        WidgetType widgetType, int minScale, int maxScale, int rights, const char* choices)
+                         WidgetType widgetType, const char* title,
+                         int minScale, int maxScale, int rights, const char* choices)
 {
    if (maxScale == na)
       maxScale = unit[0] == '%' ? 100 : 45;
@@ -2170,7 +2196,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
       tell(0, "Add ValueFact '%ld' '%s'", tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
 
       tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("TITLE", name);
+      tableValueFacts->setValue("TITLE", title ? title : name);
       tableValueFacts->setValue("FACTOR", factor);
       tableValueFacts->setValue("RIGHTS", rights);
       tableValueFacts->setValue("STATE", "D");
@@ -2192,7 +2218,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    tableValueFacts->clearChanged();
 
    tableValueFacts->setValue("NAME", name);
-   tableValueFacts->setValue("TITLE", name);
+   tableValueFacts->setValue("TITLE", title ? title : name);
    tableValueFacts->setValue("FACTOR", factor);
 
    if (!isEmpty(choices))

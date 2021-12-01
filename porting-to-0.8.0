@@ -1,0 +1,53 @@
+
+Update auf Version 0.8.0
+-------------------------
+
+bei dem Befehlen unten das #> nicht mit kopieren ;)
+
+
+1.) Sichern der Tabellen - man weiß ja nie:
+  in einen Ordner wechseln in welchem ein backup abgelegt werden kann
+  Das backup Skript ausführen und warten:
+  #> p4d-backup.sh
+
+2.) Neue Version auf üblichem Weg installieren
+
+3.) Neue Version Starten (am besten booten)
+  nun sollte der p4d wieder laufen und das WEB Interface erreichbar sein,
+  nicht wundern wenn noch nicts ordentlich angezeigt wird!
+  Im WEB Interface einem STRG-Shift-r klicken um das JS neu zu laden!
+
+4.) Konfiguration anpassen:
+   Im Webfrontend -> Setup
+     - alle "MQTT HA" Parameter wieder instellen (wurden umbenannt), nur die mit 'HA',
+     die Optionen "MQTT Interface" bleibt auf 'tcp://127.0.0.1:1883'
+     - Optionen für DB Verbindung in /etc/p4d/daemon.conf prüfen unfd ggf. anpassen,
+       Die Einstllungen können aus /etc/p4d/p4d.conf übernommen werden.
+       Dabei sind nur diese vier nötig (alle weiteren sofern non in der p4d.conf sind Altlast):
+         DbHost = 192.168.200.101
+         DbPort = 3306
+         DbName = p4
+         DbUser = p4
+         DbPass = p4
+
+   - Einstellung "MQTT HA Data Topic Name:"
+      solltet ihr diesen verwenden müsst ihr 'sensor' gegen <TYPE> tauschen
+      Beispiel:
+        aus:   p4d2mqtt/sensor/<NAME>/state
+        wird:  p4d2mqtt/<TYPE>/<NAME>/state
+
+5.) p4d neu starten:
+  #> sudo systemctl restart p4d.service
+
+6.) Parameter Tabelle updaten
+   dazu unter Setup auf 'Init Sensoren' klicken und warten bis Erfolgsmeldung kommt
+   den p4d noch ein letztes mal neu Starten:
+   #> sudo systemctl restart p4d.service
+   Im WEB Interface einem STRG-Shift-r klicken um das JS neu zu laden!
+
+nun sollte das neune Web Interface verfügbar sein.
+
+Wenn alles läuft könnt ihr diese files lösschen
+ #> rm /etc/p4d/p4d.conf
+ #> rm /etc/p4d/p4d.dat
+ #> rm -rf /var/lib/p4/

@@ -17,10 +17,25 @@ button:focus {
 
 .infoBox
 {
-    background-color: var(--editadd);
+    background-color: var(--info);
     color: black;
-    padding: 10px;
-/*    font-weight: bold;*/
+    padding: 5px;
+    width: fit-content;
+    opacity: 0;
+    position: fixed;
+    margin: 5px;
+    top: -20rem;
+    left: -20rem;
+    transition-property: all;
+    transition-duration: 1.5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+.infoBox-active
+{
+    opacity: 1;
+    top: 0.5rem;
+    left: 0.5rem;
 }
 
 .menuLogin
@@ -159,7 +174,17 @@ button:focus {
 
 .seperatorTitle1
 {
-    background-color: var(--caption1);
+    background-color: var(--blue);
+    color: var(--light2);
+    padding: 5px 15px;
+    font-weight: bold;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.seperatorFold
+{
+    background-color: var(--blue);
     color: var(--light2);
     padding: 5px 15px;
     font-weight: bold;
@@ -568,9 +593,9 @@ table.tableMultiCol tr:nth-child(odd)
 
 .imageState
 {
-    margin: 3px;
     background-color: slategray;
-    padding: 15px;
+    padding: 7px;
+    margin: 2px;
 }
 
 .heatingState
@@ -578,8 +603,8 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: slategray;
     width: 35%;
     min-width: 145px;
-    padding: 15px;
-    margin: 3px;
+    padding: 7px;
+    margin: 2px;
 }
 
 .heatingState > div > div
@@ -601,8 +626,8 @@ table.tableMultiCol tr:nth-child(odd)
     float: right;
     width: 35%;
     min-width: 280px;
-    padding: 15px;
-    margin: 3px;
+    padding: 7px;
+    margin: 2px;
 }
 
 .daemonState > div > div > span

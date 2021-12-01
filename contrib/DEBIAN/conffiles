@@ -1,4 +1,4 @@
-/etc/p4d/p4d.conf
+/etc/p4d/daemon.conf
 /etc/default/w1mqtt
 /etc/rsyslog.d/10-p4d.conf
 /etc/logrotate.d/p4d

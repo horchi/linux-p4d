@@ -23,8 +23,8 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 {
    // web
 
-   { "addrsDashboard",            ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   { "addrsList",                 ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   // { "addrsDashboard",            ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
+   // { "addrsList",                 ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
 
    { "webUrl",                    ctString,  "", false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
    { "webSSL",                    ctBool,    "", false, "2 WEB Interface", "Use SSL for WebInterface", "" },
@@ -43,6 +43,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "arduinoInterval",           ctInteger, "10",   false, "1 P4 Daemon", "Intervall der Arduino Messungen", "[s]" },
    { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
    { "loglevel",                  ctInteger, "1",    false, "1 P4 Daemon", "Log level", "" },
+   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
 
    { "tsync",                     ctBool,    "0",    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
    { "maxTimeLeak",               ctInteger, "5",    false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
@@ -55,12 +56,11 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // MQTT interface
 
-   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
    { "mqttHassUrl",               ctString,  "",  false, "4 MQTT Interface", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttHassUser",              ctString,  "",  false, "4 MQTT Interface", "User", "" },
-   { "mqttHassPassword",          ctString,  "",  false, "4 MQTT Interface", "Password", "" },
-   { "mqttDataTopic",             ctString,  "",  false, "4 MQTT Interface", "MQTT Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttHaveConfigTopic",       ctBool,    "1", false, "4 MQTT Interface", "Config Topic", "Speziell für HomeAssistant" },
+   { "mqttHassUser",              ctString,  "",  false, "4 MQTT Interface", "MQTT HA User", "" },
+   { "mqttHassPassword",          ctString,  "",  false, "4 MQTT Interface", "MQTT HA Password", "" },
+   { "mqttDataTopic",             ctString,  "",  false, "4 MQTT Interface", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
+   { "mqttHaveConfigTopic",       ctBool,    "1", false, "4 MQTT Interface", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 
@@ -1001,7 +1001,7 @@ int P4d::calcStateDuration()
       beginTime = eTime;
 
       addValueFact(thisState, "SD", 1, ("State_Duration_"+std::to_string(thisState)).c_str(),
-                   "min", wtChart, 0, 2000);
+                   "min", wtChart, (std::string(text)+" (Laufzeit/Tag)").c_str(), false, 2000);
 
       selectStateDuration->freeResult();
       tableSamples->clear();
@@ -2348,45 +2348,45 @@ int P4d::initValueFacts(bool truncate)
            count, v.address, v.name, v.factor, v.unit, v.type, v.description);
 
       int res = addValueFact(v.address, "VA", v.factor, v.name, strcmp(v.unit, "°") == 0 ? "°C" : v.unit,
-                             wtMeter, 0, v.unit[0] == '%' ? 100 : 300);
+                             wtMeter, v.description, 0, v.unit[0] == '%' ? 100 : 300);
+
+      count++;
 
       if (res == 1)
          added++;
       else if (res == 2)
          modified++;
-
-      count++;
    }
 
    tell(eloAlways, "Read %d value facts, modified %d and added %d", count, modified, added);
-   count = 0;
 
-   tell(0, "Update example value of table valuefacts");
+   // count = 0;
+   // tell(0, "Update example value of table valuefacts");
 
-   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
-   {
-      if (!tableValueFacts->hasValue("TYPE", "VA"))
-         continue;
+   // for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
+   // {
+   //    if (!tableValueFacts->hasValue("TYPE", "VA"))
+   //       continue;
 
-      Value v(tableValueFacts->getIntValue("ADDRESS"));
+   //    Value v(tableValueFacts->getIntValue("ADDRESS"));
 
-      if ((status = request->getValue(&v)) != success)
-      {
-         tell(eloAlways, "Getting value 0x%04x failed, error %d", v.address, status);
-         continue;
-      }
+   //    if ((status = request->getValue(&v)) != success)
+   //    {
+   //       tell(eloAlways, "Getting value 0x%04x failed, error %d", v.address, status);
+   //       continue;
+   //    }
 
-      double factor = tableValueFacts->getIntValue("FACTOR");
-      int dataType = tableValueFacts->getIntValue("RES1");
-      int value = dataType == 1 ? (word)v.value : (sword)v.value;
-      double theValue = value / factor;
-      tableValueFacts->setValue("VALUE", theValue);
-      tableValueFacts->update();
-      count++;
-   }
+   //    double factor = tableValueFacts->getIntValue("FACTOR");
+   //    int dataType = tableValueFacts->getIntValue("RES1");
+   //    int value = dataType == 1 ? (word)v.value : (sword)v.value;
+   //    double theValue = value / factor;
+   //    tableValueFacts->setValue("VALUE", theValue);
+   //    tableValueFacts->update();
+   //    count++;
+   // }
 
-   selectAllValueFacts->freeResult();
-   tell(0, "Updated %d example values", count);
+   // selectAllValueFacts->freeResult();
+   // tell(0, "Updated %d example values", count);
 
    // ---------------------------------
    // add default for digital outputs
@@ -2422,14 +2422,12 @@ int P4d::initValueFacts(bool truncate)
          unit = "%";
 
       int res = addValueFact(tableMenu->getIntValue("ADDRESS"), type, 1, name, unit,
-                             widgetType, 0, unit[0] == '%' ? 100 : 300);
+                             widgetType, tableMenu->getStrValue("TITLE"), 0, unit[0] == '%' ? 100 : 300);
 
       if (res == 1)
          added++;
       else if (res == 2)
          modified++;
-
-      // ?? tableValueFacts->setValue("TITLE", tableMenu->getStrValue("TITLE"));
 
       free(name);
       count++;
@@ -2441,7 +2439,7 @@ int P4d::initValueFacts(bool truncate)
    // ---------------------------------
    // add value definitions for special data
 
-   addValueFact(udState, "UD", 1, "Status", "zst", wtSymbol);
+   addValueFact(udState, "UD", 1, "Status", "zst", wtSymbol, "Heizungsstatus");
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
@@ -2450,11 +2448,10 @@ int P4d::initValueFacts(bool truncate)
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("TITLE", "Heizungsstatus");
       tableValueFacts->store();
    }
 
-   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", wtText);
+   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", wtText, "Betriebsmodus");
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
@@ -2463,11 +2460,10 @@ int P4d::initValueFacts(bool truncate)
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("TITLE", "Betriebsmodus");
       tableValueFacts->store();
    }
 
-   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", wtText);
+   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", wtText, "Datum Uhrzeit der Heizung");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
@@ -2475,7 +2471,6 @@ int P4d::initValueFacts(bool truncate)
    if (!tableValueFacts->find())
    {
       tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->setValue("TITLE", "Datum Uhrzeit der Heizung");
       tableValueFacts->store();
    }
 
