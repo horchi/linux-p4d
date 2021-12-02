@@ -172,19 +172,9 @@ button:focus {
     box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
-.seperatorTitle1
-{
-    background-color: var(--blue);
-    color: var(--light2);
-    padding: 5px 15px;
-    font-weight: bold;
-    margin-top: 4px;
-    margin-bottom: 4px;
-}
-
 .seperatorFold
 {
-    background-color: var(--blue);
+    background-color: darkslategray;
     color: var(--light2);
     padding: 5px 15px;
     font-weight: bold;
@@ -329,9 +319,10 @@ span > input
     background-color: var(--light1);
     text-decoration: none;
     font-size: 16px;
-    width: 95%;
+    width: 100%;
     padding: 5px;
     border-radius: 5px;
+    white-space: pre;
 }
 
 .schemaBox
@@ -951,14 +942,14 @@ table.tableMultiCol tr:nth-child(odd)
 
 .widget
 {
-  display: grid;
-  grid-template-areas:
-    'title'
-    'main'
-    'progress';
+    display: grid;
+    grid-template-areas:
+      'title'
+      'main'
+      'progress';
     grid-template-rows: 14% 82% 2%;
-  grid-gap: 1px;
-  box-shadow: 1px 1px 1px 0px var(--shadow);
+    grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
 .widgetPlain

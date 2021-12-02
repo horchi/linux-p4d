@@ -26,7 +26,7 @@ PyObject* PySensor::getData(PyObject* self, PyObject* args)
    if (!PyArg_ParseTuple(args, "si", &type, &address))
       return nullptr;
 
-   // tell(0, "python PySensor::getData: %s:%d  [%s]\n", type, address, singletonDaemon->sensorJsonStringOf(type, address).c_str());
+   tell(0, "Python: PySensor::getData: %s:%d  [%s]\n", type, address, singletonDaemon->sensorJsonStringOf(type, address).c_str());
 
    return Py_BuildValue("s", singletonDaemon->sensorJsonStringOf(type, address).c_str());
 }
@@ -169,14 +169,14 @@ int PySensor::execute(const char* command)
    PyObject* pyArgs = PyTuple_New(3);
    PyTuple_SetItem(pyArgs, 0, PyUnicode_FromString(command));
    PyTuple_SetItem(pyArgs, 1, PyUnicode_FromString("SC"));
-   PyTuple_SetItem(pyArgs, 2, PyLong_FromLong(99));
+   PyTuple_SetItem(pyArgs, 2, PyLong_FromLong(99));  // #TODO set address!
 
    pValue = PyObject_CallObject(pFunc, pyArgs);
 
    if (!pValue)
    {
       showError("execute");
-      tell(0, "Python: Call of function '%s()' failed", function);
+      tell(0, "Error: Python, call of function '%s()' failed", function);
       return fail;
    }
 
@@ -185,7 +185,7 @@ int PySensor::execute(const char* command)
    if (!pyStr)
    {
       Py_DECREF(pValue);
-      tell(0, "Error: Unexpected result of call to %s()", function);
+      tell(0, "Error: Python, unexpected result of call to %s()", function);
       return fail;
    }
 

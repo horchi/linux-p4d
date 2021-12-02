@@ -51,7 +51,7 @@ class P4d : public Daemon
 
       void afterUpdate() override;
       int updateErrors();
-      int updateState(Status* state) override;
+      int updateState() override;
       void scheduleTimeSyncIn(int offset = 0);
       int sendErrorMail();
       int sendStateMail();
@@ -141,8 +141,8 @@ class P4d : public Daemon
 
       std::map<int,time_t> stateDurations;
       int errorsPending {0};
-
-      // config
+      time_t nextTimeSyncAt {0};
+   // std::map<int,double> vaValues;
 
       // statics
 

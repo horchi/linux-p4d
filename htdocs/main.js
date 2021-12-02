@@ -345,6 +345,9 @@ function dispatchMessage(message)
    else if (event == "grouplist") {
       grouplist = jMessage.object;
    }
+   else if (event == "alerts") {
+      initAlerts(jMessage.object);
+   }
    else if (event == "s3200-state") {
       s3200State = jMessage.object;
    }
@@ -354,9 +357,6 @@ function dispatchMessage(message)
    else if (event == "menu") {
       initMenu(jMessage.object);
       hideProgressDialog();
-   }
-   else if (event == "alerts") {
-      initAlerts(jMessage.object);
    }
    else if (event == "pareditrequest") {
       editMenuParameter(jMessage.object);
@@ -476,11 +476,11 @@ function menuBurger()
    var haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
 
    var form = '<div id="burgerPopup" style="padding:0px;">';
-   if (haveToken)
-      form +=
-      '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'user\')">[' + localStorage.getItem(storagePrefix + 'User') + ']</button>' +
-      '  <br/>' +
-      '  <div><button style="width:120px;" class="rounded-border button1" onclick="setupDashboard()">' + (setupMode ? 'Stop Setup' : 'Setup Dashboard') + '</button></div>';
+   if (haveToken) {
+      form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'user\')">[' + localStorage.getItem(storagePrefix + 'User') + ']</button>';
+      if (currentPage == 'dashboard')
+         form += '  <br/><div><button style="width:120px;" class="rounded-border button1" onclick="setupDashboard()">' + (setupMode ? 'Stop Setup' : 'Setup Dashboard') + '</button></div>';
+   }
    else
       form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'login\')">Login</button>';
 
@@ -639,7 +639,7 @@ function initErrors(errors, root)
    $('#container').removeClass('hidden');
 
    document.getElementById("container").innerHTML =
-      '<div class="rounded-border seperatorTitle1">Fehlerspeicher</div>' +
+      '<div class="rounded-border seperatorFold">Fehlerspeicher</div>' +
       ' <table class="tableMultiCol">' +
       '   <thead>' +
       '     <tr>' +

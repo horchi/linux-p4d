@@ -59,12 +59,12 @@ const char* cWebService::events[] =
    "forcerefresh",
    "list",
    "alerts",
+   "storealerts",
 
    "errors",
    "menu",
    "pareditrequest",
    "parstore",
-   "storealerts",
    "inittables",
 
    "schema",
@@ -491,103 +491,150 @@ int Daemon::initScripts()
 {
    char* path {nullptr};
    int count {0};
+
+   tableScripts->clear();
+
+   for (int f = selectScripts->find(); f; f = selectScripts->fetch())
+   {
+      if (!fileExists(tableScripts->getStrValue("PATH")))
+      {
+         int delCount {0};
+         char* stmt {nullptr};
+         asprintf(&stmt, "%s = '%s'", tableScripts->getField("PATH")->getDbName(), tableScripts->getStrValue("PATH"));
+         tableScripts->deleteWhere(stmt, delCount);
+         free(stmt);
+         tell(eloAlways, "Removed script '%s'", tableScripts->getStrValue("PATH"));
+      }
+   }
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("TYPE", "SC");
+
+   for (int f = selectValueFactsByType->find(); f; f = selectValueFactsByType->fetch())
+   {
+      tableScripts->setValue("ID", tableValueFacts->getIntValue("ADDRESS"));
+
+      if (!tableScripts->find())
+      {
+         int delCount {0};
+         char* stmt {nullptr};
+         asprintf(&stmt, "%s = %ld and %s = 'SC'",
+                  tableValueFacts->getField("ADDRESS")->getDbName(), tableValueFacts->getIntValue("ADDRESS"),
+                  tableValueFacts->getField("TYPE")->getDbName());
+         tableValueFacts->deleteWhere(stmt, delCount);
+         free(stmt);
+         tell(eloAlways, "Removed valuefact 'SC/%ld'", tableValueFacts->getIntValue("ADDRESS"));
+      }
+   }
+
+   tableValueFacts->reset();
+
+   // check for new scripts
+
    FileList scripts;
 
    asprintf(&path, "%s/scripts.d", confDir);
    int status = getFileList(path, DT_REG, "sh py", false, &scripts, count);
 
-   if (status == success)
+   if (status != success)
    {
-      for (const auto& script : scripts)
+      free(path);
+      return status;
+   }
+
+   for (const auto& script : scripts)
+   {
+      char* scriptPath {nullptr};
+      uint addr {0};
+      char* cmd {nullptr};
+      std::string result;
+      PySensor* pySensor {nullptr};
+
+      // tell(eloAlways, "Found script '%s'", script.name.c_str());
+
+      asprintf(&scriptPath, "%s/%s", path, script.name.c_str());
+
+      if (strstr(script.name.c_str(), ".py"))
       {
-         char* scriptPath {nullptr};
-         uint addr {0};
-         char* cmd {nullptr};
-         std::string result;
-         PySensor* pySensor {nullptr};
+         int status {success};
+         pySensor = new PySensor(this, path, script.name.c_str());
 
-         asprintf(&scriptPath, "%s/%s", path, script.name.c_str());
-
-         if (strstr(script.name.c_str(), ".py"))
+         if ((status = pySensor->init()) != success || (result = executePython(pySensor, "status")) == "")
          {
-            pySensor = new PySensor(this, path, script.name.c_str());
-
-            if (pySensor->init() != success || (result = executePython(pySensor, "status")) == "")
-            {
-               tell(0, "Initialized python script '%s' failed", script.name.c_str());
-               delete pySensor;
-               continue;
-            }
-         }
-         else
-         {
-            asprintf(&cmd, "%s status", scriptPath);
-            result = executeCommand(cmd);
-            tell(5, "Calling '%s'", cmd);
-            free(cmd);
-         }
-
-         json_error_t error;
-         json_t* oData = json_loads(result.c_str(), 0, &error);
-
-         if (!oData)
-         {
-            tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
-            tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
-                 error.text, error.source, error.line, error.column, error.position);
+            tell(0, "Initialized python script '%s' failed, status was %d, result was '%s'",
+                 script.name.c_str(), status, result.c_str());
             delete pySensor;
             continue;
          }
-
-         std::string kind = getStringFromJson(oData, "kind", "status");
-         const char* title = getStringFromJson(oData, "title");
-         const char* unit = getStringFromJson(oData, "unit");
-         const char* choices = getStringFromJson(oData, "choices");
-         double value = getDoubleFromJson(oData, "value");
-         bool valid = getBoolFromJson(oData, "valid", false);
-         const char* text = getStringFromJson(oData, "text");
-
-         tableScripts->clear();
-         tableScripts->setValue("PATH", scriptPath);
-
-         if (!selectScriptByPath->find())
-         {
-            tableScripts->store();
-            addr = tableScripts->getLastInsertId();
-         }
-         else
-            addr = tableScripts->getIntValue("ID");
-
-         selectScriptByPath->freeResult();
-
-         auto tuple = split(script.name, '.');
-         addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
-                      kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
-                      tuple[0].c_str(),
-                      0, 0, urControl, choices);
-
-         tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
-
-         scSensors[addr].kind = kind;
-         scSensors[addr].pySensor = pySensor;
-         scSensors[addr].last = time(0);
-         scSensors[addr].valid = valid;
-
-         if (kind == "status")
-            scSensors[addr].state = (bool)value;
-         else if (kind == "text")
-            scSensors[addr].text = text;
-         else if (kind == "value")
-            scSensors[addr].value = value;
-
-         tell(0, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
-         free(scriptPath);
       }
+      else
+      {
+         asprintf(&cmd, "%s status", scriptPath);
+         result = executeCommand(cmd);
+         tell(5, "Calling '%s'", cmd);
+         free(cmd);
+      }
+
+      json_error_t error;
+      json_t* oData = json_loads(result.c_str(), 0, &error);
+
+      if (!oData)
+      {
+         tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
+         tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+              error.text, error.source, error.line, error.column, error.position);
+         delete pySensor;
+         continue;
+      }
+
+      std::string kind = getStringFromJson(oData, "kind", "status");
+      const char* title = getStringFromJson(oData, "title");
+      const char* unit = getStringFromJson(oData, "unit");
+      const char* choices = getStringFromJson(oData, "choices");
+      double value = getDoubleFromJson(oData, "value");
+      bool valid = getBoolFromJson(oData, "valid", false);
+      const char* text = getStringFromJson(oData, "text");
+
+      tableScripts->clear();
+      tableScripts->setValue("PATH", scriptPath);
+
+      if (!selectScriptByPath->find())
+      {
+         tableScripts->store();
+         addr = tableScripts->getLastInsertId();
+      }
+      else
+         addr = tableScripts->getIntValue("ID");
+
+      selectScriptByPath->freeResult();
+
+      auto tuple = split(script.name, '.');
+      addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
+                   kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
+                   tuple[0].c_str(),
+                   0, 0, urControl, choices);
+
+      tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
+
+      scSensors[addr].kind = kind;
+      scSensors[addr].pySensor = pySensor;
+      scSensors[addr].last = time(0);
+      scSensors[addr].valid = valid;
+
+      if (kind == "status")
+         scSensors[addr].state = (bool)value;
+      else if (kind == "text")
+         scSensors[addr].text = text;
+      else if (kind == "value")
+         scSensors[addr].value = value;
+
+      tell(0, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
+      free(scriptPath);
    }
 
    free(path);
 
-   return status;
+   return success;
 }
 
 //***************************************************************************
@@ -795,6 +842,19 @@ std::string Daemon::sensorJsonStringOf(const char* type, uint addr)
       if (spSensors[addr].disabled)
          json_object_set_new(ojData, "disabled", json_boolean(true));
    }
+   else if (strcmp(type, "VA") == 0)
+   {
+      if (vaSensors[addr].kind == "text")
+         json_object_set_new(ojData, "text", json_string(vaSensors[addr].text.c_str()));
+      else if (vaSensors[addr].kind == "value")
+         json_object_set_new(ojData, "value", json_real(vaSensors[addr].value));
+
+      json_object_set_new(ojData, "last", json_integer(vaSensors[addr].last));
+      json_object_set_new(ojData, "valid", json_integer(vaSensors[addr].valid));
+
+      if (vaSensors[addr].disabled)
+         json_object_set_new(ojData, "disabled", json_boolean(true));
+   }
 
    char* p = json_dumps(ojData, JSON_REAL_PRECISION(4));
    json_decref(ojData);
@@ -916,6 +976,17 @@ int Daemon::initDb()
 
    // ------------------
 
+   selectValueFactsByType = new cDbStatement(tableValueFacts);
+
+   selectValueFactsByType->build("select ");
+   selectValueFactsByType->bindAllOut();
+   selectValueFactsByType->build(" from %s where ", tableValueFacts->TableName());
+   selectValueFactsByType->bind("TYPE", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectValueFactsByType->prepare();
+
+   // ------------------
+
    selectAllValueFacts = new cDbStatement(tableValueFacts);
 
    selectAllValueFacts->build("select ");
@@ -1019,6 +1090,17 @@ int Daemon::initDb()
    status += selectSamplesRange60->prepare();
 
    // ------------------
+   // select all scripts
+
+   selectScripts = new cDbStatement(tableScripts);
+
+   selectScripts->build("select ");
+   selectScripts->bindAllOut();
+   selectScripts->build(" from %s", tableScripts->TableName());
+
+   status += selectScripts->prepare();
+
+   // ------------------
    // select script by path
 
    selectScriptByPath = new cDbStatement(tableScripts);
@@ -1054,12 +1136,13 @@ int Daemon::exitDb()
    delete tableSamples;               tableSamples = nullptr;
    delete tablePeaks;                 tablePeaks = nullptr;
    delete tableValueFacts;            tableValueFacts = nullptr;
-   delete tableConfig;             tableConfig = nullptr;
+   delete tableConfig;                tableConfig = nullptr;
    delete tableUsers;                 tableUsers = nullptr;
    delete tableGroups;                tableGroups = nullptr;
 
    delete selectAllGroups;            selectAllGroups = nullptr;
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
+   delete selectValueFactsByType;     selectValueFactsByType = nullptr;
    delete selectAllValueFacts;        selectAllValueFacts = nullptr;
    delete selectAllConfig;            selectAllConfig = nullptr;
    delete selectAllUser;              selectAllUser = nullptr;
@@ -1067,6 +1150,7 @@ int Daemon::exitDb()
    delete selectSamplesRange;         selectSamplesRange = nullptr;
    delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
    delete selectScriptByPath;         selectScriptByPath = nullptr;
+   delete selectScripts;              selectScripts = nullptr;
 
    delete connection; connection = nullptr;
 
@@ -1199,9 +1283,6 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
                   uint factor, uint groupid, const char* text)
 {
    double theValue = value / (double)factor;
-
-   if (strcmp(type, "VA") == 0)
-      vaValues[address] = theValue;
 
    tableSamples->clear();
 
@@ -1348,7 +1429,7 @@ int Daemon::loop()
 
       // update/check state
 
-      int status = updateState(&currentState);
+      int status = updateState();
 
       if (status != success)
       {
@@ -1804,7 +1885,7 @@ int Daemon::aggregate()
 
    if (connection->query(aggCount, "%s", stmt) == success)
    {
-      int delCount = 0;
+      int delCount {0};
 
       tell(eloDebug, "Aggregation: [%s]", stmt);
       free(stmt);

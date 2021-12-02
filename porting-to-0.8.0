@@ -51,3 +51,14 @@ Wenn alles läuft könnt ihr diese files lösschen
  #> rm /etc/p4d/p4d.conf
  #> rm /etc/p4d/p4d.dat
  #> rm -rf /var/lib/p4/
+
+Es gibt ein paar neue DB Felder, diese wurden/werden automatisch angelgt.
+Zusätzlich sind ein paar DB Felder obsolete, diese werden NICHT automatisch entfernt,
+wenn die neue Version läuft und ein Fallback unwahschenlich ist könnt ihr sie mauell
+entfernen, dazu so die Hinweise aus dem log greppen:
+#> grep "ALTER TABLE" /var/log/p4d.log
+
+oder so fertig vorbereitet für copy&paste:
+#> grep "ALTER TABLE" /var/log/p4d.log | sed s/".*call ."/""/ | sed s/". manually.*"/""/ | sort -u
+
+und entsprechnd verfahren. Die Felder stören nciht machen die tabellen nur unnötig größer.

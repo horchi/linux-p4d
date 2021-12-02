@@ -505,7 +505,7 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
          return done;
       }
 
-      int dataType = tableValueFacts->getIntValue("RES1");
+      int dataType = tableValueFacts->getIntValue("SUBTYPE");
       int value = dataType == 1 ? (word)v.value : (sword)v.value;
       double theValue = value / factor;
 
@@ -514,6 +514,11 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
 
       if (!webOnly)
       {
+         vaSensors[v.address].kind = "value";
+         vaSensors[v.address].value = value / (double)factor;
+         vaSensors[v.address].valid = true;
+         vaSensors[v.address].last = lastSampleTime;
+
          store(lastSampleTime, name, title, unit, type, v.address, value, factor, groupid);
          sprintf(num, "%.2f%s", theValue, unit);
          addParameter2Mail(title, num);
@@ -527,7 +532,7 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
 // Update State
 //***************************************************************************
 
-int P4d::updateState(Status* state)
+int P4d::updateState()
 {
    static time_t nextReportAt = 0;
 
@@ -538,15 +543,15 @@ int P4d::updateState(Status* state)
 
    sem->p();
    tell(eloDetail, "Checking state ...");
-   status = request->getStatus(state);
+   status = request->getStatus(&currentState);
    now = time(0);
    sem->v();
 
    if (status != success)
       return status;
 
-   tell(eloDetail, "... got (%d) '%s'%s", state->state, toTitle(state->state),
-        isError(state->state) ? " -> Störung" : "");
+   tell(eloDetail, "... got (%d) '%s'%s", currentState.state, toTitle(currentState.state),
+        isError(currentState.state) ? " -> Störung" : "");
 
    // ----------------------
    // check time sync
@@ -554,11 +559,11 @@ int P4d::updateState(Status* state)
    if (!nextTimeSyncAt)
       scheduleTimeSyncIn();
 
-   if (tSync && maxTimeLeak && labs(state->time - now) > maxTimeLeak)
+   if (tSync && maxTimeLeak && labs(currentState.time - now) > maxTimeLeak)
    {
       if (now > nextReportAt)
       {
-         tell(eloAlways, "Time drift is %ld seconds", state->time - now);
+         tell(eloAlways, "Time drift is %ld seconds", currentState.time - now);
          nextReportAt = now + 2 * tmeSecondsPerMinute;
       }
 
@@ -566,7 +571,7 @@ int P4d::updateState(Status* state)
       {
          scheduleTimeSyncIn(tmeSecondsPerDay);
 
-         tell(eloAlways, "Time drift is %ld seconds, syncing now", state->time - now);
+         tell(eloAlways, "Time drift is %ld seconds, syncing now", currentState.time - now);
 
          sem->p();
 
@@ -577,12 +582,12 @@ int P4d::updateState(Status* state)
 
          sleep(2);   // S-3200 need some seconds to store time :o
 
-         status = request->getStatus(state);
+         status = request->getStatus(&currentState);
          now = time(0);
 
          sem->v();
 
-         tell(eloAlways, "Time drift now %ld seconds", state->time - now);
+         tell(eloAlways, "Time drift now %ld seconds", currentState.time - now);
       }
    }
 
@@ -984,7 +989,7 @@ int P4d::updateParameter(cDbTable* tableMenu)
       {
          double factor = tableValueFacts->getIntValue("FACTOR");
          const char* unit = tableValueFacts->getStrValue("UNIT");
-         int dataType = tableValueFacts->getIntValue("RES1");
+         int dataType = tableValueFacts->getIntValue("SUBTYPE");
 
          status = request->getValue(&v);
 
@@ -1805,8 +1810,8 @@ int P4d::performPellets(json_t* oObject, long client)
    json_object_set_new(oData, "price", json_real(tPrice));
    json_object_set_new(oData, "comment", json_string("Total"));
    json_object_set_new(oData, "consumptionHint", json_string(hint));
-   json_object_set_new(oData, "stokerHours", json_integer(vaValues[0xad] - stokerHhLast));
-   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaValues[0xad]-stokerHhLast)));
+   json_object_set_new(oData, "stokerHours", json_integer(vaSensors[0xad].value - stokerHhLast));
+   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaSensors[0xad].value-stokerHhLast)));
 
    free(hint);
 
@@ -2268,7 +2273,7 @@ int P4d::performMenu(json_t* oObject, long client)
          json_object_set_new(oData, "digits", json_integer(digits));
 
          if (type == mstMesswert || type == mstMesswert1)
-            json_object_set_new(oData, "value", json_real(vaValues[address]));
+            json_object_set_new(oData, "value", json_real(vaSensors[address].value));
          else
             json_object_set_new(oData, "value", json_string(tableMenu->getStrValue("VALUE")));
 
@@ -2680,6 +2685,16 @@ int P4d::initValueFacts(bool truncate)
       int res = addValueFact(v.address, "VA", v.factor, v.name, strcmp(v.unit, "°") == 0 ? "°C" : v.unit,
                              wtMeter, v.description, 0, v.unit[0] == '%' ? 100 : 300);
 
+      // set special value SUBTYPE for valuefact
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("ADDRESS", v.address);
+      tableValueFacts->setValue("TYPE", "VA");
+
+      tableValueFacts->find();
+      tableValueFacts->setValue("SUBTYPE", v.type);
+      tableValueFacts->store();
+
       count++;
 
       if (res == 1)
@@ -2707,7 +2722,7 @@ int P4d::initValueFacts(bool truncate)
    //    }
 
    //    double factor = tableValueFacts->getIntValue("FACTOR");
-   //    int dataType = tableValueFacts->getIntValue("RES1");
+   //    int dataType = tableValueFacts->getIntValue("SUBTYPE");
    //    int value = dataType == 1 ? (word)v.value : (sword)v.value;
    //    double theValue = value / factor;
    //    tableValueFacts->setValue("VALUE", theValue);

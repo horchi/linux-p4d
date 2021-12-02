@@ -104,8 +104,12 @@ function initWidget(widget, fact)
 
    elem.innerHTML = "";
    var marginPadding = 8;
-   // console.log("clientWidth: " + elem.clientWidth);
-   elem.style.width = elem.clientWidth * fact.widget.widthfactor + ((fact.widget.widthfactor-1) * marginPadding) + 'px';
+
+   if (fact.widget.baseWidth == null)
+      fact.widget.baseWidth = elem.clientWidth;
+
+   // console.log("clientWidth: " + elem.clientWidth + ' : ' + fact.widget.baseWidth);
+   elem.style.width = fact.widget.baseWidth * fact.widget.widthfactor + ((fact.widget.widthfactor-1) * marginPadding) + 'px';
 
    if (setupMode && fact.widget.widgettype < 900) {
       elem.setAttribute('draggable', true);
@@ -332,19 +336,19 @@ function initWidget(widget, fact)
          break;
 
       case 998:     // 998 (Add Widget)
-         var html = '<div class="widget-title"></div>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">+</div>';
+         elem.innerHTML = '<div class="widget-title"></div>' +
+                          '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">+</div>';
+         elem.style.backgroundColor = "var(--light3)";
          elem.className = "widgetPlain rounded-border";
          elem.addEventListener('click', function(event) {addWidget();}, false);
-         elem.innerHTML = html;
          break;
 
       case 999:     // 999 (Del Widget)
-         var html = '<div class="widget-title"></div>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">-</div>';
+         elem.innerHTML = '<div class="widget-title"></div>' +
+                          '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">&#128465;</div>';
          elem.className = "widgetPlain rounded-border";
-         elem.innerHTML = html;
-         elem.title = 'Zum Löschen hier ablegen';
+         elem.style.backgroundColor = "var(--light3)";
+         elem.title = 'zum Löschen hier ablegen';
          elem.addEventListener('dragover', function(event) {event.preventDefault()}, false);
          elem.addEventListener('drop', function(event) {deleteWidget(event)}, false);
          break;

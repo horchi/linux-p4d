@@ -3,7 +3,7 @@
 // File daemon.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 25.04.2020  Jörg Wendel
+// Date 04.11.2010 - 01.12.2021  Jörg Wendel
 //***************************************************************************
 
 #pragma once
@@ -19,7 +19,7 @@
 
 #include "pysensor.h"
 #include "websock.h"
-#include "service.h"
+
 #include "p4io.h"
 
 #define confDirDefault "/etc/" TARGET
@@ -214,7 +214,7 @@ class Daemon : public FroelingService, public cWebInterface
       int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
       virtual int onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData) { return done; }
       void updateScriptSensors();
-      virtual int updateState(Status* state) { return done; }
+      virtual int updateState() { return done; }
       virtual void afterUpdate();
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
@@ -352,6 +352,7 @@ class Daemon : public FroelingService, public cWebInterface
 
       cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};
+      cDbStatement* selectValueFactsByType {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
       cDbStatement* selectAllConfig {nullptr};
       cDbStatement* selectAllUser {nullptr};
@@ -359,6 +360,7 @@ class Daemon : public FroelingService, public cWebInterface
       cDbStatement* selectSamplesRange {nullptr};     // for chart
       cDbStatement* selectSamplesRange60 {nullptr};   // for chart
       cDbStatement* selectScriptByPath {nullptr};
+      cDbStatement* selectScripts {nullptr};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;
@@ -453,9 +455,7 @@ class Daemon : public FroelingService, public cWebInterface
       char* mailScript {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
-      time_t nextTimeSyncAt {0};
       MemoryStruct htmlHeader;
-
       int invertDO {no};
 
       // live data
@@ -498,6 +498,7 @@ class Daemon : public FroelingService, public cWebInterface
 
       std::map<int,SensorData> spSensors;
       std::map<int,SensorData> scSensors;
+      std::map<int,SensorData> vaSensors;
 
       std::map<std::string,json_t*> jsonSensorList;
 
@@ -505,7 +506,6 @@ class Daemon : public FroelingService, public cWebInterface
 
       std::string alertMailBody;
       std::string alertMailSubject;
-      std::map<int,double> vaValues;
 
       // statics
 

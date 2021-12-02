@@ -134,12 +134,12 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
 
       case evChartbookmarks:      return rights & urView;
       case evStoreChartbookmarks: return rights & urSettings;
-
-      case evMenu:                return rights & urView;
       case evAlerts:              return rights & urSettings;
       case evStoreAlerts:         return rights & urSettings;
-      case evGroups:              return rights & urSettings;
       case evList:                return rights & urView;
+      case evGroups:              return rights & urSettings;
+
+      case evMenu:                return rights & urView;
       case evSchema:              return rights & urView;
       case evStoreSchema:         return rights & urSettings;
       case evParEditRequest:      return rights & urFullControl;

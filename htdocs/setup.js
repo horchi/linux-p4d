@@ -8,12 +8,13 @@
  *
  */
 
+var configCategories = {};
 var ioSections = {};
+var theConfiguration = null;
 
 function initConfig(configuration)
 {
    $('#container').removeClass('hidden');
-
    $("#container").height($(window).height() - $("#menu").height() - 8);
 
    window.onresize = function() {
@@ -26,6 +27,7 @@ function initConfig(configuration)
    var root = document.getElementById("setupContainer");
    var lastCat = "";
    root.innerHTML = "";
+   theConfiguration = configuration;
 
    $('#btnInitMenu').bind('click', function(event) {
       if (event.ctrlKey)
@@ -45,13 +47,20 @@ function initConfig(configuration)
       var html = "";
 
       if (lastCat != item.category) {
-         html += "<div class=\"rounded-border seperatorTitle1\">" + item.category + "</div>";
+         if (!configCategories.hasOwnProperty(item.category))
+            configCategories[item.category] = true;
+
+         var sign = configCategories[item.category] ? '&#11013;' : '&#11015;';
+         html += '<div class="rounded-border seperatorFold" onclick="foldCategory(\'' + item.category + '\')">' + sign + ' ' + item.category + "</div>";
          var elem = document.createElement("div");
          elem.innerHTML = html;
          root.appendChild(elem);
          html = "";
          lastCat = item.category;
       }
+
+      if (!configCategories[item.category])
+         continue;
 
       html += "    <span>" + item.title + ":</span>\n";
 
@@ -258,6 +267,13 @@ function doIncrementalFilterIoSetup()
    initIoSetup(valueFacts);
 }
 
+function foldCategory(category)
+{
+   configCategories[category] = !configCategories[category];
+   console.log(category + ' : ' + configCategories[category]);
+   initConfig(theConfiguration)
+}
+
 function foldSection(sectionId)
 {
    ioSections[sectionId] = !ioSections[sectionId];
@@ -281,8 +297,8 @@ function tableHeadline(title, sectionId)
       '        <td style="width:25%;">Bezeichnung</td>' +
       '        <td style="width:4%;">Einheit</td>' +
       '        <td style="width:3%;">Aktiv</td>' +
-      '        <td style="width:8%;">ID</td>' +
-      '        <td style="width:15%;">Gruppe</td>' +
+      '        <td style="width:6%;">ID</td>' +
+      '        <td style="width:10%;">Gruppe</td>' +
       '      </tr>' +
       '    </thead>' +
       '    <tbody id="' + sectionId + '">' +

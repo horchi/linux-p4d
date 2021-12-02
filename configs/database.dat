@@ -65,14 +65,10 @@ Table valuefacts
    NAME                 ""          name                 Ascii      100 Data,
    TITLE                ""          title                Ascii      100 Data,
    USRTITLE             ""          usrtitle             Ascii      100 Data,
-   MAXSCALE             ""          maxscale             Int          4 Data,
-   ORDER                ""          ord                  Int          4 Data,
-   RES1                 "data type" res1                 Int          4 Data,
+   SUBTYPE              "data type" res1                 Int          4 Data,
    CHOICES              ""          choices              Ascii      250 Data,
    WIDGETOPT            ""          widgetopt            Ascii     1000 Data,
    RIGHTS   "needed control rights" rights               Int          0 Data,
-
-   VALUE                ""          value                Float      122 Data,
 }
 
 // ----------------------------------------------------------------
@@ -83,6 +79,85 @@ Table groups
 {
    ID                   ""  id                   UInt         4 Primary|Autoinc,
    NAME                 ""  name                 Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Config
+// ----------------------------------------------------------------
+
+Table config
+{
+   OWNER                ""  owner                Ascii       40 Primary,
+   NAME                 ""  name                 Ascii       40 Primary,
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+   VALUE                ""  value                Text      1500 Data,
+}
+
+// ----------------------------------------------------------------
+// Table Users
+// ----------------------------------------------------------------
+
+Table users
+{
+   USER                 ""               user        Ascii      40 Primary,
+   INSSP                ""               inssp       Int         0 Meta,
+   UPDSP                ""               updsp       Int         0 Meta,
+   PASSWD               "md5 sum"        passwd      Ascii      40 Data,
+   TOKEN                ""               token       Ascii     200 Data,
+   RIGHTS               "Rights Bitmask" rights      INT       200 Data,
+}
+
+// ----------------------------------------------------------------
+// Table SensorAlert
+// ----------------------------------------------------------------
+
+Table sensoralert
+{
+   ID                   ""  id                   UInt        11 Primary|Autoinc,
+
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+
+   KIND                 ""  kind                 Ascii        1 Data,  // 'S'ub or 'M'aster rule
+   SUBID                ""  subid                UInt        11 Data,  // reference to 'sub' rule
+   LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
+
+   ADDRESS              ""  address              UInt         4 Data,
+   TYPE                 ""  type                 Ascii        2 Data,
+   STATE                ""  state                Ascii        1 Data,
+   MIN                  ""  min                  Int         10 Data,
+   MAX                  ""  max                  Int         10 Data,
+   RANGEM               ""  rangem               Int         10 Data,
+   DELTA                ""  delta                Int         10 Data,
+   MADDRESS             ""  maddress             Ascii      100 Data,
+   MSUBJECT             ""  msubject             Ascii      100 Data,
+   MBODY                ""  mbody                Text      2000 Data,
+   LASTALERT            ""  lastalert            Int         10 Data,
+   MAXREPEAT            ""  maxrepeat            Int         10 Data   // [minutes]
+}
+
+// ----------------------------------------------------------------
+// Table
+// ----------------------------------------------------------------
+
+Table scripts
+{
+   ID                   ""                      id                   UInt        11 Primary|Autoinc,
+
+   INSSP                ""                      inssp                Int          0 Meta,
+   UPDSP                ""                      updsp                Int          0 Meta,
+
+   PATH                 ""                      path                 Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Indices for scrips table
+// ----------------------------------------------------------------
+
+Index scripts
+{
+   path             ""  PATH
 }
 
 // ----------------------------------------------------------------
@@ -176,33 +251,6 @@ Table schemaconf
 }
 
 // ----------------------------------------------------------------
-// Table Config
-// ----------------------------------------------------------------
-
-Table config
-{
-   OWNER                ""  owner                Ascii       40 Primary,
-   NAME                 ""  name                 Ascii       40 Primary,
-   INSSP                ""  inssp                Int          0 Meta,
-   UPDSP                ""  updsp                Int          0 Meta,
-   VALUE                ""  value                Text      1500 Data,
-}
-
-// ----------------------------------------------------------------
-// Table Users
-// ----------------------------------------------------------------
-
-Table users
-{
-   USER                 ""               user        Ascii      40 Primary,
-   INSSP                ""               inssp       Int         0 Meta,
-   UPDSP                ""               updsp       Int         0 Meta,
-   PASSWD               "md5 sum"        passwd      Ascii      40 Data,
-   TOKEN                ""               token       Ascii     200 Data,
-   RIGHTS               "Rights Bitmask" rights      INT       200 Data,
-}
-
-// ----------------------------------------------------------------
 // Table Errors
 // ----------------------------------------------------------------
 
@@ -221,56 +269,3 @@ Table errors
    MAILCNT              ""                mailcnt    Int          0 Data,
 }
 
-// ----------------------------------------------------------------
-// Table SensorAlert
-// ----------------------------------------------------------------
-
-Table sensoralert
-{
-   ID                   ""  id                   UInt        11 Primary|Autoinc,
-
-   INSSP                ""  inssp                Int         10 Meta,
-   UPDSP                ""  updsp                Int         10 Meta,
-
-   KIND                 ""  kind                 Ascii        1 Data,  // 'S'ub or 'M'aster rule
-   SUBID                ""  subid                UInt        11 Data,  // reference to 'sub' rule
-   LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
-
-   ADDRESS              ""  address              UInt         4 Data,
-   TYPE                 ""  type                 Ascii        2 Data,
-   STATE                ""  state                Ascii        1 Data,
-   MIN                  ""  min                  Int         10 Data,
-   MAX                  ""  max                  Int         10 Data,
-   RANGEM               ""  rangem               Int         10 Data,
-   DELTA                ""  delta                Int         10 Data,
-   MADDRESS             ""  maddress             Ascii      100 Data,
-   MSUBJECT             ""  msubject             Ascii      100 Data,
-   MBODY                ""  mbody                Text      2000 Data,
-   LASTALERT            ""  lastalert            Int         10 Data,
-   MAXREPEAT            ""  maxrepeat            Int         10 Data   // [minutes]
-}
-
-// ----------------------------------------------------------------
-// Table
-// ----------------------------------------------------------------
-
-Table scripts
-{
-   ID                   ""                      id                   UInt        11 Primary|Autoinc,
-
-   INSSP                ""                      inssp                Int          0 Meta,
-   UPDSP                ""                      updsp                Int          0 Meta,
-
-   NAME                 ""                      name                 Ascii      100 Data,
-   VISIBLE              "'Y'es, 'N'o"           visible              Ascii        1 Data,  // button visible in webif
-   PATH                 ""                      path                 Ascii      100 Data,
-}
-
-// ----------------------------------------------------------------
-// Indices for scrips table
-// ----------------------------------------------------------------
-
-Index scripts
-{
-   path             ""  PATH
-}

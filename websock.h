@@ -52,12 +52,12 @@ class cWebService
          evForceRefresh,
          evList,
          evAlerts,
+         evStoreAlerts,
 
          evErrors,
          evMenu,
          evParEditRequest,
          evParStore,
-         evStoreAlerts,
          evInitTables,
 
          evSchema,

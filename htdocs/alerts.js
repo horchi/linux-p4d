@@ -12,7 +12,7 @@ function initAlerts(alerts)
 {
    $('#container').removeClass('hidden');
    var root = document.getElementById("container");
-   root.innerHTML = '<div class="rounded-border seperatorTitle1">Sensor Alerts</div>';
+   root.innerHTML = '<div class="rounded-border seperatorFold">Sensor Alerts</div>';
 
    for (var i = 0; i < alerts.length; i++)
    {

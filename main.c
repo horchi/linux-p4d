@@ -3,7 +3,7 @@
 // File main.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 24.12.2013  Jörg Wendel
+// Date 04.11.2010 - 01.12.2021  Jörg Wendel
 //***************************************************************************
 
 #include <unistd.h>
