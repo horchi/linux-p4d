@@ -126,7 +126,7 @@ install-scripts:
 	   chmod a+rx $(BINDEST); \
 	fi
 	for f in ./scripts/*.sh; do \
-		cp -v "$$f" $(BINDEST)/$(TARGET)-`basename "$$f"`; \
+		cp -v "$$f" $(BINDEST)/`basename "$$f"`; \
 	done
 
 iw: install-web

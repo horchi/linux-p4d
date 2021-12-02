@@ -273,21 +273,21 @@ int Daemon::mqttCheckConnection()
 
    if (!isEmpty(mqttHassUrl))
    {
-   if (!mqttHassCommandReader->isConnected())
-   {
-         if (mqttHassCommandReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
+      if (!mqttHassCommandReader->isConnected())
       {
-         tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
-      }
+         if (mqttHassCommandReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
+         {
+            tell(0, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
+         }
          else
          {
             mqttHassCommandReader->subscribe(TARGET "2mqtt/light/+/set/#");
-      tell(0, "MQTT: Connecting command subscriber to '%s' succeeded", mqttHassUrl);
+            tell(0, "MQTT: Connecting command subscriber to '%s' succeeded", mqttHassUrl);
          }
-   }
+      }
 
       if (!mqttHassWriter->isConnected())
-   {
+      {
          if (mqttHassWriter->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
             tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttHassUrl);
          else

@@ -212,8 +212,9 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int atMeanwhile() { return done; }
 
       int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
-      int updateState(Status* state);
+      virtual int onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData) { return done; }
       void updateScriptSensors();
+      virtual int updateState(Status* state) { return done; }
       virtual void afterUpdate();
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
@@ -242,12 +243,8 @@ class Daemon : public FroelingService, public cWebInterface
       int scheduleAggregate();
       int aggregate();
 
-      int sendStateMail();
-      int isMailState();
       int loadHtmlHeader();
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
-
-      void scheduleTimeSyncIn(int offset = 0);
       void addParameter2Mail(const char* name, const char* value);
 
       virtual void onIoSettingsChange() {};
@@ -280,7 +277,7 @@ class Daemon : public FroelingService, public cWebInterface
       cMyMutex messagesInMutex;
 
       int replyResult(int status, const char* message, long client);
-      int performLogin(json_t* oObject);
+      virtual int performLogin(json_t* oObject);
       int performLogout(json_t* oObject);
       int performTokenRequest(json_t* oObject, long client);
       int performPageChange(json_t* oObject, long client);
@@ -310,8 +307,6 @@ class Daemon : public FroelingService, public cWebInterface
       int valueFacts2Json(json_t* obj, bool filterActive);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
-      int s3200State2Json(json_t* obj);
-      const char* getStateImage(int state);
       int sensor2Json(json_t* obj, cDbTable* table);
       int images2Json(json_t* obj);
       void pin2Json(json_t* ojData, int pin);
@@ -382,7 +377,6 @@ class Daemon : public FroelingService, public cWebInterface
       Status currentState;
       bool stateChanged {false};
 
-
       std::vector<std::string> addrsDashboard;
       std::vector<std::string> addrsList;
 
@@ -445,10 +439,7 @@ class Daemon : public FroelingService, public cWebInterface
       int interval {60};
       int arduinoInterval {10};
       int stateCheckInterval {10};
-      char* knownStates {nullptr};
-      double consumptionPerHour {0};
       char* ttyDevice {nullptr};
-      char* heatingType {nullptr};
 
       int webPort {0};
       char* webUrl {nullptr};
@@ -462,11 +453,7 @@ class Daemon : public FroelingService, public cWebInterface
       char* mailScript {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
-      char* stateMailAtStates {nullptr};
-      int tSync {no};
-      char* iconSet {nullptr};
       time_t nextTimeSyncAt {0};
-      int maxTimeLeak {10};
       MemoryStruct htmlHeader;
 
       int invertDO {no};
@@ -519,7 +506,6 @@ class Daemon : public FroelingService, public cWebInterface
       std::string alertMailBody;
       std::string alertMailSubject;
       std::map<int,double> vaValues;
-      std::map<int,time_t> stateDurations;
 
       // statics
 

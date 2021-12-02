@@ -297,10 +297,6 @@ int Daemon::performLogin(json_t* oObject)
    images2Json(oJson);
    pushOutMessage(oJson, "images", client);
 
-   oJson = json_object();
-   s3200State2Json(oJson);
-   pushOutMessage(oJson, "s3200-state", client);
-
    oJson = json_array();
    groups2Json(oJson);
    pushOutMessage(oJson, "grouplist", client);
@@ -1372,19 +1368,6 @@ int Daemon::daemonState2Json(json_t* obj)
    return done;
 }
 
-int Daemon::s3200State2Json(json_t* obj)
-{
-   json_object_set_new(obj, "time", json_integer(currentState.time));
-   json_object_set_new(obj, "state", json_integer(currentState.state));
-   json_object_set_new(obj, "stateinfo", json_string(currentState.stateinfo));
-   json_object_set_new(obj, "mode", json_integer(currentState.mode));
-   json_object_set_new(obj, "modeinfo", json_string(currentState.modeinfo));
-   json_object_set_new(obj, "version", json_string(currentState.version));
-   json_object_set_new(obj, "image", json_string(getStateImage(currentState.state)));
-
-   return done;
-}
-
 //***************************************************************************
 // Sensor 2 Json
 //***************************************************************************
@@ -1470,29 +1453,3 @@ bool Daemon::webFileExists(const char* file, const char* base)
 
    return exist;
 }
-
-// Daemon::WidgetType Daemon::getWidgetTypeOf(std::string type, std::string unit, uint address)
-// {
-//    if (type == "DI" || type == "DO")
-//       return wtSymbol;
-
-//    if (type == "UD" && address == udState)
-//       return wtSymbol;
-
-//    if (type == "UD")
-//       return wtText;
-
-//    if (type == "AO")
-//       return wtChart;
-
-//    if (type == "SD")
-//       return wtChart;
-
-//    if (unit == "°C" || unit == "°" || unit == "%" || unit == "V" || unit == "A" || unit == "U") // Volt/Ampere/Prozent/Temperatur/Umin
-//       return wtChart;
-
-//    if (!unit.length())
-//       return wtSymbol;
-
-//    return wtValue;
-// }

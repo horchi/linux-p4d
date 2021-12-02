@@ -143,10 +143,10 @@ window.chpwd  = function()
          $("#input_passwd2").val("");
       }
       else
-         showInfoDialog("Passwords not match or empty");
+         showInfoDialog({'message' : 'Passwords not match or empty'});
    }
    else
-      showInfoDialog("Missing login!");
+      showInfoDialog({'message' : 'Missing login!'});
 }
 
 window.addUser = function()

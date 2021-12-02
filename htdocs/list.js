@@ -22,7 +22,7 @@ function initList(widgets)
    document.getElementById("container").innerHTML = '<div id="listContainer" class="rounded-border listContainer"</div>';
    var root = document.getElementById("listContainer");
 
-   //
+   // deamon state
 
    document.getElementById("stateContainer").innerHTML =
       '<div id="stateContainerS3200" class="rounded-border heatingState"></div>' +

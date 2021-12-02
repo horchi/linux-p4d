@@ -320,7 +320,7 @@ function dispatchMessage(message)
    }
    else if (event == "valuefacts") {
       valueFacts = jMessage.object;
-      console.log("valueFacts " + JSON.stringify(valueFacts, undefined, 4));
+      // console.log("valueFacts " + JSON.stringify(valueFacts, undefined, 4));
    }
    else if (event == "images") {
       images = jMessage.object;

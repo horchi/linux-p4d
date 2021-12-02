@@ -170,7 +170,6 @@ Daemon::~Daemon()
    free(mailScript);
    free(stateMailTo);
    free(errorMailTo);
-   free(stateMailAtStates);
 
    delete serial;
    delete request;
@@ -227,10 +226,6 @@ int Daemon::pushDataUpdate(const char* event, long client)
    json_t* oJson = json_object();
    daemonState2Json(oJson);
    pushOutMessage(oJson, "daemonstate", client);
-
-   oJson = json_object();
-   s3200State2Json(oJson);
-   pushOutMessage(oJson, "s3200-state", client);
 
    if (client)
    {
@@ -1122,8 +1117,6 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("interval", interval, interval);
    getConfigItem("arduinoInterval", arduinoInterval, arduinoInterval);
-   getConfigItem("consumptionPerHour", consumptionPerHour, 0);
-
    getConfigItem("webPort", webPort, webPort);
    getConfigItem("webUrl", webUrl);
    getConfigItem("webSsl", webSsl);
@@ -1139,22 +1132,8 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("invertDO", invertDO, yes);
 
-   getConfigItem("knownStates", knownStates, "");
-
-   if (!isEmpty(knownStates))
-   {
-      std::vector<std::string> sStates = split(knownStates, ':');
-      for (const auto& s : sStates)
-         stateDurations[atoi(s.c_str())] = 0;
-
-      tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
-   }
-
    getConfigItem("stateCheckInterval", stateCheckInterval, 10);
    getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
-   getConfigItem("heatingType", heatingType, "P4");
-   tell(eloDetail, "The heating type is set to '%s'", heatingType);
-   getConfigItem("iconSet", iconSet, "light");
 
    char* addrs {nullptr};
    getConfigItem("addrsDashboard", addrs, "");
@@ -1165,15 +1144,11 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("mail", mail, no);
    getConfigItem("mailScript", mailScript);
-   getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
 
    getConfigItem("aggregateInterval", aggregateInterval, aggregateInterval);
    getConfigItem("aggregateHistory", aggregateHistory, aggregateHistory);
-
-   getConfigItem("tsync", tSync, no);
-   getConfigItem("maxTimeLeak", maxTimeLeak, 10);
 
    // MQTT
 
@@ -1277,27 +1252,6 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
       mqttPublishSensor(iot, name, title, unit, theValue, text, initialRun /*forceConfig*/);
 
    return success;
-}
-
-//***************************************************************************
-// Schedule Time Sync In
-//***************************************************************************
-
-void Daemon::scheduleTimeSyncIn(int offset)
-{
-   struct tm tm = {0};
-   time_t now;
-
-   now = time(0);
-   localtime_r(&now, &tm);
-
-   tm.tm_sec = 0;
-   tm.tm_min = 0;
-   tm.tm_hour = 3;
-   tm.tm_isdst = -1;               // force DST auto detect
-
-   nextTimeSyncAt = mktime(&tm);
-   nextTimeSyncAt += offset;
 }
 
 //***************************************************************************
@@ -1463,81 +1417,12 @@ int Daemon::loop()
 
       afterUpdate();
 
-      if (stateChanged && mail)
-         sendStateMail();
-
       initialRun = false;
    }
 
    serial->close();
 
    return success;
-}
-
-//***************************************************************************
-// Update State
-//***************************************************************************
-
-int Daemon::updateState(Status* state)
-{
-   static time_t nextReportAt = 0;
-
-   int status;
-   time_t now;
-
-   // get state
-
-   sem->p();
-   tell(eloDetail, "Checking state ...");
-   status = request->getStatus(state);
-   now = time(0);
-   sem->v();
-
-   if (status != success)
-      return status;
-
-   tell(eloDetail, "... got (%d) '%s'%s", state->state, toTitle(state->state),
-        isError(state->state) ? " -> Störung" : "");
-
-   // ----------------------
-   // check time sync
-
-   if (!nextTimeSyncAt)
-      scheduleTimeSyncIn();
-
-   if (tSync && maxTimeLeak && labs(state->time - now) > maxTimeLeak)
-   {
-      if (now > nextReportAt)
-      {
-         tell(eloAlways, "Time drift is %ld seconds", state->time - now);
-         nextReportAt = now + 2 * tmeSecondsPerMinute;
-      }
-
-      if (now > nextTimeSyncAt)
-      {
-         scheduleTimeSyncIn(tmeSecondsPerDay);
-
-         tell(eloAlways, "Time drift is %ld seconds, syncing now", state->time - now);
-
-         sem->p();
-
-         if (request->syncTime() == success)
-            tell(eloAlways, "Time sync succeeded");
-         else
-            tell(eloAlways, "Time sync failed");
-
-         sleep(2);   // S-3200 need some seconds to store time :o
-
-         status = request->getStatus(state);
-         now = time(0);
-
-         sem->v();
-
-         tell(eloAlways, "Time drift now %ld seconds", state->time - now);
-      }
-   }
-
-   return status;
 }
 
 //***************************************************************************
@@ -1585,8 +1470,6 @@ int Daemon::update(bool webOnly, long client)
       double factor = tableValueFacts->getIntValue("FACTOR");
       const char* title = tableValueFacts->getStrValue("TITLE");
       const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
-
-      int dataType = tableValueFacts->getIntValue("RES1");
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
@@ -1609,113 +1492,7 @@ int Daemon::update(bool webOnly, long client)
 
       sensor2Json(ojData, tableValueFacts);
 
-      if (tableValueFacts->hasValue("TYPE", "VA"))
-      {
-         Value v(addr);
-
-         if ((status = request->getValue(&v)) != success)
-         {
-            tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         int value = dataType == 1 ? (word)v.value : (sword)v.value;
-         double theValue = value / factor;
-
-         json_object_set_new(ojData, "value", json_real(theValue));
-         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, value, factor, groupid);
-            sprintf(num, "%.2f%s", theValue, unit);
-            addParameter2Mail(title, num);
-         }
-      }
-
-      else if (tableValueFacts->hasValue("TYPE", "SC"))
-      {
-         std::string txt = ""; //  = getScriptSensor(addr).c_str();
-
-         if (!txt.empty())
-         {
-            double value = strtod(txt.c_str(), 0);
-
-            tell(eloDebug, "Debug: Got '%s' (%.2f) for (%d) from script", txt.c_str(), value, addr);
-            json_object_set_new(ojData, "value", json_real(value / factor));
-
-            if (!webOnly)
-            {
-               store(lastSampleTime, name, title, unit, type, addr, value, factor, groupid);
-               sprintf(num, "%.2f%s", value / factor, unit);
-               addParameter2Mail(title, num);
-            }
-         }
-      }
-
-      else if (tableValueFacts->hasValue("TYPE", "DO"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getDigitalOut(&v) != success)
-         {
-            tell(eloAlways, "Getting digital out 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
-         }
-      }
-
-      else if (tableValueFacts->hasValue("TYPE", "DI"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getDigitalIn(&v) != success)
-         {
-            tell(eloAlways, "Getting digital in 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
-         }
-      }
-
-      else if (tableValueFacts->hasValue("TYPE", "AO"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getAnalogOut(&v) != success)
-         {
-            tell(eloAlways, "Getting analog out 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         json_object_set_new(ojData, "value", json_integer(v.state));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
-         }
-      }
-
-      else if (tableValueFacts->hasValue("TYPE", "W1"))
+      if (tableValueFacts->hasValue("TYPE", "W1"))
       {
          bool w1Exist = existW1(name);
          time_t w1Last {0};
@@ -1743,70 +1520,102 @@ int Daemon::update(bool webOnly, long client)
             json_object_set_new(ojData, "text", json_string("missing sensor"));
          }
       }
-
-      else if (tableValueFacts->hasValue("TYPE", "SD"))   // state duration
+      else if (tableValueFacts->hasValue("TYPE", "SC"))
       {
-         const auto it = stateDurations.find(addr);
+         if (scSensors[addr].kind == "status")
+            json_object_set_new(ojData, "value", json_integer(scSensors[addr].state));
+         else if (scSensors[addr].kind == "text")
+            json_object_set_new(ojData, "text", json_string(scSensors[addr].text.c_str()));
+         else if (scSensors[addr].kind == "value")
+            json_object_set_new(ojData, "value", json_real(scSensors[addr].value));
 
-         if (it == stateDurations.end())
+         if (scSensors[addr].disabled)
+            json_object_set_new(ojData, "disabled", json_boolean(true));
+
+         if (!webOnly && !scSensors[addr].disabled)
+            store(lastSampleTime, name, title, unit, type, addr, scSensors[addr].kind == "value" ? scSensors[addr].value : scSensors[addr].state, factor, groupid);
+      }
+      else if (tableValueFacts->hasValue("TYPE", "SP"))            // Special Values
+      {
+         if (spSensors[addr].kind == "text")
+         {
+            json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
+
+            if (!webOnly && !spSensors[addr].disabled)
+               store(lastSampleTime, name, title, unit, type, addr, spSensors[addr].value, factor, groupid, spSensors[addr].text.c_str());
+         }
+         else if (spSensors[addr].kind == "value")
+         {
+            json_object_set_new(ojData, "value", json_integer(spSensors[addr].value));
+
+            if (!webOnly && !spSensors[addr].disabled)
+               store(lastSampleTime, name, title, unit, type, addr, spSensors[addr].value, factor, groupid);
+         }
+
+         if (spSensors[addr].disabled)
+            json_object_set_new(ojData, "disabled", json_boolean(true));
+      }
+      else if (tableValueFacts->hasValue("TYPE", "DO"))
+      {
+         Fs::IoValue v(addr);
+
+         if (request->getDigitalOut(&v) != success)
+         {
+            tell(eloAlways, "Getting digital out 0x%04x failed, error %d", addr, status);
             continue;
+         }
 
-         double value = stateDurations[addr] / 60;
-
-         json_object_set_new(ojData, "value", json_real(value));
+         json_object_set_new(ojData, "value", json_integer(v.state));
+         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
-            store(lastSampleTime, name, title, unit, type, addr, value, factor, groupid);
-            sprintf(num, "%.2f%s", value / factor, unit);
+            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
+            sprintf(num, "%d", v.state);
             addParameter2Mail(title, num);
          }
       }
-
-      else if (tableValueFacts->hasValue("TYPE", "UD"))
+      else if (tableValueFacts->hasValue("TYPE", "DI"))
       {
-         switch (tableValueFacts->getIntValue("ADDRESS"))
+         Fs::IoValue v(addr);
+
+         if (request->getDigitalIn(&v) != success)
          {
-            case udState:
-            {
-               json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
-               json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
+            tell(eloAlways, "Getting digital in 0x%04x failed, error %d", addr, status);
+            continue;
+         }
 
-               if (!webOnly)
-               {
-                  store(lastSampleTime, name, unit, title, type, udState, currentState.state, factor, groupid, currentState.stateinfo);
-                  addParameter2Mail(title, currentState.stateinfo);
-               }
+         json_object_set_new(ojData, "value", json_integer(v.state));
+         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
-               break;
-            }
-            case udMode:
-            {
-               json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
-
-               if (!webOnly)
-               {
-                  store(lastSampleTime, name, title, unit, type, udMode, currentState.mode, factor, groupid, currentState.modeinfo);
-                  addParameter2Mail(title, currentState.modeinfo);
-               }
-
-               break;
-            }
-            case udTime:
-            {
-               std::string date = l2pTime(currentState.time, "%A, %d. %b. %Y %H:%M:%S");
-               json_object_set_new(ojData, "text", json_string(date.c_str()));
-
-               if (!webOnly)
-               {
-                  store(lastSampleTime, name, title, unit, type, udTime, currentState.time, factor, groupid, date.c_str());
-                  addParameter2Mail(title, date.c_str());
-               }
-
-               break;
-            }
+         if (!webOnly)
+         {
+            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
+            sprintf(num, "%d", v.state);
+            addParameter2Mail(title, num);
          }
       }
+      else if (tableValueFacts->hasValue("TYPE", "AO"))
+      {
+         Fs::IoValue v(addr);
+
+         if (request->getAnalogOut(&v) != success)
+         {
+            tell(eloAlways, "Getting analog out 0x%04x failed, error %d", addr, status);
+            continue;
+         }
+
+         json_object_set_new(ojData, "value", json_integer(v.state));
+
+         if (!webOnly)
+         {
+            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
+            sprintf(num, "%d", v.state);
+            addParameter2Mail(title, num);
+         }
+      }
+      else
+         onUpdate(webOnly, tableValueFacts, lastSampleTime, ojData);
 
       count++;
    }
@@ -2021,54 +1830,6 @@ int Daemon::aggregate()
    return success;
 }
 
-//***************************************************************************
-// Send State Mail
-//***************************************************************************
-
-int Daemon::sendStateMail()
-{
-   std::string subject = "Heizung - Status: " + std::string(currentState.stateinfo);
-
-   // check
-
-   if (!isMailState() || isEmpty(mailScript) || !mailBodyHtml.length() || isEmpty(stateMailTo))
-      return done;
-
-   // HTML mail
-
-   char* html {nullptr};
-
-   loadHtmlHeader();
-
-   asprintf(&html,
-            "<html>\n"
-            " %s\n"
-            "  <body>\n"
-            "   <font face=\"Arial\"><br/>WEB Interface: <a href=\"%s\">S 3200</a><br/></font>\n"
-            "   <br/>\n"
-            "   <table>\n"
-            "     <thead>\n"
-            "       <tr class=\"head\">\n"
-            "         <th><font>Parameter</font></th>\n"
-            "         <th><font>Wert</font></th>\n"
-            "       </tr>\n"
-            "     </thead>\n"
-            "     <tbody>\n"
-            "%s"
-            "     </tbody>\n"
-            "   </table>\n"
-            "   <br/>\n"
-            "  </body>\n"
-            "</html>\n",
-            htmlHeader.memory, webUrl, mailBodyHtml.c_str());
-
-   int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
-   free(html);
-   mailBodyHtml = "";
-
-   return result;
-}
-
 int Daemon::sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType)
 {
    char* command {nullptr};
@@ -2082,34 +1843,6 @@ int Daemon::sendMail(const char* receiver, const char* subject, const char* body
       tell(eloAlways, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
    else
       tell(eloAlways, "Send mail '%s' to '%s'", subject, receiver);
-
-   return result;
-}
-
-//***************************************************************************
-// Is Mail State
-//***************************************************************************
-
-int Daemon::isMailState()
-{
-   int result = no;
-   char* mailStates = 0;
-
-   if (isEmpty(stateMailAtStates))
-      return yes;
-
-   mailStates = strdup(stateMailAtStates);
-
-   for (const char* p = strtok(mailStates, ","); p; p = strtok(0, ","))
-   {
-      if (atoi(p) == currentState.state)
-      {
-         result = yes;
-         break;
-      }
-   }
-
-   free(mailStates);
 
    return result;
 }
@@ -2464,46 +2197,6 @@ const char* Daemon::getImageFor(const char* title, int value)
       imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
 
    return imagePath;
-}
-
-const char* Daemon::getStateImage(int state)
-{
-   static char result[100] = "";
-   const char* image {nullptr};
-
-   if (state <= 0)
-      image = "state-error.gif";
-   else if (state == 1)
-      image = "state-fireoff.gif";
-   else if (state == 2)
-      image = "state-heatup.gif";
-   else if (state == 3)
-      image = "state-fire.gif";
-   else if (state == 4)
-      image = "/state/state-firehold.gif";
-   else if (state == 5)
-      image = "state-fireoff.gif";
-   else if (state == 6)
-      image = "state-dooropen.gif";
-   else if (state == 7)
-      image = "state-preparation.gif";
-   else if (state == 8)
-      image = "state-warmup.gif";
-   else if (state == 9)
-      image = "state-heatup.gif";
-   else if (state == 15 || state == 70 || state == 69)
-      image = "state-clean.gif";
-   else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
-      image = "state-wait.gif";
-   else if (state == 60 || state == 61 || state == 72)
-      image = "state-shfire.png";
-
-   if (image)
-      sprintf(result, "img/state/%s/%s", iconSet, image);
-   else
-      sprintf(result, "img/type/heating-%s.png", heatingType);
-
-   return result;
 }
 
 //***************************************************************************

@@ -84,6 +84,7 @@ P4d::P4d()
 
 P4d::~P4d()
 {
+   free(stateMailAtStates);
 }
 
 //***************************************************************************
@@ -93,6 +94,17 @@ P4d::~P4d()
 int P4d::init()
 {
    int status = Daemon::init();
+
+   getConfigItem("knownStates", knownStates, "");
+
+   if (!isEmpty(knownStates))
+   {
+      std::vector<std::string> sStates = split(knownStates, ':');
+      for (const auto& s : sStates)
+         stateDurations[atoi(s.c_str())] = 0;
+
+      tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
+   }
 
    return status;
 }
@@ -355,6 +367,25 @@ int P4d::readConfiguration(bool initial)
 {
    Daemon::readConfiguration(initial);
 
+   getConfigItem("tsync", tSync, no);
+   getConfigItem("maxTimeLeak", maxTimeLeak, 10);
+   getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
+   getConfigItem("consumptionPerHour", consumptionPerHour, 0);
+   getConfigItem("iconSet", iconSet, "light");
+   getConfigItem("heatingType", heatingType, "P4");
+   tell(eloDetail, "The heating type is set to '%s'", heatingType);
+   getConfigItem("knownStates", knownStates, "");
+
+   if (!isEmpty(knownStates))
+   {
+      std::vector<std::string> sStates = split(knownStates, ':');
+      for (const auto& s : sStates)
+         stateDurations[atoi(s.c_str())] = 0;
+
+      tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
+   }
+
+
    return done;
 }
 
@@ -362,6 +393,7 @@ int P4d::atMeanwhile()
 {
    return done;
 }
+
 
 //***************************************************************************
 // IO Interrupt Handler
@@ -378,6 +410,280 @@ void ioInterrupt()
 int P4d::applyConfigurationSpecials()
 {
    return done;
+}
+
+//***************************************************************************
+// On Update
+//***************************************************************************
+
+int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData)
+{
+   char num[100] {'\0'};
+   const char* type = tableValueFacts->getStrValue("TYPE");
+   uint addr = table->getIntValue("ADDRESS");
+   const char* unit = tableValueFacts->getStrValue("UNIT");
+   const char* name = tableValueFacts->getStrValue("NAME");
+   const char* title = tableValueFacts->getStrValue("TITLE");
+   const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
+   double factor = tableValueFacts->getIntValue("FACTOR");
+   uint groupid = tableValueFacts->getIntValue("GROUPID");
+   const char* orgTitle = title;
+
+   if (!isEmpty(usrtitle))
+      title = usrtitle;
+
+   if (table->hasValue("TYPE", "SD"))   // state duration
+   {
+      const auto it = stateDurations.find(addr);
+
+      if (it == stateDurations.end())
+         return done;
+
+      double value = stateDurations[addr] / 60;
+
+      json_object_set_new(ojData, "value", json_real(value));
+
+      if (!webOnly)
+      {
+         store(lastSampleTime, name, title, unit, type, addr, value, factor, groupid);
+         sprintf(num, "%.2f%s", value / factor, unit);
+         addParameter2Mail(title, num);
+      }
+   }
+   else if (tableValueFacts->hasValue("TYPE", "UD"))
+   {
+      switch (tableValueFacts->getIntValue("ADDRESS"))
+      {
+         case udState:
+         {
+            json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
+            json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
+
+            if (!webOnly)
+            {
+               store(lastSampleTime, name, unit, title, type, udState, currentState.state, factor, groupid, currentState.stateinfo);
+               addParameter2Mail(title, currentState.stateinfo);
+            }
+
+            break;
+         }
+         case udMode:
+         {
+            json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
+
+            if (!webOnly)
+            {
+               store(lastSampleTime, name, title, unit, type, udMode, currentState.mode, factor, groupid, currentState.modeinfo);
+               addParameter2Mail(title, currentState.modeinfo);
+            }
+
+            break;
+         }
+         case udTime:
+         {
+            std::string date = l2pTime(currentState.time, "%A, %d. %b. %Y %H:%M:%S");
+            json_object_set_new(ojData, "text", json_string(date.c_str()));
+
+            if (!webOnly)
+            {
+               store(lastSampleTime, name, title, unit, type, udTime, currentState.time, factor, groupid, date.c_str());
+               addParameter2Mail(title, date.c_str());
+            }
+
+            break;
+         }
+      }
+   }
+   else if (tableValueFacts->hasValue("TYPE", "VA"))
+   {
+      int status {success};
+      Value v(addr);
+
+      if ((status = request->getValue(&v)) != success)
+      {
+         tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
+         return done;
+      }
+
+      int dataType = tableValueFacts->getIntValue("RES1");
+      int value = dataType == 1 ? (word)v.value : (sword)v.value;
+      double theValue = value / factor;
+
+      json_object_set_new(ojData, "value", json_real(theValue));
+      json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
+
+      if (!webOnly)
+      {
+         store(lastSampleTime, name, title, unit, type, v.address, value, factor, groupid);
+         sprintf(num, "%.2f%s", theValue, unit);
+         addParameter2Mail(title, num);
+      }
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Update State
+//***************************************************************************
+
+int P4d::updateState(Status* state)
+{
+   static time_t nextReportAt = 0;
+
+   int status;
+   time_t now;
+
+   // get state
+
+   sem->p();
+   tell(eloDetail, "Checking state ...");
+   status = request->getStatus(state);
+   now = time(0);
+   sem->v();
+
+   if (status != success)
+      return status;
+
+   tell(eloDetail, "... got (%d) '%s'%s", state->state, toTitle(state->state),
+        isError(state->state) ? " -> Störung" : "");
+
+   // ----------------------
+   // check time sync
+
+   if (!nextTimeSyncAt)
+      scheduleTimeSyncIn();
+
+   if (tSync && maxTimeLeak && labs(state->time - now) > maxTimeLeak)
+   {
+      if (now > nextReportAt)
+      {
+         tell(eloAlways, "Time drift is %ld seconds", state->time - now);
+         nextReportAt = now + 2 * tmeSecondsPerMinute;
+      }
+
+      if (now > nextTimeSyncAt)
+      {
+         scheduleTimeSyncIn(tmeSecondsPerDay);
+
+         tell(eloAlways, "Time drift is %ld seconds, syncing now", state->time - now);
+
+         sem->p();
+
+         if (request->syncTime() == success)
+            tell(eloAlways, "Time sync succeeded");
+         else
+            tell(eloAlways, "Time sync failed");
+
+         sleep(2);   // S-3200 need some seconds to store time :o
+
+         status = request->getStatus(state);
+         now = time(0);
+
+         sem->v();
+
+         tell(eloAlways, "Time drift now %ld seconds", state->time - now);
+      }
+   }
+
+   return status;
+}
+
+//***************************************************************************
+// Schedule Time Sync In
+//***************************************************************************
+
+void P4d::scheduleTimeSyncIn(int offset)
+{
+   struct tm tm = {0};
+   time_t now;
+
+   now = time(0);
+   localtime_r(&now, &tm);
+
+   tm.tm_sec = 0;
+   tm.tm_min = 0;
+   tm.tm_hour = 3;
+   tm.tm_isdst = -1;               // force DST auto detect
+
+   nextTimeSyncAt = mktime(&tm);
+   nextTimeSyncAt += offset;
+}
+
+//***************************************************************************
+// Send State Mail
+//***************************************************************************
+
+int P4d::sendStateMail()
+{
+   std::string subject = "Heizung - Status: " + std::string(currentState.stateinfo);
+
+   // check
+
+   if (!isMailState() || isEmpty(mailScript) || !mailBodyHtml.length() || isEmpty(stateMailTo))
+      return done;
+
+   // HTML mail
+
+   char* html {nullptr};
+
+   loadHtmlHeader();
+
+   asprintf(&html,
+            "<html>\n"
+            " %s\n"
+            "  <body>\n"
+            "   <font face=\"Arial\"><br/>WEB Interface: <a href=\"%s\">S 3200</a><br/></font>\n"
+            "   <br/>\n"
+            "   <table>\n"
+            "     <thead>\n"
+            "       <tr class=\"head\">\n"
+            "         <th><font>Parameter</font></th>\n"
+            "         <th><font>Wert</font></th>\n"
+            "       </tr>\n"
+            "     </thead>\n"
+            "     <tbody>\n"
+            "%s"
+            "     </tbody>\n"
+            "   </table>\n"
+            "   <br/>\n"
+            "  </body>\n"
+            "</html>\n",
+            htmlHeader.memory, webUrl, mailBodyHtml.c_str());
+
+   int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
+   free(html);
+   mailBodyHtml = "";
+
+   return result;
+}
+
+//***************************************************************************
+// Is Mail State
+//***************************************************************************
+
+int P4d::isMailState()
+{
+   int result = no;
+   char* mailStates = 0;
+
+   if (isEmpty(stateMailAtStates))
+      return yes;
+
+   mailStates = strdup(stateMailAtStates);
+
+   for (const char* p = strtok(mailStates, ","); p; p = strtok(0, ","))
+   {
+      if (atoi(p) == currentState.state)
+      {
+         result = yes;
+         break;
+      }
+   }
+
+   free(mailStates);
+
+   return result;
 }
 
 //***************************************************************************
@@ -403,6 +709,13 @@ void P4d::afterUpdate()
 
    if (mail && errorsPending)
       sendErrorMail();
+
+   if (mail && stateChanged)
+      sendStateMail();
+
+   oJson = json_object();
+   s3200State2Json(oJson);
+   pushOutMessage(oJson, "s3200-state");
 }
 
 //***************************************************************************
@@ -1047,6 +1360,23 @@ void P4d::sensorAlertCheck(time_t now)
    }
 
    selectSensorAlerts->freeResult();
+}
+
+//***************************************************************************
+// Perform Login
+//***************************************************************************
+
+int P4d::performLogin(json_t* oObject)
+{
+   Daemon::performLogin(oObject);
+
+   long client = getLongFromJson(oObject, "client");
+
+   json_t* oJson = json_object();
+   s3200State2Json(oJson);
+   pushOutMessage(oJson, "s3200-state", client);
+
+   return done;
 }
 
 //***************************************************************************
@@ -2583,4 +2913,65 @@ int P4d::dispatchMqttCommandRequest(json_t* jData, const char* topic)
    }
 
    return success;
+}
+
+//***************************************************************************
+//
+//***************************************************************************
+
+int P4d::s3200State2Json(json_t* obj)
+{
+   json_object_set_new(obj, "time", json_integer(currentState.time));
+   json_object_set_new(obj, "state", json_integer(currentState.state));
+   json_object_set_new(obj, "stateinfo", json_string(currentState.stateinfo));
+   json_object_set_new(obj, "mode", json_integer(currentState.mode));
+   json_object_set_new(obj, "modeinfo", json_string(currentState.modeinfo));
+   json_object_set_new(obj, "version", json_string(currentState.version));
+   json_object_set_new(obj, "image", json_string(getStateImage(currentState.state)));
+
+   return done;
+}
+
+//***************************************************************************
+//
+//***************************************************************************
+
+const char* P4d::getStateImage(int state)
+{
+   static char result[100] = "";
+   const char* image {nullptr};
+
+   if (state <= 0)
+      image = "state-error.gif";
+   else if (state == 1)
+      image = "state-fireoff.gif";
+   else if (state == 2)
+      image = "state-heatup.gif";
+   else if (state == 3)
+      image = "state-fire.gif";
+   else if (state == 4)
+      image = "/state/state-firehold.gif";
+   else if (state == 5)
+      image = "state-fireoff.gif";
+   else if (state == 6)
+      image = "state-dooropen.gif";
+   else if (state == 7)
+      image = "state-preparation.gif";
+   else if (state == 8)
+      image = "state-warmup.gif";
+   else if (state == 9)
+      image = "state-heatup.gif";
+   else if (state == 15 || state == 70 || state == 69)
+      image = "state-clean.gif";
+   else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
+      image = "state-wait.gif";
+   else if (state == 60 || state == 61 || state == 72)
+      image = "state-shfire.png";
+
+   if (image)
+      sprintf(result, "img/state/%s/%s", iconSet, image);
+   else
+      sprintf(result, "img/type/heating-%s.png", heatingType);
+
+   return result;
 }

@@ -104,9 +104,8 @@ function initWidget(widget, fact)
 
    elem.innerHTML = "";
    var marginPadding = 8;
-   console.log("clientWidth: " + elem.clientWidth);
+   // console.log("clientWidth: " + elem.clientWidth);
    elem.style.width = elem.clientWidth * fact.widget.widthfactor + ((fact.widget.widthfactor-1) * marginPadding) + 'px';
-   // elem.style.width = elem.clientWidth * fact.widget.widthfactor  + 'px';
 
    if (setupMode && fact.widget.widgettype < 900) {
       elem.setAttribute('draggable', true);

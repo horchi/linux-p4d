@@ -132,7 +132,7 @@ function addRow(id, date, amount, price, comment, stokerHours, consumptionH, dur
                        var price = parseFloat($(this).parent().find('#inpPrice').val().replace(',', '.'));
                        var comment = $(this).parent().find('#inpComment').val();
                        if (amount == 0 || price == 0) {
-                          showInfoDialog("Missing input");
+                          showInfoDialog({'message' : 'Missing input'});
                        }
                        else {
                           var unixDate = (new Date($(this).parent().find('#inpTime').val())).getTime() / 1000

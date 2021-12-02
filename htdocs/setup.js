@@ -8,6 +8,8 @@
  *
  */
 
+var ioSections = {};
+
 function initConfig(configuration)
 {
    $('#container').removeClass('hidden');
@@ -256,9 +258,22 @@ function doIncrementalFilterIoSetup()
    initIoSetup(valueFacts);
 }
 
-function tableHeadline(title, id)
+function foldSection(sectionId)
 {
-   return '  <div class="rounded-border seperatorFold">' + title + '</div>' +
+   ioSections[sectionId] = !ioSections[sectionId];
+   console.log(sectionId + ' : ' + ioSections[sectionId]);
+   initIoSetup(valueFacts);
+}
+
+function tableHeadline(title, sectionId)
+{
+   if (!ioSections.hasOwnProperty(sectionId))
+      ioSections[sectionId] = true;
+
+   if (!ioSections[sectionId])
+      return '  <div id="fold_' + sectionId + '" class="rounded-border seperatorFold" onclick="foldSection(\'' + sectionId + '\')">' + '&#11015; ' + title + '</div>';
+
+   return '  <div id="fold_' + sectionId + '" class="rounded-border seperatorFold" onclick="foldSection(\'' + sectionId + '\')">' + '&#11013; ' + title + '</div>' +
       '  <table class="tableMultiCol">' +
       '    <thead>' +
       '      <tr>' +
@@ -270,7 +285,7 @@ function tableHeadline(title, id)
       '        <td style="width:15%;">Gruppe</td>' +
       '      </tr>' +
       '    </thead>' +
-      '    <tbody id="' + id + '">' +
+      '    <tbody id="' + sectionId + '">' +
       '    </tbody>' +
       '  </table>';
 }
@@ -294,17 +309,10 @@ function initIoSetup(valueFacts)
       tableHeadline('Weitere Sensoren', 'ioOther') +
       '</div>';
 
-   var root = document.getElementById("ioSetupContainer");
-
-   document.getElementById("ioValues").innerHTML = "";
-   document.getElementById("ioStateDurations").innerHTML = "";
-   document.getElementById("ioDigitalOut").innerHTML = "";
-   document.getElementById("ioDigitalIn").innerHTML = "";
-   document.getElementById("ioOneWire").innerHTML = "";
-   document.getElementById("ioOther").innerHTML = "";
-   document.getElementById("ioAnalogOut").innerHTML = "";
-   document.getElementById("ioAnalog").innerHTML = "";
-   document.getElementById("ioScripts").innerHTML = "";
+   for (var key in ioSections) {
+      if (ioSections[key])
+         document.getElementById(key).innerHTML = "";
+   }
 
    var filterExpression = null;
 
@@ -312,14 +320,29 @@ function initIoSetup(valueFacts)
       filterExpression = new RegExp($("#incSearchName").val());
 
    for (var key in valueFacts) {
+      var sectionId = "";
       var item = valueFacts[key];
-      var root = null;
       var usrtitle = item.usrtitle != null ? item.usrtitle : "";
 
       if (!item.state && filterActive)
          continue;
 
       if (filterExpression != null && !filterExpression.test(item.title) && !filterExpression.test(usrtitle))
+         continue;
+
+      switch (item.type) {
+         case 'VA': sectionId = "ioValues";         break
+         case 'SD': sectionId = "ioStateDurations"; break
+         case 'DO': sectionId = "ioDigitalOut";     break
+         case 'DI': sectionId = "ioDigitalIn";      break
+         case 'W1': sectionId = "ioOneWire";        break
+         case 'SP': sectionId = "ioOther";          break
+         case 'AO': sectionId = "ioAnalogOut";      break
+         case 'AI': sectionId = "ioAnalog";         break
+         case 'SC': sectionId = "ioScripts";        break
+      }
+
+      if (!ioSections[sectionId])
          continue;
 
       var html = '<td id="row_' + item.type + item.address + '" data-address="' + item.address + '" data-type="' + item.type + '" >' + item.title + '</td>';
@@ -338,17 +361,7 @@ function initIoSetup(valueFacts)
       }
       html += '  </select></td>';
 
-      switch (item.type) {
-         case 'VA': root = document.getElementById("ioValues");     break
-         case 'SD': root = document.getElementById("ioStateDurations"); break
-         case 'DO': root = document.getElementById("ioDigitalOut"); break
-         case 'DI': root = document.getElementById("ioDigitalIn");  break
-         case 'W1': root = document.getElementById("ioOneWire");    break
-         case 'SP': root = document.getElementById("ioOther");      break
-         case 'AO': root = document.getElementById("ioAnalogOut");  break
-         case 'AI': root = document.getElementById("ioAnalog");     break
-         case 'SC': root = document.getElementById("ioScripts");    break
-      }
+      var root = document.getElementById(sectionId);
 
       if (root != null)
       {

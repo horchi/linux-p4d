@@ -141,7 +141,19 @@ function updateSchema(data)
    if (data.length == 0)
       return ;
 
-   lastData = data;
+   if (lastData == null) {
+      lastData = data;
+   }
+   else {
+      for (var i = 0; i < data.length; i++) {
+         for (var l = 0; l < lastData.length; l++) {
+            if (lastData[l].type == data[i].type && lastData[l].address == data[i].address) {
+               lastData[l] = data[i];
+               break;
+            }
+         }
+      }
+   }
 
    for (var i = 0; i < lastSchemadata.length; i++) {
       var schemaDef = lastSchemadata[i];
@@ -158,7 +170,7 @@ function updateSchema(data)
             theText += eval(schemaDef.fct);
          }
          catch (err) {
-            showInfoDialog("Fehler in JS Funktion: '" + err.message + "'", "Error in '" + schemaDef.fct + "'");
+            showInfoDialog({'message' : "Fehler in JS Funktion: '" + err.message + ", " + schemaDef.fct + "'", 'status': -1});
             schemaDef.fct = "";  // delete the buggy function
          }
          // console.log("result of '" + schemaDef.fct + "' is " + result);
@@ -172,8 +184,11 @@ function updateSchema(data)
          html += item.title + ":&nbsp;";
 
       if (schemaDef.kind == 2) {
-         if (theText == "")
+         if (theText == "" && item != null)
             theText = item.image;
+         else if (item == null)
+            console.log("Missing item for " + JSON.stringify(schemaDef, undefined, 4));
+
          if (theText != "") {
             var style = 'width:' + (schemaDef.width ? schemaDef.width : 40) + 'px;';
             if (schemaDef.height)
@@ -424,7 +439,7 @@ function editSchemaValue(id, newUC)
          var result = eval($('#function').val());
       }
       catch (err) {
-         showInfoDialog("Fehler in JS Funktion: '" + err.message + "'", "Error in '" + $('#function').val() + "'");
+         showInfoDialog({'message' : "Fehler in JS Funktion: '" + err.message + ", " + $('#function').val() + "'", 'status': -1});
          return -1;  // fail
       }
 
