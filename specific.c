@@ -37,7 +37,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
    { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
 
-   { "dashboards",                ctString,  "",       true, "2 WEB Interface", "Dashboard", "" },
+   { "dashboards",                ctString,  "{\"dashboard\":{\"UD:0x03\":true,\"UD:0x01\":true,\"VA:0x76\":true}}",     true, "2 WEB Interface", "Dashboard", "" },
    { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
    { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
 

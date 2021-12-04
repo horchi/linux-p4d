@@ -368,8 +368,7 @@ function updateDashboard(widgets, refresh)
 
    var jDashboard = JSON.parse(config.dashboards);
 
-   if (widgets)
-   {
+   if (widgets != null && jDashboard['dashboard'] != null) {
       for (var key in widgets) {
          if (jDashboard['dashboard'][key] != true)
             continue;
