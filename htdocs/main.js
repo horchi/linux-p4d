@@ -26,7 +26,7 @@ var theChartRange = null;
 var theChartStart = null;
 var chartDialogSensor = "";
 var chartBookmarks = {};
-var allWidgets = [];
+var dashboardWidgets = [];
 var infoDialogTimer = null;
 var grouplist = {};
 
@@ -77,11 +77,11 @@ function connectWebSocket(useUrl, protocol)
       url: useUrl,
       protocol: protocol,
       autoReconnectInterval: 1000,
-      onopen: function (){
+      onopen: function () {
          console.log("socket opened " + socket.protocol);
          if (isActive === null)     // wurde beim Schliessen auf null gesetzt
             onSocketConnect(protocol);
-      }, onclose: function (){
+      }, onclose: function () {
          isActive = null;           // auf null setzen, dass ein neues login aufgerufen wird
       }, onmessage: function (msg) {
          dispatchMessage(msg.data)
@@ -247,42 +247,32 @@ function dispatchMessage(message)
       hideProgressDialog();
       showInfoDialog(jMessage.object);
    }
-   else if ((event == "updatedashboard" || event == "alldashboard") && currentPage == 'dashboard') {
+   else if (event == "init") {
+      dashboardWidgets = jMessage.object;
+      if (currentPage == 'dashboard')
+         initDashboard();
+      else if (currentPage == 'schema')
+         updateSchema(jMessage.object);
+      else if (currentPage == 'list')
+         initList(jMessage.object);
+   }
+   else if (event == "update" || event == "all") {
       if (event == "all") {
-         allWidgets = jMessage.object;
-         console.log("set allWidgets with " + Object.keys(allWidgets).length + " elements")
+         dashboardWidgets = jMessage.object;
       }
       else {
-         console.log("update allWidgets, size is " + Object.keys(allWidgets).length + " elements ->");
-         for (var i = 0; i < jMessage.object.length; i++) {
-            for (var w = 0; w < allWidgets.length; w++) {
-               if (jMessage.object[i].name == allWidgets[w].name) {
-                  allWidgets[w] = jMessage.object[i];
-               }
-            }
-         }
-         console.log("  <- size now " + Object.keys(allWidgets).length + " elements");
+         for (var key in jMessage.object)
+            dashboardWidgets[key] = jMessage.object[key];
       }
-      updateDashboard(jMessage.object, event == "all");
+      if (currentPage == 'dashboard')
+         updateDashboard(jMessage.object, event == "all");
+      else if (currentPage == 'schema')
+         updateSchema(jMessage.object);
+      else if (currentPage == 'list')
+         updateList(jMessage.object);
    }
-   else if ((event == "updatelist" || event == "alllist") && currentPage == 'list') {
-      updateList(jMessage.object);
-   }
-   else if ((event == "updateschema" || event == "allschema") && currentPage == 'schema') {
-      updateSchema(jMessage.object);
-   }
-   else if (event == "initdashboard" && currentPage == 'dashboard') {
-      allWidgets = jMessage.object;
-      console.log("init allWidgets with " + Object.keys(allWidgets).length + " elements")
-      initDashboard();
-   }
-   else if (event == "initlist" && currentPage == 'list') {
-      console.log("init allWidgets with " + Object.keys(jMessage.object).length + " elements")
-      initList(jMessage.object);
-   }
-   else if (event == "initschema" && currentPage == 'schema') {
-      console.log("got schema widgets with " + Object.keys(jMessage.object).length + " elements")
-      updateSchema(jMessage.object);
+   else if (event == "schema") {
+      initSchema(jMessage.object);
    }
    else if (event == "chartbookmarks") {
       chartBookmarks = jMessage.object;
@@ -364,9 +354,6 @@ function dispatchMessage(message)
    else if (event == "pellets") {
       hideProgressDialog();
       initPellets(jMessage.object);
-   }
-   else if (event == "schema") {
-      initSchema(jMessage.object);
    }
 
    // console.log("event: " + event + " dispatched");
@@ -807,8 +794,7 @@ function drawChartWidget(dataObject)
       }
    };
 
-   for (var i = 0; i < dataObject.rows.length; i++)
-   {
+   for (var i = 0; i < dataObject.rows.length; i++) {
       var dataset = {};
 
       dataset["data"] = dataObject.rows[i].data;

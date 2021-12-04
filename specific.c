@@ -37,6 +37,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
    { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
 
+   { "dashboards",                ctString,  "",       true, "2 WEB Interface", "Dashboard", "" },
    { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
    { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
 
@@ -432,7 +433,7 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
    const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
    double factor = tableValueFacts->getIntValue("FACTOR");
    uint groupid = tableValueFacts->getIntValue("GROUPID");
-   const char* orgTitle = title;
+   // const char* orgTitle = title;
 
    if (!isEmpty(usrtitle))
       title = usrtitle;
@@ -515,7 +516,7 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
       double theValue = value / factor;
 
       json_object_set_new(ojData, "value", json_real(theValue));
-      json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
+      // needed?? json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
 
       if (!webOnly)
       {

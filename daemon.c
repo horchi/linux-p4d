@@ -213,6 +213,7 @@ int Daemon::pushOutMessage(json_t* oContents, const char* event, long client)
       return fail;
    }
 
+   tell(0, "----- message '%s'", p);
    webSock->pushOutMessage(p, (lws*)client);
    free(p);
 
@@ -232,72 +233,33 @@ int Daemon::pushDataUpdate(const char* event, long client)
    if (client)
    {
       auto cl = wsClients[(void*)client];
-      json_t* oWsJson = json_array();
 
-      if (cl.page == "dashboard")
+      json_t* oJson = json_object();
+
+      for (auto& sj : jsonSensorList)
       {
-         if (addrsDashboard.size())
-            for (const auto& sensor : addrsDashboard)
-               json_array_append(oWsJson, jsonSensorList[sensor]);
-         else
-            for (auto& sj : jsonSensorList)
-               json_array_append(oWsJson, sj.second);
-      }
-      else if (cl.page == "list")
-      {
-         if (addrsList.size())
-            for (const auto& sensor : addrsList)
-               json_array_append(oWsJson, jsonSensorList[sensor]);
-         else
-            for (auto& sj : jsonSensorList)
-               json_array_append(oWsJson, sj.second);
-      }
-      else if (cl.page == "schema")
-      {
-         for (auto sj : jsonSensorList)           // #TODO - send visible instead of all??
-            json_array_append(oWsJson, sj.second);
+         tell(0, "append '%s'", sj.first.c_str());
+         json_object_set_new(oJson, sj.first.c_str(), sj.second);
       }
 
-      pushOutMessage(oWsJson, (event + cl.page).c_str(), client);
+      pushOutMessage(oJson, event, client);
    }
    else
    {
       for (const auto& cl : wsClients)
       {
-         json_t* oWsJson = json_array();
+         json_t* oJson = json_object();
 
-         if (cl.second.page == "dashboard")
-         {
-            if (addrsDashboard.size())
-               for (const auto& sensor : addrsDashboard)
-                  json_array_append(oWsJson, jsonSensorList[sensor]);
-            else
-               for (auto& sj : jsonSensorList)
-                  json_array_append(oWsJson, sj.second);
-         }
-         else if (cl.second.page == "list")
-         {
-            if (addrsList.size())
-               for (const auto& sensor : addrsList)
-                  json_array_append(oWsJson, jsonSensorList[sensor]);
-            else
-               for (auto& sj : jsonSensorList)
-                  json_array_append(oWsJson, sj.second);
-         }
-         else if (cl.second.page == "schema")
-         {
-            for (auto& sj : jsonSensorList)          // #TODO - send visible instead of all??
-               json_array_append(oWsJson, sj.second);
-         }
+         for (auto& sj : jsonSensorList)
+            json_object_set_new(oJson, sj.first.c_str(), sj.second);
 
-         pushOutMessage(oWsJson, (event + cl.second.page).c_str(), (long)cl.first);
+         pushOutMessage(oJson, event, (long)cl.first);
       }
    }
 
    // cleanup
-
-   for (auto sj : jsonSensorList)
-      json_decref(sj.second);
+   // for (auto sj : jsonSensorList)
+   //    json_decref(sj.second);
 
    jsonSensorList.clear();
 
@@ -1558,7 +1520,7 @@ int Daemon::update(bool webOnly, long client)
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
-      const char* orgTitle = title;
+      // const char* orgTitle = title;
 
       if (!isEmpty(usrtitle))
          title = usrtitle;
@@ -1651,7 +1613,7 @@ int Daemon::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
+         // json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -1671,7 +1633,7 @@ int Daemon::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
+         // json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -2341,7 +2303,7 @@ void Daemon::pin2Json(json_t* ojData, int pin)
    json_object_set_new(ojData, "value", json_integer(digitalOutputStates[pin].state));
    json_object_set_new(ojData, "last", json_integer(digitalOutputStates[pin].last));
    json_object_set_new(ojData, "next", json_integer(digitalOutputStates[pin].next));
-   json_object_set_new(ojData, "image", json_string(getImageFor(digitalOutputStates[pin].title.c_str(), digitalOutputStates[pin].state)));
+// needed?   json_object_set_new(ojData, "image", json_string(getImageFor(digitalOutputStates[pin].title.c_str(), digitalOutputStates[pin].state)));
    json_object_set_new(ojData, "widgettype", json_integer(wtSymbol));  // #TODO get type from valuefacts
 }
 

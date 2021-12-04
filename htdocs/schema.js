@@ -26,9 +26,9 @@ function getSchemDef(id)
 
 function getItemById(id)
 {
-   for (var i = 0; i < lastData.length; i++) {
-      if (lastData[i].type + ((lastData[i].address)>>>0).toString(10) == id)
-         return lastData[i];
+   for (var key in lastData) {
+      if (lastData[key].type + ((lastData[key].address)>>>0).toString(10) == id)
+         return lastData[key];
    }
 }
 
@@ -36,9 +36,9 @@ function getItem(id)
 {
    var idPar = id.split(':');
 
-   for (var i = 0; i < lastData.length; i++) {
-      if (idPar.length == 2 && idPar[0] == lastData[i].type && idPar[1] == lastData[i].address)
-         return lastData[i];
+   for (var key in lastData) {
+      if (idPar.length == 2 && idPar[0] == lastData[key].type && idPar[1] == lastData[key].address)
+         return lastData[key];
    }
 
    return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
@@ -138,17 +138,17 @@ function initSchemaElement(item, tabindex)
 
 function updateSchema(data)
 {
-   if (data.length == 0)
+   if (data == null)
       return ;
 
    if (lastData == null) {
       lastData = data;
    }
    else {
-      for (var i = 0; i < data.length; i++) {
-         for (var l = 0; l < lastData.length; l++) {
-            if (lastData[l].type == data[i].type && lastData[l].address == data[i].address) {
-               lastData[l] = data[i];
+      for (var key in data) {
+         for (var lKey in data) {
+            if (lKey == key) {
+               lastData[lKey] = data[key];
                break;
             }
          }
@@ -282,9 +282,9 @@ function editSchemaValue(id, newUC)
    var schemaDef = getSchemDef(id);
    var isUC = schemaDef.type == "UC";
 
-   for (var i = 0; i < lastData.length; i++) {
-      if (lastData[i].type + ((lastData[i].address)>>>0).toString(10) == id) {
-         item = lastData[i];
+   for (var key in lastData) {
+      if (lastData[key].type + ((lastData[key].address)>>>0).toString(10) == id) {
+         item = lastData[key];
          break;
       }
    }

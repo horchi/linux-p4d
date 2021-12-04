@@ -12,9 +12,9 @@ var gauge = null;
 
 function initDashboard(update = false)
 {
-   // console.log("initDashboard " + JSON.stringify(allWidgets, undefined, 4));
+   // console.log("initDashboard " + JSON.stringify(dashboardWidgets, undefined, 4));
 
-   if (!allWidgets || !allWidgets.length) {
+   if (dashboardWidgets == null) {
       console.log("Fatal: Missing widgets!");
       return;
    }
@@ -30,8 +30,12 @@ function initDashboard(update = false)
 
    document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
 
-   for (var i = 0; i < allWidgets.length; i++)
-      initWidget(allWidgets[i], null);
+   var jDashboard = JSON.parse(config.dashboards);
+
+   for (var key in jDashboard['dashboard']) {
+      initWidget(dashboardWidgets[key], null);
+      updateWidget(dashboardWidgets[key], true);
+   }
 
    // additional setup elements
 
@@ -48,7 +52,6 @@ function initDashboard(update = false)
             "widgettype": 998
          }
       }
-
       initWidget({"address": 998, "type": "SP"}, factAdd);
 
       var factDel = {
@@ -63,12 +66,8 @@ function initDashboard(update = false)
             "widgettype": 999
          }
       }
-
       initWidget({"address": 999, "type": "SP"}, factDel);
-
    }
-
-   updateDashboard(allWidgets, true);
 }
 
 function initWidget(widget, fact)
@@ -357,6 +356,7 @@ function initWidget(widget, fact)
          var html = '<div class="widget-title">' + title + editButton + '</div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
          elem.className = "widget rounded-border";
+         elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
          elem.innerHTML = html;
          break;
    }
@@ -366,10 +366,17 @@ function updateDashboard(widgets, refresh)
 {
    // console.log("updateDashboard");
 
+   var jDashboard = JSON.parse(config.dashboards);
+
    if (widgets)
    {
-      for (var i = 0; i < widgets.length; i++)
-         updateWidget(widgets[i], refresh)
+      for (var key in widgets) {
+         if (jDashboard['dashboard'][key] != true)
+            continue;
+
+         console.log("update widget; " + key + "=>" + JSON.stringify(widgets[key], undefined, 4));
+         updateWidget(widgets[key], refresh);
+      }
    }
 }
 
@@ -538,8 +545,8 @@ function addWidget()
                continue;
             // console.log(fKey);
             var found = false;
-            for (var i = 0; i < allWidgets.length; i++) {
-               if (allWidgets[i].type + ':' + allWidgets[i].address == fKey) {
+            for (var key in dashboardWidgets) {
+               if (key == fKey) {
                   found = true;
                   break;
                }
@@ -555,14 +562,20 @@ function addWidget()
             $(this).dialog('close');
          },
          'Ok': function () {
-            var list = '';
+
+            var json = {};
+            json['dashboard'] = {};
             $('#widgetContainer > div').each(function () {
                var sensor = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-               list += sensor + ',';
+               if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7') {
+                  // console.log(" add " + sensor + " for sensor " + $(this).attr('id'));
+                  json['dashboard'][sensor] = true;
+               }
             });
-            list += $("#widgetId").val();
-            socket.send({ "event" : "storeconfig", "object" : { "addrsDashboard" : list } });
-            console.log(" - " + list);
+
+            json['dashboard'][$("#widgetId").val()] = true;
+
+            socket.send({ "event" : "storeconfig", "object" : { "dashboards" : JSON.stringify(json) } });
             socket.send({ "event" : "forcerefresh", "object" : {} });
             $(this).dialog('close');
          }
@@ -654,17 +667,17 @@ function dropWidget(ev)
    console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
    target.after(source);
 
-   var list = '';
+   var json = {};
+   json['dashboard'] = {};
    $('#widgetContainer > div').each(function () {
       var sensor = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
       if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7') {
          // console.log(" add " + sensor + " for sensor " + $(this).attr('id'));
-         list += sensor + ',';
+         json['dashboard'][sensor] = true;
       }
    });
 
-   socket.send({ "event" : "storeconfig", "object" : { "addrsDashboard" : list } });
-   console.log(" - " + list);
+   socket.send({ "event" : "storeconfig", "object" : { "dashboards" : JSON.stringify(json) } });
 }
 
 function deleteWidget(ev)
@@ -678,15 +691,16 @@ function deleteWidget(ev)
 
    document.getElementById(ev.dataTransfer.getData("source")).remove();
 
-   var list = '';
+   var json = {};
+   json['dashboard'] = {};
    $('#widgetContainer > div').each(function () {
       var sensor = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-      if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7' && sensor != sourceId)
-         list += sensor + ',';
+      if (sensor != 'SP:0x3e6' && sensor != 'SP:0x3e7') {
+         json['dashboard'][sensor] = true;
+      }
    });
 
-   socket.send({ "event" : "storeconfig", "object" : { "addrsDashboard" : list } });
-   console.log(" - " + list);
+   socket.send({ "event" : "storeconfig", "object" : { "dashboards" : JSON.stringify(json) } });
 }
 
 function widgetSetup(key)
@@ -894,11 +908,10 @@ function widgetSetup(key)
 
    var widget = null;
 
-   for (var i = 0; i < allWidgets.length; i++)
-   {
-      console.log("check " + allWidgets[i].type + " - " + allWidgets[i].address);
-      if (allWidgets[i].type == item.type && allWidgets[i].address == item.address) {
-         widget = allWidgets[i];
+   for (var key in dashboardWidgets) {
+      console.log("check " + key);
+      if (dashboardWidgets[key].type == item.type && dashboardWidgets[key].address == item.address) {
+         widget = dashboardWidgets[key];
          break;
       }
    }

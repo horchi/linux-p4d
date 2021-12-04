@@ -85,10 +85,9 @@ function initList(widgets)
 
    // build page content
 
-   for (var i = 0; i < widgets.length; i++)
-   {
+   for (var key in widgets) {
       var html = "";
-      var widget = widgets[i];
+      var widget = widgets[key];
       var id = "id=\"widget" + widget.type + widget.address + "\"";
       var fact = valueFacts[widget.type + ":" + widget.address];
 
@@ -127,9 +126,8 @@ function updateList(widgets)
    var d = new Date();     // #TODO use SP:0x4 instead of Date()
    document.getElementById("refreshTime").innerHTML = "Messwerte von " + d.toLocaleTimeString();
 
-   for (var i = 0; i < widgets.length; i++)
-   {
-      var widget = widgets[i];
+   for (var key in widgets) {
+      var widget = widgets[key];
       var fact = valueFacts[widget.type + ":" + widget.address];
 
       if (fact == null || fact == undefined) {

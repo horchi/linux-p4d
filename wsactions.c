@@ -1391,16 +1391,16 @@ int Daemon::images2Json(json_t* obj)
    char* path {nullptr};
 
    json_array_append_new(obj, json_string(""));
-   asprintf(&path, "%s/img/icon", httpPath);
+   asprintf(&path, "%s/img", httpPath);
 
-   if (getFileList(path, DT_REG, nullptr, false, &images, count) == success)
+   if (getFileList(path, DT_REG, nullptr, true, &images, count) == success)
    {
       sortFileList(images);
 
       for (const auto& img : images)
       {
          char* imgPath {nullptr};
-         asprintf(&imgPath, "img/icon/%s", img.name.c_str());
+         asprintf(&imgPath, "%s/%s", img.path.c_str()+strlen(httpPath), img.name.c_str());
          json_array_append_new(obj, json_string(imgPath));
          free(imgPath);
       }
