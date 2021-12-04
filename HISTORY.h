@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.8.2"
+#define _VERSION     "0.8.3"
 #define VERSION_DATE "04.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-04:  version 0.8.3
+  - change: Compile on X86 without wiringPin lib
 
 2021-12-04:  version 0.8.2
   - change: Remember last selected chart sensors and range

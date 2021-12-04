@@ -8,6 +8,8 @@
 
 #ifndef _NO_RASPBERRY_PI_
 #  include <wiringPi.h>
+#else
+#  include "gpio.h"
 #endif
 
 #include "lib/json.h"
