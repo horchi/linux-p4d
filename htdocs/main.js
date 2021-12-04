@@ -22,8 +22,8 @@ var currentPage = "dashboard";
 var s3200State = {};
 var widgetCharts = {};
 var theChart = null;
-var theChartRange = 1;
-var theChartStart = new Date(); theChartStart.setDate(theChartStart.getDate()-theChartRange);
+var theChartRange = null;
+var theChartStart = null;
 var chartDialogSensor = "";
 var chartBookmarks = {};
 var allWidgets = [];
@@ -574,7 +574,16 @@ function mainMenuSel(what)
       initVdr();
    else if (currentPage == "chart") {
       event = "chartdata";
-      prepareChartRequest(jsonRequest, "", theChartStart, theChartRange, "chart");
+      // console.log("config.chartSensors: " + config.chartSensors);
+      // console.log("1 config.chartRange " + config.chartRange.replace(',', '.') + " :" + parseFloat(config.chartRange.replace(',', '.')));
+      if (!theChartRange) {
+         theChartRange = parseFloat(config.chartRange.replace(',', '.'));
+         theChartStart = new Date().subHours(theChartRange * 24);
+      }
+      else if (!theChartStart)
+         theChartStart = new Date().subHours(theChartRange * 24);
+
+      prepareChartRequest(jsonRequest, config.chartSensors, theChartStart, theChartRange, "chart");
    }
    else if (currentPage == "groups")
       event = "groups";
@@ -857,7 +866,7 @@ function drawChartDialog(dataObject)
                distribution: "linear",
                display: true,
                ticks: {
-                  maxTicksLimit: 24,
+                  maxTicksLimit: 25,
                   padding: 10,
                   fontColor: "white"
                },

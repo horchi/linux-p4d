@@ -550,14 +550,16 @@ int Daemon::performChartData(json_t* oObject, long client)
    if (!widget)
       performChartbookmarks(client);
 
-   if (strcmp(id, "chart") == 0 && !isEmpty(sensors))
+   if (strcmp(id, "chart") == 0)
    {
-      tell(2, "storing sensors '%s' for chart", sensors);
-      setConfigItem("chart", sensors);
-      getConfigItem("chart", chartSensors);
+      setConfigItem("chartRange", range);
+
+      if (!isEmpty(sensors))
+      {
+         tell(2, "storing sensors '%s' for chart", sensors);
+         setConfigItem("chartSensors", sensors);
+      }
    }
-   else if (isEmpty(sensors))
-      sensors = chartSensors;
 
    tell(eloInfo, "Selecting chart data for sensors '%s' with range %.1f ..", sensors, range);
 
@@ -1184,37 +1186,6 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
       }
 
       free(path);
-   }
-   else if (strcmp(name, "addrsDashboard") == 0 || strcmp(name, "addrsList") == 0)
-   {
-      json_t* oArray = json_array();
-
-      tableValueFacts->clear();
-      tableValueFacts->setValue("STATE", "A");
-
-      for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
-      {
-         const char* title = tableValueFacts->getStrValue("USRTITLE");
-
-         if (isEmpty(title))
-            title = tableValueFacts->getStrValue("TITLE");
-
-         json_t* oOpt = json_object();
-
-         char* tmp;
-         asprintf(&tmp, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
-
-         json_object_set_new(oOpt, "value", json_string(tmp));
-         json_object_set_new(oOpt, "label", json_string(title));
-         json_array_append_new(oArray, oOpt);
-
-         // json_array_append_new(oArray, json_string(tmp));
-         free(tmp);
-      }
-
-      selectActiveValueFacts->freeResult();
-
-      json_object_set_new(obj, "options", oArray);
    }
    else if (strcmp(name, "stateMailStates") == 0)
    {

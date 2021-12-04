@@ -25,7 +25,7 @@ function drawCharts(dataObject)
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'now\')">Jetzt</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'next\')">Tag &gt;</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextmonth\')">Monat &gt;</button>' +
-         '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="1"></input>' +
+         '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
          '</div>' +
          '<div id="chartSelector" class="chartSelectors"></div>';
    }
@@ -240,9 +240,6 @@ function chartSelect(action)
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "now")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
-   else if (action == "range"){
-      theChartStart = new Date().subHours(theChartRange * 24); //  setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
-   }
 
    // console.log("sensors:  '" + sensors + "'" + ' Range:' + theChartRange);
 

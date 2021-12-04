@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.0"
-#define VERSION_DATE "01.12.2021"
+#define _VERSION     "0.8.2"
+#define VERSION_DATE "04.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2021-12-04:  version 0.8.2
+  - change: Remember last selected chart sensors and range
+
+2021-12-03:  version 0.8.1
+  - bugfix: Fixed w1 MQTT timeout without sensors
 
 2021-12-01:  version 0.8.0
   - change: Redesign of web frontend

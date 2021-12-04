@@ -21,6 +21,7 @@ W1::W1(const char* aUrl)
 {
    w1Path = strdup("/sys/bus/w1/devices");
    mqttTopic = TARGET "2mqtt/w1";
+   mqttPingTopic = TARGET "2mqtt/w1/ping";
    mqttUrl = aUrl;
 }
 
@@ -215,6 +216,8 @@ int W1::update()
 
    if (count)
       mqttW1Writer->writeRetained(mqttTopic, p);
+   else
+      mqttW1Writer->write(mqttPingTopic, "{\"ping\"}: true");
 
    free(p);
 

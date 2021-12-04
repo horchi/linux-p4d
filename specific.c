@@ -35,6 +35,9 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
    { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
 
+   { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
+   { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
+
    // p4d
 
    { "interval",                  ctInteger, "60",   false, "1 P4 Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },

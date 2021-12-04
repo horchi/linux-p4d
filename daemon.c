@@ -1487,9 +1487,6 @@ int Daemon::loop()
       nextRefreshAt = time(0) + interval;
       nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
 
-      updateScriptSensors();
-      process();
-
       {
          sem->p();
          update();
@@ -1497,6 +1494,11 @@ int Daemon::loop()
       }
 
       afterUpdate();
+
+      // after update until update fetches data (at least for 'VA') -> #TODO
+
+      updateScriptSensors();
+      process();
 
       initialRun = false;
    }
@@ -2182,6 +2184,8 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
 
    free(txt);
 
+   // tell(0, "getConfigItem '%s' now %.2f\n", name, value);
+
    return success;
 }
 
@@ -2355,7 +2359,12 @@ int Daemon::toggleOutputMode(uint pin)
       json_array_append_new(oJson, ojData);
       pin2Json(ojData, pin);
 
-      pushOutMessage(oJson, "update");
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", "DO", pin);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
    }
 
    return success;
@@ -2386,7 +2395,13 @@ void Daemon::gpioWrite(uint pin, bool state, bool store)
       json_array_append_new(oJson, ojData);
       pin2Json(ojData, pin);
 
-      pushOutMessage(oJson, "update");
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", "DO", pin);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+      // pushOutMessage(oJson, "update");
    }
 
    mqttPublishSensor(iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "", false /*forceConfig*/);

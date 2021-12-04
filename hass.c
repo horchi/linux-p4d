@@ -199,7 +199,9 @@ int Daemon::performMqttRequests()
          std::string tp = mqttReader->getLastReadTopic();
          tell(eloAlways, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
 
-         if (strcmp(tp.c_str(), TARGET "2mqtt/w1") == 0)
+         if (strcmp(tp.c_str(), TARGET "2mqtt/w1/ping") == 0)
+            ;
+         else if (strcmp(tp.c_str(), TARGET "2mqtt/w1") == 0)
             dispatchW1Msg(message.memory);
          else if (strcmp(tp.c_str(), TARGET "2mqtt/arduino/out") == 0)
             dispatchArduinoMsg(message.memory);
@@ -315,8 +317,8 @@ int Daemon::mqttCheckConnection()
          }
          else
          {
-            mqttReader->subscribe(TARGET "2mqtt/w1");
-            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/w1");
+            mqttReader->subscribe(TARGET "2mqtt/w1/#");
+            tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/w1/#");
             mqttReader->subscribe(TARGET "2mqtt/arduino/out");
             tell(0, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/arduino/out");
          }

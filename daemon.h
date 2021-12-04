@@ -449,8 +449,6 @@ class Daemon : public FroelingService, public cWebInterface
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
-      char* chartSensors {nullptr};
-
       int mail {no};
       char* mailScript {nullptr};
       char* stateMailTo {nullptr};
