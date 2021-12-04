@@ -209,11 +209,10 @@ int Daemon::pushOutMessage(json_t* oContents, const char* event, long client)
 
    if (!p)
    {
-      tell(0, "Error: Dumping json message failed");
+      tell(0, "Error: Dumping json message for event '%s' failed", event);
       return fail;
    }
 
-   tell(0, "----- message '%s'", p);
    webSock->pushOutMessage(p, (lws*)client);
    free(p);
 
@@ -237,10 +236,7 @@ int Daemon::pushDataUpdate(const char* event, long client)
       json_t* oJson = json_object();
 
       for (auto& sj : jsonSensorList)
-      {
-         tell(0, "append '%s'", sj.first.c_str());
-         json_object_set_new(oJson, sj.first.c_str(), sj.second);
-      }
+         json_object_set(oJson, sj.first.c_str(), sj.second);
 
       pushOutMessage(oJson, event, client);
    }
@@ -251,15 +247,20 @@ int Daemon::pushDataUpdate(const char* event, long client)
          json_t* oJson = json_object();
 
          for (auto& sj : jsonSensorList)
-            json_object_set_new(oJson, sj.first.c_str(), sj.second);
+            json_object_set(oJson, sj.first.c_str(), sj.second);
 
          pushOutMessage(oJson, event, (long)cl.first);
       }
    }
 
    // cleanup
-   // for (auto sj : jsonSensorList)
-   //    json_decref(sj.second);
+
+   // since we use the references more than once we have to do it
+   //  by calling json_object_set instead of json_object_set_new
+   //  therefore we have to free it by json_decref()
+
+   for (auto sj : jsonSensorList)
+      json_decref(sj.second);
 
    jsonSensorList.clear();
 
@@ -666,9 +667,9 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
 
    // update WS
    {
-      json_t* oJson = json_array();
+      // json_t* oJson = json_array();
       json_t* ojData = json_object();
-      json_array_append_new(oJson, ojData);
+      // json_array_append_new(oJson, ojData);
 
       json_object_set_new(ojData, "address", json_integer((ulong)addr));
       json_object_set_new(ojData, "type", json_string("SC"));
@@ -2318,9 +2319,9 @@ int Daemon::toggleOutputMode(uint pin)
 
       storeStates();
 
-      json_t* oJson = json_array();
+      // json_t* oJson = json_array();
       json_t* ojData = json_object();
-      json_array_append_new(oJson, ojData);
+      // json_array_append_new(oJson, ojData);
       pin2Json(ojData, pin);
 
       char* tuple {nullptr};
@@ -2354,9 +2355,9 @@ void Daemon::gpioWrite(uint pin, bool state, bool store)
 
    // send update to WS
    {
-      json_t* oJson = json_array();
+      // json_t* oJson = json_array();
       json_t* ojData = json_object();
-      json_array_append_new(oJson, ojData);
+      // json_array_append_new(oJson, ojData);
       pin2Json(ojData, pin);
 
       char* tuple {nullptr};

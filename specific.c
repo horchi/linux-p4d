@@ -25,9 +25,6 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 {
    // web
 
-   // { "addrsDashboard",            ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Dashboard'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-   // { "addrsList",                 ctMultiSelect, "", false, "2 WEB Interface", "Sensoren 'Liste'", "Komma getrennte Liste aus Typ:ID siehe 'Aufzeichnung'" },
-
    { "webUrl",                    ctString,  "", false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
    { "webSSL",                    ctBool,    "", false, "2 WEB Interface", "Use SSL for WebInterface", "" },
    { "haUrl",                     ctString,  "", false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.8.5"
+#define _VERSION     "0.8.6"
 #define VERSION_DATE "04.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-04:  version 0.8.6
+  - bugfix: Fixed crash
 
 2021-12-04:  version 0.8.5
   - bugfix: Fixed start with empty dashbord config
