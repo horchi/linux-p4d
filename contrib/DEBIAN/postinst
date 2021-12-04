@@ -33,6 +33,7 @@ case "$1" in
         fi
         systemctl daemon-reload && systemctl enable p4d
         systemctl daemon-reload && systemctl enable w1mqtt
+        systemctl daemon-reload && systemctl enable mosquitto-log.service
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

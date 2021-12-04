@@ -1,0 +1,14 @@
+[Unit]
+
+Description = Create mosquitto log folder - needed in case /var/log is on a temp filesystem
+After = local-fs.target
+
+[Service]
+
+Type = oneshot
+ExecStart = mkdir -p /var/log/mosquitto
+ExecStartPost = chown mosquitto:mosquitto /var/log/mosquitto
+
+[Install]
+
+WantedBy = multi-user.target
