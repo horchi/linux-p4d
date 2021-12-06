@@ -15,8 +15,12 @@ var isActive = null;
 var socket = null;
 var config = {};
 var daemonState = {};
+
 var widgetTypes = {};
 var valueFacts = {};
+var dashboards = {};
+var allSensors = [];
+
 var images = [];
 var currentPage = "dashboard";
 var s3200State = {};
@@ -26,7 +30,6 @@ var theChartRange = null;
 var theChartStart = null;
 var chartDialogSensor = "";
 var chartBookmarks = {};
-var dashboardWidgets = [];
 var infoDialogTimer = null;
 var grouplist = {};
 
@@ -248,28 +251,28 @@ function dispatchMessage(message)
       showInfoDialog(jMessage.object);
    }
    else if (event == "init") {
-      dashboardWidgets = jMessage.object;
+      allSensors = jMessage.object;
       if (currentPage == 'dashboard')
          initDashboard();
       else if (currentPage == 'schema')
          updateSchema(jMessage.object);
       else if (currentPage == 'list')
-         initList(jMessage.object);
+         initList();
    }
    else if (event == "update" || event == "all") {
       if (event == "all") {
-         dashboardWidgets = jMessage.object;
+         allSensors = jMessage.object;
       }
       else {
          for (var key in jMessage.object)
-            dashboardWidgets[key] = jMessage.object[key];
+            allSensors[key] = jMessage.object[key];
       }
       if (currentPage == 'dashboard')
          updateDashboard(jMessage.object, event == "all");
       else if (currentPage == 'schema')
          updateSchema(jMessage.object);
       else if (currentPage == 'list')
-         updateList(jMessage.object);
+         updateList();
    }
    else if (event == "schema") {
       initSchema(jMessage.object);
@@ -308,12 +311,18 @@ function dispatchMessage(message)
             document.getElementById("confirm").innerHTML = "<div class=\"infoError\"><b><center>Login fehlgeschlagen</center></b></div>";
       }
    }
+   else if (event == "dashboards") {
+      dashboards = jMessage.object;
+      // console.log("dashboards " + JSON.stringify(dashboards, undefined, 4));
+   }
+
    else if (event == "valuefacts") {
       valueFacts = jMessage.object;
       // console.log("valueFacts " + JSON.stringify(valueFacts, undefined, 4));
    }
    else if (event == "images") {
       images = jMessage.object;
+      // console.log("images " + JSON.stringify(images, undefined, 4));
    }
    else if (event == "chartdata") {
       hideProgressDialog();
@@ -366,7 +375,7 @@ function prepareMenu()
 
    console.log("prepareMenu: " + currentPage);
 
-   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dashboard</button>';
+   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dashboards</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'chart\')">Charts</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Funktionsschema</button>';
@@ -494,19 +503,6 @@ function menuBurger()
    });
 }
 
-function setupDashboard()
-{
-   $("#burgerPopup").dialog("close");
-
-   setupMode = !setupMode;
-   initDashboard();
-}
-
-function resetBatt(what)
-{
-   socket.send({ "event" : "reset", what : {}});
-}
-
 function mainMenuSel(what)
 {
    $("#burgerPopup").dialog("close");
@@ -554,7 +550,7 @@ function mainMenuSel(what)
       event = "syslog";
    }
    else if (currentPage == "list")
-      event = "list";
+      initList();
    else if (currentPage == "dashboard")
       initDashboard();
    else if (currentPage == "vdr")
@@ -596,6 +592,19 @@ function mainMenuSel(what)
       if (currentPage == 'login')
          initLogin();
    }
+}
+
+function setupDashboard()
+{
+   $("#burgerPopup").dialog("close");
+
+   setupMode = !setupMode;
+   initDashboard();
+}
+
+function resetBatt(what)
+{
+   socket.send({ "event" : "reset", what : {}});
 }
 
 function initLogin()
@@ -721,6 +730,7 @@ function doLogout()
 
 function hideAllContainer()
 {
+   $('#dashboardMenu').addClass('hidden');
    $('#stateContainer').addClass('hidden');
    $('#container').addClass('hidden');
 }

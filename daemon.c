@@ -59,7 +59,7 @@ const char* cWebService::events[] =
    "sendmail",
    "syslog",
    "forcerefresh",
-   "list",
+   "storedashboards",
    "alerts",
    "storealerts",
 
@@ -463,10 +463,9 @@ int Daemon::initScripts()
    {
       if (!fileExists(tableScripts->getStrValue("PATH")))
       {
-         int delCount {0};
          char* stmt {nullptr};
          asprintf(&stmt, "%s = '%s'", tableScripts->getField("PATH")->getDbName(), tableScripts->getStrValue("PATH"));
-         tableScripts->deleteWhere(stmt, delCount);
+         tableScripts->deleteWhere(stmt);
          free(stmt);
          tell(eloAlways, "Removed script '%s'", tableScripts->getStrValue("PATH"));
       }
@@ -481,12 +480,11 @@ int Daemon::initScripts()
 
       if (!tableScripts->find())
       {
-         int delCount {0};
          char* stmt {nullptr};
          asprintf(&stmt, "%s = %ld and %s = 'SC'",
                   tableValueFacts->getField("ADDRESS")->getDbName(), tableValueFacts->getIntValue("ADDRESS"),
                   tableValueFacts->getField("TYPE")->getDbName());
-         tableValueFacts->deleteWhere(stmt, delCount);
+         tableValueFacts->deleteWhere(stmt);
          free(stmt);
          tell(eloAlways, "Removed valuefact 'SC/%ld'", tableValueFacts->getIntValue("ADDRESS"));
       }
@@ -928,6 +926,12 @@ int Daemon::initDb()
    tableGroups = new cDbTable(connection, "groups");
    if (tableGroups->open() != success) return fail;
 
+   tableDashboards = new cDbTable(connection, "dashboards");
+   if (tableDashboards->open() != success) return fail;
+
+   tableDashboardWidgets = new cDbTable(connection, "dashboardwidgets");
+   if (tableDashboardWidgets->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -1077,6 +1081,67 @@ int Daemon::initDb()
 
    status += selectScriptByPath->prepare();
 
+
+   // ------------------
+   // select dashboards
+   //  join dashboardWidgets
+   /*
+   selectDashboards = new cDbStatement(tableDashboards);
+
+   selectDashboards->build("select ");
+   selectDashboards->setBindPrefix("d.");
+   selectDashboards->bind("TITLE", cDBS::bndOut);
+   selectDashboards->setBindPrefix("w.");
+   selectDashboards->bind(tableDashboardWidgets, "ADDRESS", cDBS::bndOut, ", ");
+   selectDashboards->bind(tableDashboardWidgets, "TYPE", cDBS::bndOut, ", ");
+   selectDashboards->bind(tableDashboardWidgets, "WIDGETOPTS", cDBS::bndOut, ", ");
+   selectDashboards->clrBindPrefix();
+   selectDashboards->build(" from %s d, %s w where",
+                              tableDashboards->TableName(),
+                              tableDashboardWidgets->TableName());
+   selectDashboards->build(" w.%s = d.%s",
+                              tableDashboardWidgets->getField("DASHBOARDID")->getDbName(),
+                              tableDashboards->getField("ID")->getDbName());
+
+   status += selectDashboards->prepare();
+   */
+
+   // ------------------
+
+   selectDashboards = new cDbStatement(tableDashboards);
+
+   selectDashboards->build("select ");
+   selectDashboards->bind("ID", cDBS::bndOut);
+   selectDashboards->bind("TITLE", cDBS::bndOut, ", ");
+   selectDashboards->build(" from %s", tableDashboards->TableName());
+
+   status += selectDashboards->prepare();
+
+   // ------------------
+
+   selectDashboardById = new cDbStatement(tableDashboards);
+
+   selectDashboardById->build("select ");
+   selectDashboardById->bind("ID", cDBS::bndOut);
+   selectDashboardById->build(" from %s where ", tableDashboards->TableName());
+   selectDashboardById->bind("TITLE", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectDashboardById->prepare();
+
+   // ------------------
+
+   selectDashboardWidgetsFor = new cDbStatement(tableDashboardWidgets);
+
+   selectDashboardWidgetsFor->build("select ");
+   selectDashboardWidgetsFor->bind("TYPE", cDBS::bndOut);
+   selectDashboardWidgetsFor->bind("ADDRESS", cDBS::bndOut, ", ");
+   selectDashboardWidgetsFor->bind("WIDGETOPTS", cDBS::bndOut, ", ");
+   selectDashboardWidgetsFor->build(" from %s where ", tableDashboardWidgets->TableName());
+   selectDashboardWidgetsFor->bind("DASHBOARDID", cDBS::bndIn | cDBS::bndSet);
+   selectDashboardWidgetsFor->build(" order by ord");
+
+   status += selectDashboardWidgetsFor->prepare();
+
    // ------------------
 
    if (status == success)
@@ -1093,6 +1158,64 @@ int Daemon::initDb()
       }
    }
 
+   // check about old and new dashboards and port if possible
+
+   tableDashboards->clear();
+   tableDashboardWidgets->clear();
+
+   char* dashboards {nullptr};
+   getConfigItem("dashboards", dashboards, "");
+   json_t* oDashboards = json_loads(dashboards, 0, nullptr);
+   free(dashboards);
+
+   int count {0};
+   tableDashboards->countWhere("1=1", count);
+
+   if (!count && oDashboards)
+   {
+      json_t* oDashboard = getObjectFromJson(oDashboards, "dashboard");
+
+      if (oDashboard)
+      {
+         const char* key {nullptr};
+         json_t* jValue {nullptr};
+
+         tableDashboards->setValue("TITLE", "dashboard");
+         tableDashboards->store();
+         int dashboardId = tableDashboards->getLastInsertId();
+         int ord {0};
+         json_object_foreach(oDashboard, key, jValue)
+         {
+            auto tuple = split(key, ':');
+
+            tableValueFacts->clear();
+            tableValueFacts->setValue("TYPE", tuple[0].c_str());
+            tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+
+            if (tableValueFacts->find())
+            {
+               tableDashboardWidgets->clear();
+               tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
+               tableDashboardWidgets->setValue("ORDER", ord++);
+               tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
+               tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+               tableDashboardWidgets->setValue("WIDGETOPTS", tableValueFacts->getStrValue("WIDGETOPT"));
+               tableDashboardWidgets->store();
+               tell(0, "Ported dashboard widget '%s' [%s]", key, tableValueFacts->getStrValue("WIDGETOPT"));
+            }
+         }
+      }
+   }
+
+   tableDashboards->countWhere("1=1", count);
+
+   if (!count)
+   {
+      tell(0, "Starting with empty dashboard");
+      tableDashboards->setValue("TITLE", "dashboard");
+      tableDashboards->store();
+   }
+
    return status;
 }
 
@@ -1104,6 +1227,8 @@ int Daemon::exitDb()
    delete tableConfig;                tableConfig = nullptr;
    delete tableUsers;                 tableUsers = nullptr;
    delete tableGroups;                tableGroups = nullptr;
+   delete tableDashboards;            tableDashboards = nullptr;
+   delete tableDashboardWidgets;      tableDashboardWidgets = nullptr;
 
    delete selectAllGroups;            selectAllGroups = nullptr;
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
@@ -1116,6 +1241,10 @@ int Daemon::exitDb()
    delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
    delete selectScriptByPath;         selectScriptByPath = nullptr;
    delete selectScripts;              selectScripts = nullptr;
+   delete selectDashboards;           selectDashboards = nullptr;
+   delete selectDashboardById;        selectDashboardById = nullptr;
+
+   delete selectDashboardWidgetsFor;  selectDashboardWidgetsFor = nullptr;
 
    delete connection; connection = nullptr;
 
@@ -1521,7 +1650,6 @@ int Daemon::update(bool webOnly, long client)
       const char* unit = tableValueFacts->getStrValue("UNIT");
       const char* name = tableValueFacts->getStrValue("NAME");
       uint groupid = tableValueFacts->getIntValue("GROUPID");
-      // const char* orgTitle = title;
 
       if (!isEmpty(usrtitle))
          title = usrtitle;
@@ -1614,7 +1742,6 @@ int Daemon::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         // json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -1634,7 +1761,6 @@ int Daemon::update(bool webOnly, long client)
          }
 
          json_object_set_new(ojData, "value", json_integer(v.state));
-         // json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, v.state)));
 
          if (!webOnly)
          {
@@ -1852,8 +1978,6 @@ int Daemon::aggregate()
 
    if (connection->query(aggCount, "%s", stmt) == success)
    {
-      int delCount {0};
-
       tell(eloDebug, "Aggregation: [%s]", stmt);
       free(stmt);
 
@@ -1861,11 +1985,10 @@ int Daemon::aggregate()
 
       asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%ld)", history);
 
-      if (tableSamples->deleteWhere(stmt, delCount) == success)
+      if (tableSamples->deleteWhere(stmt) == success)
       {
          tell(eloAlways, "Aggregation with interval of %d minutes done; "
-              "Created %d aggregation rows, deleted %d sample rows",
-              aggregateInterval, aggCount, delCount);
+              "Created %d aggregation rows", aggregateInterval, aggCount);
       }
    }
 

@@ -365,7 +365,7 @@ function initIoSetup(valueFacts)
       html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + usrtitle + '"/></td>';
       html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + item.unit + '"/></td>';
       html += '<td><input id="state_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.state ? 'checked' : '') + ' /><label for="state_' + item.type + item.address + '"></label></td>';
-      html += '<td>' + item.type + ':0x' + item.address.toString(16).padStart(2, '0') + '</td>';
+      html += '<td>' + key + '</td>';
 
       html += '<td><select id="group_' + item.type + item.address + '" class="rounded-border inputSetting" name="group">';
       if (grouplist != null) {

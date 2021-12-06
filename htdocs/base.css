@@ -162,6 +162,45 @@ button:focus {
     background-color: darkslategray;
 }
 
+.menuDashboard
+{
+    background-color: slategray;
+    width: 99%;
+    margin: 7px;
+}
+
+.buttonDashboard
+{
+    display: inline;
+    margin: 5px 0px 5px 10px;
+    color: white;
+    background-color: slategray;
+    height: 28px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.buttonDashboard:hover
+{
+    background-color: darkslategray;
+}
+
+.buttonDashboardTool
+{
+    display: inline;
+    margin: 5px 5px 5px 2px;
+    color: orange;
+    background-color: transparent;
+    height: 28px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.buttonDashboardTool:hover
+{
+    background-color: darkslategray;
+}
+
 .buttonHighlighted
 {
     background-color: darkblue;
@@ -454,7 +493,7 @@ span > input
 
 .listFirstCol
 {
-    width: 12%;
+    width: 20%;
     min-width: 145px;
     display: inline-block;
     text-align: left;
@@ -1041,7 +1080,7 @@ table.tableMultiCol tr:nth-child(odd)
     align-self: center;
     font-size: 1.4em;
     overflow: hidden;
-    background-color: Transparent;
+    background-color: transparent;
     cursor: pointer;
     border: none;
    /* width: inherit;*/
@@ -1049,17 +1088,20 @@ table.tableMultiCol tr:nth-child(odd)
     text-overflow: ellipsis;
 }
 
+
 .widget-edit
 {
+    grid-area: title;
     justify-self: flex-end;
     font-size: 1em;
     z-index: 99;
-    color: var(--blue);
+    color: orange;
+    background-color: transparent;
 }
 
 .widget-edit:hover
 {
-    color: yellow;
+    background-color: darkslategray;
 }
 
 .widget-progress {

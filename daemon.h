@@ -290,7 +290,9 @@ class Daemon : public FroelingService, public cWebInterface
       int performUserDetails(long client);
       int storeUserConfig(json_t* oObject, long client);
       int performPasswChange(json_t* oObject, long client);
+      int performForceRefresh(json_t* obj, long client);
       int storeConfig(json_t* obj, long client);
+      int storeDashboards(json_t* obj, long client);
       int storeIoSetup(json_t* array, long client);
       int storeGroups(json_t* array, long client);
       int performChartbookmarks(long client);
@@ -305,6 +307,7 @@ class Daemon : public FroelingService, public cWebInterface
       int configChoice2json(json_t* obj, const char* name);
 
       int valueFacts2Json(json_t* obj, bool filterActive);
+      int dashboards2Json(json_t* obj);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
       int sensor2Json(json_t* obj, cDbTable* table);
@@ -349,6 +352,8 @@ class Daemon : public FroelingService, public cWebInterface
       cDbTable* tableScripts {nullptr};
       cDbTable* tableUsers {nullptr};
       cDbTable* tableGroups {nullptr};
+      cDbTable* tableDashboards {nullptr};
+      cDbTable* tableDashboardWidgets {nullptr};
 
       cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};
@@ -361,6 +366,9 @@ class Daemon : public FroelingService, public cWebInterface
       cDbStatement* selectSamplesRange60 {nullptr};   // for chart
       cDbStatement* selectScriptByPath {nullptr};
       cDbStatement* selectScripts {nullptr};
+      cDbStatement* selectDashboards {nullptr};
+      cDbStatement* selectDashboardById {nullptr};
+      cDbStatement* selectDashboardWidgetsFor {nullptr};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;

@@ -39,6 +39,8 @@ if ! dumpTable "groups";      then  exit 1; fi
 if ! dumpTable "peaks";       then  exit 1; fi
 if ! dumpTable "pellets";     then  exit 1; fi
 if ! dumpTable "users";       then  exit 1; fi
+if ! dumpTable "dashboards";  then  exit 1; fi
+if ! dumpTable "dashboardwidgets"; then  exit 1; fi
 
 echo "to import the tables call mysql per file:"
 echo "  zcat the-dumpfile.gz | mysql -u p4 -pp4 -Dp4"

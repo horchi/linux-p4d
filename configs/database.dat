@@ -95,6 +95,37 @@ Table config
 }
 
 // ----------------------------------------------------------------
+// Table Dashboards
+// ----------------------------------------------------------------
+
+Table dashboards
+{
+   ID                   ""  id                   UInt         4 Primary|Autoinc,
+
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+
+   TITLE                ""  title                Ascii      100 Data,
+}
+
+// ----------------------------------------------------------------
+// Table DashboardWidgets
+// ----------------------------------------------------------------
+
+Table dashboardwidgets
+{
+   DASHBOARDID          ""  dashboardid          UInt         4 Primary,
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+
+   INSSP                ""  inssp                Int          0 Meta,
+   UPDSP                ""  updsp                Int          0 Meta,
+
+   WIDGETOPTS           ""  widgetopts           Ascii     1000 Data,
+   ORDER                ""  ord                  Int         10 Data,
+}
+
+// ----------------------------------------------------------------
 // Table Users
 // ----------------------------------------------------------------
 
@@ -268,4 +299,3 @@ Table errors
    TEXT                 ""                text       Ascii      100 Data,
    MAILCNT              ""                mailcnt    Int          0 Data,
 }
-

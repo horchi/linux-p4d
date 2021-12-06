@@ -430,7 +430,6 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
    const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
    double factor = tableValueFacts->getIntValue("FACTOR");
    uint groupid = tableValueFacts->getIntValue("GROUPID");
-   // const char* orgTitle = title;
 
    if (!isEmpty(usrtitle))
       title = usrtitle;
@@ -513,7 +512,6 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
       double theValue = value / factor;
 
       json_object_set_new(ojData, "value", json_real(theValue));
-      // needed?? json_object_set_new(ojData, "image", json_string(getImageFor(orgTitle, theValue)));
 
       if (!webOnly)
       {

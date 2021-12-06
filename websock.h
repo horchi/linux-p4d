@@ -50,7 +50,7 @@ class cWebService
          evSendMail,
          evSyslog,
          evForceRefresh,
-         evList,
+         evStoreDashboards,
          evAlerts,
          evStoreAlerts,
 
