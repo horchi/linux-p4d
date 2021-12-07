@@ -21,6 +21,7 @@
   - bugfix: fixed ssl support
   - change: Improved chart widget
   - change: Support text and symbol for dashboard title
+  - change: improved speed at page change between dashboard, list and schema
 
 2021-12-05:  version 0.8.8
   - change: Multi dashboard configuration
