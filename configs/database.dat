@@ -106,6 +106,7 @@ Table dashboards
    UPDSP                ""  updsp                Int          0 Meta,
 
    TITLE                ""  title                Ascii      100 Data,
+   SYMBOL               ""  symbol               Ascii      100 Data,
 }
 
 // ----------------------------------------------------------------

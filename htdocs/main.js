@@ -38,8 +38,8 @@ var setupMode = false;
 $('document').ready(function() {
    daemonState.state = -1;
    s3200State.state = -1;
-
    console.log("currentPage: " + currentPage);
+   var url = "";
 
    if (window.location.href.startsWith("https"))
       url = "wss://" + location.hostname + ":" + location.port;
@@ -255,7 +255,7 @@ function dispatchMessage(message)
       if (currentPage == 'dashboard')
          initDashboard();
       else if (currentPage == 'schema')
-         updateSchema(jMessage.object);
+         updateSchema();
       else if (currentPage == 'list')
          initList();
    }
@@ -270,12 +270,13 @@ function dispatchMessage(message)
       if (currentPage == 'dashboard')
          updateDashboard(jMessage.object, event == "all");
       else if (currentPage == 'schema')
-         updateSchema(jMessage.object);
+         updateSchema();
       else if (currentPage == 'list')
          updateList();
    }
    else if (event == "schema") {
       initSchema(jMessage.object);
+      // console.log("schema " + JSON.stringify(jMessage.object, undefined, 4));
    }
    else if (event == "chartbookmarks") {
       chartBookmarks = jMessage.object;
@@ -794,11 +795,37 @@ function drawChartWidget(dataObject)
          scales: {
             xAxes: [{
                type: "time",
+               time: {
+                  unit: 'hour',
+                  unitStepSize: 1,
+                  displayFormats: {
+                     hour: 'HH:mm',
+                     day: 'HH:mm'
+                  }},
                distribution: "linear",
-               display: false
+               display: true,
+               gridLines: {
+                  color: "gray"
+               },
+               ticks: {
+                  padding: 10,
+                  maxTicksLimit: 6,
+                  maxRotation: 0,
+                  fontColor: "darkgray"
+               }
+
             }],
             yAxes: [{
-               display: false
+               display: true,
+               gridLines: {
+                  color: "darkgray",
+                  zeroLineColor: 'darkgray'
+               },
+               ticks: {
+                  padding: 10,
+                  maxTicksLimit: 5,
+                  fontColor: "darkgray"
+               }
             }]
          }
       }
@@ -810,8 +837,9 @@ function drawChartWidget(dataObject)
       dataset["data"] = dataObject.rows[i].data;
       dataset["backgroundColor"] = "#415969";  // fill color
       dataset["borderColor"] = "#3498db";      // line color
-      dataset["fill"] = true;
-      dataset["pointRadius"] = 2.0;
+      dataset["borderWidth"] = 1;
+      dataset["fill"] = false;
+      dataset["pointRadius"] = 1.5;
       data.data.datasets.push(dataset);
    }
 
@@ -837,8 +865,16 @@ function drawChartDialog(dataObject)
          datasets: []
       },
       options: {
+         tooltips: {
+            mode: "index",
+            intersect: false,
+         },
          legend: {
             display: true
+         },
+         hover: {
+            mode: "nearest",
+            intersect: true
          },
          responsive: true,
          maintainAspectRatio: false,
@@ -850,20 +886,15 @@ function drawChartDialog(dataObject)
                   unit: 'hour',
                   unitStepSize: 1,
                   displayFormats: {
-                  millisecond: 'MMM DD - HH:mm',
-                  second: 'MMM DD - HH:mm',
-                  minute: 'HH:mm',
-                  hour: 'MMM DD - HH:mm',
-                  day: 'HH:mm',
-                  week: 'MMM DD - HH:mm',
-                  month: 'MMM DD - HH:mm',
-                  quarter: 'MMM DD - HH:mm',
-                  year: 'MMM DD - HH:mm' } },
+                     hour: 'HH:mm',
+                     day: 'HH:mm',
+                  }},
                distribution: "linear",
                display: true,
                ticks: {
-                  maxTicksLimit: 25,
+                  maxTicksLimit: 12,
                   padding: 10,
+                  maxRotation: 0,
                   fontColor: "white"
                },
                gridLines: {
@@ -905,7 +936,8 @@ function drawChartDialog(dataObject)
       dataset["data"] = dataObject.rows[i].data;
       dataset["backgroundColor"] = "#415969";  // fill color
       dataset["borderColor"] = "#3498db";      // line color
-      dataset["fill"] = true;
+      dataset["borderWidth"] = 1;
+      dataset["fill"] = false;
       dataset["label"] = dataObject.rows[i].title;
       dataset["pointRadius"] = 0;
       data.data.datasets.push(dataset);
@@ -913,6 +945,11 @@ function drawChartDialog(dataObject)
 
    var canvas = root.querySelector("#chartDialog");
    theChart = new Chart(canvas, data);
+}
+
+function toKey(type, address)
+{
+   return type + ":0x" + address.toString(16).padStart(2, '0');
 }
 
 function parseBool(val)

@@ -12,7 +12,6 @@ var oTop = 0;
 var oLeft = 0;
 var modeEdit = false;
 var lastSchemadata = null;
-var lastData = null;
 var properties = [ "top", "left", "color", "font-size", "color", "background-color", "border", "border-radius", "z-index"];
 var schemaRoot = null;
 
@@ -24,11 +23,23 @@ function getSchemDef(id)
    }
 }
 
+// get schema definition by '<Type>:0x<HexAddr>' notation
+
+function getItemDef(key)
+{
+   for (var i = 0; i < lastSchemadata.length; i++) {
+      if (lastSchemadata[i].type + ':0x' + ((lastSchemadata[i].address)>>>0).toString(16).toUpperCase() == key)
+         return lastSchemadata[i];
+   }
+
+   return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
+}
+
 function getItemById(id)
 {
-   for (var key in lastData) {
-      if (lastData[key].type + ((lastData[key].address)>>>0).toString(10) == id)
-         return lastData[key];
+   for (var key in allSensors) {
+      if (allSensors[key].type + ((allSensors[key].address)>>>0).toString(10) == id)
+         return allSensors[key];
    }
 }
 
@@ -36,20 +47,9 @@ function getItem(id)
 {
    var idPar = id.split(':');
 
-   for (var key in lastData) {
-      if (idPar.length == 2 && idPar[0] == lastData[key].type && idPar[1] == lastData[key].address)
-         return lastData[key];
-   }
-
-   return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
-}
-
-// get data item definition by '<Type>:0x<HexAddr>' notation !
-function getItemDef(id)
-{
-   for (var i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type + ':0x' + ((lastSchemadata[i].address)>>>0).toString(16).toUpperCase() == id)
-         return lastSchemadata[i];
+   for (var key in allSensors) {
+      if (idPar.length == 2 && idPar[0] == allSensors[key].type && idPar[1] == allSensors[key].address)
+         return allSensors[key];
    }
 
    return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
@@ -80,6 +80,8 @@ function initSchema(schemaData)
       if (!lastSchemadata[i].deleted)
          initSchemaElement(schemaData[i], i);
    }
+
+   updateSchema();
 }
 
 function initSchemaElement(item, tabindex)
@@ -96,7 +98,7 @@ function initSchemaElement(item, tabindex)
    div.style.cursor = modeEdit ? "move" : "default";
 
    if (modeEdit) {
-      div.setAttribute("onclick", 'editSchemaValue("' + id + '")');
+      div.setAttribute("onclick", 'editSchemaValue("' + item.type + '", ' + item.address + ')');
       div.setAttribute('tabindex', tabindex);
    }
 
@@ -136,25 +138,8 @@ function initSchemaElement(item, tabindex)
    schemaRoot.appendChild(div);
 }
 
-function updateSchema(data)
+function updateSchema()
 {
-   if (data == null)
-      return ;
-
-   if (lastData == null) {
-      lastData = data;
-   }
-   else {
-      for (var key in data) {
-         for (var lKey in data) {
-            if (lKey == key) {
-               lastData[lKey] = data[key];
-               break;
-            }
-         }
-      }
-   }
-
    for (var i = 0; i < lastSchemadata.length; i++) {
       var schemaDef = lastSchemadata[i];
       var id = schemaDef.type + ((schemaDef.address)>>>0).toString(10);
@@ -230,7 +215,7 @@ function schemaEditModeToggle()
 {
    modeEdit = !modeEdit;
    initSchema(lastSchemadata, schemaRoot);
-   updateSchema(lastData, schemaRoot);
+   updateSchema();
 
    document.getElementById("buttonSchemaStore").style.visibility = modeEdit ? 'visible' : 'hidden';
    document.getElementById("buttonSchemaAddItem").style.visibility = modeEdit ? 'visible' : 'hidden';
@@ -260,7 +245,7 @@ function schemaAddItem()
 
    lastSchemadata[lastSchemadata.length] = schemaDef;
    initSchemaElement(schemaDef, lastSchemadata.length);
-   editSchemaValue(schemaDef.type + ((schemaDef.address)>>>0).toString(10), true);
+   editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
 
 function setAttributeStyleFrom(element, json)
@@ -274,20 +259,16 @@ function setAttributeStyleFrom(element, json)
    element.style.position = "absolute";
 }
 
-function editSchemaValue(id, newUC)
+function editSchemaValue(type, address, newUC)
 {
    // console.log("editSchemaValue of id: " + id);
 
-   var item = null;
+   var key = toKey(type, address);
+   var id = type + ((address)>>>0).toString(10);
+
    var schemaDef = getSchemDef(id);
    var isUC = schemaDef.type == "UC";
-
-   for (var key in lastData) {
-      if (lastData[key].type + ((lastData[key].address)>>>0).toString(10) == id) {
-         item = lastData[key];
-         break;
-      }
-   }
+   var item = allSensors[key];
 
    var form =
        '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
@@ -446,7 +427,7 @@ function editSchemaValue(id, newUC)
       schemaDef.fct = $('#function').val();
 
       setAttributeStyleFrom(schemaRoot.querySelector(id), schemaDef.properties);
-      updateSchema(lastData, schemaRoot)
+      updateSchema()
 
       return 0;  // success
    }

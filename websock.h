@@ -211,6 +211,8 @@ class cWebSock : public cWebService
       //
 
       int port {na};
+      char* certFile {nullptr};
+      char* certKeyFile {nullptr};
       lws_protocols protocols[3];
       lws_http_mount mounts[1];
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)

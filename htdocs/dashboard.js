@@ -32,38 +32,35 @@ function initDashboard(update = false)
       $("#container").height($(window).height() - $("#menu").height() - 8);
    };
 
+   if (setupMode) {
+      $('#dashboardMenu').append($('<button></button>')
+                                 .addClass('rounded-border buttonDashboardTool')
+                                 .addClass('mdi mdi-close-outline')
+                                 .attr('title', 'Setup beenden')
+                                 .click(function() { setupDashboard(); })
+                                );
+   }
+
    for (var did in dashboards) {
       if (actDashboard < 0)
          actDashboard = did;
 
-      if (dashboards[did].title.indexOf('mdi:') != 0) {
-         $('#dashboardMenu').append($('<button></button>')
-                                    .addClass('rounded-border buttonDashboard')
-                                    .html(dashboards[did].title)
-                                    .click({"id" : did}, function(event) {
-                                       actDashboard = event.data.id;
-                                       console.log("Activate dashboard " + actDashboard);
-                                       initDashboard();
-                                    }));
-      }
-      else
-      {
-         var classes = dashboards[did].title.replace(':', ' ');;
+      var classes = dashboards[did].symbol != '' ? dashboards[did].symbol.replace(':', ' ') : '';
 
-         $('#dashboardMenu').append($('<button></button>')
-                                    .addClass('rounded-border buttonDashboard')
-                                    .addClass(classes)
-                                    .click({"id" : did}, function(event) {
-                                       actDashboard = event.data.id;
-                                       console.log("Activate dashboard " + actDashboard);
+      $('#dashboardMenu').append($('<button></button>')
+                                 .addClass('rounded-border buttonDashboard')
+                                 .addClass(classes)
+                                 .html(dashboards[did].title)
+                                 .click({"id" : did}, function(event) {
+                                    actDashboard = event.data.id;
+                                    console.log("Activate dashboard " + actDashboard);
                                     initDashboard();
-                                    }));
-      }
+                                 }));
 
       if (setupMode)
          $('#dashboardMenu').append($('<button></button>')
                                     .addClass('rounded-border buttonDashboardTool')
-                                    .addClass('mdi mdi-draw-pen')
+                                    .addClass('mdi mdi-lead-pencil')  //  mdi-draw-pen
                                     .click({"id" : did}, function(event) { dashboardSetup(event.data.id); })
                                    );
    }
@@ -85,7 +82,7 @@ function initDashboard(update = false)
                          .addClass('rounded-border input')
                          .css('margin', '15px,15px,15px,0px')
                          .attr('id', 'newDashboard')
-                         .attr('title', 'neues dashboard')
+                         .attr('title', 'Neues Dashboard')
                         )
                  .append($('<button></button>')
                          .addClass('rounded-border buttonDashboardTool')
@@ -573,11 +570,6 @@ function updateWidget(sensor, refresh, widget)
    }
 }
 
-function toKey(type, address)
-{
-   return type + ":0x" + address.toString(16).padStart(2, '0');
-}
-
 function addWidget()
 {
    // console.log("add widget ..");
@@ -789,7 +781,21 @@ function dashboardSetup(dashboardId)
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'dashTitle')
                                           .val(dashboards[dashboardId].title)
-                                         ))));
+                                         ))
+                          .append($('<br></br>'))
+                          .append($('<span></span>')
+                                  .css('width', '25%')
+                                  .css('text-align', 'end')
+                                  .css('align-self', 'center')
+                                  .css('margin-right', '10px')
+                                  .html('Symbol'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('id', 'dashSymbol')
+                                          .val(dashboards[dashboardId].symbol)
+                                         ))
+                         ));
 
    $(form).dialog({
       modal: true,
@@ -811,11 +817,13 @@ function dashboardSetup(dashboardId)
             $(this).dialog('close');
          },
          'Ok': function () {
-            if (dashboards[dashboardId].title != $("#dashTitle").val()) {
+            if (dashboards[dashboardId].title != $("#dashTitle").val() || dashboards[dashboardId].symbol != $("#dashSymbol").val()) {
                console.log("change title from: " + dashboards[dashboardId].title + " to " + $("#dashTitle").val());
                dashboards[dashboardId].title = $("#dashTitle").val();
+               dashboards[dashboardId].symbol = $("#dashSymbol").val();
 
-               socket.send({ "event" : "storedashboards", "object" : { [dashboardId] : { 'title' : dashboards[dashboardId].title } } });
+               socket.send({ "event" : "storedashboards", "object" : { [dashboardId] : { 'title' : dashboards[dashboardId].title,
+                                                                                         'symbol' : dashboards[dashboardId].symbol } } });
                socket.send({ "event" : "forcerefresh", "object" : {} });
             }
             $(this).dialog('close');

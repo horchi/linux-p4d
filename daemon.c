@@ -1081,38 +1081,12 @@ int Daemon::initDb()
 
    status += selectScriptByPath->prepare();
 
-
-   // ------------------
-   // select dashboards
-   //  join dashboardWidgets
-   /*
-   selectDashboards = new cDbStatement(tableDashboards);
-
-   selectDashboards->build("select ");
-   selectDashboards->setBindPrefix("d.");
-   selectDashboards->bind("TITLE", cDBS::bndOut);
-   selectDashboards->setBindPrefix("w.");
-   selectDashboards->bind(tableDashboardWidgets, "ADDRESS", cDBS::bndOut, ", ");
-   selectDashboards->bind(tableDashboardWidgets, "TYPE", cDBS::bndOut, ", ");
-   selectDashboards->bind(tableDashboardWidgets, "WIDGETOPTS", cDBS::bndOut, ", ");
-   selectDashboards->clrBindPrefix();
-   selectDashboards->build(" from %s d, %s w where",
-                              tableDashboards->TableName(),
-                              tableDashboardWidgets->TableName());
-   selectDashboards->build(" w.%s = d.%s",
-                              tableDashboardWidgets->getField("DASHBOARDID")->getDbName(),
-                              tableDashboards->getField("ID")->getDbName());
-
-   status += selectDashboards->prepare();
-   */
-
    // ------------------
 
    selectDashboards = new cDbStatement(tableDashboards);
 
    selectDashboards->build("select ");
-   selectDashboards->bind("ID", cDBS::bndOut);
-   selectDashboards->bind("TITLE", cDBS::bndOut, ", ");
+   selectDashboards->bindAllOut();
    selectDashboards->build(" from %s", tableDashboards->TableName());
 
    status += selectDashboards->prepare();

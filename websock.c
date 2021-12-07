@@ -42,7 +42,8 @@ cWebSock::cWebSock(cWebInterface* aProcess, const char* aHttpPath)
 cWebSock::~cWebSock()
 {
    exit();
-
+   free(certFile);
+   free(certKeyFile);
    free(httpPath);
 }
 
@@ -82,9 +83,14 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
    mount.origin = httpPath;
    mount.mountpoint_len = 1;
    mount.cache_max_age = true ? 86400 : 604800;
-   mount.cache_reusable = 1;
+   mount.cache_reusable = 1;   // 0 => no-store
    mount.cache_revalidate = true ? 1 : 0;
    mount.cache_intermediaries = 1;
+
+// #if defined (LWS_LIBRARY_VERSION_MAJOR) && ((LWS_LIBRARY_VERSION_MAJOR > 4) || (LWS_LIBRARY_VERSION_MINOR > 3))
+#ifdef LWS_CACHE_PATCH
+   mount.cache_no = 1;
+#endif
    mount.origin_protocol = LWSMPRO_FILE;
    mount.basic_auth_login_file = nullptr;
    mounts[0] = mount;
@@ -92,6 +98,10 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
    // setup websocket context info
 
    memset(&info, 0, sizeof(info));
+   info.options = 0;
+   info.mounts = mounts;
+   info.gid = -1;
+   info.uid = -1;
    info.port = port;
    info.protocols = protocols;
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR < 4)
@@ -102,8 +112,8 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 
    if (ssl)
    {
-      char* certFile {nullptr};
-      char* certKeyFile {nullptr};
+      free(certFile);
+      free(certKeyFile);
       asprintf(&certFile, "%s/" TARGET ".cert", confDir);
       asprintf(&certKeyFile, "%s/" TARGET ".key", confDir);
       tell(eloAlways, "Starting SSL mode with '%s' / '%s'", certFile, certKeyFile);
@@ -111,9 +121,6 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
       info.ssl_cert_filepath = certFile;
       info.ssl_private_key_filepath = certKeyFile;
       info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT; // | LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE;
-
-      free(certFile);
-      free(certKeyFile);
    }
 
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
@@ -123,11 +130,6 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 #else
    info.ws_ping_pong_interval = timeout;
 #endif
-
-   info.gid = -1;
-   info.uid = -1;
-   info.options = 0;
-   info.mounts = mounts;
 
    // create libwebsocket context representing this server
 
@@ -140,7 +142,7 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
    }
 
    tell(0, "WebSocket Listener at port (%d) established", port);
-   tell(1, "using libwebsocket version '%s'", lws_get_library_version());
+   tell(1, "Using libwebsocket version '%s'", lws_get_library_version());
 
    threadCtl.webSock = this;
    threadCtl.timeout = timeout;

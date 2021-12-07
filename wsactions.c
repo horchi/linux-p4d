@@ -920,6 +920,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
    {
       long dashboardId = atol(dashboardIdStr);
       const char* dashboardTitle = getStringFromJson(jObj, "title", "<new>");
+      const char* dashboardSymbol = getStringFromJson(jObj, "symbol", "");
       const char* action = getStringFromJson(jObj, "action", "store");
 
       if (strcmp(action, "delete") == 0)
@@ -935,6 +936,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
       {
          tableDashboards->clear();
          tableDashboards->setValue("TITLE", dashboardTitle);
+         tableDashboards->setValue("SYMBOL", dashboardSymbol);
          tableDashboards->store();
          tell(eloAlways, "Created new dashboard '%ld/%s'!", dashboardId, dashboardTitle);
          dashboardId = tableDashboards->getLastInsertId();
@@ -950,6 +952,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
       }
 
       tableDashboards->setValue("TITLE", dashboardTitle);
+      tableDashboards->setValue("SYMBOL", dashboardSymbol);
       tableDashboards->store();
       tableDashboards->reset();
 
@@ -1410,6 +1413,7 @@ int Daemon::dashboards2Json(json_t* obj)
       asprintf(&tmp, "%ld", tableDashboards->getIntValue("ID"));
       json_object_set_new(obj, tmp, oDashboard);
       json_object_set_new(oDashboard, "title", json_string(tableDashboards->getStrValue("TITLE")));
+      json_object_set_new(oDashboard, "symbol", json_string(tableDashboards->getStrValue("SYMBOL")));
       free(tmp);
 
       json_t* oWidgets = json_object();

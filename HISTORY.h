@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.8"
-#define VERSION_DATE "05.12.2021"
+#define _VERSION     "0.8.9"
+#define VERSION_DATE "07.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2021-12-07:  version 0.8.9
+  - bugfix: fixed ssl support
+  - change: Improved chart widget
+  - change: Support text and symbol for dashboard title
 
 2021-12-05:  version 0.8.8
   - change: Multi dashboard configuration
