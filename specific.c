@@ -2785,39 +2785,28 @@ int P4d::initValueFacts(bool truncate)
    // add value definitions for special data
 
    addValueFact(udState, "UD", 1, "Status", "zst", wtSymbol, "Heizungsstatus");
-
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-
-   if (!tableValueFacts->find())
-   {
-      tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->store();
-   }
+   tableValueFacts->find();
+   tableValueFacts->setValue("STATE", "A");
+   tableValueFacts->store();
 
    addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", wtText, "Betriebsmodus");
-
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-
-   if (!tableValueFacts->find())
-   {
-      tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->store();
-   }
+   tableValueFacts->find();
+   tableValueFacts->setValue("STATE", "A");
+   tableValueFacts->store();
 
    addValueFact(udTime, "UD", 1, "Uhrzeit", "T", wtText, "Datum Uhrzeit der Heizung");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
-
-   if (!tableValueFacts->find())
-   {
-      tableValueFacts->setValue("STATE", "A");
-      tableValueFacts->store();
-   }
+   tableValueFacts->find();
+   tableValueFacts->setValue("STATE", "A");
+   tableValueFacts->store();
 
    return success;
 }
