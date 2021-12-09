@@ -74,6 +74,7 @@ const char* cWebService::events[] =
    "updatetimeranges",
    "pellets",
    "pelletsadd",
+   "imageconfig",
 
    0
 };
@@ -274,12 +275,12 @@ int Daemon::pushDataUpdate(const char* event, long client)
 int Daemon::init()
 {
    int status {success};
-   char* dictPath {nullptr};
 
    initLocale();
 
    // initialize the dictionary
 
+   char* dictPath {nullptr};
    asprintf(&dictPath, "%s/database.dat", confDir);
 
    if (dbDict.in(dictPath) != success)

@@ -777,6 +777,28 @@ int removeFile(const char* filename)
 }
 
 //***************************************************************************
+// Check Dir
+//***************************************************************************
+
+int chkDir(const char* path)
+{
+   struct stat fs;
+
+   if (stat(path, &fs) != 0 || !S_ISDIR(fs.st_mode))
+   {
+      tell(0, "Creating directory '%s'", path);
+
+      if (mkdir(path, ACCESSPERMS) == -1)
+      {
+         tell(0, "Can't create directory '%s'", strerror(errno));
+         return fail;
+      }
+   }
+
+   return success;
+}
+
+//***************************************************************************
 // Load From File
 //***************************************************************************
 
@@ -831,6 +853,24 @@ int loadFromFile(const char* infile, MemoryStruct* data)
       tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
       return fail;
    }
+
+   return success;
+}
+
+//***************************************************************************
+// Store To File
+//***************************************************************************
+
+int storeToFile(const char* filename, const char* data, int size)
+{
+   FILE* fout;
+
+   if (!(fout = fopen(filename, "w+")))
+      return fail;
+
+   size = size > 0 ? size : strlen(data);
+   fwrite(data, sizeof(char), size, fout);
+   fclose(fout);
 
    return success;
 }

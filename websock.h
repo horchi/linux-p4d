@@ -65,6 +65,7 @@ class cWebService
          evUpdateTimeRanges,
          evPellets,
          evPelletsAdd,
+         evImageConfig,
 
          evCount
       };

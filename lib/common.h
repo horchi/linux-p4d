@@ -340,8 +340,10 @@ int isEmpty(const char* str);
 const char* notNull(const char* str, const char* def = "<null>");
 int isZero(const char* str);
 int removeFile(const char* filename);
+int chkDir(const char* path);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
+int storeToFile(const char* filename, const char* data, int size = 0);
 
 struct FsStat
 {

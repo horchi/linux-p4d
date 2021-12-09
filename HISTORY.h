@@ -1,11 +1,11 @@
 /*
  * -----------------------------------
- * p4 Daemon / p4d -  Revision History
+ * p4 Daemon / p4d - Revision History
  * -----------------------------------
  *
  */
 
-#define _VERSION     "0.8.10"
+#define _VERSION     "0.8.11"
 #define VERSION_DATE "09.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2021-12-09:  version 0.8.11
+  - added:  User image upload (setup -> images)
+  - added:  Sort of dashboard pages (drag&drop)
+  - change: Some minor webif improvements
 
 2021-12-09:  version 0.8.10
   - change: Webfrontend improvement

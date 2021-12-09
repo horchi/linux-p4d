@@ -75,7 +75,8 @@ int Daemon::dispatchClientRequest()
             case evSyslog:          status = performSyslog(oObject, client);         break;
             case evForceRefresh:    status = performForceRefresh(oObject, client);   break;
             case evChartbookmarks:  status = performChartbookmarks(client);          break;
-            case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client);     break;
+            case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
+            case evImageConfig:         status = performImageConfig(oObject, client);  break;
             default:
             {
                if (dispatchSpecialRequest(event,oObject, client) == ignore)
@@ -150,6 +151,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evPellets:             return rights & urControl;
       case evPelletsAdd:          return rights & urFullControl;
       case evErrors:              return rights & urView;
+      case evImageConfig:         return rights & urSettings;
 
       default: break;
    }
@@ -921,85 +923,112 @@ int Daemon::storeConfig(json_t* obj, long client)
 
 int Daemon::storeDashboards(json_t* obj, long client)
 {
-   const char* dashboardIdStr {nullptr};
-   json_t* jObj {nullptr};
+   const char* action = getStringFromJson(obj, "action", "");
 
-   json_object_foreach(obj, dashboardIdStr, jObj)
+   if (strcmp(action, "order") == 0)
    {
-      long dashboardId = atol(dashboardIdStr);
-      const char* dashboardTitle = getStringFromJson(jObj, "title", "<new>");
-      const char* dashboardSymbol = getStringFromJson(jObj, "symbol", "");
-      const char* action = getStringFromJson(jObj, "action", "store");
+      // {"action": "order", "order": ["16", "25", "14", "27"]},
 
-      if (strcmp(action, "delete") == 0)
+      size_t index {0};
+      json_t* jId {nullptr};
+      json_t* array = getObjectFromJson(obj, "order");
+
+      json_array_foreach(array, index, jId)
       {
-         tell(2, "Debug: Deleting dashboard '%ld'", dashboardId);
+         int dashboardId = json_integer_value(jId);
 
-         tableDashboards->deleteWhere("%s = %ld", tableDashboards->getField("ID")->getDbName(), dashboardId);
-         tableDashboardWidgets->deleteWhere("%s = %ld", tableDashboardWidgets->getField("DASHBOARDID")->getDbName(), dashboardId);
-         return done;
-      }
-
-      if (dashboardId == -1)
-      {
          tableDashboards->clear();
+         tableDashboards->setValue("ID", dashboardId);
+
+         if (tableDashboards->find())
+         {
+            tableDashboards->setValue("ORDER", (long)index);
+            tableDashboards->store();
+         }
+      }
+   }
+   else
+   {
+      const char* dashboardIdStr {nullptr};
+      json_t* jObj {nullptr};
+
+      json_object_foreach(obj, dashboardIdStr, jObj)
+      {
+         long dashboardId = atol(dashboardIdStr);
+         const char* dashboardTitle = getStringFromJson(jObj, "title", "<new>");
+         const char* dashboardSymbol = getStringFromJson(jObj, "symbol", "");
+         const char* action = getStringFromJson(jObj, "action", "store");
+
+         if (strcmp(action, "delete") == 0)
+         {
+            tell(2, "Debug: Deleting dashboard '%ld'", dashboardId);
+
+            tableDashboards->deleteWhere("%s = %ld", tableDashboards->getField("ID")->getDbName(), dashboardId);
+            tableDashboardWidgets->deleteWhere("%s = %ld", tableDashboardWidgets->getField("DASHBOARDID")->getDbName(), dashboardId);
+            return done;
+         }
+
+         if (dashboardId == -1)
+         {
+            tableDashboards->clear();
+            tableDashboards->setValue("TITLE", dashboardTitle);
+            tableDashboards->setValue("SYMBOL", dashboardSymbol);
+            tableDashboards->store();
+            tell(eloAlways, "Created new dashboard '%ld/%s'!", dashboardId, dashboardTitle);
+            dashboardId = tableDashboards->getLastInsertId();
+         }
+
+         tableDashboards->clear();
+         tableDashboards->setValue("ID", dashboardId);
+
+         if (!tableDashboards->find())
+         {
+            tell(1, "Debug: Storing dashboard '%s' failed", dashboardTitle);
+            return fail;
+         }
+
          tableDashboards->setValue("TITLE", dashboardTitle);
          tableDashboards->setValue("SYMBOL", dashboardSymbol);
          tableDashboards->store();
-         tell(eloAlways, "Created new dashboard '%ld/%s'!", dashboardId, dashboardTitle);
-         dashboardId = tableDashboards->getLastInsertId();
-      }
+         tableDashboards->reset();
 
-      tableDashboards->clear();
-      tableDashboards->setValue("ID", dashboardId);
+         int ord {0};
+         const char* id {nullptr};
+         json_t* jData {nullptr};
+         json_t* jWidgets = getObjectFromJson(jObj, "widgets");
 
-      if (!tableDashboards->find())
-      {
-         tell(1, "Debug: Storing dashboard '%s' failed", dashboardTitle);
-         return fail;
-      }
-
-      tableDashboards->setValue("TITLE", dashboardTitle);
-      tableDashboards->setValue("SYMBOL", dashboardSymbol);
-      tableDashboards->store();
-      tableDashboards->reset();
-
-      int ord {0};
-      const char* id {nullptr};
-      json_t* jData {nullptr};
-      json_t* jWidgets = getObjectFromJson(jObj, "widgets");
-
-      if (jWidgets)
-      {
-         tell(1, "Debug: Storing widgets of dashboard '%s'", dashboardTitle);
-         tableDashboardWidgets->deleteWhere("%s = %ld", tableDashboardWidgets->getField("DASHBOARDID")->getDbName(), dashboardId);
-
-         json_object_foreach(jWidgets, id, jData)
+         if (jWidgets)
          {
-            auto tuple = split(id, ':');
-            char* opts = json_dumps(jData, JSON_REAL_PRECISION(4));
+            tell(1, "Debug: Storing widgets of dashboard '%s'", dashboardTitle);
+            tableDashboardWidgets->deleteWhere("%s = %ld", tableDashboardWidgets->getField("DASHBOARDID")->getDbName(), dashboardId);
 
-            tableDashboardWidgets->clear();
-            tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
-            tableDashboardWidgets->setValue("ORDER", ord++);
-            tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
-            tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
-
-            if (!opts)
+            json_object_foreach(jWidgets, id, jData)
             {
-               tableValueFacts->clear();
-               tableValueFacts->setValue("TYPE", tuple[0].c_str());
-               tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+               auto tuple = split(id, ':');
+               char* opts = json_dumps(jData, JSON_REAL_PRECISION(4));
 
-               if (tableValueFacts->find())
-                  asprintf(&opts, "%s", tableValueFacts->getStrValue("WIDGETOPT"));
+               tableDashboardWidgets->clear();
+               tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
+               tableDashboardWidgets->setValue("ORDER", ord++);
+               tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
+               tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+
+               if (!opts)
+               {
+                  tableValueFacts->clear();
+                  tableValueFacts->setValue("TYPE", tuple[0].c_str());
+                  tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+
+                  if (tableValueFacts->find())
+                     asprintf(&opts, "%s", tableValueFacts->getStrValue("WIDGETOPT"));
+               }
+
+               tableDashboardWidgets->setValue("WIDGETOPTS", opts);
+               tableDashboardWidgets->store();
+
+               tell(1, "Debug: dashboard widget '%s' with [%s]", id, opts);
+               free(opts);
             }
-
-            tableDashboardWidgets->setValue("WIDGETOPTS", opts);
-            tableDashboardWidgets->store();
-
-            tell(1, "Debug: dashboard widget '%s' with [%s]", id, opts);
-            free(opts);
          }
       }
    }
@@ -1148,6 +1177,56 @@ int Daemon::storeGroups(json_t* oObject, long client)
    performGroups(client);
 
    return replyResult(success, "Konfiguration gespeichert", client);
+}
+
+//***************************************************************************
+// Perform Image Config
+//***************************************************************************
+
+#include "lib/base64.h"
+
+int Daemon::performImageConfig(json_t* obj, long client)
+{
+   const char* action = getStringFromJson(obj, "action");
+
+   if (strcmp(action, "upload") == 0)
+   {
+      const char* name = getStringFromJson(obj, "name");
+      const char* data = getStringFromJson(obj, "data");
+      const char* p = strchr(data, ',');
+
+      if (p)
+      {
+         // "data:image/png;base64,/9j/4AAQSkZJRg........."
+
+         const char* mediaTpe = strchr(data, '/');
+         mediaTpe++;
+         char suffix[20];
+         sprintf(suffix, "%.*s", strchr(mediaTpe, ';') - mediaTpe, mediaTpe);
+
+         p++;
+
+         std::string out;
+         macaron::Base64::Decode(p, out);
+
+         char* tmp {nullptr};
+         asprintf(&tmp, "%s/img/user/%s.%s", httpPath, name, suffix);
+
+         if (out.size())
+         {
+            storeToFile(tmp, out.c_str(), out.size());
+            tell(0, "Stored image to '%s' with %d bytes", tmp, out.size());
+         }
+
+         free(tmp);
+      }
+
+      oJson = json_array();
+      images2Json(oJson);
+      pushOutMessage(oJson, "images", client);
+   }
+
+   return done;
 }
 
 //***************************************************************************

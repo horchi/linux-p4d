@@ -241,6 +241,12 @@ button:focus {
     cursor: pointer;
 }
 
+.tableImage
+{
+    width: 80%;
+    margin: 10%;
+}
+
 /* ----------------------- */
 /* Input */
 

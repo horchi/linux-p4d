@@ -323,6 +323,8 @@ function dispatchMessage(message)
    }
    else if (event == "images") {
       images = jMessage.object;
+      if (currentPage == 'images')
+         initImages();
       // console.log("images " + JSON.stringify(images, undefined, 4));
    }
    else if (event == "chartdata") {
@@ -400,7 +402,7 @@ function prepareMenu()
 
    // buttons below menu
 
-   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog") {
+   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog" || currentPage == "images") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div>";
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'setup\')">Allg. Konfiguration</button>';
@@ -408,6 +410,7 @@ function prepareMenu()
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'userdetails\')">User</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'alerts\')">Sensor Alerts</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'groups\')">Baugruppen</button>';
+         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'images\')">Images</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'syslog\')">Syslog</button>';
          html += "</div>";
       }
@@ -546,6 +549,8 @@ function mainMenuSel(what)
       initUser();
    else if (currentPage == "userdetails")
       event = "userdetails";
+   else if (currentPage == "images")
+      initImages();
    else if (currentPage == "syslog") {
       showProgressDialog();
       event = "syslog";

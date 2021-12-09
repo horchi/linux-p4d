@@ -153,21 +153,20 @@ aggregateInterval = 15
 ```
 
 Means that all samples older than 365 days will be aggregated to one sample per 15 Minutes.
-If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :o ?).
-Maybe i implement it later ;)
+If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :) ?).
 
 ## WEB interface:
 
 The default port of the WEB interface is 1111, The default username and password for the login is
 User: *p4*
-Pass: *p4-3200*
+Pass: *p4d*
 
 ### Fist steps to enable data logging:
 
 1. Log in to the web interface
 2. Goto Setup
-  - click 'Init Messwerte'
-3. Goto Setup -> Aufzeichnung
+  - click 'Init Sensors'
+3. Goto Setup -> IO Setup
   - Select the values you like to record and store your selection (click 'Speichern')
 4. Goto Setup
   - click 'Init Service Menü'
@@ -176,21 +175,12 @@ After this you can set up the schema configuration. The schema configuration is 
 Also deleting of chart bookmarks isn't supported on mobile devices.
 
 ### Setup and configure sending mails:
-The next steps are an example to setup the sending of mails. If another tool is preferred it can be used as well. The config is based on GMX. If you have another provider please search in the Internet for the required config.
+The next steps are an example to setup the sending of mails. If another tool is preferred it can be used as well.
 - Install required components
-  - `apt-get install ssmtp mailutils`
+  - `apt-get install bsd-mailx msmtp msmtp-mta`
 - The mailscript `p4d-mail.sh` is copied during the `make install` to the folder `/usr/local/bin`. This script is used in our case to send mails
-- Change revaliases file edit file /etc/ssmtp/revaliases and add line (gmx is used as an example)
-  - `root:MyMailAddress@gmx.de:mail.gmx.net:25`
-- Change `ssmtp.conf` file. Edit file `/etc/ssmtp/ssmtp.conf` (gmx is used as an example)
-```
-root=MyMailAddress@gmx.de
-mailhub=mail.gmx.net
-hostname=gmx.net
-UseSTARTTLS=YES
-AuthUser=MyMailAddress@gmx.de
-AuthPass=MyPassword
-```
+- Setup your mail account in `/etc/msmtprc`
+
 - Start the WEBIF and Login, go to the Setup page
 - Configure the "Mail Benachrichtigungen" options (status and Fehler Mail Empfänger)
 - If no Status options are set you will get a mail for each status change
@@ -264,29 +254,17 @@ Backup the data of the p4 database including all recorded values:
 p4d-backup
 ```
 
-This will create the following files:
+This will create a dump file for each table like:
 
 ```
-config-dump.sql.gz
-errors-dump.sql.gz
-jobs-dump.sql.gz
-menu-dump.sql.gz
-samples-dump.sql.gz
-schemaconf-dump.sql.gz
-sensoralert-dump.sql.gz
-smartconfig-dump.sql.gz
-valuefacts-dump.sql.gz
-timeranges-dump.sql.gz
-hmsysvars-dump.sql.gz
-scripts-dump.sql.gz
+<tablename>-dump.sql.gz
 ```
 
 To import the backup:
 ```
 gunzip NAME-dump.sql.gz
-mysql -u p4 -pp4 -Dp4 <  NAME-dump.sql
+mysql -u p4 -pp4 -Dp4 < *-dump.sql
 ```
-replace NAME with the name of the dump
 
 #### ATTENTION:
 The import deletes at first all the data and then imports the dumped data. To append the dumped data you have to modify the SQL statements inside the dump files manually.
@@ -302,17 +280,8 @@ use mysql
 SELECT host, user FROM user;
 ```
 
-## Alternative install by script of Philipp:
-
-```
-cd ..
-cd p4d
-wget http://hungerphilipp.de/files/p4d/install.sh
-chmod +x install.sh
-./install.sh" or "sudo ./install.sh/
-```
-
 ## Problems - anything is not working
- - check the syslog about errors of the p4d
+ - check the syslog an p4d.log about errors of the p4d
  - for the WEBIF check also the browser console for errors
+ - check the wiki at github
 If you post any problem at at git-hub or the forum please post the errors also!

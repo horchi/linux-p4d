@@ -53,8 +53,15 @@ function initDashboard(update = false)
          classes += ' buttonDashboardActive';
 
       $('#dashboardMenu').append($('<button></button>')
-                                 .addClass('rounded-border buttonDashboard')
+                                 .addClass('rounded-border buttonDashboard widgetDropZone')
                                  .addClass(classes)
+                                 .attr('id', did)
+                                 .attr('draggable', setupMode)
+                                 .data('droppoint', setupMode)
+                                 .on('dragstart', function(event) {dragDashboard(event)})
+                                 .on('dragover', function(event) {dragOverDashboard(event)})
+                                 .on('dragleave', function(event) {dragLeaveDashboard(event)})
+                                 .on('drop', function(event) {dropDashboard(event)})
                                  .html(dashboards[did].title)
                                  .click({"id" : did}, function(event) {
                                     actDashboard = event.data.id;
@@ -710,6 +717,60 @@ function svg_circle_arc_path(x, y, radius, start_angle, end_angle)
 // ---------------------------------
 // drag&drop stuff ...
 
+
+function dragDashboard(ev)
+{
+   // console.log("drag: " + ev.target.getAttribute('id'));
+   ev.originalEvent.dataTransfer.setData("source", ev.target.getAttribute('id'));
+}
+
+function dragOverDashboard(ev)
+{
+   event.preventDefault();
+   var target = ev.target;
+   target.setAttribute('drop-active', true);
+}
+
+function dragLeaveDashboard(ev)
+{
+   event.preventDefault();
+   var target = ev.target;
+   target.removeAttribute('drop-active', true);
+}
+
+function dropDashboard(ev)
+{
+   ev.preventDefault();
+   var target = ev.target;
+   target.removeAttribute('drop-active', true);
+   // console.log("drop: " + ev.target.getAttribute('id'));
+
+   var source = document.getElementById(ev.originalEvent.dataTransfer.getData("source"));
+   // console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
+   target.after(source);
+
+   // -> The order for objects follows a certain set of rules since ES2015,
+   //    but it does not (always) follow the insertion order. Simply,
+   //    the iteration order is a combination of the insertion order for strings keys,
+   //    and ascending order for number keys
+   // terefore we use a array instead
+
+   var jOrder = [];
+   var i = 0;
+
+   $('#dashboardMenu > button').each(function () {
+      var did = $(this).attr('id');
+      console.log("add: " + did);
+      jOrder[i++] = parseInt(did);
+   });
+
+   // console.log("store:  " + JSON.stringify( { 'action' : 'order', 'order' : jOrder }, undefined, 4));
+   socket.send({ "event" : "storedashboards", "object" : { 'action' : 'order', 'order' : jOrder } });
+   socket.send({ "event" : "forcerefresh", "object" : {} });
+}
+
+// widgets
+
 function dragWidget(ev)
 {
    console.log("drag: " + ev.target.getAttribute('id'));
@@ -764,7 +825,7 @@ function dropWidget(ev)
       }
    });
 
-   console.log("dashboards " + JSON.stringify(json));
+   // console.log("dashboards " + JSON.stringify(json));
    socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
    socket.send({ "event" : "forcerefresh", "object" : {} });
 }

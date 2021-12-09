@@ -297,6 +297,7 @@ class Daemon : public FroelingService, public cWebInterface
       int storeGroups(json_t* array, long client);
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);
+      int performImageConfig(json_t* obj, long client);
       virtual int performReset(json_t* obj, long client);
       virtual int performAlertTestMail(int id, long client) { return done; }
 
