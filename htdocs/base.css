@@ -65,6 +65,15 @@ button:focus {
     border-width: 1px;
 }
 
+.border-underline
+{
+    border-style: none;
+    border-radius: 0;
+    border-color: white;
+    border-width: 1px;
+    border-bottom-style: solid;
+}
+
 .hidden
 {
     width: 0px !important;
@@ -182,7 +191,17 @@ button:focus {
 
 .buttonDashboard:hover
 {
-    background-color: darkslategray;
+/*    border-bottom-color: lightgray;
+    border-bottom-style: solid;
+    border-bottom-width: 2px; */
+}
+
+.buttonDashboardActive
+{
+    border-radius: 0;
+    border-bottom-color: white;
+    border-bottom-style: solid;
+    border-bottom-width: 2px;
 }
 
 .buttonDashboardTool
@@ -228,48 +247,54 @@ button:focus {
 .input
 {
     background-color: var(--edit);
+    color: black;
+/*    background-color: transparent;
+    color: white; */
+
     margin-top: 2px;
     padding: 3px;
-    color: black;
 }
 
 .inputTime
 {
     background-color: var(--edit);
+    color: black;
+
     margin-top: 2px;
     padding: 3px;
     width: 45px;
-    color: black;
 }
 
 .inputNum
 {
     background-color: var(--edit);
+    color: black;
+
     margin-top: 2px;
     padding: 3px;
     width: 75px;
     height: 21px;
-    color: black;
 }
 
 .inputFloat
 {
     background-color: var(--edit);
+    color: black;
+
     margin-top: 2px;
     padding: 3px;
     width: 75px;
     height: 21px;
-    color: black;
 }
 
 .inputSetting
 {
     background-color: var(--edit);
+    color: black;
     margin-top: 2px;
     padding: 3px;
     margin: 1px;
     width: 100%;
-    color: black;
 }
 
 span > input
@@ -991,6 +1016,20 @@ table.tableMultiCol tr:nth-child(odd)
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
+.widgetDropZone
+{
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.widgetDropZone[drop-active=true]
+{
+    border-color: orange;
+    border-style: solid;
+    border-width: 1px;
+}
+
 .widgetPlain
 {
     text-align: center;
@@ -1045,7 +1084,7 @@ table.tableMultiCol tr:nth-child(odd)
     text-align: end;
     overflow: hidden;
     background-color: Transparent;
-    margin-top: 5px;
+    margin-top: 0px;
     margin-right: 4px;
     color: var(--buttonFont);
 }
@@ -1058,14 +1097,14 @@ table.tableMultiCol tr:nth-child(odd)
     padding-left: 12px;
     overflow: hidden;
     background-color: Transparent;
-    margin-top: 15px;
+    margin-top: 10px;
     color: red;
 }
 
 .chart-canvas-container
 {
     grid-area: chart;
-/*    position: relative;*/
+    /* position: relative;*/
     width: inherit;
 }
 
@@ -1076,6 +1115,8 @@ table.tableMultiCol tr:nth-child(odd)
 .widget-title
 {
     grid-area: title;
+    display: flex;
+    justify-self: center;
     text-align: center;
     align-self: center;
     font-size: 1.4em;
@@ -1083,7 +1124,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: transparent;
     cursor: pointer;
     border: none;
-   /* width: inherit;*/
+    /* width: inherit;*/
     color: var(--buttonFont);
     text-overflow: ellipsis;
 }
@@ -1130,7 +1171,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: Transparent;
     border: none;
     width: inherit;
-/*    overflow: hidden;*/
+    /* overflow: hidden;*/
     outline: none;
     cursor: pointer;
 }

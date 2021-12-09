@@ -476,7 +476,7 @@ function menuBurger()
    if (haveToken) {
       form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'user\')">[' + localStorage.getItem(storagePrefix + 'User') + ']</button>';
       if (currentPage == 'dashboard')
-         form += '  <br/><div><button style="width:120px;" class="rounded-border button1" onclick="setupDashboard()">' + (setupMode ? 'Stop Setup' : 'Setup Dashboard') + '</button></div>';
+         form += '  <br/><div><button style="width:120px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupDashboard()">' + (setupMode ? ' Stop Setup' : ' Setup Dashboard') + '</button></div>';
    }
    else
       form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'login\')">Login</button>';

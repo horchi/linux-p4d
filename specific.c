@@ -23,20 +23,6 @@ volatile int showerSwitch {0};
 
 std::list<Daemon::ConfigItemDef> P4d::configuration
 {
-   // web
-
-   { "webUrl",                    ctString,  "", false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
-   { "webSSL",                    ctBool,    "", false, "2 WEB Interface", "Use SSL for WebInterface", "" },
-   { "haUrl",                     ctString,  "", false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
-
-   { "heatingType",               ctChoice,  "", false, "2 WEB Interface", "Typ der Heizung", "" },
-   { "style",                     ctChoice,  "", false, "2 WEB Interface", "Farbschema", "" },
-   { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
-   { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
-
-   { "dashboards",                ctString,  "{\"dashboard\":{\"UD:0x03\":true,\"UD:0x01\":true,\"VA:0x76\":true}}",     true, "2 WEB Interface", "Dashboard", "" },
-   { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
-   { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
 
    // p4d
 
@@ -57,22 +43,35 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "consumptionPerHour",        ctNum,     "4",    false, "1 P4 Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
 
+   // web
+
+   { "webUrl",                    ctString,  "", false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
+   { "webSSL",                    ctBool,    "", false, "2 WEB Interface", "Use SSL for WebInterface", "" },
+   { "haUrl",                     ctString,  "", false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
+
+   { "heatingType",               ctChoice,  "", false, "2 WEB Interface", "Typ der Heizung", "" },
+   { "style",                     ctChoice,  "", false, "2 WEB Interface", "Farbschema", "" },
+   { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
+   { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
+
+   { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
+   { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
+
    // MQTT interface
 
-   { "mqttHassUrl",               ctString,  "",  false, "4 MQTT Interface", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttHassUser",              ctString,  "",  false, "4 MQTT Interface", "MQTT HA User", "" },
-   { "mqttHassPassword",          ctString,  "",  false, "4 MQTT Interface", "MQTT HA Password", "" },
-   { "mqttDataTopic",             ctString,  "",  false, "4 MQTT Interface", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttHaveConfigTopic",       ctBool,    "1", false, "4 MQTT Interface", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
+   { "mqttHassUrl",               ctString,  "",  false, "3 MQTT Interface", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttHassUser",              ctString,  "",  false, "3 MQTT Interface", "MQTT HA User", "" },
+   { "mqttHassPassword",          ctString,  "",  false, "3 MQTT Interface", "MQTT HA Password", "" },
+   { "mqttDataTopic",             ctString,  "",  false, "3 MQTT Interface", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
+   { "mqttHaveConfigTopic",       ctBool,    "1", false, "3 MQTT Interface", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 
-   { "mail",                      ctBool,    "0", false, "3 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
-   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "3 Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  "", false, "3 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctMultiSelect, "", false, "3 Mail", "  für folgende Status", "" },
-
-   { "errorMailTo",               ctString,  "", false, "3 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "mail",                      ctBool,    "0",                    false, "4 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
+   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "4 Mail", "p4d sendet Mails über das Skript", "" },
+   { "stateMailTo",               ctString,  "",                     false, "4 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailStates",           ctMultiSelect, "",                 false, "4 Mail", "  für folgende Status", "" },
+   { "errorMailTo",               ctString,  "",                     false, "4 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
 };
 
 //***************************************************************************

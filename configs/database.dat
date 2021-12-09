@@ -107,6 +107,7 @@ Table dashboards
 
    TITLE                ""  title                Ascii      100 Data,
    SYMBOL               ""  symbol               Ascii      100 Data,
+   ORDER                ""  ord                  Int         10 Data,
 }
 
 // ----------------------------------------------------------------

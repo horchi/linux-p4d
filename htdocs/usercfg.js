@@ -56,10 +56,10 @@ function initUserConfig(users)
       }
       html += "</td>";
       html += "<td>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
-      html += "<button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
+      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
+      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
+      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
+      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
       html += "</td>";
 
       var elem = document.createElement("tr");

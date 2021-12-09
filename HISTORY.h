@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.9"
-#define VERSION_DATE "07.12.2021"
+#define _VERSION     "0.8.10"
+#define VERSION_DATE "09.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-09:  version 0.8.10
+  - change: Webfrontend improvement
 
 2021-12-07:  version 0.8.9
   - bugfix: fixed ssl support
@@ -28,7 +31,7 @@
   - change: Fixed list view
 
 2021-12-05:  version 0.8.7
-  - change: Minor improvementds and fixes
+  - change: Minor improvement and fixes
 
 2021-12-04:  version 0.8.6
   - bugfix: Fixed crash

@@ -87,8 +87,7 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
    mount.cache_revalidate = true ? 1 : 0;
    mount.cache_intermediaries = 1;
 
-// #if defined (LWS_LIBRARY_VERSION_MAJOR) && ((LWS_LIBRARY_VERSION_MAJOR > 4) || (LWS_LIBRARY_VERSION_MINOR > 3))
-#ifdef LWS_CACHE_PATCH
+#ifdef LWS_FEATURE_MOUNT_NO_CACHE
    mount.cache_no = 1;
 #endif
    mount.origin_protocol = LWSMPRO_FILE;

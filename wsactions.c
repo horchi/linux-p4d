@@ -707,6 +707,8 @@ int Daemon::performChartbookmarks(long client)
 
 int Daemon::storeUserConfig(json_t* oObject, long client)
 {
+   int count {0};
+
    if (client == 0)
       return done;
 
@@ -722,7 +724,7 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
    if (strcmp(action, "add") == 0)
    {
       if (exists)
-         tell(0, "User alredy exists, ignoring 'add' request");
+         replyResult(fail, "User alredy exists, ignoring 'add' request", client);
       else
       {
          char* token {nullptr};
@@ -732,28 +734,31 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
          tableUsers->setValue("TOKEN", token);
          tableUsers->setValue("RIGHTS", urView);
          tableUsers->store();
+         count++;
          free(token);
       }
    }
    else if (strcmp(action, "store") == 0)
    {
       if (!exists)
-         tell(0, "User not exists, ignoring 'store' request");
+         replyResult(fail, "User not exists, ignoring 'store' request", client);
       else
       {
          tell(0, "Store settings for user '%s'", user);
          tableUsers->setValue("RIGHTS", rights);
          tableUsers->store();
+         count++;
       }
    }
    else if (strcmp(action, "del") == 0)
    {
       if (!exists)
-         tell(0, "User not exists, ignoring 'del' request");
+         replyResult(fail, "User not exists, ignoring 'del' request", client);
       else
       {
          tell(0, "Delete user '%s'", user);
          tableUsers->deleteWhere(" user = '%s'", user);
+         count++;
       }
    }
    else if (strcmp(action, "resetpwd") == 0)
@@ -766,12 +771,13 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
          tableUsers->setValue("PASSWD", passwd);
          tableUsers->store();
          replyResult(success, "Passwort gespeichert", client);
+         count++;
       }
    }
    else if (strcmp(action, "resettoken") == 0)
    {
       if (!exists)
-         tell(0, "User not exists, ignoring 'resettoken' request");
+         replyResult(fail, "User not exists, ignoring 'resettoken' request", client);
       else
       {
          char* token {nullptr};
@@ -779,9 +785,13 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
          tell(0, "Reset token of user '%s' to '%s'", user, token);
          tableUsers->setValue("TOKEN", token);
          tableUsers->store();
+         count++;
          free(token);
       }
    }
+
+   if (count)
+      replyResult(fail, "Gespeichert", client);
 
    tableUsers->reset();
 
@@ -913,8 +923,6 @@ int Daemon::storeDashboards(json_t* obj, long client)
 {
    const char* dashboardIdStr {nullptr};
    json_t* jObj {nullptr};
-
-   // {"dashboard":{"DO:0x00":true,"VA:0x00":true,"UD:0x01":true}}
 
    json_object_foreach(obj, dashboardIdStr, jObj)
    {

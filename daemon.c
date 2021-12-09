@@ -1087,7 +1087,7 @@ int Daemon::initDb()
 
    selectDashboards->build("select ");
    selectDashboards->bindAllOut();
-   selectDashboards->build(" from %s", tableDashboards->TableName());
+   selectDashboards->build(" from %s order by ord", tableDashboards->TableName());
 
    status += selectDashboards->prepare();
 

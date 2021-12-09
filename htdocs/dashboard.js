@@ -32,6 +32,8 @@ function initDashboard(update = false)
       $("#container").height($(window).height() - $("#menu").height() - 8);
    };
 
+   // setupMode = true;  // to debug
+
    if (setupMode) {
       $('#dashboardMenu').append($('<button></button>')
                                  .addClass('rounded-border buttonDashboardTool')
@@ -47,6 +49,9 @@ function initDashboard(update = false)
 
       var classes = dashboards[did].symbol != '' ? dashboards[did].symbol.replace(':', ' ') : '';
 
+      if (dashboards[actDashboard] == dashboards[did])
+         classes += ' buttonDashboardActive';
+
       $('#dashboardMenu').append($('<button></button>')
                                  .addClass('rounded-border buttonDashboard')
                                  .addClass(classes)
@@ -57,7 +62,7 @@ function initDashboard(update = false)
                                     initDashboard();
                                  }));
 
-      if (setupMode)
+      if (setupMode && did == actDashboard)
          $('#dashboardMenu').append($('<button></button>')
                                     .addClass('rounded-border buttonDashboardTool')
                                     .addClass('mdi mdi-lead-pencil')  //  mdi-draw-pen
@@ -92,7 +97,7 @@ function initDashboard(update = false)
                         ));
 
       var factAdd = {
-         "address": 998,
+        "address": 998,
          "type": "SP",
          "state": true,
          "name": "add",
@@ -170,7 +175,8 @@ function initWidget(sensor, widget, fact)
       elem.setAttribute('draggable', true);
       elem.dataset.droppoint = true;
       elem.addEventListener('dragstart', function(event) {dragWidget(event)}, false);
-      elem.addEventListener('dragover', function(event) {event.preventDefault()}, false);
+      elem.addEventListener('dragover', function(event) {dragOver(event)}, false);
+      elem.addEventListener('dragleave', function(event) {dragLeave(event)}, false);
       elem.addEventListener('drop', function(event) {dropWidget(event)}, false);
 
       editButton += '  <button class="rounded-border widget-edit mdi mdi-lead-pencil" onclick="widgetSetup(\'' + key + '\')"></button>';
@@ -196,13 +202,13 @@ function initWidget(sensor, widget, fact)
          html += "   <div id=\"progressBar" + fact.type + fact.address + "\" class=\"progress-bar\" style=\"visible\"></div>";
          html += "</div>";
 
-         elem.className = "widget rounded-border";
+         elem.className = "widget rounded-border widgetDropZone";
          elem.innerHTML = html;
          document.getElementById("progress" + fact.type + fact.address).style.visibility = "hidden";
          break;
 
       case 1:          // Chart
-         elem.className = "widgetChart rounded-border";
+         elem.className = "widgetChart rounded-border widgetDropZone";
          var eTitle = document.createElement("div");
          eTitle.className = "widget-title";
          eTitle.innerHTML = title + editButton;
@@ -243,7 +249,7 @@ function initWidget(sensor, widget, fact)
          html += "    <text id=\"sMax" + fact.type + fact.address + "\" class=\"scale-text\" text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"950\" y=\"550\"></text>\n";
          html += "  </svg>\n";
 
-         elem.className = "widgetGauge rounded-border participation";
+         elem.className = "widgetGauge rounded-border participation widgetDropZone";
          if (!setupMode)
             elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
          elem.innerHTML = html;
@@ -253,6 +259,7 @@ function initWidget(sensor, widget, fact)
       case 6:          // MeterLevel
          var radial = widget.widgettype == 5;
          elem.className = radial ? "widgetMeter rounded-border" : "widgetMeterLinear rounded-border";
+         elem.className += " widgetDropZone";
          var eTitle = document.createElement("div");
          eTitle.className = "widget-title";
          eTitle.innerHTML = title + editButton;
@@ -382,14 +389,14 @@ function initWidget(sensor, widget, fact)
       case 7:     // 7 (PlainText)
          var html = '<div class="widget-title">' + editButton + '</div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;"></div>';
-         elem.className = "widgetPlain rounded-border";
+         elem.className = "widgetPlain rounded-border widgetDropZone";
          elem.innerHTML = html;
          break;
 
       case 8:     // 8 (Choice)
          var html = '<div class="widget-title">' + title + editButton + '</div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
-         elem.className = "widget rounded-border";
+         elem.className = "widget rounded-border widgetDropZone";
          elem.style.cursor = 'pointer';
          elem.addEventListener('click', function(event) {
              socket.send({ "event": "toggleio", "object":
@@ -404,14 +411,14 @@ function initWidget(sensor, widget, fact)
          elem.innerHTML = '<div class="widget-title"></div>' +
                           '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">+</div>';
          elem.style.backgroundColor = "var(--light3)";
-         elem.className = "widgetPlain rounded-border";
+         elem.className = "widgetPlain rounded-border widgetDropZone";
          elem.addEventListener('click', function(event) {addWidget();}, false);
          break;
 
       case 999:     // 999 (Del Widget)
          elem.innerHTML = '<div class="widget-title"></div>' +
                           '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">&#128465;</div>';
-         elem.className = "widgetPlain rounded-border";
+         elem.className = "widgetPlain rounded-border widgetDropZone";
          elem.style.backgroundColor = "var(--light3)";
          elem.title = 'zum Löschen hier ablegen';
          elem.addEventListener('dragover', function(event) {event.preventDefault()}, false);
@@ -421,7 +428,7 @@ function initWidget(sensor, widget, fact)
       default:   // type 2(Text), 3(Value)
          var html = '<div class="widget-title">' + title + editButton + '</div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
-         elem.className = "widget rounded-border";
+         elem.className = "widget rounded-border widgetDropZone";
          if (!setupMode)
             elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
          elem.innerHTML = html;
@@ -588,7 +595,7 @@ function addWidget()
                           .append($('<span></span>')
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
-                                          .attr('id', 'widgetId')
+                                          .attr('id', 'widgetKey')
                                          )))
                  );
 
@@ -605,9 +612,9 @@ function addWidget()
             if (!valueFacts[key].state)   // use only active facts here
                continue;
             if (dashboards[actDashboard].widgets[key] == null)
-               $('#widgetId').append($('<option></option>')
-                                     .val(key)
-                                     .html(valueFacts[key].usrtitle ? valueFacts[key].usrtitle : valueFacts[key].title));
+               $('#widgetKey').append($('<option></option>')
+                                      .val(key)
+                                      .html(valueFacts[key].usrtitle ? valueFacts[key].usrtitle : valueFacts[key].title));
          }
       },
       buttons: {
@@ -625,10 +632,10 @@ function addWidget()
                }
             });
 
-            json[$("#widgetId").val()] = "";
+            json[$("#widgetKey").val()] = "";
 
             // console.log("storedashboards " + JSON.stringify(json, undefined, 4));
-            // console.log("storedashboards key " + $("#widgetId").val());
+            // console.log("storedashboards key " + $("#widgetKey").val());
 
             socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
             socket.send({ "event" : "forcerefresh", "object" : {} });
@@ -709,6 +716,30 @@ function dragWidget(ev)
    ev.dataTransfer.setData("source", ev.target.getAttribute('id'));
 }
 
+function dragOver(ev)
+{
+   event.preventDefault();
+   var target = ev.target;
+   while (target) {
+      if (target.dataset.droppoint)
+         break;
+      target = target.parentElement;
+   }
+   target.setAttribute('drop-active', true);
+}
+
+function dragLeave(ev)
+{
+   event.preventDefault();
+   var target = ev.target;
+   while (target) {
+      if (target.dataset.droppoint)
+         break;
+      target = target.parentElement;
+   }
+   target.removeAttribute('drop-active', true);
+}
+
 function dropWidget(ev)
 {
    ev.preventDefault();
@@ -718,6 +749,7 @@ function dropWidget(ev)
          break;
       target = target.parentElement;
    }
+   target.removeAttribute('drop-active', true);
 
    var source = document.getElementById(ev.dataTransfer.getData("source"));
    console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
@@ -781,8 +813,9 @@ function dashboardSetup(dashboardId)
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'dashTitle')
                                           .val(dashboards[dashboardId].title)
-                                         ))
-                          .append($('<br></br>'))
+                                         )))
+                  .append($('<div></div>')
+                          .css('display', 'flex')
                           .append($('<span></span>')
                                   .css('width', '25%')
                                   .css('text-align', 'end')
@@ -794,8 +827,8 @@ function dashboardSetup(dashboardId)
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'dashSymbol')
                                           .val(dashboards[dashboardId].symbol)
-                                         ))
-                         ));
+                                         )))
+                 );
 
    $(form).dialog({
       modal: true,
@@ -803,7 +836,7 @@ function dashboardSetup(dashboardId)
       closeOnEscape: true,
       hide: "fade",
       width: "auto",
-      title: "Dashbord Konfiguration - " + dashboards[dashboardId].title,
+      title: "Dashbord - " + dashboards[dashboardId].title,
       open: function() {
          $(".ui-dialog-buttonpane button:contains('Dashboard löschen')").attr('style','color:red');
       },
@@ -1066,7 +1099,7 @@ function widgetSetup(key)
       closeOnEscape: true,
       hide: "fade",
       width: "auto",
-      title: "Widget Konfiguration - " + (item.usrtitle ? item.usrtitle : item.title),
+      title: "Widget - " + (item.usrtitle ? item.usrtitle : item.title),
       open: function() {
          for (var wdKey in widgetTypes) {
             $('#widgettype').append($('<option></option>')
