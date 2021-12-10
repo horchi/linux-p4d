@@ -6,6 +6,9 @@ Written by: *Jörg Wendel (linux at jwendel dot de)*
 
 Homepage: https://github.com/horchi/linux-p4d
 
+![](contrib/dashboard.jpg?raw=true "Title")
+![](contrib/chart.jpg?raw=true "Title")
+
 ## License
 This code is distributed under the terms and conditions of the GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 
@@ -265,6 +268,9 @@ To import the backup:
 gunzip NAME-dump.sql.gz
 mysql -u p4 -pp4 -Dp4 < *-dump.sql
 ```
+
+#### Alternative installation using Docker
+https://hub.docker.com/r/n3m3515/docker-p4d
 
 #### ATTENTION:
 The import deletes at first all the data and then imports the dumped data. To append the dumped data you have to modify the SQL statements inside the dump files manually.

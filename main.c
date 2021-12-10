@@ -119,6 +119,7 @@ void showUsage(const char* bin)
    printf("Usage: %s [-n][-c <config-dir>][-l <log-level>][-t]\n", bin);
    printf("    -n              don't daemonize\n");
    printf("    -t              log to stdout\n");
+   printf("    -T              log to stdout during init\n");
    printf("    -v              show version\n");
    printf("    -s              setup\n");
    printf("    -i              update configuration tables\n");
@@ -139,10 +140,11 @@ int main(int argc, char** argv)
    int setup = no;
    int init = no;
    int truncOnInit = no;
-   int _stdout = na;
+   bool _stdout {false};
+   bool _stdoutOnInit {false};
    int _level = na;
 
-   logstdout = yes;
+   logstdout = true;
 
    // Usage ..
 
@@ -162,7 +164,8 @@ int main(int argc, char** argv)
       switch (argv[i][1])
       {
          case 'l': if (argv[i+1]) _level = atoi(argv[i+1]); break;
-         case 't': _stdout = yes;                           break;
+         case 't': _stdout = true;                          break;
+         case 'T': _stdoutOnInit = true;                    break;
          case 'n': nofork = yes;                            break;
          case 'c': if (argv[i+1]) confDir = argv[i+1];      break;
          case 's': setup = yes;                             break;
@@ -172,10 +175,8 @@ int main(int argc, char** argv)
       }
    }
 
-   if (_stdout != na)
+   if (!_stdoutOnInit)
       logstdout = _stdout;
-   else
-      logstdout = no;
 
    // read configuration ..
 
@@ -224,6 +225,10 @@ int main(int argc, char** argv)
    ::signal(SIGINT, CLASS::downF);
    ::signal(SIGTERM, CLASS::downF);
    // ::signal(SIGHUP, CLASS::triggerF);
+
+   // after init ... switch to log file
+
+   logstdout = _stdout;
 
    // do work ...
 

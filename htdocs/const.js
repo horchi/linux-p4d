@@ -1,4 +1,4 @@
 
-var myProtocol = "p4d";
-var storagePrefix = "p4d";
-var pageTitle = 'P4 Control';
+const myProtocol = "p4d";
+const storagePrefix = "p4d";
+const pageTitle = 'P4 Control';

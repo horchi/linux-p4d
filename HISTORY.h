@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.11"
-#define VERSION_DATE "09.12.2021"
+#define _VERSION     "0.8.12"
+#define VERSION_DATE "10.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-12-10:  version 0.8.12
+  - change:  Improved logging for docker
+  - bugfix:  Fixed dashboard symbol handling
+  - change:  minor changes and fixes
+  - added:   peak for 'value' and 'linear-meter' widgets
+  - added:   new widget type 'SymbolValue'
 
 2021-12-09:  version 0.8.11
   - added:  User image upload (setup -> images)

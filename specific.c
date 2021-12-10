@@ -32,7 +32,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "arduinoInterval",           ctInteger, "10",   false, "1 P4 Daemon", "Intervall der Arduino Messungen", "[s]" },
    { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
    { "loglevel",                  ctInteger, "1",    false, "1 P4 Daemon", "Log level", "" },
-   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "4 MQTT Interface", "MQTT Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "1 P4 Daemon", "MQTT Broker Url", "MQTT Instanz für den p4d. Beispiel: 'tcp://127.0.0.1:1883'" },
 
    { "tsync",                     ctBool,    "0",    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
    { "maxTimeLeak",               ctInteger, "5",    false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
@@ -1319,7 +1319,7 @@ int P4d::calcStateDuration()
       beginTime = eTime;
 
       addValueFact(thisState, "SD", 1, ("State_Duration_"+std::to_string(thisState)).c_str(),
-                   "min", wtChart, (std::string(text)+" (Laufzeit/Tag)").c_str(), false, 2000);
+                   "min", (std::string(text)+" (Laufzeit/Tag)").c_str());
 
       selectStateDuration->freeResult();
       tableSamples->clear();
@@ -2682,8 +2682,9 @@ int P4d::initValueFacts(bool truncate)
       tell(eloDebug, "%3d) 0x%04x '%s' %d '%s' (%04d) '%s'",
            count, v.address, v.name, v.factor, v.unit, v.type, v.description);
 
-      int res = addValueFact(v.address, "VA", v.factor, v.name, strcmp(v.unit, "°") == 0 ? "°C" : v.unit,
-                             wtMeter, v.description, 0, v.unit[0] == '%' ? 100 : 300);
+      int res = addValueFact(v.address, "VA", v.factor, v.name,
+                             strcmp(v.unit, "°") == 0 ? "°C" : v.unit,
+                             v.description);
 
       // set special value SUBTYPE for valuefact
 
@@ -2746,13 +2747,12 @@ int P4d::initValueFacts(bool truncate)
       const char* type {nullptr};
       int structType = tableMenu->getIntValue("TYPE");
       std::string sname = tableMenu->getStrValue("TITLE");
-      WidgetType widgetType = wtMeter;
 
       switch (structType)
       {
-         case mstDigOut: type = "DO"; widgetType = wtSymbol; break;
-         case mstDigIn:  type = "DI"; widgetType = wtSymbol; break;
-         case mstAnlOut: type = "AO"; widgetType = wtMeter;  break;
+         case mstDigOut: type = "DO"; break;
+         case mstDigIn:  type = "DI"; break;
+         case mstAnlOut: type = "AO"; break;
       }
 
       if (!type)
@@ -2767,7 +2767,7 @@ int P4d::initValueFacts(bool truncate)
          unit = "%";
 
       int res = addValueFact(tableMenu->getIntValue("ADDRESS"), type, 1, name, unit,
-                             widgetType, tableMenu->getStrValue("TITLE"), 0, unit[0] == '%' ? 100 : 300);
+                             tableMenu->getStrValue("TITLE"));
 
       if (res == 1)
          added++;
@@ -2784,7 +2784,7 @@ int P4d::initValueFacts(bool truncate)
    // ---------------------------------
    // add value definitions for special data
 
-   addValueFact(udState, "UD", 1, "Status", "zst", wtSymbol, "Heizungsstatus");
+   addValueFact(udState, "UD", 1, "Status", "zst", "Heizungsstatus");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udState);      // 1  -> Kessel Status
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
@@ -2792,7 +2792,7 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
 
-   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", wtText, "Betriebsmodus");
+   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", "Betriebsmodus");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
@@ -2800,7 +2800,7 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
 
-   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", wtText, "Datum Uhrzeit der Heizung");
+   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", "Datum Uhrzeit der Heizung");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined

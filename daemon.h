@@ -121,6 +121,7 @@ class Daemon : public FroelingService, public cWebInterface
          wtMeterLevel,   // == 6
          wtPlainText,    // == 7  without title
          wtChoice,       // == 8  option choice
+         wtSymbolValue,
          wtCount
       };
 
@@ -188,6 +189,23 @@ class Daemon : public FroelingService, public cWebInterface
          const char* description {nullptr};
       };
 
+      struct DefaultWidgetProperty
+      {
+         std::string type;
+         int address {na};
+         std::string unit;
+
+         WidgetType widgetType {wtMeter};
+         int minScale {0};
+         int maxScale {100};
+         int scaleStep {0};
+         bool showPeak {false};
+      };
+
+      static DefaultWidgetProperty defaultWidgetProperties[];
+      static DefaultWidgetProperty* getDefalutProperty(const char* type, const char* unit, int address = 0);
+      std::string toWidgetOptionString(const char* type, const char* unit, const char* name, int address = 0);
+
       std::map<uint,OutputState> digitalOutputStates;
       std::map<int,bool> digitalInputStates;
 
@@ -198,9 +216,8 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int readConfiguration(bool initial);
       virtual int applyConfigurationSpecials() { return done; }
 
-      int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
-                       WidgetType widgetType, const char* title = nullptr,
-                       int minScale = 0, int maxScale = na, int rights = 0, const char* choices = nullptr);
+      int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit = "",
+                       const char* title = nullptr, int rights = 0, const char* choices = nullptr);
 
       int initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights = urControl);
       int initInput(uint pin, const char* name);

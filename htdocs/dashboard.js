@@ -8,6 +8,8 @@
  *
  */
 
+const widgetWidthBase = '212';
+
 var actDashboard = -1;
 var gauge = null;
 
@@ -140,6 +142,9 @@ function newDashboard()
 
 function initWidget(sensor, widget, fact)
 {
+   if (sensor == null)
+      return ;
+
    var key = toKey(sensor.type, sensor.address);
    var root = document.getElementById("widgetContainer");
 
@@ -172,11 +177,8 @@ function initWidget(sensor, widget, fact)
    elem.innerHTML = "";
    var marginPadding = 8;
 
-   if (widget.baseWidth == null)
-      widget.baseWidth = elem.clientWidth;
-
-   // console.log("clientWidth: " + elem.clientWidth + ' : ' + widget.baseWidth);
-   elem.style.width = widget.baseWidth * widget.widthfactor + ((widget.widthfactor-1) * marginPadding) + 'px';
+   // console.log("clientWidth: " + elem.clientWidth + ' : ' + widgetWidthBase);
+   elem.style.width = widgetWidthBase * widget.widthfactor + ((widget.widthfactor-1) * marginPadding) + 'px';
 
    if (setupMode && (widget.widgettype < 900 || widget.widgettype == null)) {
       elem.setAttribute('draggable', true);
@@ -195,8 +197,8 @@ function initWidget(sensor, widget, fact)
       case 0:           // Symbol
          var html = editButton;
          if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights) {
-            html += "  <button class=\"widget-title\" type=\"button\" onclick=\"toggleMode(" + fact.address + ", '" + fact.type + "')\">" + title + "</button>";
-            html += "  <button class=\"widget-main\" type=\"button\" onclick=\"toggleIo(" + fact.address + ",'" + fact.type + "')\" >";
+            html += '  <button class="widget-title" type="button" onclick="toggleMode(' + fact.address + ", '" + fact.type + '\')">' + title + '</button>';
+            html += '  <button class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
          }
          else {
             html += '  <button class="widget-title" type="button">' + title + '</button>';
@@ -241,7 +243,19 @@ function initWidget(sensor, widget, fact)
          eCanvas.setAttribute('id', 'widget' + fact.type + fact.address);
          eCanvas.className = "chart-canvas";
          eChart.appendChild(eCanvas);
+         break;
 
+      case 3:   // type 3 (Value)
+         var html = '<div class="widget-title">' + title + editButton + '</div>';
+         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
+         elem.className = "widgetValue rounded-border widgetDropZone";
+         if (!setupMode)
+            elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
+         elem.innerHTML = html;
+         var ePeak = document.createElement("div");
+         ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
+         ePeak.className = "chart-peak";
+         elem.appendChild(ePeak);
          break;
 
       case 4:           // Gauge
@@ -286,6 +300,10 @@ function initWidget(sensor, widget, fact)
             value.setAttribute('id', 'widgetValue' + fact.type + fact.address);
             value.className = "widget-main-value-lin";
             elem.appendChild(value);
+            var ePeak = document.createElement("div");
+            ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
+            ePeak.className = "widget-main-peak-lin";
+            elem.appendChild(ePeak);
          }
 
          if (widget.scalemin == null)
@@ -414,6 +432,35 @@ function initWidget(sensor, widget, fact)
          elem.innerHTML = html;
          break;
 
+      case 9:           // Symbol-Value
+         var html = editButton;
+         if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights) {
+            html += '  <button class="widget-title" type="button" onclick="toggleMode(' + fact.address + ", '" + fact.type + '\')">' + title + '</button>';
+            html += '  <button class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
+         }
+         else {
+            html += '  <button class="widget-title" type="button">' + title + '</button>';
+            html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button">';
+         }
+
+         html += '    <img id="widget' + fact.type + fact.address + '" draggable="false")/>';
+         html += "   </button>\n";
+
+         html += "<div id=\"progress" + fact.type + fact.address + "\" class=\"widget-progress\">";
+         html += "   <div id=\"progressBar" + fact.type + fact.address + "\" class=\"progress-bar\" style=\"visible\"></div>";
+         html += "</div>";
+
+         elem.className = "widgetSymbolValue rounded-border widgetDropZone";
+         elem.innerHTML = html;
+         document.getElementById("progress" + fact.type + fact.address).style.visibility = "hidden";
+
+         var eValue = document.createElement("div");
+         eValue.setAttribute('id', 'value' + fact.type + fact.address);
+         eValue.className = "symbol-value";
+         elem.appendChild(eValue);
+
+         break;
+
       case 998:     // 998 (Add Widget)
          elem.innerHTML = '<div class="widget-title"></div>' +
                           '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;font-size:6em;">+</div>';
@@ -432,7 +479,7 @@ function initWidget(sensor, widget, fact)
          elem.addEventListener('drop', function(event) {deleteWidget(event)}, false);
          break;
 
-      default:   // type 2(Text), 3(Value)
+      default:   // type 2 (Text)
          var html = '<div class="widget-title">' + title + editButton + '</div>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
          elem.className = "widget rounded-border widgetDropZone";
@@ -457,6 +504,9 @@ function updateDashboard(widgets, refresh)
 
 function updateWidget(sensor, refresh, widget)
 {
+   if (sensor == null)
+      return ;
+
    var key = toKey(sensor.type, sensor.address);
    fact = valueFacts[key];
 
@@ -472,21 +522,34 @@ function updateWidget(sensor, refresh, widget)
       return;
    }
 
-   if (widget.widgettype == 0)         // Symbol
+   if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
    {
       // console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
       var modeStyle = sensor.options == 3 && sensor.mode == 'manual' ? "background-color: #a27373;" : "";
       var image = 'img/icon/unknown.png';
+      var classes = '';
       if (sensor.image != null)
          image = sensor.image;
+      else if (widget.symbol != null && widget.symbol != '') {
+         classes = widget.symbol.replace(':', ' ');
+         image = '';
+      }
       else
          image = sensor.value != 0 ? widget.imgon : widget.imgoff;
-      $("#widget" + fact.type + fact.address).attr("src", image);
 
-      var ddd = "div_" + key;
-      var e = document.getElementById(ddd);
+      if (image != '')
+         $("#widget" + fact.type + fact.address).attr("src", image);
+      else {
+         $("#button" + fact.type + fact.address).addClass(classes);
+         $("#widget" + fact.type + fact.address).addClass('hidden');
+      }
+
+      var e = document.getElementById("div_" + key);
       e.setAttribute("style", modeStyle);
-      // $('#' + ddd).attr("style", modeStyle);  // #TODO geht nicht??
+
+      if (widget.widgettype == 9) {
+         $("#value" + fact.type + fact.address).text(sensor.value.toFixed(2) + (widget.unit!="" ? " " : "") + widget.unit);
+      }
 
       var e = document.getElementById("progress" + fact.type + fact.address);
       if (e != null)
@@ -542,6 +605,8 @@ function updateWidget(sensor, refresh, widget)
    else if (widget.widgettype == 3)      // plain value
    {
       $("#widget" + fact.type + fact.address).html(sensor.value + " " + widget.unit);
+      if (widget.showpeak != null && widget.showpeak)
+         $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
    }
    else if (widget.widgettype == 4)      // Gauge
    {
@@ -577,10 +642,11 @@ function updateWidget(sensor, refresh, widget)
             gauge.value = value;
          else
             console.log("Missing gauge instance for " + '#widget' + fact.type + fact.address);
+         if (widget.showpeak != null && widget.showpeak)
+            $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
       }
       else
          console.log("Missing value for " + '#widget' + fact.type + fact.address);
-      //  = fact.address != 4 ? value = sensor.value : 45;  // for test
    }
 }
 
@@ -749,7 +815,7 @@ function dropDashboard(ev)
    // console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
    target.after(source);
 
-   // -> The order for objects follows a certain set of rules since ES2015,
+   // -> The order for json objects follows a certain set of rules since ES2015,
    //    but it does not (always) follow the insertion order. Simply,
    //    the iteration order is a combination of the insertion order for strings keys,
    //    and ascending order for number keys
@@ -948,7 +1014,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -963,7 +1029,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -977,7 +1043,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -992,7 +1058,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1009,7 +1075,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1026,7 +1092,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1043,7 +1109,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1060,7 +1126,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1077,7 +1143,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1094,12 +1160,33 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
+                                  .css('text-align', 'end')
+                                  .css('align-self', 'center')
+                                  .css('margin-right', '10px')
+                                  .html('Symbol'))
+                          .append($('<span></span>')
+                                  .css('width', '300px')
+                                  .append($('<input></input>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('id', 'symbol')
+                                          .val(widget.symbol)
+                                          .change(function() {
+                                             $('#imgon').prop( "disabled", $(this).val() != '');
+                                             $('#imgoff').prop( "disabled", $(this).val() != '');
+                                          })
+                                         )))
+
+                  .append($('<div></div>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Image On'))
                           .append($('<span></span>')
+                                  .css('width', '300px')
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'imgon')
@@ -1108,12 +1195,13 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Image Off'))
                           .append($('<span></span>')
+                                  .css('width', '300px')
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'imgoff')
@@ -1122,7 +1210,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1140,7 +1228,7 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -1192,6 +1280,8 @@ function widgetSetup(key)
          }
          else
             console.log("No widget for " + item.type + " - " + item.address + " found");
+
+         $('#symbol').trigger('change');
       },
       buttons: {
          'Cancel': function () {
@@ -1215,6 +1305,7 @@ function widgetSetup(key)
                widget.scalestep = parseFloat($("#scalestep").val()) || 0.0;
                widget.critmin = parseFloat($("#critmin").val()) || -1;
                widget.critmax = parseFloat($("#critmax").val()) || -1;
+               widget.symbol = $("#symbol").val();
                widget.imgon = $("#imgon").val();
                widget.imgoff = $("#imgoff").val();
                widget.widgettype = parseInt($("#widgettype").val());
@@ -1234,6 +1325,7 @@ function widgetSetup(key)
                widget.scalestep = parseFloat($("#scalestep").val()) || 0.0;
                widget.critmin = parseFloat($("#critmin").val()) || -1;
                widget.critmax = parseFloat($("#critmax").val()) || -1;
+               widget.symbol = $("#symbol").val();
                widget.imgon = $("#imgon").val();
                widget.imgoff = $("#imgoff").val();
                widget.widgettype = parseInt($("#widgettype").val());
@@ -1266,6 +1358,8 @@ function widgetSetup(key)
                json[key]["critmin"] = parseFloat($("#critmin").val());
             if ($("#critmax").length)
                json[key]["critmax"] = parseFloat($("#critmax").val());
+            if ($("#symbol").length)
+               json[key]["symbol"] = $("#symbol").val();
             if ($("#imgon").length)
                json[key]["imgon"] = $("#imgon").val();
             if ($("#imgoff").length)

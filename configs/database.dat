@@ -67,7 +67,6 @@ Table valuefacts
    USRTITLE             ""          usrtitle             Ascii      100 Data,
    SUBTYPE              "data type" res1                 Int          4 Data,
    CHOICES              ""          choices              Ascii      250 Data,
-   WIDGETOPT            ""          widgetopt            Ascii     1000 Data,
    RIGHTS   "needed control rights" rights               Int          0 Data,
 }
 

@@ -1022,6 +1022,32 @@ table.tableMultiCol tr:nth-child(odd)
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
+.widgetSymbolValue
+{
+    display: grid;
+    grid-template-areas:
+      'title'
+      'main'
+      'value'
+      'progress';
+    grid-template-rows: 14% 62% 20% 2%;
+    grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.widgetValue
+{
+    display: grid;
+    grid-template-areas:
+      'title'
+      'peak'
+      'main'
+      'progress';
+    grid-template-rows: 14% 14% 70% 2%;
+    grid-gap: 1px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
 .widgetDropZone
 {
     border-color: transparent;
@@ -1082,6 +1108,15 @@ table.tableMultiCol tr:nth-child(odd)
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
+.symbol-value
+{
+    grid-area: value;
+    font-size: 1.5em;
+    font-weight: bold;
+    align-self: center;
+    justify-self: center;
+}
+
 .chart-value
 {
     grid-area: value;
@@ -1089,7 +1124,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-weight: bold;
     text-align: end;
     overflow: hidden;
-    background-color: Transparent;
+    background-color: transparent;
     margin-top: 0px;
     margin-right: 4px;
     color: var(--buttonFont);
@@ -1102,7 +1137,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-weight: bold;
     padding-left: 12px;
     overflow: hidden;
-    background-color: Transparent;
+    background-color: transparent;
     margin-top: 10px;
     color: red;
 }
@@ -1180,6 +1215,9 @@ table.tableMultiCol tr:nth-child(odd)
     /* overflow: hidden;*/
     outline: none;
     cursor: pointer;
+
+    color: white;
+    font-size: 6em;
 }
 
 .widget-main > img
@@ -1210,9 +1248,10 @@ table.tableMultiCol tr:nth-child(odd)
     display: grid;
     grid-template-areas:
         'title title'
+        'main peak'
         'main value';
-    grid-template-rows: 15% 85%;
-    grid-template-columns: 55% 45%;
+    grid-template-rows: 15% 15% 70%;
+    grid-template-columns: 57% 43%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1240,6 +1279,20 @@ table.tableMultiCol tr:nth-child(odd)
     /*text-align: end;*/
     font-weight: bold;
     align-self: center;
+}
+
+.widget-main-peak-lin
+{
+    grid-area: peak;
+    font-size: 0.9em;
+    font-weight: bold;
+    padding-left: 12px;
+    overflow: hidden;
+    background-color: transparent;
+    margin-top: 10px;
+    color: red;
+    text-align: right;
+    margin-right: 5px;
 }
 
 .widget-main-meter > canvas

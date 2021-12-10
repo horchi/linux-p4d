@@ -956,7 +956,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
       {
          long dashboardId = atol(dashboardIdStr);
          const char* dashboardTitle = getStringFromJson(jObj, "title", "<new>");
-         const char* dashboardSymbol = getStringFromJson(jObj, "symbol", "");
+         const char* dashboardSymbol = getStringFromJson(jObj, "symbol");
          const char* action = getStringFromJson(jObj, "action", "store");
 
          if (strcmp(action, "delete") == 0)
@@ -972,7 +972,8 @@ int Daemon::storeDashboards(json_t* obj, long client)
          {
             tableDashboards->clear();
             tableDashboards->setValue("TITLE", dashboardTitle);
-            tableDashboards->setValue("SYMBOL", dashboardSymbol);
+            if (dashboardSymbol)
+               tableDashboards->setValue("SYMBOL", dashboardSymbol);
             tableDashboards->store();
             tell(eloAlways, "Created new dashboard '%ld/%s'!", dashboardId, dashboardTitle);
             dashboardId = tableDashboards->getLastInsertId();
@@ -988,7 +989,8 @@ int Daemon::storeDashboards(json_t* obj, long client)
          }
 
          tableDashboards->setValue("TITLE", dashboardTitle);
-         tableDashboards->setValue("SYMBOL", dashboardSymbol);
+         if (dashboardSymbol)
+            tableDashboards->setValue("SYMBOL", dashboardSymbol);
          tableDashboards->store();
          tableDashboards->reset();
 
@@ -1020,13 +1022,22 @@ int Daemon::storeDashboards(json_t* obj, long client)
                   tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
 
                   if (tableValueFacts->find())
-                     asprintf(&opts, "%s", tableValueFacts->getStrValue("WIDGETOPT"));
+                  {
+                     std::string widgetOptionsDefault = toWidgetOptionString(tableValueFacts->getStrValue("TYPE"),
+                                                                             tableValueFacts->getStrValue("UNIT"),
+                                                                             tableValueFacts->getStrValue("NAME"),
+                                                                             tableValueFacts->getIntValue("ADDRESS"));
+
+                     asprintf(&opts, "%s", widgetOptionsDefault.c_str());
+                  }
+                  else
+                     strdup("{}");
                }
 
                tableDashboardWidgets->setValue("WIDGETOPTS", opts);
                tableDashboardWidgets->store();
 
-               tell(1, "Debug: dashboard widget '%s' with [%s]", id, opts);
+               tell(1, "Debug: Dashboard widget '%s' with [%s]", id, opts);
                free(opts);
             }
          }
@@ -1081,17 +1092,8 @@ int Daemon::storeIoSetup(json_t* array, long client)
          tableValueFacts->setValue("USRTITLE", getStringFromJson(jObj, "usrtitle"));
       if (isElementSet(jObj, "unit"))
          tableValueFacts->setValue("UNIT", getStringFromJson(jObj, "unit"));
-
-      if (isElementSet(jObj, "widget"))
-      {
-         json_t* oWidgetOptions = getObjectFromJson(jObj, "widget");
-
-         if (oWidgetOptions)
-         {
-            char* widgetOptions = json_dumps(oWidgetOptions, JSON_REAL_PRECISION(4));
-            tableValueFacts->setValue("WIDGETOPT", widgetOptions);
-         }
-      }
+      if (isElementSet(jObj, "groupid"))
+         tableValueFacts->setValue("GROUPID", getIntFromJson(jObj, "groupid"));
 
       if (tableValueFacts->getChanges())
       {
@@ -1439,7 +1441,6 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
          continue;
 
       char* key {nullptr};
-      // asprintf(&key, "%s:%lu", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       asprintf(&key, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       json_t* oData = json_object();
       json_object_set_new(obj, key, oData);
@@ -1457,16 +1458,17 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       if (!tableValueFacts->getValue("CHOICES")->isNull())
          json_object_set_new(oData, "choices", json_string(tableValueFacts->getStrValue("CHOICES")));
 
-      const char* widgetOptions = tableValueFacts->getStrValue("WIDGETOPT");
-      if (isEmpty(widgetOptions))
-         widgetOptions = "{}";
+      std::string widgetOptionsDefault = toWidgetOptionString(tableValueFacts->getStrValue("TYPE"),
+                                                              tableValueFacts->getStrValue("UNIT"),
+                                                              tableValueFacts->getStrValue("NAME"),
+                                                              tableValueFacts->getIntValue("ADDRESS"));
       json_error_t error;
-      json_t* oWidgetOptions = json_loads(widgetOptions, 0, &error);
+      json_t* oWidgetOptions = json_loads(widgetOptionsDefault.c_str(), 0, &error);
       if (oWidgetOptions)
          json_object_set_new(oData, "widget", oWidgetOptions);
       else
          tell(1, "Error decoding json: %s (%s, line %d column %d, position %d) [%s]",
-              error.text, error.source, error.line, error.column, error.position, widgetOptions);
+              error.text, error.source, error.line, error.column, error.position, widgetOptionsDefault.c_str());
 
       tableGroups->clear();
       tableGroups->setValue("ID", tableValueFacts->getIntValue("GROUPID"));

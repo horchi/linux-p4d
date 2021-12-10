@@ -100,12 +100,12 @@ cWebService::Event cWebService::toEvent(const char* name)
 }
 
 //***************************************************************************
-// Service
+// Widgets
 //***************************************************************************
 
 const char* Daemon::widgetTypes[] =
 {
-   "Symbol",
+   "Image",
    "Chart",
    "Text",
    "Value",
@@ -114,6 +114,7 @@ const char* Daemon::widgetTypes[] =
    "MeterLevel",
    "PlainText",
    "Choice",
+   "SymbolValue",
    0
 };
 
@@ -135,6 +136,70 @@ Daemon::WidgetType Daemon::toType(const char* name)
          return (WidgetType)t;
 
    return wtText;
+}
+
+//***************************************************************************
+// Widgets - Default Properties
+//***************************************************************************
+
+Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
+{
+   // type, address,  unit,  widgetType, minScale, maxScale scaleStep, showPeak
+
+   {  "-",       na,   "*",     wtMeter,        0,        45,       0, false },
+   { "DO",       na,   "*",    wtSymbol,        0,         0,       0, false },
+   { "DI",       na,   "*",    wtSymbol,        0,         0,       0, false },
+   { "AO",       na,   "*",     wtMeter,        0,        45,       0, false },
+   { "AI",       na,   "*",     wtMeter,        0,        45,       0, false },
+   { "SD",       na,   "*",     wtChart,        0,      2000,       0, false },
+   { "SC",       na,    "",      wtText,        0,         0,       0, false },
+   { "SC",       na, "zst",    wtSymbol,        0,         0,       0, false },
+   { "SC",       na,   "*",     wtMeter,        0,         0,       0, false },
+   { "UD",  udState, "zst",    wtSymbol,        0,         0,       0, false },
+   { "UD",   udMode, "zst",      wtText,        0,         0,       0, false },
+   { "UD",   udTime,   "T",      wtText,        0,         0,       0, false },
+   { "UD",       na,   "*",      wtText,        0,         0,       0, false },
+   { "W1",       na,   "*",    wtSymbol,        0,        30,       0, false },
+   { "VA",       na,   "%",     wtMeter,        0,       100,       0, false },
+   { "VA",       na,   "*",     wtMeter,        0,        45,       0, false },
+   { "" }
+};
+
+Daemon::DefaultWidgetProperty* Daemon::getDefalutProperty(const char* type, const char* unit, int address)
+{
+   for (int i = 0; defaultWidgetProperties[i].type != ""; i++)
+   {
+      if (defaultWidgetProperties[i].type == type)
+      {
+         bool addressMatch = defaultWidgetProperties[i].address == na || defaultWidgetProperties[i].address == address;
+         bool unitMatch = defaultWidgetProperties[i].unit == "*" || defaultWidgetProperties[i].unit == unit;
+
+         if (unitMatch && addressMatch)
+            return &defaultWidgetProperties[i];
+      }
+   }
+
+   return &defaultWidgetProperties[0]; // the default of the defaluts
+}
+
+//***************************************************************************
+//
+//***************************************************************************
+
+std::string Daemon::toWidgetOptionString(const char* type, const char* unit, const char* name, int address)
+{
+   std::string result;
+   char* opt {nullptr};
+
+   DefaultWidgetProperty* defProperty = getDefalutProperty(type, unit, address);
+
+   asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"showpeak\": %s, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
+            unit, defProperty->maxScale, defProperty->minScale, defProperty->scaleStep, defProperty->showPeak ? "true" : "false",
+            getImageFor(name, true), getImageFor(name, false), defProperty->widgetType);
+   result = opt;
+   free(opt);
+
+   return result;
 }
 
 //***************************************************************************
@@ -428,7 +493,7 @@ int Daemon::initOutput(uint pin, int opt, OutputMode mode, const char* name, uin
 
    pinMode(pin, OUTPUT);
    gpioWrite(pin, false, false);
-   addValueFact(pin, "DO", 1, name, "", wtSymbol, 0, 0, urControl);
+   addValueFact(pin, "DO", 1, name, "", "", urControl);
 
    return done;
 }
@@ -442,7 +507,7 @@ int Daemon::initInput(uint pin, const char* name)
    pinMode(pin, INPUT);
 
    if (!isEmpty(name))
-      addValueFact(pin, "DI", 1, name, "", wtSymbol, name, 0, 0);
+      addValueFact(pin, "DI", 1, name);
 
    digitalInputStates[pin] = gpioRead(pin);
 
@@ -572,11 +637,14 @@ int Daemon::initScripts()
 
       selectScriptByPath->freeResult();
 
+      if (kind == "text")
+         unit = "";
+      else if (kind == "status")
+         unit = "zst";
+
       auto tuple = split(script.name, '.');
       addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
-                   kind == "status" ? wtSymbol : kind == "text" ? wtText : wtValue,
-                   tuple[0].c_str(),
-                   0, 0, urControl, choices);
+                   tuple[0].c_str(), urControl, choices);
 
       tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
 
@@ -1169,14 +1237,17 @@ int Daemon::initDb()
 
             if (tableValueFacts->find())
             {
+               std::string widgetOptionsDefault = toWidgetOptionString(tuple[0].c_str(), tableValueFacts->getStrValue("UNIT"),
+                                                                       tableValueFacts->getStrValue("NAME"), strtol(tuple[1].c_str(), nullptr, 0));
+
                tableDashboardWidgets->clear();
                tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
                tableDashboardWidgets->setValue("ORDER", ord++);
                tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
                tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
-               tableDashboardWidgets->setValue("WIDGETOPTS", tableValueFacts->getStrValue("WIDGETOPT"));
+               tableDashboardWidgets->setValue("WIDGETOPTS", widgetOptionsDefault.c_str());
                tableDashboardWidgets->store();
-               tell(0, "Ported dashboard widget '%s' [%s]", key, tableValueFacts->getStrValue("WIDGETOPT"));
+               tell(0, "Ported dashboard widget '%s' [%s]", key, widgetOptionsDefault.c_str());
             }
          }
       }
@@ -1238,7 +1309,7 @@ int Daemon::initW1()
 
    for (const auto& it : w1Sensors)
    {
-      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C", wtMeter);
+      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C");
 
       if (res == 1)
          added++;
@@ -2060,11 +2131,10 @@ int Daemon::loadHtmlHeader()
 //***************************************************************************
 
 int Daemon::addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
-                         WidgetType widgetType, const char* title,
-                         int minScale, int maxScale, int rights, const char* choices)
+                         const char* title, int rights, const char* choices)
+
 {
-   if (maxScale == na)
-      maxScale = unit[0] == '%' ? 100 : 45;
+   std::string widgetOptionsDefault = toWidgetOptionString(type, unit, name, addr);
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", addr);
@@ -2084,12 +2154,6 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
       if (!isEmpty(choices))
          tableValueFacts->setValue("CHOICES", choices);
 
-      char* opt {nullptr};
-      asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
-               unit, maxScale, minScale, 0, getImageFor(name, true), getImageFor(name, false), widgetType);
-      tableValueFacts->setValue("WIDGETOPT", opt);
-      free(opt);
-
       tableValueFacts->store();
       return 1;                               // 1 for 'added'
    }
@@ -2105,15 +2169,6 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
 
    if (tableValueFacts->getValue("RIGHTS")->isNull())
       tableValueFacts->setValue("RIGHTS", rights);
-
-   if (tableValueFacts->getValue("WIDGETOPT")->isNull())
-   {
-      char* opt {nullptr};
-      asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
-               unit, maxScale, minScale, 0, getImageFor(name, true), getImageFor(name, false), widgetType);
-      tableValueFacts->setValue("WIDGETOPT", opt);
-      free(opt);
-   }
 
    if (tableValueFacts->getChanges())
    {
