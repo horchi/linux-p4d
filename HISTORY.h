@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.12"
-#define VERSION_DATE "10.12.2021"
+#define _VERSION     "0.8.13"
+#define VERSION_DATE "11.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-11:  version 0.8.13
+  - change:  display optimized for mobile devices
 
 2021-12-10:  version 0.8.12
   - change:  Improved logging for docker

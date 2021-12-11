@@ -8,7 +8,7 @@
  *
  */
 
-const widgetWidthBase = '212';
+var widgetWidthBase = null;
 
 var actDashboard = -1;
 var gauge = null;
@@ -176,6 +176,9 @@ function initWidget(sensor, widget, fact)
 
    elem.innerHTML = "";
    var marginPadding = 8;
+
+   if (widgetWidthBase == null)
+      widgetWidthBase = elem.clientWidth;
 
    // console.log("clientWidth: " + elem.clientWidth + ' : ' + widgetWidthBase);
    elem.style.width = widgetWidthBase * widget.widthfactor + ((widget.widthfactor-1) * marginPadding) + 'px';
@@ -436,14 +439,14 @@ function initWidget(sensor, widget, fact)
          var html = editButton;
          if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights) {
             html += '  <button class="widget-title" type="button" onclick="toggleMode(' + fact.address + ", '" + fact.type + '\')">' + title + '</button>';
-            html += '  <button class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
+            html += '  <button class="widget-main" style="color:white;font-size:6em;" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
          }
          else {
             html += '  <button class="widget-title" type="button">' + title + '</button>';
-            html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button">';
+            html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" style="color:white;font-size:6em;" type="button">';
          }
 
-         html += '    <img id="widget' + fact.type + fact.address + '" draggable="false")/>';
+         html += '    <img id="widget' + fact.type + fact.address + '" draggable="false"/>';
          html += "   </button>\n";
 
          html += "<div id=\"progress" + fact.type + fact.address + "\" class=\"widget-progress\">";
@@ -533,6 +536,7 @@ function updateWidget(sensor, refresh, widget)
       else if (widget.symbol != null && widget.symbol != '') {
          classes = widget.symbol.replace(':', ' ');
          image = '';
+         $("#widget" + fact.type + fact.address).remove();
       }
       else
          image = sensor.value != 0 ? widget.imgon : widget.imgoff;
@@ -541,7 +545,7 @@ function updateWidget(sensor, refresh, widget)
          $("#widget" + fact.type + fact.address).attr("src", image);
       else {
          $("#button" + fact.type + fact.address).addClass(classes);
-         $("#widget" + fact.type + fact.address).addClass('hidden');
+         // $("#widget" + fact.type + fact.address).addClass('hidden');
       }
 
       var e = document.getElementById("div_" + key);

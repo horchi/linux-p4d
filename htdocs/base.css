@@ -181,7 +181,7 @@ button:focus {
 .buttonDashboard
 {
     display: inline;
-    margin: 5px 0px 5px 10px;
+    margin: 5px 0px 5px 4px;
     color: white;
     background-color: slategray;
     height: 28px;
@@ -1050,9 +1050,6 @@ table.tableMultiCol tr:nth-child(odd)
 
 .widgetDropZone
 {
-    border-color: transparent;
-    border-style: solid;
-    border-width: 1px;
 }
 
 .widgetDropZone[drop-active=true]
@@ -1212,12 +1209,9 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: Transparent;
     border: none;
     width: inherit;
-    /* overflow: hidden;*/
     outline: none;
     cursor: pointer;
-
-    color: white;
-    font-size: 6em;
+    text-align: -webkit-center;
 }
 
 .widget-main > img
@@ -1427,10 +1421,13 @@ dialog::backdrop, #backdrop
 @media only screen and (max-width: 740px)
 {
     .daemonState               { width: 88%; }
+    .menu                      { margin: 0px; }
+    .button1                   { margin: 1px; }
     .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 30%; }
-
+    .buttonDashboard           { margin: 1px 0px 1px 0px; }
+    .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 180px; height: 160px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 30% 66% 4%; }
