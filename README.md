@@ -109,7 +109,7 @@ apt install mosquitto
 systemctl start mosquitto
 systemctl enable mosquitto
 ```
-# if you like to ceck mosquitto or use it from scripts install mosquitto client package
+#### if you like to ceck mosquitto or use it from scripts install mosquitto client package
 ```
 install mosquitto-clients
 ```
