@@ -103,6 +103,17 @@ if the database is running remote (on a other host or you like to habe remote ac
  flush privileges;
 ```
 
+### Install and enable mosquitto
+```
+apt install mosquitto
+systemctl start mosquitto
+systemctl enable mosquitto
+```
+# if you like to ceck mosquitto or use it from scripts install mosquitto client package
+```
+install mosquitto-clients
+```
+
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```

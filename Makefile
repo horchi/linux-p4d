@@ -91,6 +91,7 @@ install-systemd:
    ifeq ($(DESTDIR),)
 	   systemctl daemon-reload
 	   systemctl enable $(TARGET)
+	   systemctl enable $(W1TARGET)
 	   systemctl enable mosquitto-log.service
    endif
 

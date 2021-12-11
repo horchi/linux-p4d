@@ -33,10 +33,10 @@ else
 fi
 
 if [ $RETVAL != 0 ]; then
-   echo -n "{ \"kind\":\"status\",\"value\":0 }"
+   echo -n '{ "kind":"status","value":0 }'
    exit 1
 fi
 
-echo -n "{ \"kind\":\"status\",\"value\":1 }"
+echo -n '{ "kind":"status","value":1 }'
 
 exit 0
