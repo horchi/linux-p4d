@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.8.13"
+#define _VERSION     "0.8.14"
 #define VERSION_DATE "11.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-11:  version 0.8.14
+  - change:  fixed sympol alignment for ios devices
+  - added:   color chouce for dashboard widgets
 
 2021-12-11:  version 0.8.13
   - change:  display optimized for mobile devices

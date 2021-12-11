@@ -424,6 +424,60 @@ class cTimeMs
 typedef cTimeMs cMyTimeMs;
 
 //***************************************************************************
+// Smart char pointer
+//  - freed at new assigment
+//  - freed at destroy
+//
+// Usage:
+//   char_smart p("init");
+//
+//   printf("char: %s\n", p.c_str());
+//
+//   asprintf(&p, "%s", "test");
+//   printf("char: %s\n", p.c_str());
+//***************************************************************************
+
+class char_smart
+{
+   public:
+
+      char_smart(const char* s = nullptr)  { set(s); }
+      ~char_smart() { free(); }
+
+      inline void operator = (const char* s) { set(s); }
+      char** operator& () { return ref(); }
+      operator const char* () const { return c_str(); }
+
+      void free()
+      {
+         if (p)
+            printf("free %s\n", p);
+         ::free(p);
+         p = nullptr;
+      }
+
+      void set(const char* s = nullptr)
+      {
+         free();
+         if (s)
+            p = strdup(s);
+      };
+
+      char** ref()
+      {
+         free();
+         return &p;
+      };
+
+      char* c_str() const { return p; };
+
+   private:
+
+      char* p {nullptr};
+};
+
+
+//***************************************************************************
 // Log Duration
 //***************************************************************************
 

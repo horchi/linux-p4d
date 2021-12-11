@@ -76,19 +76,20 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 
    // mounts
 
+   bool noStore {false};       // for debugging on iOS
    lws_http_mount mount {0};
 
    mount.mount_next = (lws_http_mount*)nullptr;
    mount.mountpoint = "/";
    mount.origin = httpPath;
    mount.mountpoint_len = 1;
-   mount.cache_max_age = true ? 86400 : 604800;
-   mount.cache_reusable = 1;   // 0 => no-store
-   mount.cache_revalidate = true ? 1 : 0;
+   mount.cache_max_age = noStore ? 0 : 86400;
+   mount.cache_reusable = !noStore;       // 0 => no-store
+   mount.cache_revalidate = 1;
    mount.cache_intermediaries = 1;
 
 #ifdef LWS_FEATURE_MOUNT_NO_CACHE
-   mount.cache_no = 1;
+   mount.cache_no = noStore ? 0 : 1;
 #endif
    mount.origin_protocol = LWSMPRO_FILE;
    mount.basic_auth_login_file = nullptr;

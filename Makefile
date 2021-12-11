@@ -78,10 +78,8 @@ install-daemon: install-config install-scripts
 	mkdir -p $(DESTDIR)$(PREFIX)/share/$(TARGET)/
 #	install --mode=644 -D arduino/build-nano-atmega328/ioctrl.hex $(DESTDIR)$(PREFIX)/share/$(TARGET)/nano-atmega328-ioctrl.hex
 
-inst_restart: $(TARGET) $(CMDTARGET) install-config install-scripts
-	systemctl stop  $(TARGET)
-	@cp -p $(TARGET) $(CMDTARGET) $(BINDEST)
-	systemctl start $(TARGET)
+restart: $(TARGET) $(CMDTARGET) install
+	systemctl restart $(TARGET)
 
 install-systemd:
 	@echo install systemd

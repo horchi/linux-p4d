@@ -1206,12 +1206,14 @@ table.tableMultiCol tr:nth-child(odd)
 .widget-main
 {
     grid-area: main;
-    background-color: Transparent;
+    background-color: transparent;
     border: none;
     width: inherit;
     outline: none;
     cursor: pointer;
-    text-align: -webkit-center;
+    text-align: center;
+    color: white;
+    padding: 0px;
 }
 
 .widget-main > img
@@ -1421,7 +1423,7 @@ dialog::backdrop, #backdrop
 @media only screen and (max-width: 740px)
 {
     .daemonState               { width: 88%; }
-    .menu                      { margin: 0px; }
+    .menu                      { padding: 0px; margin: 0px; }
     .button1                   { margin: 1px; }
     .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }

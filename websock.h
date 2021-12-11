@@ -53,19 +53,18 @@ class cWebService
          evStoreDashboards,
          evAlerts,
          evStoreAlerts,
+         evImageConfig,
 
          evErrors,
          evMenu,
          evParEditRequest,
          evParStore,
          evInitTables,
-
          evSchema,
          evStoreSchema,
          evUpdateTimeRanges,
          evPellets,
          evPelletsAdd,
-         evImageConfig,
 
          evCount
       };

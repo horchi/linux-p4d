@@ -62,19 +62,18 @@ const char* cWebService::events[] =
    "storedashboards",
    "alerts",
    "storealerts",
+   "imageconfig",
 
    "errors",
    "menu",
    "pareditrequest",
    "parstore",
    "inittables",
-
    "schema",
    "storeschema",
    "updatetimeranges",
    "pellets",
    "pelletsadd",
-   "imageconfig",
 
    0
 };
