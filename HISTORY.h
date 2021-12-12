@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.14"
-#define VERSION_DATE "11.12.2021"
+#define _VERSION     "0.8.15"
+#define VERSION_DATE "12.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-12:  version 0.8.15
+  - bugfix:  fixed w1 sensor detection on busmaster > 1
+  - bugfix:  fixed update of table schemaconf
 
 2021-12-11:  version 0.8.14
   - change:  fixed sympol alignment for ios devices

@@ -97,6 +97,7 @@ class P4d : public Daemon
       int performTimeParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);
       int performTimeParStore(json_t* oObject, long client);
+      int storeIoSetup(json_t* array, long client) override;
       int storeSchema(json_t* oObject, long client);
 
       int s3200State2Json(json_t* obj);

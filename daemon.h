@@ -310,7 +310,7 @@ class Daemon : public FroelingService, public cWebInterface
       int performForceRefresh(json_t* obj, long client);
       int storeConfig(json_t* obj, long client);
       int storeDashboards(json_t* obj, long client);
-      int storeIoSetup(json_t* array, long client);
+      virtual int storeIoSetup(json_t* array, long client);
       int storeGroups(json_t* array, long client);
       int performChartbookmarks(long client);
       int storeChartbookmarks(json_t* array, long client);

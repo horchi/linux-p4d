@@ -48,42 +48,48 @@ int W1::show()
 
 int W1::scan()
 {
-   std::vector<std::string> lines;
+   DIR* dir {nullptr};
+   dirent* dp {nullptr};
 
-   if (loadLinesFromFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", lines) != success)
-      return fail;
-
-   for (auto it = lines.begin(); it != lines.end(); ++it)
+   if (!(dir = opendir(w1Path)))
    {
-      if (strcasestr(it->c_str(), "not found") || isEmpty(it->c_str()))
-         continue;
+      tell(0, "Info: No One-Wire sensors found, path '%s' not exist (%s)", w1Path, strerror(errno));
+      return fail;
+   }
+
+   while ((dp = readdir(dir)))
+   {
+      if (strlen(dp->d_name) < 3 || strstr(dp->d_name, "bus_master"))
+          continue;
 
       char* path {nullptr};
-      asprintf(&path, "%s/%s/w1_slave", w1Path, it->c_str());
+      asprintf(&path, "%s/%s/w1_slave", w1Path, dp->d_name);
       bool exist = fileExists(path);
       free(path);
 
       if (!exist)
       {
-         tell(eloDebug, "%s seems not to be a temperatur sensor, skipping", it->c_str());
+         tell(eloAlways, "%s seems not to be a temperatur sensor, skipping", dp->d_name);
          continue;
       }
 
-      if (sensors.find(it->c_str()) == sensors.end())
+      if (sensors.find(dp->d_name) == sensors.end())
       {
-         tell(eloAlways, "One Wire Sensor '%s' attached", it->c_str());
-         sensors[it->c_str()].value = 0;
-         sensors[it->c_str()].active = true;
+         tell(eloAlways, "One Wire Sensor '%s' attached", dp->d_name);
+         sensors[dp->d_name].value = 0;
+         sensors[dp->d_name].active = true;
       }
-      else if (!sensors[it->c_str()].active)
+      else if (!sensors[dp->d_name].active)
       {
-         tell(eloAlways, "One Wire Sensor '%s' activated again", it->c_str());
-         sensors[it->c_str()].value = 0;
-         sensors[it->c_str()].active = true;
+         tell(eloAlways, "One Wire Sensor '%s' activated again", dp->d_name);
+         sensors[dp->d_name].value = 0;
+         sensors[dp->d_name].active = true;
       }
    }
 
-   return success;
+   closedir(dir);
+
+   return done;
 }
 
 //***************************************************************************
@@ -298,7 +304,8 @@ int main(int argc, char** argv)
    // if (readConfig() != success)
    //    return 1;
 
-   if (_level != na)  loglevel = _level;
+   if (_level != na)
+      loglevel = _level;
 
    job = new W1(url);
 

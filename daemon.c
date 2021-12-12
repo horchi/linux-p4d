@@ -522,6 +522,8 @@ int Daemon::initScripts()
    char* path {nullptr};
    int count {0};
 
+   // clear removed scripts ...
+
    tableScripts->clear();
 
    for (int f = selectScripts->find(); f; f = selectScripts->fetch())
