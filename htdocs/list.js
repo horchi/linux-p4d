@@ -22,7 +22,7 @@ function initList()
    document.getElementById("container").innerHTML = '<div id="listContainer" class="rounded-border listContainer"</div>';
    var root = document.getElementById("listContainer");
 
-   // deamon state
+   // state
 
    document.getElementById("stateContainer").innerHTML =
       '<div id="stateContainerS3200" class="rounded-border heatingState"></div>' +
@@ -106,7 +106,7 @@ function initList()
          html += '<div class="listFirstCol" id="widget' + elemId + '"></div>';
       }
       else {
-         html += '<span class="listFirstCol" id=widget' + elemId + '">' + sensor.value.toFixed(2) + '&nbsp;' + fact.widget.unit;
+         html += '<span class="listFirstCol" id=widget' + elemId + '">' + (sensor.value ? sensor.value.toFixed(2) : '-') + '&nbsp;' + fact.widget.unit;
          html += '&nbsp; <p style="display:inline;font-size:12px;font-style:italic;">(' + (sensor.peak != null ? sensor.peak.toFixed(2) : '  ') + ')</p>';
          html += '</span>';
       }

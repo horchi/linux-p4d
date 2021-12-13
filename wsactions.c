@@ -139,6 +139,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evStoreAlerts:         return rights & urSettings;
       case evStoreDashboards:     return rights & urSettings;
       case evGroups:              return rights & urSettings;
+      case evImageConfig:         return rights & urSettings;
 
       case evMenu:                return rights & urView;
       case evSchema:              return rights & urView;
@@ -151,7 +152,6 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evPellets:             return rights & urControl;
       case evPelletsAdd:          return rights & urFullControl;
       case evErrors:              return rights & urView;
-      case evImageConfig:         return rights & urSettings;
 
       default: break;
    }
@@ -793,7 +793,7 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
    }
 
    if (count)
-      replyResult(fail, "Gespeichert", client);
+      replyResult(success, "Gespeichert", client);
 
    tableUsers->reset();
 
@@ -936,7 +936,6 @@ int Daemon::storeDashboards(json_t* obj, long client)
       json_array_foreach(array, index, jId)
       {
          int dashboardId = json_integer_value(jId);
-
          tableDashboards->clear();
          tableDashboards->setValue("ID", dashboardId);
 
@@ -1023,9 +1022,11 @@ int Daemon::storeDashboards(json_t* obj, long client)
 
                   if (tableValueFacts->find())
                   {
+                     const char* title = !tableValueFacts->getValue("USRTITLE")->isEmpty() ? tableValueFacts->getStrValue("USRTITLE") : tableValueFacts->getStrValue("NAME");
+
                      std::string widgetOptionsDefault = toWidgetOptionString(tableValueFacts->getStrValue("TYPE"),
                                                                              tableValueFacts->getStrValue("UNIT"),
-                                                                             tableValueFacts->getStrValue("NAME"),
+                                                                             title,
                                                                              tableValueFacts->getIntValue("ADDRESS"));
 
                      asprintf(&opts, "%s", widgetOptionsDefault.c_str());
@@ -1458,6 +1459,8 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       if (!tableValueFacts->getValue("CHOICES")->isNull())
          json_object_set_new(oData, "choices", json_string(tableValueFacts->getStrValue("CHOICES")));
 
+      // widget in valuefacts only used or list view!
+
       std::string widgetOptionsDefault = toWidgetOptionString(tableValueFacts->getStrValue("TYPE"),
                                                               tableValueFacts->getStrValue("UNIT"),
                                                               tableValueFacts->getStrValue("NAME"),
@@ -1501,9 +1504,10 @@ int Daemon::dashboards2Json(json_t* obj)
       char* tmp {nullptr};
       asprintf(&tmp, "%ld", tableDashboards->getIntValue("ID"));
       json_object_set_new(obj, tmp, oDashboard);
+      free(tmp);
       json_object_set_new(oDashboard, "title", json_string(tableDashboards->getStrValue("TITLE")));
       json_object_set_new(oDashboard, "symbol", json_string(tableDashboards->getStrValue("SYMBOL")));
-      free(tmp);
+      json_object_set_new(oDashboard, "order", json_integer(tableDashboards->getIntValue("ORDER")));
 
       json_t* oWidgets = json_object();
       json_object_set_new(oDashboard, "widgets", oWidgets);

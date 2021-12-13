@@ -68,6 +68,7 @@ if [ ${update} != 1 ]; then
    echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
    echo -e "${WHITE}- to permit the daemon sending mails: ${NC}"
    echo -e "${WHITE}-   setup your mail account in /etc/msmtprc properly${NC}"
+   echo -e "${WHITE}-   and check your setting with:${NC}"
    echo -e "${WHITE}-    #> ${CYAN}p4d-mail.sh 'Test Mail' 'just a test' text/plain your@mail.de${NC}"
    echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
    echo -e -n "${CYAN}Reboot now? [y/N] ${NC}"

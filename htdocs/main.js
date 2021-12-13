@@ -9,6 +9,7 @@
  */
 
 var WebSocketClient = window.WebSocketClient
+var colorStyle = null;
 
 var onSmalDevice = false;
 var isActive = null;
@@ -36,6 +37,15 @@ var grouplist = {};
 var setupMode = false;
 
 $('document').ready(function() {
+
+   // just a deconz ws test
+   if (false) {
+      const ws = new WebSocket('ws://' + '192.168.200.101' + ':' + 443);
+      ws.onmessage = function(msg) {
+         console.log(JSON.parse(msg.data));
+      }
+   }
+
    daemonState.state = -1;
    s3200State.state = -1;
    console.log("currentPage: " + currentPage);
@@ -49,6 +59,7 @@ $('document').ready(function() {
    var protocol = myProtocol;
 
    connectWebSocket(url, protocol);
+   colorStyle = getComputedStyle(document.body);
 });
 
 function onSocketConnect(protocol)
@@ -573,6 +584,7 @@ function mainMenuSel(what)
          theChartStart = new Date().subHours(theChartRange * 24);
 
       prepareChartRequest(jsonRequest, config.chartSensors, theChartStart, theChartRange, "chart");
+      currentRequest = jsonRequest;
    }
    else if (currentPage == "groups")
       event = "groups";

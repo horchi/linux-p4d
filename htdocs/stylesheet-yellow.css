@@ -41,6 +41,9 @@
 
     --dialogColor: black;
     --dialogBackground: #818382;
+
+    --scaleText: white;
+    --scale: #ccc;
 }
 
 Body

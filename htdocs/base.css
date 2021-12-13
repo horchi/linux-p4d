@@ -1247,7 +1247,7 @@ table.tableMultiCol tr:nth-child(odd)
         'main peak'
         'main value';
     grid-template-rows: 15% 15% 70%;
-    grid-template-columns: 57% 43%;
+    grid-template-columns: 58% 42%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1265,7 +1265,8 @@ table.tableMultiCol tr:nth-child(odd)
     grid-area: main;
     height: 100%;
     /*align-self: center;*/
-    margin-left: 20%;
+    margin-left: 10%;
+    padding-left: 10%;
 }
 
 .widget-main-value-lin
@@ -1410,17 +1411,9 @@ dialog::backdrop, #backdrop
 }
 
 /* -------------- */
-/* Media specials*/
+/* Media specials */
 
-@media only screen and (min-width: 900px)
-{
-}
-
-@media only screen and (min-width: 768px) and (max-width:1139px)
-{
-}
-
-@media only screen and (max-width: 740px)
+@media only screen and (max-width:395px)
 {
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
@@ -1430,15 +1423,39 @@ dialog::backdrop, #backdrop
     .inputTableConfig > div > span              { width: 30%; }
     .buttonDashboard           { margin: 1px 0px 1px 0px; }
     .menuDashboard             { margin: 2px; }
-    .widgetContainer > div     { width: 180px; height: 160px; }
+    .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 30% 66% 4%; }
     .widgetChart               { grid-template-rows: 30% 20% 50%; }
-    .widget-title              { font-size: 1.2em; }
+    .widget-title              { font-size: 1.0em; }
+    .widget-value              { font-size: 1.0em; }
+}
+
+@media only screen and (min-width:396px) and (max-width:1080px)
+{
+    .daemonState               { width: 88%; }
+    .menu                      { padding: 0px; margin: 0px; }
+    .button1                   { margin: 1px; }
+    .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
+    .inputTableConfig > div > span:nth-child(3) { width: 25%; }
+    .inputTableConfig > div > span              { width: 30%; }
+    .buttonDashboard           { margin: 1px 0px 1px 0px; }
+    .menuDashboard             { margin: 2px; }
+    .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; }
+    .widgetGauge               { grid-template-rows: 30% 70%; }
+    .widget                    { grid-template-rows: 30% 66% 4%; }
+    .widgetChart               { grid-template-rows: 30% 20% 50%; }
+    .widget-title              { font-size: 1.3em; }
     .widget-value              { font-size: 1.3em; }
 }
 
-@media only screen and (max-width: 375px)
+
+@media only screen and (max-width: 375px) and (min-width:321px)
 {
-    .widgetContainer > div     { width: 153px; padding: 0px; margin: 0px; }
+    .widgetContainer > div     { width: 175px; padding: 0px; margin: 1px; }
+}
+
+@media only screen and (max-width: 320px)
+{
+    .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; }
 }

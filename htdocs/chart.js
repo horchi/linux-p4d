@@ -8,6 +8,8 @@
  *
  */
 
+var currentRequest = null;
+
 function drawCharts(dataObject)
 {
    var update = document.getElementById("chartTitle") != null;
@@ -166,6 +168,30 @@ function getSensors()
    return sensors;
 }
 
+var refreshTimer = null;
+
+function setRefreshTimer()
+{
+   if (refreshTimer)
+      clearTimeout(refreshTimer);
+
+   if ($('#refresh').is(":checked")) {
+      refreshTimer = setTimeout(function() {
+         refresh();
+         console.log("refresh");
+      }, 120000);
+   }
+}
+
+function refresh()
+{
+   console.log("do refresh");
+   if (currentRequest != null) {
+      socket.send({ "event" : "chartdata", "object" : currentRequest });
+      showProgressDialog();
+   }
+}
+
 function updateChartBookmarks()
 {
    if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10)
@@ -185,6 +211,12 @@ function updateChartBookmarks()
       html += "</div>"
       $("#chartBookmarks").append(html);
    }
+
+   var html = ' <div style="display:flex;margin-left:60px;text-align:right;align-items: center;"><span style="align-self:center;width:120px;">Refresh:</span><span><input id="refresh" style="width:auto;" type="checkbox"' + (refreshTimer != null ? ' checked' : '') + '/><label for="refresh"></label></span></div>';
+   $("#chartBookmarks").append(html);
+   $("#refresh").click(function() {setRefreshTimer()});
+
+   setRefreshTimer();
 }
 
 function dragBm(ev, name)
@@ -245,6 +277,7 @@ function chartSelect(action)
 
    var jsonRequest = {};
    prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
+   currentRequest = jsonRequest;
    socket.send({ "event" : "chartdata", "object" : jsonRequest });
    showProgressDialog();
 }
@@ -255,6 +288,7 @@ function chartSelectBookmark(sensors)
 
    var jsonRequest = {};
    prepareChartRequest(jsonRequest, sensors, theChartStart, theChartRange, "chart");
+   currentRequest = jsonRequest;
    socket.send({ "event" : "chartdata", "object" : jsonRequest });
    showProgressDialog();
 }

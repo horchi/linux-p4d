@@ -56,10 +56,12 @@ int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, c
       status = mqttHassReader->read(&message, 100);
       tp = mqttHassReader->getLastReadTopic();
 
+      tell(eloDebug, "config topic '%s', state %d", tp.c_str(), status);
+
       if (status != success && status != Mqtt::wrnTimeout)
          return fail;
 
-      if (forceConfig || status == Mqtt::wrnTimeout)
+      if (forceConfig || status != success || !tp.length())
       {
          char* configTopic {nullptr};
          char* configJson {nullptr};

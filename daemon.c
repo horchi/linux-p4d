@@ -150,17 +150,22 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
    { "DI",       na,   "*",    wtSymbol,        0,         0,       0, false },
    { "AO",       na,   "*",     wtMeter,        0,        45,       0, false },
    { "AI",       na,   "*",     wtMeter,        0,        45,       0, false },
-   { "SD",       na,   "*",     wtChart,        0,      2000,       0, false },
+   { "SD",       na,   "*",      wtChart,        0,      2000,       0, true },
    { "SC",       na,    "",      wtText,        0,         0,       0, false },
    { "SC",       na, "zst",    wtSymbol,        0,         0,       0, false },
-   { "SC",       na,   "*",     wtMeter,        0,         0,       0, false },
-   { "UD",  udState, "zst",    wtSymbol,        0,         0,       0, false },
-   { "UD",   udMode, "zst",      wtText,        0,         0,       0, false },
-   { "UD",   udTime,   "T",      wtText,        0,         0,       0, false },
+   { "SC",       na,   "*",      wtMeter,        0,        40,       0, true },
+   { "SP",       na,    "",      wtText,        0,         0,       0, false },
+   { "SP",       na,   "%", wtMeterLevel,        0,       100,       0, false },
+   { "SP",       na, "kWh",      wtChart,        0,        50,       0, true },
+   { "SP",       na,   "W",      wtMeter,        0,      3000,       0, true },
+   { "SP",       na,   "*",      wtMeter,        0,       100,       0, true },
+   { "UD",  udState, "zst",     wtSymbol,        0,         0,       0, false },
+   { "UD",   udMode, "zst",       wtText,        0,         0,       0, false },
+   { "UD",   udTime,   "T",       wtText,        0,         0,       0, false },
    { "UD",       na,   "*",      wtText,        0,         0,       0, false },
-   { "W1",       na,   "*",    wtSymbol,        0,        30,       0, false },
-   { "VA",       na,   "%",     wtMeter,        0,       100,       0, false },
-   { "VA",       na,   "*",     wtMeter,        0,        45,       0, false },
+   { "W1",       na,   "*", wtMeterLevel,        0,        40,       0, true },
+   { "VA",       na,   "%", wtMeterLevel,        0,       100,       0, true },
+   { "VA",       na,   "*",      wtMeter,        0,        45,       0, true },
    { "" }
 };
 
@@ -655,6 +660,8 @@ int Daemon::initScripts()
       scSensors[addr].valid = valid;
 
       if (kind == "status")
+         scSensors[addr].state = (bool)value;
+      else if (kind == "trigger")
          scSensors[addr].state = (bool)value;
       else if (kind == "text")
          scSensors[addr].text = text;
@@ -1471,7 +1478,7 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
-      mqttPublishSensor(iot, name, title, unit, theValue, text, initialRun /*forceConfig*/);
+      mqttPublishSensor(iot, name, title, unit, theValue, text); // , initialRun /*forceConfig*/);
 
    return success;
 }
@@ -2132,10 +2139,10 @@ int Daemon::loadHtmlHeader()
 //***************************************************************************
 
 int Daemon::addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
-                         const char* title, int rights, const char* choices)
+                         const char* aTitle, int rights, const char* choices)
 
 {
-   std::string widgetOptionsDefault = toWidgetOptionString(type, unit, name, addr);
+   const char* title = !isEmpty(aTitle) ? aTitle : name;
 
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", addr);
@@ -2146,7 +2153,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
       tell(0, "Add ValueFact '%ld' '%s'", tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
 
       tableValueFacts->setValue("NAME", name);
-      tableValueFacts->setValue("TITLE", title ? title : name);
+      tableValueFacts->setValue("TITLE", title);
       tableValueFacts->setValue("FACTOR", factor);
       tableValueFacts->setValue("RIGHTS", rights);
       tableValueFacts->setValue("STATE", "D");
@@ -2162,7 +2169,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    tableValueFacts->clearChanged();
 
    tableValueFacts->setValue("NAME", name);
-   tableValueFacts->setValue("TITLE", title ? title : name);
+   tableValueFacts->setValue("TITLE", title);
    tableValueFacts->setValue("FACTOR", factor);
 
    if (!isEmpty(choices))
@@ -2389,7 +2396,7 @@ const char* Daemon::getImageFor(const char* title, int value)
 
    if (strcasestr(title, "Pump"))
       imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
-   else if (strcasestr(title, "Steckdose"))
+   else if (strcasestr(title, "Steckdose") || strcasestr(title, "Plug") )
       imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
    else if (strcasestr(title, "UV-C"))
       imagePath = value ? "img/icon/uvc-on.png" : "img/icon/uvc-off.png";
@@ -2397,6 +2404,19 @@ const char* Daemon::getImageFor(const char* title, int value)
       imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
    else if (strcasestr(title, "Shower") || strcasestr(title, "Dusche"))
       imagePath = value ? "img/icon/shower-on.png" : "img/icon/shower-off.png";
+   else if (strcasestr(title, "VDR"))
+      imagePath = value ? "img/icon/vdr-on.png" : "img/icon/vdr-off.png";
+   else if (strcasestr(title, "VPN"))
+      imagePath = value ? "img/icon/vpn-on.png" : "img/icon/vpn-off.png";
+   else if (strcasestr(title, "SATIP"))
+      imagePath = value ? "img/icon/satip-on.png" : "img/icon/satip-off.png";
+   else if (strcasestr(title, "Music") || strcasestr(title, "Musik"))
+      imagePath = value ? "img/icon/note-on.png" : "img/icon/note-off.png";
+   else if (strcasestr(title, "Fan") || strcasestr(title, "Lüfter"))
+      imagePath = value ? "img/icon/fan-on.png" : "img/icon/fan-off.png";
+   else if (strcasestr(title, "Desktop"))
+      imagePath = value ? "img/icon/desktop-on.png" : "img/icon/desktop-off.png";
+
    else
       imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
 

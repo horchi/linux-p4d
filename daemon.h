@@ -121,7 +121,7 @@ class Daemon : public FroelingService, public cWebInterface
          wtMeterLevel,   // == 6
          wtPlainText,    // == 7  without title
          wtChoice,       // == 8  option choice
-         wtSymbolValue,
+         wtSymbolValue,  // == 9
          wtCount
       };
 

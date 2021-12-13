@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.15"
-#define VERSION_DATE "12.12.2021"
+#define _VERSION     "0.8.19"
+#define VERSION_DATE "13.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,21 @@
 
 /*
  * ------------------------------------
+
+2021-12-13:  version 0.8.19
+  - added:  add all widgets option
+  - change: adjusted widget defaults
+  - change: redesigned add and delete of widgets
+
+2021-12-12:  version 0.8.18
+  - added:  show only widget-type specific option in widget setup dialog
+
+2021-12-12:  version 0.8.17
+  - added:  media query for deviced between 741px anf 1100px width (by Michael Pölsterl)
+  - added:  cyclic refresh for charts
+
+2021-12-12:  version 0.8.16
+  - added:  color of meter scales to stylesheet
 
 2021-12-12:  version 0.8.15
   - bugfix:  fixed w1 sensor detection on busmaster > 1
