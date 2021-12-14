@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.19"
-#define VERSION_DATE "13.12.2021"
+#define _VERSION     "0.8.20"
+#define VERSION_DATE "14.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-14:  version 0.8.20
+  - added:  MQTT Topics for node-red communication
 
 2021-12-13:  version 0.8.19
   - added:  add all widgets option

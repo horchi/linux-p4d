@@ -37,17 +37,9 @@ var grouplist = {};
 var setupMode = false;
 
 $('document').ready(function() {
-
-   // just a deconz ws test
-   if (false) {
-      const ws = new WebSocket('ws://' + '192.168.200.101' + ':' + 443);
-      ws.onmessage = function(msg) {
-         console.log(JSON.parse(msg.data));
-      }
-   }
-
    daemonState.state = -1;
    s3200State.state = -1;
+
    console.log("currentPage: " + currentPage);
    var url = "";
 
@@ -392,7 +384,7 @@ function prepareMenu()
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dashboards</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'chart\')">Charts</button>';
-   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Funktionsschema</button>';
+   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Schema</button>';
    // html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'vdr\')">VDR</button>';
 
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'menu\')">Service Menü</button>';
@@ -458,20 +450,20 @@ function prepareMenu()
       html += '<div id="confirm" class="confirmDiv"/>';
    }
 
-   if (currentPage == "menu") {
-      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
-         html += "<div class=\"confirmDiv\">";
-         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"updateTimeRanges()\">Zeiten aktualisieren</button>";
-         html += "</div>";
-      }
-   }
-
    if (currentPage == "schema") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div class=\"confirmDiv\">";
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
+         html += "</div>";
+      }
+   }
+
+   if (currentPage == "menu") {
+      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
+         html += "<div class=\"confirmDiv\">";
+         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"updateTimeRanges()\">Zeiten aktualisieren</button>";
          html += "</div>";
       }
    }

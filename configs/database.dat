@@ -193,6 +193,29 @@ Index scripts
 }
 
 // ----------------------------------------------------------------
+// Table SchemaConf
+// ----------------------------------------------------------------
+
+Table schemaconf
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        2 Primary,
+
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+
+   STATE                ""  state                Ascii        1 Data,
+   KIND                 "kind of display" kind   Int          1 Data,
+   WIDTH                "image width"     width  Int          1 Data,
+   HEIGHT               "image height"    height Int          1 Data,
+   SHOWUNIT             ""  showunit             Int          1 Data,
+   SHOWTITLE            ""  showtitle            Int          1 Data,
+   USRTEXT              ""  usrtext              Ascii      100 Data,
+   FUNCTION             ""  function             Text      2000 Data,
+   PROPERTIES           ""  properties           Text      1000 Data,
+}
+
+// ----------------------------------------------------------------
 // Table Menu
 // ----------------------------------------------------------------
 
@@ -260,29 +283,6 @@ Table pellets
 }
 
 // ----------------------------------------------------------------
-// Table SchemaConf
-// ----------------------------------------------------------------
-
-Table schemaconf
-{
-   ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
-
-   INSSP                ""  inssp                Int         10 Meta,
-   UPDSP                ""  updsp                Int         10 Meta,
-
-   STATE                ""  state                Ascii        1 Data,
-   KIND                 "kind of display" kind   Int          1 Data,
-   WIDTH                "image width"     width  Int          1 Data,
-   HEIGHT               "image height"    height Int          1 Data,
-   SHOWUNIT             ""  showunit             Int          1 Data,
-   SHOWTITLE            ""  showtitle            Int          1 Data,
-   USRTEXT              ""  usrtext              Ascii      100 Data,
-   FUNCTION             ""  function             Text      2000 Data,
-   PROPERTIES           ""  properties           Text      1000 Data,
-}
-
-// ----------------------------------------------------------------
 // Table Errors
 // ----------------------------------------------------------------
 
@@ -300,3 +300,4 @@ Table errors
    TEXT                 ""                text       Ascii      100 Data,
    MAILCNT              ""                mailcnt    Int          0 Data,
 }
+

@@ -63,14 +63,14 @@ const char* cWebService::events[] =
    "alerts",
    "storealerts",
    "imageconfig",
+   "schema",
+   "storeschema",
 
    "errors",
    "menu",
    "pareditrequest",
    "parstore",
    "inittables",
-   "schema",
-   "storeschema",
    "updatetimeranges",
    "pellets",
    "pelletsadd",
@@ -145,27 +145,27 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
 {
    // type, address,  unit,  widgetType, minScale, maxScale scaleStep, showPeak
 
-   {  "-",       na,   "*",     wtMeter,        0,        45,       0, false },
-   { "DO",       na,   "*",    wtSymbol,        0,         0,       0, false },
-   { "DI",       na,   "*",    wtSymbol,        0,         0,       0, false },
-   { "AO",       na,   "*",     wtMeter,        0,        45,       0, false },
-   { "AI",       na,   "*",     wtMeter,        0,        45,       0, false },
+   {  "-",       na,   "*",      wtMeter,        0,        45,      10, false },
+   { "DO",       na,   "*",     wtSymbol,        0,         0,       0, false },
+   { "DI",       na,   "*",     wtSymbol,        0,         0,       0, false },
+   { "AO",       na,   "*",      wtMeter,        0,        45,      10, false },
+   { "AI",       na,   "*",      wtMeter,        0,        45,      10, false },
    { "SD",       na,   "*",      wtChart,        0,      2000,       0, true },
-   { "SC",       na,    "",      wtText,        0,         0,       0, false },
-   { "SC",       na, "zst",    wtSymbol,        0,         0,       0, false },
-   { "SC",       na,   "*",      wtMeter,        0,        40,       0, true },
-   { "SP",       na,    "",      wtText,        0,         0,       0, false },
-   { "SP",       na,   "%", wtMeterLevel,        0,       100,       0, false },
+   { "SC",       na,    "",       wtText,        0,         0,       0, false },
+   { "SC",       na, "zst",     wtSymbol,        0,         0,       0, false },
+   { "SC",       na,   "*",      wtMeter,        0,        40,       5, true },
+   { "SP",       na,    "",       wtText,        0,         0,       0, false },
+   { "SP",       na,   "%", wtMeterLevel,        0,       100,       5, false },
    { "SP",       na, "kWh",      wtChart,        0,        50,       0, true },
    { "SP",       na,   "W",      wtMeter,        0,      3000,       0, true },
-   { "SP",       na,   "*",      wtMeter,        0,       100,       0, true },
+   { "SP",       na,   "*",      wtMeter,        0,       100,      10, true },
    { "UD",  udState, "zst",     wtSymbol,        0,         0,       0, false },
    { "UD",   udMode, "zst",       wtText,        0,         0,       0, false },
    { "UD",   udTime,   "T",       wtText,        0,         0,       0, false },
-   { "UD",       na,   "*",      wtText,        0,         0,       0, false },
-   { "W1",       na,   "*", wtMeterLevel,        0,        40,       0, true },
-   { "VA",       na,   "%", wtMeterLevel,        0,       100,       0, true },
-   { "VA",       na,   "*",      wtMeter,        0,        45,       0, true },
+   { "UD",       na,   "*",       wtText,        0,         0,       0, false },
+   { "W1",       na,   "*", wtMeterLevel,        0,        40,       5, true },
+   { "VA",       na,   "%", wtMeterLevel,        0,       100,      10, true },
+   { "VA",       na,   "*",      wtMeter,        0,        45,      10, true },
    { "" }
 };
 
@@ -724,6 +724,7 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    double value = getDoubleFromJson(oData, "value");
    const char* text = getStringFromJson(oData, "text");
    bool valid = getBoolFromJson(oData, "valid", false);
+   IoType iot = iotSensor;
 
    tell(3, "DEBUG: Got '%s' from script (kind:%s unit:%s value:%0.2f) [SC:%d]", result.c_str(), kind.c_str(), unit, value, addr);
 
@@ -731,20 +732,32 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    scSensors[addr].last = time(0);
    scSensors[addr].valid = valid;
 
+   bool changed {false};
+
    if (kind == "status")
+   {
+      changed = scSensors[addr].state != (bool)value;
       scSensors[addr].state = (bool)value;
+      iot = iotLight;
+   }
    else if (kind == "text")
+   {
+      changed = scSensors[addr].text != text;
       scSensors[addr].text = text;
+      iot = iotSensor;
+   }
    else if (kind == "value")
+   {
+      changed = scSensors[addr].value != value;
       scSensors[addr].value = value;
+      iot = iotSensor;
+   }
    else
       tell(0, "Got unexpected script kind '%s' in '%s'", kind.c_str(), result.c_str());
 
    // update WS
    {
-      // json_t* oJson = json_array();
       json_t* ojData = json_object();
-      // json_array_append_new(oJson, ojData);
 
       json_object_set_new(ojData, "address", json_integer((ulong)addr));
       json_object_set_new(ojData, "type", json_string("SC"));
@@ -766,7 +779,10 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
       pushDataUpdate("update", 0L);
    }
 
-   mqttPublishSensor(iotLight, name, "", "", value, "", false /*forceConfig*/);
+   mqttHaPublishSensor(iotLight, name, "", "", value, "", false /*forceConfig*/);
+
+   if (changed)
+      mqttNodeRedPublishSensor("SC", addr, iot, name, "", "", value, "");
 
    return success;
 }
@@ -1009,6 +1025,9 @@ int Daemon::initDb()
    tableDashboardWidgets = new cDbTable(connection, "dashboardwidgets");
    if (tableDashboardWidgets->open() != success) return fail;
 
+   tableSchemaConf = new cDbTable(connection, "schemaconf");
+   if (tableSchemaConf->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -1195,6 +1214,27 @@ int Daemon::initDb()
 
    // ------------------
 
+   selectSchemaConfByState = new cDbStatement(tableSchemaConf);
+
+   selectSchemaConfByState->build("select ");
+   selectSchemaConfByState->bindAllOut();
+   selectSchemaConfByState->build(" from %s where ", tableSchemaConf->TableName());
+   selectSchemaConfByState->bind("STATE", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectSchemaConfByState->prepare();
+
+   // ------------------
+
+   selectAllSchemaConf = new cDbStatement(tableSchemaConf);
+
+   selectAllSchemaConf->build("select ");
+   selectAllSchemaConf->bindAllOut();
+   selectAllSchemaConf->build(" from %s", tableSchemaConf->TableName());
+
+   status += selectAllSchemaConf->prepare();
+
+   // ------------------
+
    if (status == success)
       tell(eloAlways, "Connection to database established");
 
@@ -1283,6 +1323,7 @@ int Daemon::exitDb()
    delete tableGroups;                tableGroups = nullptr;
    delete tableDashboards;            tableDashboards = nullptr;
    delete tableDashboardWidgets;      tableDashboardWidgets = nullptr;
+   delete tableSchemaConf;            tableSchemaConf = nullptr;
 
    delete selectAllGroups;            selectAllGroups = nullptr;
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
@@ -1297,6 +1338,8 @@ int Daemon::exitDb()
    delete selectScripts;              selectScripts = nullptr;
    delete selectDashboards;           selectDashboards = nullptr;
    delete selectDashboardById;        selectDashboardById = nullptr;
+   delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
+   delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
 
    delete selectDashboardWidgetsFor;  selectDashboardWidgetsFor = nullptr;
 
@@ -1352,6 +1395,11 @@ int Daemon::readConfiguration(bool initial)
    getConfigItem("webPort", webPort, webPort);
    getConfigItem("webUrl", webUrl);
    getConfigItem("webSsl", webSsl);
+   getConfigItem("iconSet", iconSet, "light");
+
+   char* tmp {nullptr};
+   getConfigItem("schema", tmp);
+   free(tmp);
 
    char* port {nullptr};
    asprintf(&port, "%d", webPort);
@@ -1389,6 +1437,16 @@ int Daemon::readConfiguration(bool initial)
 
    if (url != mqttUrl)
       mqttDisconnect();
+
+   // Node-Red
+
+   url = mqttNodeRedUrl ? mqttNodeRedUrl : "";
+   getConfigItem("mqttNodeRedUrl", mqttNodeRedUrl);
+
+   if (url != mqttNodeRedUrl)
+      mqttDisconnect();
+
+   // Home Automation MQTT
 
    url = mqttHassUrl ? mqttHassUrl : "";
    getConfigItem("mqttHassUrl", mqttHassUrl);
@@ -1478,7 +1536,7 @@ int Daemon::store(time_t now, const char* name, const char* title, const char* u
    else if (mqttInterfaceStyle == misGroupedTopic)
       jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
    else if (mqttInterfaceStyle == misMultiTopic)
-      mqttPublishSensor(iot, name, title, unit, theValue, text); // , initialRun /*forceConfig*/);
+      mqttHaPublishSensor(iot, name, title, unit, theValue, text);
 
    return success;
 }
@@ -1864,7 +1922,7 @@ int Daemon::update(bool webOnly, long client)
 
    if (mqttInterfaceStyle == misSingleTopic)
    {
-      mqttWrite(oJson, 0);
+      mqttHaWrite(oJson, 0);
       json_decref(oJson);
       oJson = nullptr;
    }
@@ -1877,7 +1935,7 @@ int Daemon::update(bool webOnly, long client)
       {
          if (it.second.oJson)
          {
-            mqttWrite(it.second.oJson, it.first);
+            mqttHaWrite(it.second.oJson, it.first);
             json_decref(groups[it.first].oJson);
             groups[it.first].oJson = nullptr;
          }
@@ -1933,6 +1991,48 @@ void Daemon::afterUpdate()
    }
 
    free(path);
+}
+
+//***************************************************************************
+// Update Conf Tables
+//***************************************************************************
+
+int Daemon::updateSchemaConfTable()
+{
+   const int step = 20;
+   int y = 50;
+   int added = 0;
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("STATE", "A");
+
+   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+   {
+      int addr = tableValueFacts->getIntValue("ADDRESS");
+      const char* type = tableValueFacts->getStrValue("TYPE");
+      y += step;
+
+      tableSchemaConf->clear();
+      tableSchemaConf->setValue("ADDRESS", addr);
+      tableSchemaConf->setValue("TYPE", type);
+
+      if (!tableSchemaConf->find())
+      {
+         tableSchemaConf->setValue("KIND", "value");
+         tableSchemaConf->setValue("STATE", "A");
+         tableSchemaConf->setValue("COLOR", "black");
+         tableSchemaConf->setValue("XPOS", 12);
+         tableSchemaConf->setValue("YPOS", y);
+
+         tableSchemaConf->store();
+         added++;
+      }
+   }
+
+   selectActiveValueFacts->freeResult();
+   tell(eloAlways, "Added %d html schema configurations", added);
+
+   return success;
 }
 
 //***************************************************************************
@@ -2192,7 +2292,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
 //   Format: {"state": "OFF", "brightness": 255}
 //***************************************************************************
 
-int Daemon::dispatchMqttCommandRequest(json_t* jData, const char* topic)
+int Daemon::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
 {
    auto it = hassCmdTopicMap.find(topic);
 
@@ -2214,6 +2314,30 @@ int Daemon::dispatchMqttCommandRequest(json_t* jData, const char* topic)
          }
       }
    }
+
+   return success;
+}
+
+//***************************************************************************
+// Dispatch Node-Red Command Request
+//   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off" }'
+//***************************************************************************
+
+int Daemon::dispatchNodeRedCommand(json_t* jObject)
+{
+   const char* command = getStringFromJson(jObject, "command", "set");
+   const char* key = getStringFromJson(jObject, "id", "");
+
+   if (isEmpty(key))
+   {
+      tell(0, "Error: Node-Red: Got unexpected id '%s' from node-red, commad was '%s'", key, command);
+      return fail;
+   }
+
+   const char* sState = getStringFromJson(jObject, "state", "");
+   bool state = strcasecmp(sState, "on") == 0;
+
+   tell(0, "Node-Red: switch %s to %d", key, state);
 
    return success;
 }
@@ -2543,7 +2667,8 @@ void Daemon::gpioWrite(uint pin, bool state, bool store)
       // pushOutMessage(oJson, "update");
    }
 
-   mqttPublishSensor(iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "", false /*forceConfig*/);
+   mqttHaPublishSensor(iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "", false /*forceConfig*/);
+   mqttNodeRedPublishSensor("DO", pin, iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "");
 }
 
 bool Daemon::gpioRead(uint pin)
@@ -2819,6 +2944,8 @@ void Daemon::updateW1(const char* id, double value, time_t stamp)
 {
    tell(2, "w1: %s : %0.2f", id, value);
 
+   bool changed = w1Sensors[id].value != value;
+
    w1Sensors[id].value = value;
    w1Sensors[id].last = stamp;
 
@@ -2839,6 +2966,9 @@ void Daemon::updateW1(const char* id, double value, time_t stamp)
       free(tuple);
 
       pushDataUpdate("update", 0L);
+
+      if (changed)
+         mqttNodeRedPublishSensor("W1", (int)toW1Id(id), iotSensor, "", "", "", value, "");
    }
 
    tableValueFacts->reset();

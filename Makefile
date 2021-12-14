@@ -37,10 +37,6 @@ ifdef WIRINGPI
   LIBS += -lwiringPi
 endif
 
-ifdef TEST_MODE
-	DEFINES += -D__TEST
-endif
-
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
 endif
@@ -73,7 +69,7 @@ install-daemon: install-config install-scripts
    endif
 	install --mode=755 -D $(TARGET) $(BINDEST)/
 	install --mode=755 -D $(W1TARGET) $(BINDEST)/
-	install --mode=755 -D $(W1TARGET) $(CMDTARGET) $(BINDEST)/
+	install --mode=755 -D $(CMDTARGET) $(BINDEST)/
 	make install-systemd
 	mkdir -p $(DESTDIR)$(PREFIX)/share/$(TARGET)/
 #	install --mode=644 -D arduino/build-nano-atmega328/ioctrl.hex $(DESTDIR)$(PREFIX)/share/$(TARGET)/nano-atmega328-ioctrl.hex

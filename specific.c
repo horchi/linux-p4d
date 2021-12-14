@@ -6,6 +6,8 @@
 // Date 16.04.2021 - Jörg Wendel
 //***************************************************************************
 
+#include <dirent.h>
+
 #ifndef _NO_RASPBERRY_PI_
 #  include <wiringPi.h>
 #else
@@ -57,7 +59,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
    { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
 
-   // MQTT interface
+   // Home Autonation MQTT interface
 
    { "mqttHassUrl",               ctString,  "",  false, "3 MQTT Interface", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
    { "mqttHassUser",              ctString,  "",  false, "3 MQTT Interface", "MQTT HA User", "" },
@@ -65,13 +67,17 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "mqttDataTopic",             ctString,  "",  false, "3 MQTT Interface", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
    { "mqttHaveConfigTopic",       ctBool,    "1", false, "3 MQTT Interface", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
 
+   // node-red MQTT interface
+
+   { "mqttNodeRedUrl",            ctString,  "",  false, "4 MQTT Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+
    // mail
 
-   { "mail",                      ctBool,    "0",                    false, "4 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
-   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "4 Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  "",                     false, "4 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctMultiSelect, "",                 false, "4 Mail", "  für folgende Status", "" },
-   { "errorMailTo",               ctString,  "",                     false, "4 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "mail",                      ctBool,    "0",                    false, "5 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
+   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "5 Mail", "p4d sendet Mails über das Skript", "" },
+   { "stateMailTo",               ctString,  "",                     false, "5 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailStates",           ctMultiSelect, "",                 false, "5 Mail", "  für folgende Status", "" },
+   { "errorMailTo",               ctString,  "",                     false, "5 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
 };
 
 //***************************************************************************
@@ -132,9 +138,6 @@ int P4d::initDb()
    tableSensorAlert = new cDbTable(connection, "sensoralert");
    if (tableSensorAlert->open() != success) return fail;
 
-   tableSchemaConf = new cDbTable(connection, "schemaconf");
-   if (tableSchemaConf->open() != success) return fail;
-
    tableTimeRanges = new cDbTable(connection, "timeranges");  // #TODO - still needed
    if (tableTimeRanges->open() != success) return fail;
 
@@ -172,27 +175,6 @@ int P4d::initDb()
    selectMenuItemsByChild->bind("CHILD", cDBS::bndIn | cDBS::bndSet);
 
    status += selectMenuItemsByChild->prepare();
-
-   // ------------------
-
-   selectSchemaConfByState = new cDbStatement(tableSchemaConf);
-
-   selectSchemaConfByState->build("select ");
-   selectSchemaConfByState->bindAllOut();
-   selectSchemaConfByState->build(" from %s where ", tableSchemaConf->TableName());
-   selectSchemaConfByState->bind("STATE", cDBS::bndIn | cDBS::bndSet);
-
-   status += selectSchemaConfByState->prepare();
-
-   // ------------------
-
-   selectAllSchemaConf = new cDbStatement(tableSchemaConf);
-
-   selectAllSchemaConf->build("select ");
-   selectAllSchemaConf->bindAllOut();
-   selectAllSchemaConf->build(" from %s", tableSchemaConf->TableName());
-
-   status += selectAllSchemaConf->prepare();
 
    // ------------------
 
@@ -332,7 +314,6 @@ int P4d::exitDb()
    delete tablePellets;               tablePellets= nullptr;
    delete tableMenu;                  tableMenu = nullptr;
    delete tableSensorAlert;           tableSensorAlert = nullptr;
-   delete tableSchemaConf;            tableSchemaConf = nullptr;
    delete tableErrors;                tableErrors = nullptr;
    delete tableTimeRanges;            tableTimeRanges = nullptr;
 
@@ -348,8 +329,6 @@ int P4d::exitDb()
    delete selectAllPellets;           selectAllPellets = nullptr;
    delete selectStokerHours;          selectStokerHours = nullptr;
    delete selectStateDuration;        selectStateDuration = nullptr;
-   delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
-   delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
 
    return Daemon::exitDb();
 }
@@ -373,7 +352,6 @@ int P4d::readConfiguration(bool initial)
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
    getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
    getConfigItem("consumptionPerHour", consumptionPerHour, 0);
-   getConfigItem("iconSet", iconSet, "light");
    getConfigItem("heatingType", heatingType, "P4");
    tell(eloDetail, "The heating type is set to '%s'", heatingType);
    getConfigItem("knownStates", knownStates, "");
@@ -387,7 +365,6 @@ int P4d::readConfiguration(bool initial)
       tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
    }
 
-
    return done;
 }
 
@@ -395,7 +372,6 @@ int P4d::atMeanwhile()
 {
    return done;
 }
-
 
 //***************************************************************************
 // IO Interrupt Handler
@@ -514,14 +490,20 @@ int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* 
 
       if (!webOnly)
       {
+         double theValue = value / (double)factor;
+         bool changed = vaSensors[v.address].value != theValue;
+
          vaSensors[v.address].kind = "value";
-         vaSensors[v.address].value = value / (double)factor;
+         vaSensors[v.address].value = theValue;
          vaSensors[v.address].valid = true;
          vaSensors[v.address].last = lastSampleTime;
 
          store(lastSampleTime, name, title, unit, type, v.address, value, factor, groupid);
          sprintf(num, "%.2f%s", theValue, unit);
          addParameter2Mail(title, num);
+
+         if (changed)
+            mqttNodeRedPublishSensor(type, addr, iotSensor, name, title, unit, theValue);
       }
    }
 
@@ -1684,8 +1666,6 @@ int P4d::dispatchSpecialRequest(Event event, json_t* oObject, long client)
       case evPellets:           status = performPellets(oObject, client);          break;
       case evPelletsAdd:        status = performPelletsAdd(oObject, client);       break;
       case evStoreAlerts:       status = storeAlerts(oObject, client);             break;
-      case evSchema:            status = performSchema(oObject, client);           break;
-      case evStoreSchema:       status = storeSchema(oObject, client);             break;
       case evParEditRequest:    status = performParEditRequest(oObject, client);   break;
       case evParStore:          status = performParStore(oObject, client);         break;
       case evMenu:              status = performMenu(oObject, client);             break;
@@ -1695,6 +1675,28 @@ int P4d::dispatchSpecialRequest(Event event, json_t* oObject, long client)
    }
 
    return status;
+}
+
+//***************************************************************************
+// Check Rights
+//***************************************************************************
+
+bool P4d::onCheckRights(long client, Event event, uint rights)
+{
+   switch (event)
+   {
+      case evMenu:                return rights & urView;
+      case evParEditRequest:      return rights & urFullControl;
+      case evParStore:            return rights & urFullControl;
+      case evInitTables:          return rights & urSettings;
+      case evUpdateTimeRanges:    return rights & urFullControl;
+      case evPellets:             return rights & urControl;
+      case evPelletsAdd:          return rights & urFullControl;
+      case evErrors:              return rights & urView;
+      default: break;
+   }
+
+   return false;
 }
 
 //***************************************************************************
@@ -2376,129 +2378,6 @@ int P4d::performMenu(json_t* oObject, long client)
 }
 
 //***************************************************************************
-// Perform WS Scehma Data
-//***************************************************************************
-
-int P4d::performSchema(json_t* oObject, long client)
-{
-   if (client == 0)
-      return done;
-
-   json_t* oArray = json_array();
-
-   tableSchemaConf->clear();
-
-   for (int f = selectAllSchemaConf->find(); f; f = selectAllSchemaConf->fetch())
-   {
-      tableValueFacts->clear();
-      tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
-      tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
-
-      if (!tableSchemaConf->hasValue("TYPE", "UC") && (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
-         continue;
-
-      json_t* oData = json_object();
-      json_array_append_new(oArray, oData);
-
-      addFieldToJson(oData, tableSchemaConf, "ADDRESS");
-      addFieldToJson(oData, tableSchemaConf, "TYPE");
-      addFieldToJson(oData, tableSchemaConf, "STATE");
-      addFieldToJson(oData, tableSchemaConf, "KIND");
-      addFieldToJson(oData, tableSchemaConf, "WIDTH");
-      addFieldToJson(oData, tableSchemaConf, "HEIGHT");
-      addFieldToJson(oData, tableSchemaConf, "SHOWUNIT");
-      addFieldToJson(oData, tableSchemaConf, "SHOWTITLE");
-      addFieldToJson(oData, tableSchemaConf, "USRTEXT");
-      addFieldToJson(oData, tableSchemaConf, "FUNCTION", true, "fct");
-
-      const char* properties = tableSchemaConf->getStrValue("PROPERTIES");
-      if (isEmpty(properties))
-         properties = "{}";
-      json_error_t error;
-      json_t* o = json_loads(properties, 0, &error);
-      json_object_set_new(oData, "properties", o);
-   }
-
-   selectAllSchemaConf->freeResult();
-
-   pushOutMessage(oArray, "schema", client);
-   update(true, client);     // push the data ('init')
-
-   return done;
-}
-
-//***************************************************************************
-// Store Io Setup
-//***************************************************************************
-
-int P4d::storeIoSetup(json_t* array, long client)
-{
-   Daemon::storeIoSetup(array, client);
-
-   updateSchemaConfTable();
-
-   return done;
-}
-
-//***************************************************************************
-// Store Schema
-//***************************************************************************
-
-int P4d::storeSchema(json_t* oObject, long client)
-{
-   if (!client)
-      return done;
-
-   size_t index {0};
-   json_t* jObj {nullptr};
-
-   json_array_foreach(oObject, index, jObj)
-   {
-      int address = getIntFromJson(jObj, "address");
-      const char* type = getStringFromJson(jObj, "type");
-      int deleted = getBoolFromJson(jObj, "deleted");
-
-      tableSchemaConf->clear();
-      tableSchemaConf->setValue("ADDRESS", address);
-      tableSchemaConf->setValue("TYPE", type);
-
-      if (tableSchemaConf->find() && deleted)
-      {
-         tableSchemaConf->deleteWhere("%s = '%s' and %s = %d",
-                                      tableSchemaConf->getField("TYPE")->getName(), type,
-                                      tableSchemaConf->getField("ADDRESS")->getName(), address);
-         continue;
-      }
-
-      tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
-      tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
-      tableSchemaConf->setValue("KIND", getIntFromJson(jObj, "kind"));
-      tableSchemaConf->setValue("WIDTH", getIntFromJson(jObj, "width"));
-      tableSchemaConf->setValue("HEIGHT", getIntFromJson(jObj, "height"));
-      tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
-      tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
-      tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
-
-      json_t* jProp = json_object_get(jObj, "properties");
-      char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
-
-      if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
-         tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
-              type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
-      else
-         tableSchemaConf->setValue("PROPERTIES", p);
-
-      tableSchemaConf->store();
-      free(p);
-   }
-
-   tableSchemaConf->reset();
-   replyResult(success, "Konfiguration gespeichert", client);
-
-   return done;
-}
-
-//***************************************************************************
 // Perform WS Sensor Alert Request
 //***************************************************************************
 
@@ -2617,48 +2496,6 @@ int P4d::performUpdateTimeRanges(json_t* oObject, long client)
    json_object_set_new(oJson, "parent", json_integer(parent));
 
    return performMenu(oJson, client);
-}
-
-//***************************************************************************
-// Update Conf Tables
-//***************************************************************************
-
-int P4d::updateSchemaConfTable()
-{
-   const int step = 20;
-   int y = 50;
-   int added = 0;
-
-   tableValueFacts->clear();
-   tableValueFacts->setValue("STATE", "A");
-
-   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
-   {
-      int addr = tableValueFacts->getIntValue("ADDRESS");
-      const char* type = tableValueFacts->getStrValue("TYPE");
-      y += step;
-
-      tableSchemaConf->clear();
-      tableSchemaConf->setValue("ADDRESS", addr);
-      tableSchemaConf->setValue("TYPE", type);
-
-      if (!tableSchemaConf->find())
-      {
-         tableSchemaConf->setValue("KIND", "value");
-         tableSchemaConf->setValue("STATE", "A");
-         tableSchemaConf->setValue("COLOR", "black");
-         tableSchemaConf->setValue("XPOS", 12);
-         tableSchemaConf->setValue("YPOS", y);
-
-         tableSchemaConf->store();
-         added++;
-      }
-   }
-
-   selectActiveValueFacts->freeResult();
-   tell(eloAlways, "Added %d html schema configurations", added);
-
-   return success;
 }
 
 //***************************************************************************
@@ -2829,12 +2666,12 @@ int P4d::initValueFacts(bool truncate)
 //   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
-int P4d::dispatchMqttCommandRequest(json_t* jData, const char* topic)
+int P4d::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
 {
    const char* command = getStringFromJson(jData, "command", "");
 
    if (isEmpty(command))
-      return Daemon::dispatchMqttCommandRequest(jData, topic);
+      return Daemon::dispatchMqttHaCommandRequest(jData, topic);
 
    if (strcmp(command, "parget") == 0)
    {
@@ -2844,7 +2681,7 @@ int P4d::dispatchMqttCommandRequest(json_t* jData, const char* topic)
 
       if (!json_is_integer(jAddress) || address == -1)
       {
-         tell(0, "Error: Missing address or invalid object type for MQTT command 'parstore', ignoring");
+         tell(0, "Error: Missing address or invalid object type for MQTT command 'parget', ignoring");
          return fail;
       }
 
@@ -2933,7 +2770,22 @@ int P4d::dispatchMqttCommandRequest(json_t* jData, const char* topic)
 }
 
 //***************************************************************************
-//
+// Dispatch Node-Red Command Request
+//   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
+//***************************************************************************
+
+int P4d::dispatchNodeRedCommand(json_t* jObject)
+{
+   const char* command = getStringFromJson(jObject, "command", "set");
+
+   if (strcmp(command, "parstore") == 0)
+      return dispatchMqttHaCommandRequest(jObject, "");
+
+   return Daemon::dispatchNodeRedCommand(jObject);
+}
+
+//***************************************************************************
+// s3200 State to Json
 //***************************************************************************
 
 int P4d::s3200State2Json(json_t* obj)
@@ -2950,7 +2802,61 @@ int P4d::s3200State2Json(json_t* obj)
 }
 
 //***************************************************************************
-//
+// Config Choice to Json
+//***************************************************************************
+
+int P4d::configChoice2json(json_t* obj, const char* name)
+{
+   Daemon::configChoice2json(obj, name);
+
+   if (strcmp(name, "heatingType") == 0)
+   {
+      FileList options;
+      int count {0};
+      char* path {nullptr};
+
+      asprintf(&path, "%s/img/type", httpPath);
+
+      if (getFileList(path, DT_REG, "png", false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+         {
+            if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
+               continue;
+
+            char* p = strdup(strchr(opt.name.c_str(), '-'));
+            *(strrchr(p, '.')) = '\0';
+            json_array_append_new(oArray, json_string(p+1));
+            free(p);
+         }
+
+         json_object_set_new(obj, "options", oArray);
+      }
+
+      free(path);
+   }
+   else if (strcmp(name, "stateMailStates") == 0)
+   {
+      json_t* oArray = json_array();
+
+      for (int i = 0; stateInfos[i].code != na; i++)
+      {
+         json_t* oOpt = json_object();
+         json_object_set_new(oOpt, "value", json_string(std::to_string(stateInfos[i].code).c_str()));
+         json_object_set_new(oOpt, "label", json_string(stateInfos[i].title));
+         json_array_append_new(oArray, oOpt);
+      }
+
+      json_object_set_new(obj, "options", oArray);
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Get State Image
 //***************************************************************************
 
 const char* P4d::getStateImage(int state)

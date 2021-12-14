@@ -15,8 +15,8 @@
 // Push Value to MQTT for Home Automation Systems
 //***************************************************************************
 
-int Daemon::mqttPublishSensor(IoType iot, const char* name, const char* title, const char* unit,
-                              double value, const char* text, bool forceConfig)
+int Daemon::mqttHaPublishSensor(IoType iot, const char* name, const char* title, const char* unit,
+                                double value, const char* text, bool forceConfig)
 {
    // check/prepare reader/writer connection
 
@@ -183,7 +183,7 @@ int Daemon::performMqttRequests()
          }
 
          tell(eloAlways, "<- (%s) [%s]", mqttHassCommandReader->getLastReadTopic().c_str(), message.memory);
-         dispatchMqttCommandRequest(jData, mqttHassCommandReader->getLastReadTopic().c_str());
+         dispatchMqttHaCommandRequest(jData, mqttHassCommandReader->getLastReadTopic().c_str());
       }
    }
 
@@ -210,6 +210,30 @@ int Daemon::performMqttRequests()
       }
    }
 
+   if (!isEmpty(mqttNodeRedUrl) && mqttNodeRedReader->isConnected())
+   {
+      while (mqttNodeRedReader->read(&message, 10) == success)
+      {
+         if (isEmpty(message.memory))
+            continue;
+
+         tell(eloAlways, "<- (node-red) [%s]", message.memory);
+
+         json_error_t error;
+         json_t* jData = json_loads(message.memory, 0, &error);
+
+         if (!jData)
+         {
+            tell(0, "Error: Ignoring invalid json in '%s'", message.memory);
+            tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+                 error.text, error.source, error.line, error.column, error.position);
+            return fail;
+         }
+
+         dispatchNodeRedCommand(jData);
+      }
+   }
+
    // last successful W1 read at least in last 5 minutes?
 
    if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
@@ -229,11 +253,15 @@ int Daemon::performMqttRequests()
 int Daemon::mqttDisconnect()
 {
    if (mqttReader)               mqttReader->disconnect();
+   if (mqttNodeRedReader)        mqttNodeRedReader->disconnect();
+   if (mqttNodeRedWriter)        mqttNodeRedWriter->disconnect();
    if (mqttHassCommandReader)    mqttHassCommandReader->disconnect();
    if (mqttHassWriter)           mqttHassWriter->disconnect();
    if (mqttHassReader)           mqttHassReader->disconnect();
 
    delete mqttReader;            mqttReader = nullptr;
+   delete mqttNodeRedReader;     mqttNodeRedReader = nullptr;
+   delete mqttNodeRedWriter;     mqttNodeRedWriter = nullptr;
    delete mqttHassCommandReader; mqttHassCommandReader = nullptr;
    delete mqttHassWriter;        mqttHassWriter = nullptr;
    delete mqttHassReader;        mqttHassReader = nullptr;
@@ -252,6 +280,12 @@ int Daemon::mqttCheckConnection()
    if (!mqttReader)
       mqttReader = new Mqtt();
 
+   if (!mqttNodeRedReader)
+      mqttNodeRedReader = new Mqtt();
+
+   if (!mqttNodeRedWriter)
+      mqttNodeRedWriter = new Mqtt();
+
    if (!mqttHassCommandReader)
       mqttHassCommandReader = new Mqtt();
 
@@ -265,6 +299,12 @@ int Daemon::mqttCheckConnection()
       renonnectNeeded = true;
 
    if (!isEmpty(mqttUrl) && !mqttReader->isConnected())
+      renonnectNeeded = true;
+
+   if (!isEmpty(mqttNodeRedUrl) && !mqttNodeRedReader->isConnected())
+      renonnectNeeded = true;
+
+   if (!isEmpty(mqttNodeRedUrl) && !mqttNodeRedWriter->isConnected())
       renonnectNeeded = true;
 
    if (!renonnectNeeded)
@@ -327,14 +367,38 @@ int Daemon::mqttCheckConnection()
       }
    }
 
+   if (!isEmpty(mqttNodeRedUrl))
+   {
+      if (!mqttNodeRedReader->isConnected())
+      {
+         if (mqttNodeRedReader->connect(mqttNodeRedUrl) != success)
+         {
+            tell(0, "Error: MQTT: Connecting node-red subscriber to '%s' failed", mqttNodeRedUrl);
+         }
+         else
+         {
+            mqttNodeRedReader->subscribe(TARGET "2mqtt/command/#");
+            tell(0, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/command/#");
+         }
+      }
+
+      if (!mqttNodeRedWriter->isConnected())
+      {
+         if (mqttNodeRedWriter->connect(mqttNodeRedUrl) != success)
+            tell(0, "Error: MQTT: Connecting node-red publisher to '%s' failed", mqttNodeRedUrl);
+         else
+            tell(0, "MQTT: Connecting node-red publisher to '%s' succeeded", mqttNodeRedUrl);
+      }
+   }
+
    return success;
 }
 
 //***************************************************************************
-// MQTT Write
+// MQTT Write (to Home Automation Systems)
 //***************************************************************************
 
-int Daemon::mqttWrite(json_t* obj, uint groupid)
+int Daemon::mqttHaWrite(json_t* obj, uint groupid)
 {
    std::string sDataTopic = mqttDataTopic;
 
@@ -349,9 +413,43 @@ int Daemon::mqttWrite(json_t* obj, uint groupid)
    if (mqttInterfaceStyle == misGroupedTopic)
       sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
 
-   return mqttHassWriter->write(sDataTopic.c_str(), message);
+   int status = mqttHassWriter->write(sDataTopic.c_str(), message);
+   free(message);
+
+   return status;
 }
 
+//***************************************************************************
+// Publish to Node-Red (on change)
+//***************************************************************************
+
+int Daemon::mqttNodeRedPublishSensor(const char* type, uint address, IoType iot, const char* name,
+                                     const char* title, const char* unit, double value, const char* text)
+{
+   if (!mqttNodeRedWriter || !mqttNodeRedWriter->isConnected())
+       return done;
+
+   json_t* oJson = json_object();
+
+   char* key {nullptr};
+   asprintf(&key, "%s:0x%02x", type, address);
+   json_object_set_new(oJson, "id", json_string(key));
+   json_object_set_new(oJson, "type", json_string(type));
+   json_object_set_new(oJson, "address", json_integer(address));
+
+   if (iot == iotLight)
+      json_object_set_new(oJson, "state", json_string(value ? "on" : "off"));
+   else
+      json_object_set_new(oJson, "value", json_real(value));
+
+   char* message = json_dumps(oJson, JSON_REAL_PRECISION(4));
+   tell(2, "Debug: -> node-red (%s) [%s]", TARGET "2mqtt/changes", message);
+
+   int status = mqttNodeRedWriter->write(TARGET "2mqtt/changes", message);
+   free(message);
+
+   return status;
+}
 
 //***************************************************************************
 // Json Add Value

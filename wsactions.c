@@ -77,6 +77,9 @@ int Daemon::dispatchClientRequest()
             case evChartbookmarks:  status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
             case evImageConfig:         status = performImageConfig(oObject, client);  break;
+            case evSchema:            status = performSchema(oObject, client);         break;
+            case evStoreSchema:       status = storeSchema(oObject, client);           break;
+
             default:
             {
                if (dispatchSpecialRequest(event,oObject, client) == ignore)
@@ -90,8 +93,8 @@ int Daemon::dispatchClientRequest()
          if (client == na)
             tell(0, "Insufficient rights to '%s', missing login", getStringFromJson(oData, "event", "<null>"));
          else
-         tell(0, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
-              wsClients[(void*)client].user.c_str());
+            tell(0, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
+                 wsClients[(void*)client].user.c_str());
          replyResult(fail, "Insufficient rights", client);
       }
 
@@ -141,20 +144,14 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evGroups:              return rights & urSettings;
       case evImageConfig:         return rights & urSettings;
 
-      case evMenu:                return rights & urView;
       case evSchema:              return rights & urView;
       case evStoreSchema:         return rights & urSettings;
-      case evParEditRequest:      return rights & urFullControl;
-      case evParStore:            return rights & urFullControl;
-
-      case evInitTables:          return rights & urSettings;
-      case evUpdateTimeRanges:    return rights & urFullControl;
-      case evPellets:             return rights & urControl;
-      case evPelletsAdd:          return rights & urFullControl;
-      case evErrors:              return rights & urView;
 
       default: break;
    }
+
+   if (onCheckRights(client, event, rights))
+      return true;
 
    if (event == evToggleIo && rights & urControl)
    {
@@ -861,6 +858,116 @@ int Daemon::performReset(json_t* obj, long client)
 }
 
 //***************************************************************************
+// Perform Schema Data
+//***************************************************************************
+
+int Daemon::performSchema(json_t* oObject, long client)
+{
+   if (client == 0)
+      return done;
+
+   json_t* oArray = json_array();
+
+   tableSchemaConf->clear();
+
+   for (int f = selectAllSchemaConf->find(); f; f = selectAllSchemaConf->fetch())
+   {
+      tableValueFacts->clear();
+      tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
+      tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
+
+      if (!tableSchemaConf->hasValue("TYPE", "UC") && (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
+         continue;
+
+      json_t* oData = json_object();
+      json_array_append_new(oArray, oData);
+
+      addFieldToJson(oData, tableSchemaConf, "ADDRESS");
+      addFieldToJson(oData, tableSchemaConf, "TYPE");
+      addFieldToJson(oData, tableSchemaConf, "STATE");
+      addFieldToJson(oData, tableSchemaConf, "KIND");
+      addFieldToJson(oData, tableSchemaConf, "WIDTH");
+      addFieldToJson(oData, tableSchemaConf, "HEIGHT");
+      addFieldToJson(oData, tableSchemaConf, "SHOWUNIT");
+      addFieldToJson(oData, tableSchemaConf, "SHOWTITLE");
+      addFieldToJson(oData, tableSchemaConf, "USRTEXT");
+      addFieldToJson(oData, tableSchemaConf, "FUNCTION", true, "fct");
+
+      const char* properties = tableSchemaConf->getStrValue("PROPERTIES");
+      if (isEmpty(properties))
+         properties = "{}";
+      json_error_t error;
+      json_t* o = json_loads(properties, 0, &error);
+      json_object_set_new(oData, "properties", o);
+   }
+
+   selectAllSchemaConf->freeResult();
+
+   pushOutMessage(oArray, "schema", client);
+   update(true, client);     // push the data ('init')
+
+   return done;
+}
+
+//***************************************************************************
+// Store Schema
+//***************************************************************************
+
+int Daemon::storeSchema(json_t* oObject, long client)
+{
+   if (!client)
+      return done;
+
+   size_t index {0};
+   json_t* jObj {nullptr};
+
+   json_array_foreach(oObject, index, jObj)
+   {
+      int address = getIntFromJson(jObj, "address");
+      const char* type = getStringFromJson(jObj, "type");
+      int deleted = getBoolFromJson(jObj, "deleted");
+
+      tableSchemaConf->clear();
+      tableSchemaConf->setValue("ADDRESS", address);
+      tableSchemaConf->setValue("TYPE", type);
+
+      if (tableSchemaConf->find() && deleted)
+      {
+         tableSchemaConf->deleteWhere("%s = '%s' and %s = %d",
+                                      tableSchemaConf->getField("TYPE")->getName(), type,
+                                      tableSchemaConf->getField("ADDRESS")->getName(), address);
+         continue;
+      }
+
+      tableSchemaConf->setValue("FUNCTION", getStringFromJson(jObj, "fct"));
+      tableSchemaConf->setValue("USRTEXT", getStringFromJson(jObj, "usrtext"));
+      tableSchemaConf->setValue("KIND", getIntFromJson(jObj, "kind"));
+      tableSchemaConf->setValue("WIDTH", getIntFromJson(jObj, "width"));
+      tableSchemaConf->setValue("HEIGHT", getIntFromJson(jObj, "height"));
+      tableSchemaConf->setValue("SHOWTITLE", getIntFromJson(jObj, "showtitle"));
+      tableSchemaConf->setValue("SHOWUNIT", getIntFromJson(jObj, "showunit"));
+      tableSchemaConf->setValue("STATE", getStringFromJson(jObj, "state"));
+
+      json_t* jProp = json_object_get(jObj, "properties");
+      char* p = json_dumps(jProp, JSON_REAL_PRECISION(4));
+
+      if (tableSchemaConf->getField("PROPERTIES")->getSize() < (int)strlen(p))
+         tell(0, "Warning, Ignoring properties of %s:0x%x due to field limit of %d bytes",
+              type, address, tableSchemaConf->getField("PROPERTIES")->getSize());
+      else
+         tableSchemaConf->setValue("PROPERTIES", p);
+
+      tableSchemaConf->store();
+      free(p);
+   }
+
+   tableSchemaConf->reset();
+   replyResult(success, "Konfiguration gespeichert", client);
+
+   return done;
+}
+
+//***************************************************************************
 // Store Configuration
 //***************************************************************************
 
@@ -1106,6 +1213,7 @@ int Daemon::storeIoSetup(json_t* array, long client)
    json_t* oJson = json_object();
    valueFacts2Json(oJson, false);
    pushOutMessage(oJson, "valuefacts", client);
+   updateSchemaConfTable();
 
    return replyResult(success, "Konfiguration gespeichert", client);
 }
@@ -1289,6 +1397,10 @@ int Daemon::configDetails2Json(json_t* obj)
    return done;
 }
 
+//***************************************************************************
+// Config Choice to Json
+//***************************************************************************
+
 int Daemon::configChoice2json(json_t* obj, const char* name)
 {
    if (strcmp(name, "style") == 0)
@@ -1314,13 +1426,13 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
          json_object_set_new(obj, "options", oArray);
       }
    }
-   else if (strcmp(name, "heatingType") == 0)
+   else if (strcmp(name, "schema") == 0)
    {
       FileList options;
       int count {0};
       char* path {nullptr};
 
-      asprintf(&path, "%s/img/type", httpPath);
+      asprintf(&path, "%s/img/schema", httpPath);
 
       if (getFileList(path, DT_REG, "png", false, &options, count) == success)
       {
@@ -1328,7 +1440,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
 
          for (const auto& opt : options)
          {
-            if (strncmp(opt.name.c_str(), "heating-", strlen("heating-")) != 0)
+            if (strncmp(opt.name.c_str(), "schema-", strlen("schema-")) != 0)
                continue;
 
             char* p = strdup(strchr(opt.name.c_str(), '-'));
@@ -1361,48 +1473,6 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
       }
 
       free(path);
-   }
-   else if (strcmp(name, "schema") == 0)
-   {
-      FileList options;
-      int count {0};
-      char* path {nullptr};
-
-      asprintf(&path, "%s/img/schema", httpPath);
-
-      if (getFileList(path, DT_REG, "png", false, &options, count) == success)
-      {
-         json_t* oArray = json_array();
-
-         for (const auto& opt : options)
-         {
-            if (strncmp(opt.name.c_str(), "schema-", strlen("schema-")) != 0)
-               continue;
-
-            char* p = strdup(strchr(opt.name.c_str(), '-'));
-            *(strrchr(p, '.')) = '\0';
-            json_array_append_new(oArray, json_string(p+1));
-            free(p);
-         }
-
-         json_object_set_new(obj, "options", oArray);
-      }
-
-      free(path);
-   }
-   else if (strcmp(name, "stateMailStates") == 0)
-   {
-      json_t* oArray = json_array();
-
-      for (int i = 0; stateInfos[i].code != na; i++)
-      {
-         json_t* oOpt = json_object();
-         json_object_set_new(oOpt, "value", json_string(std::to_string(stateInfos[i].code).c_str()));
-         json_object_set_new(oOpt, "label", json_string(stateInfos[i].title));
-         json_array_append_new(oArray, oOpt);
-      }
-
-      json_object_set_new(obj, "options", oArray);
    }
 
    return done;

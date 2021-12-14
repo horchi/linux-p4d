@@ -60,10 +60,10 @@ class P4d : public Daemon
       int process() override;
       int performJobs() override;
       void logReport() override;
-      void onIoSettingsChange() override { updateSchemaConfTable(); }
       int onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData) override;
-      int dispatchMqttCommandRequest(json_t* jData, const char* topic) override;
-
+      bool onCheckRights(long client, Event event, uint rights) override;
+      int dispatchMqttHaCommandRequest(json_t* jData, const char* topic) override;
+      int dispatchNodeRedCommand(json_t* jObject) override;
       std::list<ConfigItemDef>* getConfiguration() override { return &configuration; }
 
       int updateTimeRangeData();
@@ -75,7 +75,6 @@ class P4d : public Daemon
       int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
       int initValueFacts(bool truncate = false);
-      int updateSchemaConfTable();
       const char* getStateImage(int state);
 
       // WS request
@@ -89,7 +88,6 @@ class P4d : public Daemon
 
       int performErrors(long client);
       int performMenu(json_t* oObject, long client);
-      int performSchema(json_t* oObject, long client);
       int storeAlerts(json_t* oObject, long client);
       int performAlerts(json_t* oObject, long client);
       int performAlertTestMail(int id, long client) override;
@@ -97,10 +95,9 @@ class P4d : public Daemon
       int performTimeParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);
       int performTimeParStore(json_t* oObject, long client);
-      int storeIoSetup(json_t* array, long client) override;
-      int storeSchema(json_t* oObject, long client);
 
       int s3200State2Json(json_t* obj);
+      int configChoice2json(json_t* obj, const char* name) override;
 
       // config
 
@@ -109,7 +106,6 @@ class P4d : public Daemon
       char* stateMailAtStates {nullptr};
       double consumptionPerHour {0};
       char* knownStates {nullptr};
-      char* iconSet {nullptr};
       char* heatingType {nullptr};
 
       // data
@@ -117,7 +113,6 @@ class P4d : public Daemon
       cDbTable* tablePellets {nullptr};
       cDbTable* tableMenu {nullptr};
       cDbTable* tableSensorAlert {nullptr};
-      cDbTable* tableSchemaConf {nullptr};
       cDbTable* tableErrors {nullptr};
       cDbTable* tableTimeRanges {nullptr};
 
@@ -137,13 +132,10 @@ class P4d : public Daemon
       cDbStatement* selectAllPellets {nullptr};
       cDbStatement* selectStokerHours {nullptr};
       cDbStatement* selectStateDuration {nullptr};
-      cDbStatement* selectSchemaConfByState {nullptr};
-      cDbStatement* selectAllSchemaConf {nullptr};
 
       std::map<int,time_t> stateDurations;
       int errorsPending {0};
       time_t nextTimeSyncAt {0};
-   // std::map<int,double> vaValues;
 
       // statics
 
