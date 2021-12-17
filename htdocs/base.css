@@ -1457,5 +1457,5 @@ dialog::backdrop, #backdrop
 
 @media only screen and (max-width: 320px)
 {
-    .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; }
+    .widgetContainer > div     { width: 155px; padding: 0px; margin: 1px; }
 }

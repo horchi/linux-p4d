@@ -2020,9 +2020,9 @@ int Daemon::updateSchemaConfTable()
       {
          tableSchemaConf->setValue("KIND", "value");
          tableSchemaConf->setValue("STATE", "A");
-         tableSchemaConf->setValue("COLOR", "black");
-         tableSchemaConf->setValue("XPOS", 12);
-         tableSchemaConf->setValue("YPOS", y);
+         // tableSchemaConf->setValue("COLOR", "black");
+         // tableSchemaConf->setValue("XPOS", 12);
+         // tableSchemaConf->setValue("YPOS", y);
 
          tableSchemaConf->store();
          added++;
