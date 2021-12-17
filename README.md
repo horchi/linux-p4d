@@ -172,7 +172,7 @@ If you like to delete 'old' samples you have to do the cleanup job by hand, actu
 ## WEB interface:
 
 The default port of the WEB interface is 1111, The default username and password for the login is
-User: *p4*
+User: *p4d*
 Pass: *p4d*
 
 ### Fist steps to enable data logging:
