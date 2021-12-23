@@ -1624,6 +1624,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
 
          json_t* oArray = json_array();
          json_object_set_new(obj, "options", oArray);
+         json_array_append_new(oArray, json_string(""));
 
          for (const auto& img : options)
          {

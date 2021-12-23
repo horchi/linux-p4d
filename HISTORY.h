@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.0"
-#define VERSION_DATE "18.12.2021"
+#define _VERSION     "0.9.1"
+#define VERSION_DATE "23.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-23:  version 0.9.1
+  - bugfix:  Fixed background image config
 
 2021-12-18:  version 0.9.0
   - added:  Interface for deCONZ (ConBee)
