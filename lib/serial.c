@@ -264,7 +264,7 @@ int Serial::read(void* buf, size_t count, uint timeoutMs)
 
    if (nRead != count)
    {
-      tell(0, "Error: Serial read failrd, got %zd bytes instead of %zd", nRead, count);
+      tell(eloAlways, "Error: Serial read failrd, got %zd bytes instead of %zd", nRead, count);
       return errCountMissmatch;
    }
 

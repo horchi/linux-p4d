@@ -144,14 +144,14 @@ class cDbValue : public cDbService
          if (field->getFormat() != ffAscii && field->getFormat() != ffText &&
              field->getFormat() != ffMText && field->getFormat() != ffMlob)
          {
-            tell(0, "Setting invalid field format for '%s', expected ASCII, TEXT or MLOB",
+            tell(eloAlways, "Setting invalid field format for '%s', expected ASCII, TEXT or MLOB",
                  field->getName());
             return;
          }
 
          if (field->getFormat() == ffMlob && !size)
          {
-            tell(0, "Missing size for MLOB field '%s'", field->getName());
+            tell(eloAlways, "Missing size for MLOB field '%s'", field->getName());
             return;
          }
 
@@ -159,7 +159,7 @@ class cDbValue : public cDbService
          {
             if (size > field->getSize())
             {
-               tell(0, "Warning, size of %d for '%s' exeeded, got %d bytes!",
+               tell(eloAlways, "Warning, size of %d for '%s' exeeded, got %d bytes!",
                     field->getSize(), field->getName(), size);
 
                size = field->getSize();
@@ -178,7 +178,7 @@ class cDbValue : public cDbService
          else if (value)
          {
             if (strlen(value) > (size_t)field->getSize())
-               tell(0, "Warning, size of %d for '%s' exeeded (needed %ld) [%s]",
+               tell(eloAlways, "Warning, size of %d for '%s' exeeded (needed %ld) [%s]",
                     field->getSize(), field->getName(), (long)strlen(value), value);
 
             if (strcmp(strValue, value) != 0 || isNull())
@@ -241,7 +241,7 @@ class cDbValue : public cDbService
          }
          else
          {
-            tell(0, "Setting invalid field format for '%s'", field->getName());
+            tell(eloAlways, "Setting invalid field format for '%s'", field->getName());
          }
       }
 
@@ -273,7 +273,7 @@ class cDbValue : public cDbService
          }
          else
          {
-            tell(0, "Setting invalid field format for '%s'", field->getName());
+            tell(eloAlways, "Setting invalid field format for '%s'", field->getName());
          }
       }
 
@@ -306,7 +306,7 @@ class cDbValue : public cDbService
          if (field->getFormat() == ffDateTime)
             return no; // to be implemented!
 
-         tell(0, "Setting invalid field format for '%s'", field->getName());
+         tell(eloAlways, "Setting invalid field format for '%s'", field->getName());
 
          return no;
       }
@@ -322,7 +322,7 @@ class cDbValue : public cDbService
          if (field->getFormat() == ffFloat)
             return floatValue == value;
 
-         tell(0, "Setting invalid field format for '%s'", field->getName());
+         tell(eloAlways, "Setting invalid field format for '%s'", field->getName());
 
          return no;
       }
@@ -335,7 +335,7 @@ class cDbValue : public cDbService
          if (field->getFormat() != ffAscii && field->getFormat() != ffText &&
              field->getFormat() != ffMText && field->getFormat() != ffMlob)
          {
-            tell(0, "Checking invalid field format for '%s', expected ASCII or TEXT",
+            tell(eloAlways, "Checking invalid field format for '%s', expected ASCII or TEXT",
                  field->getName());
             return no;
          }
@@ -347,7 +347,7 @@ class cDbValue : public cDbService
       {
          if (field->getFormat() != ffAscii)
          {
-            tell(0, "Checking invalid field format for '%s', expected ASCII or TEXT",
+            tell(eloAlways, "Checking invalid field format for '%s', expected ASCII or TEXT",
                  field->getName());
             return no;
          }
@@ -524,7 +524,7 @@ class cDbStatements
 
       void showStat(const char* name)
       {
-         tell(0, "Statement statistic of last %ld seconds from '%s':", time(0) - statisticPeriod, name);
+         tell(eloAlways, "Statement statistic of last %ld seconds from '%s':", time(0) - statisticPeriod, name);
 
          for (std::list<cDbStatement*>::iterator it = statements.begin() ; it != statements.end(); ++it)
          {
@@ -549,7 +549,7 @@ class cDbStatements
    cDbFieldDef* f = tableDef->getField(name);  \
    if (!f) \
    { \
-      tell(0, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
+      tell(eloAlways, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
       return ; \
    } \
 
@@ -557,7 +557,7 @@ class cDbStatements
    cDbFieldDef* f = tableDef->getField(name);  \
    if (!f) \
    { \
-      tell(0, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
+      tell(eloAlways, "Fatal: Field '%s.%s' not defined (missing in dictionary)", tableDef->getName(), name); \
       return def; \
    } \
 
@@ -577,7 +577,7 @@ class cDbRow : public cDbService
          if (t)
             set(t);
          else
-            tell(0, "Fatal: Table '%s' missing in dictionary '%s'!", name, dbDict.getPath());
+            tell(eloAlways, "Fatal: Table '%s' missing in dictionary '%s'!", name, dbDict.getPath());
       }
 
       virtual ~cDbRow() { delete[] dbValues; }
@@ -725,7 +725,7 @@ class cDbConnection
          {
             connectDropped = yes;
 
-            tell(0, "Calling mysql_init(%ld)", syscall(__NR_gettid));
+            tell(eloDb, "Calling mysql_init(%ld)", syscall(__NR_gettid));
 
             if (!(mysql = mysql_init(0)))
                return errorSql(this, "attachConnection(init)");
@@ -733,7 +733,7 @@ class cDbConnection
             if (!mysql_real_connect(mysql, dbHost, dbUser, dbPass, dbName, dbPort, 0, 0))
             {
                errorSql(this, "connecting to database");
-               tell(0, "Error, connecting to database at '%s' on port (%d) failed", dbHost, dbPort);
+               tell(eloAlways, "Error, connecting to database at '%s' on port (%d) failed", dbHost, dbPort);
                close();
                return fail;
             }
@@ -749,7 +749,7 @@ class cDbConnection
 
                if (first)
                {
-                  tell(0, "SQL client character now '%s'", mysql_character_set_name(mysql));
+                  tell(eloAlways, "SQL client character now '%s'", mysql_character_set_name(mysql));
                   first = no;
                }
             }
@@ -772,7 +772,7 @@ class cDbConnection
       {
          if (mysql)
          {
-            tell(0, "Closing mysql connection and calling mysql_thread_end(%ld)", syscall(__NR_gettid));
+            tell(eloDb, "Closing mysql connection and calling mysql_thread_end(%ld)", syscall(__NR_gettid));
 
             mysql_close(mysql);
             mysql_thread_end();
@@ -899,7 +899,7 @@ class cDbConnection
 
          if (!(f = fopen(file, "r")))
          {
-            tell(0, "Fatal: Can't execute sql file '%s'; Error was '%s'", file, strerror(errno));
+            tell(eloAlways, "Fatal: Can't execute sql file '%s'; Error was '%s'", file, strerror(errno));
             return fail;
          }
 
@@ -917,7 +917,7 @@ class cDbConnection
 
          // execute statement
 
-         tell(2, "Executing '%s'", buffer);
+         tell(eloDebug, "Executing '%s'", buffer);
 
          if (query("%s", buffer))
          {
@@ -997,17 +997,17 @@ class cDbConnection
 
          if (!initThreads)
          {
-            tell(1, "Info: Calling mysql_library_init()");
+            tell(eloDebugDb, "Info: Calling mysql_library_init()");
 
             if (mysql_library_init(0, 0, 0))
             {
-               tell(0, "Error: mysql_library_init() failed");
+               tell(eloAlways, "Error: mysql_library_init() failed");
                status = fail;
             }
          }
          else
          {
-            tell(1, "Info: Skipping calling mysql_library_init(), it's already done!");
+            tell(eloDebugDb, "Info: Skipping calling mysql_library_init(), it's already done!");
          }
 
          initThreads++;
@@ -1024,7 +1024,7 @@ class cDbConnection
 
          if (!initThreads)
          {
-            tell(1, "Info: Released the last usage of mysql_lib, calling mysql_library_end() now");
+            tell(eloDetail, "Info: Released the last usage of mysql_lib, calling mysql_library_end() now");
             mysql_library_end();
 
             free(dbHost);
@@ -1036,7 +1036,7 @@ class cDbConnection
          }
          else
          {
-            tell(1, "Info: The mysql_lib is still in use, skipping mysql_library_end() call");
+            tell(eloDetail, "Info: The mysql_lib is still in use, skipping mysql_library_end() call");
          }
 
          initMutex.Unlock();
@@ -1230,7 +1230,7 @@ class cDbView : public cDbService
 
          asprintf(&file, "%s/%s", path, sqlFile);
 
-         tell(0, "Creating view '%s' using definition in '%s'",
+         tell(eloAlways, "Creating view '%s' using definition in '%s'",
               name, file);
 
          status = connection->executeSqlFile(file);
@@ -1242,7 +1242,7 @@ class cDbView : public cDbService
 
       int drop()
       {
-         tell(0, "Drop view '%s'", name);
+         tell(eloAlways, "Drop view '%s'", name);
 
          return connection->query("drop view %s", name);
       }
@@ -1279,14 +1279,14 @@ class cDbProcedure : public cDbService
 
          cDbStatement stmt(connection);
 
-         tell(ll, "Calling '%s'", name);
+         tell(eloDebugDb, "Calling '%s'", name);
 
          stmt.build("call %s", name);
 
          if (stmt.prepare() != success || stmt.execute() != success)
             return fail;
 
-         tell(ll, "'%s' suceeded", name);
+         tell(eloDebugDb, "'%s' suceeded", name);
 
          return success;
       }
@@ -1303,7 +1303,7 @@ class cDbProcedure : public cDbService
 
          if (stmt.prepare() != success || stmt.execute() != success)
          {
-            tell(0, "%s check of '%s' failed",
+            tell(eloAlways, "%s check of '%s' failed",
                  type == ptProcedure ? "Procedure" : "Function", name);
             return no;
          }
@@ -1323,7 +1323,7 @@ class cDbProcedure : public cDbService
 
          asprintf(&file, "%s/%s.sql", path, name);
 
-         tell(1, "Creating %s '%s'",
+         tell(eloDetail, "Creating %s '%s'",
               type == ptProcedure ? "procedure" : "function", name);
 
          status = connection->executeSqlFile(file);
@@ -1335,7 +1335,7 @@ class cDbProcedure : public cDbService
 
       int drop()
       {
-         tell(1, "Drop %s '%s'", type == ptProcedure ? "procedure" : "function", name);
+         tell(eloDetail, "Drop %s '%s'", type == ptProcedure ? "procedure" : "function", name);
 
          return connection->query("drop %s %s", type == ptProcedure ? "procedure" : "function", name);
       }

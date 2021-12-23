@@ -6,6 +6,34 @@ button:focus {
     outline: none;
 }
 
+/* .body-background:after
+{
+    background: transparent url(/img/backgrounds/background.jpg) no-repeat 50% 0 fixed;
+    background-size: cover;
+    content: "";
+    opacity: 0.7;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;
+} */
+
+.slider
+{
+    display: none;
+    height: 20x;
+    padding: 15px;
+    width: 50%;
+    margin: 0px;
+    position: absolute;
+    vertical-align: middle;
+    top: 50%;
+    left: 25%;
+    background-color: #272727d9;
+}
+
 .menu
 {
     display: grid;
@@ -54,7 +82,7 @@ button:focus {
 .vdrContent
 {
     margin: 0px 5px 0px 5px;
-    background-color: var(--background);
+    /*background-color: var(--background); */
 }
 
 .rounded-border
@@ -173,9 +201,10 @@ button:focus {
 
 .menuDashboard
 {
-    background-color: slategray;
+    background-color: var(--dashboardMenuBackground);
     width: 99%;
     margin: 7px;
+    display: inline-block;
 }
 
 .buttonDashboard
@@ -183,10 +212,10 @@ button:focus {
     display: inline;
     margin: 5px 0px 5px 4px;
     color: white;
-    background-color: slategray;
-    height: 28px;
+    background-color: transparent;
     text-decoration: none;
     cursor: pointer;
+    font-size: x-large;
 }
 
 .buttonDashboard:hover
@@ -483,7 +512,7 @@ span > input
 .inputTableConfig
 {
     background-color: var(--light1);
-    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    background: linear-gradient(to bottom right, #00000096, black); /* Standard syntax (must be last) */
     padding: 5px;
 }
 
@@ -541,7 +570,8 @@ span > input
 }
 
 .listRow {
-    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+/*    background: linear-gradient(to bottom right, var(--light3), var(--light1)); */
+    background-color: var(--widgetBackground);
     border-radius: var(--borderRadius);
     border-color: var(--borderColor);
     border-style: solid;
@@ -741,24 +771,22 @@ table.tableMultiCol tr:nth-child(odd)
 .vdrFbContainer > div
 {
     overflow: hidden;
-}
-
-.vdrButtonDiv
-{
-    width: 33%;
+    width: 31%;
+    margin: 2px;
 }
 
 .vdrButtonColorDiv
 {
-    width: 25%;
-    height: 60px
+    width: 23% !important;
+    height: 60px;
+    margin: 2px;
 }
 
 .vdrButton
 {
     border-radius: 15px;
     border-color: var(--borderColor);
-    background-color: var(--caption1);
+    background-color: var(--background);
     color: var(--buttonFont);
     text-decoration: none;
     font-size: 5.0vh;
@@ -809,25 +837,21 @@ table.tableMultiCol tr:nth-child(odd)
 
 .vdrColorButtonRed
 {
-    margin: 5px;
     background-color: red;
 }
 
 .vdrColorButtonGreen
 {
-    margin: 5px;
     background-color: green;
 }
 
 .vdrColorButtonYellow
 {
-    margin: 5px;
     background-color: darkgoldenrod;
 }
 
 .vdrColorButtonBlue
 {
-    margin: 5px;
     background-color: darkblue;
 }
 
@@ -836,9 +860,13 @@ table.tableMultiCol tr:nth-child(odd)
 
 .chartCanvas
 {
-    background-color: #151515;
+    background-color: var(--background);
 }
 
+.chartDialogCanvas
+{
+    background-color: black;
+}
 .chartTitle
 {
     text-align: center;
@@ -853,7 +881,8 @@ table.tableMultiCol tr:nth-child(odd)
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 4px;
+    padding: 5px;
+    background-color: var(--background);
 }
 
 .chartButton
@@ -875,7 +904,7 @@ table.tableMultiCol tr:nth-child(odd)
 .chartBookmarks
 {
     display: flex;
-    margin: 4px;
+    padding: 5px;
 }
 
 .chartBookmarkButton
@@ -898,7 +927,8 @@ table.tableMultiCol tr:nth-child(odd)
 {
     display: flex;
     flex-wrap: wrap;
-    margin: 15px;
+    padding: 15px 15px 15px 15px;
+    background-color: var(--background);
 }
 
 .chartSel
@@ -1006,7 +1036,7 @@ table.tableMultiCol tr:nth-child(odd)
     width: 212px;
     height: 212px;
     margin: 3px;
-    background-color: var(--light1);
+    background-color: var(--widgetBackground);
     padding: 1px;
 }
 
@@ -1017,9 +1047,14 @@ table.tableMultiCol tr:nth-child(odd)
       'title'
       'main'
       'progress';
-    grid-template-rows: 14% 82% 2%;
+    grid-template-rows: 12% 86% 2%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.widgetSpacer
+{
+    box-shadow: 0px 0px 0px 0px var(--shadow);
 }
 
 .widgetSymbolValue
@@ -1100,7 +1135,7 @@ table.tableMultiCol tr:nth-child(odd)
       'title title'
       'peak value'
       'chart chart';
-    grid-template-rows: 15% 16% 69%;
+    grid-template-rows: 10% 14% 75%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1153,18 +1188,21 @@ table.tableMultiCol tr:nth-child(odd)
 .widget-title
 {
     grid-area: title;
-    display: flex;
-    justify-self: center;
-    text-align: center;
-    align-self: center;
-    font-size: 1.4em;
-    overflow: hidden;
+    display: block;
+    font-size: 1.2em;
     background-color: transparent;
     cursor: pointer;
     border: none;
-    /* width: inherit;*/
     color: var(--buttonFont);
+    justify-self: center;
+    text-align: center;
+    align-self: center;
+    width: 100%;
+    overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0px;
+    margin: 0px;
 }
 
 
@@ -1214,6 +1252,7 @@ table.tableMultiCol tr:nth-child(odd)
     text-align: center;
     color: white;
     padding: 0px;
+    font-size: 8em;
 }
 
 .widget-main > img
@@ -1418,15 +1457,15 @@ dialog::backdrop, #backdrop
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
     .button1                   { margin: 1px; }
-    .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
+    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 30%; }
     .buttonDashboard           { margin: 1px 0px 1px 0px; }
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 30% 66% 4%; }
-    .widgetChart               { grid-template-rows: 30% 20% 50%; }
+    .widget                    { grid-template-rows: 15% 81% 4%; }
+    .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
 }
@@ -1436,19 +1475,33 @@ dialog::backdrop, #backdrop
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
     .button1                   { margin: 1px; }
-    .inputTableConfig > div:nth-child(odd) { background-color: var(--light3); }
+    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 30%; }
-    .buttonDashboard           { margin: 1px 0px 1px 0px; }
+    .buttonDashboard           { padding: 4px; margin: 1px 0px 1px 0px; }
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 30% 66% 4%; }
-    .widgetChart               { grid-template-rows: 30% 20% 50%; }
-    .widget-title              { font-size: 1.3em; }
-    .widget-value              { font-size: 1.3em; }
+    .widget                    { grid-template-rows: 15% 81% 4%; }
+    .widgetChart               { grid-template-rows: 15% 18% 67%; }
+    .widgetMeterLinear         { grid-template-rows: 15% 25% 60%; }
+    .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
+    .widget-main-peak-lin      { font-size: 0.7em; }
+    .widget-value              { font-size: 1.2em; }
 }
 
+@media only screen and (max-height:500px)
+{
+    .content                   { margin: 0px; }
+    .widgetContainer > div     { width: 120px; height: 96px; margin: 2px; }
+    .widgetChart               { grid-template-rows: 15% 14% 71%; }
+    .buttonDashboard           { padding: 4px; margin: 0px 0px 0px 0px; }
+    .chart-peak                { font-size: 0.7em; margin-top: 4px; }
+    .widget-value              { font-size: 1.2em; }
+    .chart-value               { font-size: 1.0em; }
+    .widget-main               { font-size: 3.5em;}
+    .widget-main-value-lin     { font-size: 0.9em; }
+}
 
 @media only screen and (max-width: 375px) and (min-width:321px)
 {

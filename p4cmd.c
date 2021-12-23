@@ -114,8 +114,8 @@ int main(int argc, char** argv)
 
    Sem sem(0x3da00001);
 
-   loglevel = 0;
-   logstdout = yes;
+   eloquence = eloAlways;
+   logstdout = true;
 
    // usage ..
 
@@ -185,19 +185,19 @@ int main(int argc, char** argv)
 
       switch (argv[i][1])
       {
-         case 'o': if (argv[i+1]) offset = strtol(argv[++i], 0, 0);  break;
-         case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);    break;
-         case 'v': if (argv[i+1]) value = argv[++i];                 break;
-         case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);        break;
-         case 'd': if (argv[i+1]) device = argv[++i];                break;
+         case 'o': if (argv[i+1]) offset = strtol(argv[++i], 0, 0);    break;
+         case 'a': if (argv[i+1]) addr = strtol(argv[++i], 0, 0);      break;
+         case 'v': if (argv[i+1]) value = argv[++i];                   break;
+      case 'l': if (argv[i+1]) eloquence = (Eloquence)atoi(argv[++i]); break;
+         case 'd': if (argv[i+1]) device = argv[++i];                  break;
       }
    }
 
    if (cmd == ucUnknown)
       return 1;
 
-   if (loglevel > 0)
-      logstamp = yes;
+   if (eloquence != eloAlways)
+      logstamp = true;
 
    int debugMode = strcmp(device, "-") == 0;
 

@@ -34,12 +34,19 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
 int jStringValid(const char* s);
 
 bool isElementSet(json_t* obj, const char* name);
-const char* getStringFromJson(json_t* obj, const char* name, const char* def = 0);
+const char* getStringFromJson(json_t* obj, const char* name, const char* def = nullptr);
 int getIntFromJson(json_t* obj, const char* name, int def = na);
 int getBoolFromJson(json_t* obj, const char* name, bool def = false);
 long getLongFromJson(json_t* obj, const char* name, long def = na);
 double getDoubleFromJson(json_t* obj, const char* name, double def = na);
 json_t* getObjectFromJson(json_t* obj, const char* name, json_t* def = nullptr);
+
+json_t* getObjectByPath(json_t* jData, const char* aPath, json_t* def = nullptr);
+bool getBoolByPath(json_t* jData, const char* aPath, bool def = false);
+int getIntByPath(json_t* jData, const char* aPath, int def = na);
+double getDoubleByPath(json_t* jData, const char* aPath, double def = na);
+const char* getStringByPath(json_t* jData, const char* aPath, const char* def = nullptr);
+
 int addToJson(json_t* obj, const char* name, const char* value, const char* def = "");
 int addToJson(json_t* obj, const char* name, long value);
 int addToJson(json_t* obj, const char* name, json_t* o);

@@ -28,11 +28,12 @@
     <script src="jquery/jquery-migrate-3.0.0.min.js"></script>
     <script src="jquery/picktim.js"></script>
     <script src="jquery/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+    <script src="jquery/jquery.ui.touch-punch.min.js"></script>
     <script src="jquery/jquery.md5.js"></script>
     <script src="jquery/jquery.browser.min.js"></script>
     <script src="jquery/spectrum.js"></script>
     <script src="jquery/autocomplete.js"></script>
-    <script src="jquery/Moment.js"></script>
+    <script src="jquery/moment-with-locales.min.js"></script>
     <script src="jquery/Chart.min.js"></script>
     <script src="jquery/canvas-gauges-master/gauge.min.js"></script>
 
@@ -52,9 +53,9 @@
     <script type="text/javascript" src="pellets.js"></script>
 
 <!--    <script type="text/javascript" src="ph.js"></script> -->
-<!--    <script type="text/javascript" src="vdr.js"></script> -->
+    <script type="text/javascript" src="vdr.js"></script>
 
-    <title>Heating Control Dashboard</title>
+    <title>Control Dashboard</title>
   </head>
   <body>
 
@@ -71,7 +72,7 @@
     </div>
 
     <dialog role="dialog">
-      <canvas id="chartDialog" class="chartCanvas" onclick="toggleChartDialog('',0)"></canvas>
+      <canvas id="chartDialog" class="chartDialogCanvas" onclick="toggleChartDialog('',0)"></canvas>
     </dialog>
 
   </body>

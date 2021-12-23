@@ -41,6 +41,7 @@ class FroelingService
 
       static StateInfo stateInfos[];
       static const char* toTitle(int code);
+      static int toState(const char* title);
       static int isError(int code);
 
       // -------------------------
@@ -358,7 +359,7 @@ class FroelingService
                }
                else if (type == mstPar || type == mstParSet || type == mstParSet1  || type == mstParSet2)
                {
-                  tell(0, "Set value '%s' with %d digits and factor %d", strValue, digits, factor);
+                  tell(eloAlways, "Set value '%s' with %d digits and factor %d", strValue, digits, factor);
 
                   if (digits == 0)
                   {
@@ -376,7 +377,7 @@ class FroelingService
 
                      rValue = strtod(strValue, nullptr);
                      value = rValue * factor;
-                     tell(0, "Set value to %.*f (%d)", digits, rValue, value);
+                     tell(eloAlways, "Set value to %.*f (%d)", digits, rValue, value);
                   }
                }
                else

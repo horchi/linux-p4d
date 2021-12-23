@@ -16,7 +16,6 @@ update=0
 
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 echo -e "${BLUE}- Starting the installation (or update) of p4d deamon${NC}"
-echo -e "${BLUE}-    Deamon to fetch sensor data of the 'Lambdatronic s3200' and store to a MySQL database${NC}"
 echo -e "${BLUE}-------------------------------------------------------------------------------------------${NC}"
 
 echo -e -n "${BLUE}Continue? [y/N] ${NC}"
@@ -60,7 +59,7 @@ if [ ${update} != 1 ]; then
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>:1111${NC}"
    echo -e "${BLUE}- Your IP seems to be ${IP} therefore you can try:${NC} ${BWHITE}http://${IP}:1111${NC}"
-   echo -e "${BLUE}- Default user/password is p4/p4d${NC}"
+   echo -e "${BLUE}- Default user/password is p4d/p4d${NC}"
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- Added aliases for convenience:${NC}"
    echo -e "${BLUE}-  p4db  - go to the SQL prompt${NC}"

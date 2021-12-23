@@ -102,6 +102,15 @@ const char* FroelingService::toTitle(int code)
    return "unknown";
 }
 
+int FroelingService::toState(const char* title)
+{
+   for (int i = 0; stateInfos[i].code != na; i++)
+      if (strcmp(stateInfos[i].title, title) == 0)
+         return i;
+
+   return na;
+}
+
 int FroelingService::isError(int code)
 {
    const char* title = toTitle(code);

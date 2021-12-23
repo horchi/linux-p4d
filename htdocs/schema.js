@@ -62,6 +62,7 @@ function initSchema(schemaData)
    lastSchemadata = schemaData;
 
    $('#container').removeClass('hidden');
+
    document.getElementById("container").innerHTML = '<div id="schemaContainer" class="rounded-border schemaBox">';
    schemaRoot = document.getElementById("schemaContainer");
 
@@ -82,6 +83,11 @@ function initSchema(schemaData)
    }
 
    updateSchema();
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
+   };
 }
 
 function initSchemaElement(item, tabindex)
@@ -144,6 +150,8 @@ function updateSchema()
       var schemaDef = lastSchemadata[i];
       var id = schemaDef.type + ((schemaDef.address)>>>0).toString(10);
       var item = getItemById(id);
+      var key = toKey(schemaDef.type, schemaDef.address);
+      var fact = valueFacts[key];
 
       if (schemaDef == null)
          continue;
@@ -192,7 +200,7 @@ function updateSchema()
          else if (schemaDef.kind == 1)
             html += item.text || "";
 
-         html += schemaDef.showunit ? item.unit || "" : "";
+         html += schemaDef.showunit ? fact.unit || "" : "";
       }
       else {
          if(schemaDef.fct == null && schemaDef.fct == "" && item == null)

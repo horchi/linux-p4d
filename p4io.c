@@ -504,7 +504,7 @@ int P4Request::getStatus(Status* s)
       {
          *p = 0;
 
-         s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
+          s->modeinfo = strcasecmp(text, "Übergangsbetr") != 0 ? strdup(text) : strdup("Übergangsbetrieb");
          s->stateinfo = strdup(p+1);
 
          free(text);
@@ -634,7 +634,7 @@ int P4Request::getParameter(ConfigParameter* p)
 
       if (header.size < 4)
       {
-         tell(0, "Read header done, got %d bytes instead of 4", header.size);
+         tell(eloAlways, "Read header done, got %d bytes instead of 4", header.size);
          for (int i = 0; i < header.size; i++)
             readByte(b);
          return errWrongAddress;
@@ -770,7 +770,7 @@ int P4Request::getTimeRanges(TimeRanges* t, int first)
 
       if (status != success)
       {
-         tell(0, "Error: Reading address failed");
+         tell(eloAlways, "Error: Reading address failed");
          return fail;
       }
 
@@ -784,7 +784,7 @@ int P4Request::getTimeRanges(TimeRanges* t, int first)
 
       if ((status = readByte(crc)) != success)
       {
-         tell(0, "Error: Reading CRC failed;");
+         tell(eloAlways, "Error: Reading CRC failed;");
          return fail;
       }
 
@@ -1143,7 +1143,7 @@ int P4Request::getValueSpec(ValueSpec* v, int first)
       {
          free(v->unit);
          asprintf(&v->unit, "%.*s", (int)(e-s)-1, s+1);
-         tell(2, "Using unit '%s' from description", v->unit);
+         tell(eloDetail, "Using unit '%s' from description", v->unit);
       }
    }
 

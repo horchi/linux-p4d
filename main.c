@@ -32,11 +32,11 @@ int atConfigItem(const char* Name, const char* Value)
 {
    // Parse setup parameters and store values.
 
-   if      (!strcasecmp(Name, "dbHost"))      sstrcpy(dbHost, Value, sizeof(dbHost));
-   else if (!strcasecmp(Name, "dbPort"))      dbPort = atoi(Value);
-   else if (!strcasecmp(Name, "dbName"))      sstrcpy(dbName, Value, sizeof(dbName));
-   else if (!strcasecmp(Name, "dbUser"))      sstrcpy(dbUser, Value, sizeof(dbUser));
-   else if (!strcasecmp(Name, "dbPass"))      sstrcpy(dbPass, Value, sizeof(dbPass));
+   if      (!strcasecmp(Name, "dbHost")) sstrcpy(dbHost, Value, sizeof(dbHost));
+   else if (!strcasecmp(Name, "dbPort")) dbPort = atoi(Value);
+   else if (!strcasecmp(Name, "dbName")) sstrcpy(dbName, Value, sizeof(dbName));
+   else if (!strcasecmp(Name, "dbUser")) sstrcpy(dbUser, Value, sizeof(dbUser));
+   else if (!strcasecmp(Name, "dbPass")) sstrcpy(dbPass, Value, sizeof(dbPass));
 
    return success;
 }
@@ -116,16 +116,13 @@ int readConfig()
 
 void showUsage(const char* bin)
 {
-   printf("Usage: %s [-n][-c <config-dir>][-l <log-level>][-t]\n", bin);
+   printf("Usage: %s [-n][-c <config-dir>][-l <eloquence>][-t]\n", bin);
    printf("    -n              don't daemonize\n");
    printf("    -t              log to stdout\n");
    printf("    -T              log to stdout during init\n");
    printf("    -v              show version\n");
-   printf("    -s              setup\n");
-   printf("    -i              update configuration tables\n");
-   printf("    -I              truncate and initialze configuration tables\n");
    printf("    -c <config-dir> use config in <config-dir>\n");
-   printf("    -l <log-level>  set log level\n");
+   printf("    -l <eloquence>  set eloquence\n");
 }
 
 //***************************************************************************
@@ -137,12 +134,9 @@ int main(int argc, char** argv)
    CLASS* job;
    int nofork = no;
    int pid;
-   int setup = no;
-   int init = no;
-   int truncOnInit = no;
    bool _stdout {false};
    bool _stdoutOnInit {false};
-   int _level = na;
+   Eloquence _eloquence {eloAlways};
 
    logstdout = true;
 
@@ -163,14 +157,11 @@ int main(int argc, char** argv)
 
       switch (argv[i][1])
       {
-         case 'l': if (argv[i+1]) _level = atoi(argv[i+1]); break;
+         case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
          case 't': _stdout = true;                          break;
          case 'T': _stdoutOnInit = true;                    break;
          case 'n': nofork = yes;                            break;
          case 'c': if (argv[i+1]) confDir = argv[i+1];      break;
-         case 's': setup = yes;                             break;
-         case 'i': init = yes;                              break;
-         case 'I': truncOnInit = yes; init = yes;           break;
          case 'v': printf("Version %s\n", VERSION);         return 1;
       }
    }
@@ -183,11 +174,11 @@ int main(int argc, char** argv)
    if (readConfig() != success)
       return 1;
 
-   argLoglevel = _level;
+   argEloquence = _eloquence;
 
    // fork daemon
 
-   if (!nofork && !setup && !init)
+   if (!nofork)
    {
       if ((pid = fork()) < 0)
       {
@@ -213,12 +204,6 @@ int main(int argc, char** argv)
       delete job;
       return 1;
    }
-
-   if (setup)
-      return job->setup();
-
-   if (init)
-      return job->initialize(truncOnInit);
 
    // register SIGINT
 

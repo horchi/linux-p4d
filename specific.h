@@ -36,9 +36,6 @@ class P4d : public Daemon
       {
       };
 
-      int setup();
-      int initialize(bool truncate = false);
-
    protected:
 
       int initDb() override;
@@ -49,6 +46,7 @@ class P4d : public Daemon
       int loadStates() override;
       int atMeanwhile() override;
 
+      int updateSensors() override;
       void afterUpdate() override;
       int updateErrors();
       int updateState() override;
@@ -60,7 +58,6 @@ class P4d : public Daemon
       int process() override;
       int performJobs() override;
       void logReport() override;
-      int onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData) override;
       bool onCheckRights(long client, Event event, uint rights) override;
       int dispatchMqttHaCommandRequest(json_t* jData, const char* topic) override;
       int dispatchNodeRedCommand(json_t* jObject) override;
@@ -75,7 +72,7 @@ class P4d : public Daemon
       int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
       int initValueFacts(bool truncate = false);
-      const char* getStateImage(int state);
+      const char* getTextImage(const char* key, const char* text) override;
 
       // WS request
 

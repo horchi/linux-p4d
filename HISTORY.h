@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.8.20"
-#define VERSION_DATE "14.12.2021"
+#define _VERSION     "0.9.0"
+#define VERSION_DATE "18.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,20 @@
 
 /*
  * ------------------------------------
+
+2021-12-18:  version 0.9.0
+  - added:  Interface for deCONZ (ConBee)
+  - added:  widget width 0.5
+  - added:  Spacer widget with linefeed option
+  - added:  Time widget
+  - added:  background image
+  - added:  Kiosk mode (e.g. for wall mounted touch panels) - activated by URL option 'kiosk=1'
+  - added:  Auto switch back to first dashboard - activated by URL option 'backTime=<seconds>'
+  - change: Optical adjustments for different display sizes
+  - added:  Sensors active and record separately adjustable
+  - change: Extended node-red support
+  - added:  Config for widget heigh per dashboard
+  - added:  HomeMatic support via node-red
 
 2021-12-14:  version 0.8.20
   - added:  MQTT Topics for node-red communication

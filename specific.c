@@ -7,6 +7,7 @@
 //***************************************************************************
 
 #include <dirent.h>
+#include <inttypes.h>
 
 #ifndef _NO_RASPBERRY_PI_
 #  include <wiringPi.h>
@@ -25,59 +26,68 @@ volatile int showerSwitch {0};
 
 std::list<Daemon::ConfigItemDef> P4d::configuration
 {
-
    // p4d
 
-   { "interval",                  ctInteger, "60",   false, "1 P4 Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
-   { "webPort",                   ctInteger, "1111", false, "1 P4 Daemon", "Port des Web Interfaces", "" },
-   { "stateCheckInterval",        ctInteger, "10",   false, "1 P4 Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
-   { "arduinoInterval",           ctInteger, "10",   false, "1 P4 Daemon", "Intervall der Arduino Messungen", "[s]" },
-   { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "1 P4 Daemon", "TTY Device", "Beispiel: '/dev/ttyUsb0'" },
-   { "loglevel",                  ctInteger, "1",    false, "1 P4 Daemon", "Log level", "" },
-   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "1 P4 Daemon", "MQTT Broker Url", "MQTT Instanz für den p4d. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "interval",                  ctInteger, "60",   false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
+   { "webPort",                   ctInteger, "1111", false, "Daemon", "Port des Web Interfaces", "" },
+   { "stateCheckInterval",        ctInteger, "10",   false, "Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
+   { "arduinoInterval",           ctInteger, "10",   false, "Daemon", "Intervall der Arduino Messungen", "[s]" },
+   { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "Daemon", "TTY Device zur S-3200", "Beispiel: '/dev/ttyUsb0'" },
+   { "eloquence",                 ctBitSelect, "1",          false, "Daemon", "Log Eloquence", "" },
 
-   { "tsync",                     ctBool,    "0",    false, "1 P4 Daemon", "Zeitsynchronisation", "täglich 3:00" },
-   { "maxTimeLeak",               ctInteger, "5",    false, "1 P4 Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
+   { "tsync",                     ctBool,    "0",    false, "Daemon", "Zeitsynchronisation", "täglich 3:00" },
+   { "maxTimeLeak",               ctInteger, "5",    false, "Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
 
-   { "aggregateHistory",          ctInteger, "1",    false, "1 P4 Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
-   { "aggregateInterval",         ctInteger, "15",   false, "1 P4 Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
-   { "peakResetAt",               ctString,  "",     true,  "1 P4 Daemon", "", "" },
+   { "aggregateHistory",          ctInteger, "1",    false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
+   { "aggregateInterval",         ctInteger, "15",   false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
+   { "peakResetAt",               ctString,  "",     true,  "Daemon", "", "" },
 
-   { "consumptionPerHour",        ctNum,     "4",    false, "1 P4 Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
+   { "consumptionPerHour",        ctNum,     "4",    false, "Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
 
    // web
 
-   { "webUrl",                    ctString,  "", false, "2 WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
-   { "webSSL",                    ctBool,    "", false, "2 WEB Interface", "Use SSL for WebInterface", "" },
-   { "haUrl",                     ctString,  "", false, "2 WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
+   { "webUrl",                    ctString,  "",             false, "WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
+   { "webSSL",                    ctBool,    "",             false, "WEB Interface", "Use SSL for WebInterface" },
+   { "haUrl",                     ctString,  "",             false, "WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 
-   { "heatingType",               ctChoice,  "", false, "2 WEB Interface", "Typ der Heizung", "" },
-   { "style",                     ctChoice,  "", false, "2 WEB Interface", "Farbschema", "" },
-   { "iconSet",                   ctChoice,  "", false, "2 WEB Interface", "Status Icon Set", "" },
-   { "schema",                    ctChoice,  "", false, "2 WEB Interface", "Schematische Darstellung", "" },
+   { "heatingType",               ctChoice,  "",             false, "WEB Interface", "Typ der Heizung", "" },
+   { "style",                     ctChoice,  "dark",         false, "WEB Interface", "Farbschema", "" },
+   { "iconSet",                   ctChoice,  "",             true,  "WEB Interface", "Status Icon Set", "" },
+   { "background",                ctChoice,  "",             false, "WEB Interface", "Background image", "" },
+   { "schema",                    ctChoice,  "schema.jpg",   false, "WEB Interface", "Schematische Darstellung", "" },
 
-   { "chartRange",                ctNum,     "1.5",    true, "2 WEB Interface", "Chart Range", "" },
-   { "chartSensors",              ctNum,     "VA:0x0", true, "2 WEB Interface", "Chart Sensors", "" },
+   { "chartRange",                ctNum,     "1.5",          true, "WEB Interface", "Chart Range", "" },
+   { "chartSensors",              ctNum,     "VA:0x0",       true, "WEB Interface", "Chart Sensors", "" },
 
-   // Home Autonation MQTT interface
+   // homectrld MQTT interface
 
-   { "mqttHassUrl",               ctString,  "",  false, "3 MQTT Interface", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttHassUser",              ctString,  "",  false, "3 MQTT Interface", "MQTT HA User", "" },
-   { "mqttHassPassword",          ctString,  "",  false, "3 MQTT Interface", "MQTT HA Password", "" },
-   { "mqttDataTopic",             ctString,  "",  false, "3 MQTT Interface", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttHaveConfigTopic",       ctBool,    "1", false, "3 MQTT Interface", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
+   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "Home-Control MQTT Interface", "MQTT Broker Url", "MQTT Instanz für den p4d. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttSensorTopics",          ctString,  TARGET "2mqtt/w1/#, " TARGET "2mqtt/arduino/out",  false, "Home-Control MQTT Interface", "Sensor Topics", "" },
 
    // node-red MQTT interface
 
-   { "mqttNodeRedUrl",            ctString,  "",  false, "4 MQTT Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttNodeRedUrl",            ctString,  "",  false, "Node-Red Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+
+   // Home Automation MQTT interface
+
+   { "mqttHassUrl",               ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttHassUser",              ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA User", "" },
+   { "mqttHassPassword",          ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Password", "" },
+   { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
+   { "mqttHaveConfigTopic",       ctBool,    "1", false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 
-   { "mail",                      ctBool,    "0",                    false, "5 Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
-   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "5 Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  "",                     false, "5 Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctMultiSelect, "",                 false, "5 Mail", "  für folgende Status", "" },
-   { "errorMailTo",               ctString,  "",                     false, "5 Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "mail",                      ctBool,    "0",                    false, "Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
+   { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "Mail", "p4d sendet Mails über das Skript", "" },
+   { "stateMailTo",               ctString,  "",                     false, "Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailStates",           ctMultiSelect, "",                 false, "Mail", "  für folgende Status", "" },
+   { "errorMailTo",               ctString,  "",                     false, "Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+
+   { "deconzHttpUrl",             ctString,  "",                     false, "DECONZ", "deCONZ HTTP URL", "" },
+   { "deconzApiKey",              ctString,  "",                     false, "DECONZ", "deCONZ API key", "" },
+
+   { "homeMaticInterface",        ctBool,    "false",                false, "HomeMatic CCU", "HomeMatic Interface", "" },
 };
 
 //***************************************************************************
@@ -387,125 +397,152 @@ void ioInterrupt()
 
 int P4d::applyConfigurationSpecials()
 {
+   sensors["UD"][udState].record = true;
+   sensors["UD"][udMode].record = true;
+   sensors["UD"][udTime].record = true;
+
    return done;
 }
 
 //***************************************************************************
-// On Update
+// Update Sensors
 //***************************************************************************
 
-int P4d::onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData)
+int P4d::updateSensors()
 {
-   char num[100] {'\0'};
-   const char* type = tableValueFacts->getStrValue("TYPE");
-   uint addr = table->getIntValue("ADDRESS");
-   const char* unit = tableValueFacts->getStrValue("UNIT");
-   const char* name = tableValueFacts->getStrValue("NAME");
-   const char* title = tableValueFacts->getStrValue("TITLE");
-   const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
-   double factor = tableValueFacts->getIntValue("FACTOR");
-   uint groupid = tableValueFacts->getIntValue("GROUPID");
-
-   if (!isEmpty(usrtitle))
-      title = usrtitle;
-
-   if (table->hasValue("TYPE", "SD"))   // state duration
+   time_t now = time(0);
+   for (const auto& typeSensorsIt : sensors)
    {
-      const auto it = stateDurations.find(addr);
-
-      if (it == stateDurations.end())
-         return done;
-
-      double value = stateDurations[addr] / 60;
-
-      json_object_set_new(ojData, "value", json_real(value));
-
-      if (!webOnly)
+      for (const auto& sensorIt : typeSensorsIt.second)
       {
-         store(lastSampleTime, name, title, unit, type, addr, value, factor, groupid);
-         sprintf(num, "%.2f%s", value / factor, unit);
-         addParameter2Mail(title, num);
-      }
-   }
-   else if (tableValueFacts->hasValue("TYPE", "UD"))
-   {
-      switch (tableValueFacts->getIntValue("ADDRESS"))
-      {
-         case udState:
+         int status {success};
+         const SensorData* sensor = &sensorIt.second;
+
+         cDbRow* row = valueFactOf(sensor->type.c_str(), sensor->address);
+
+         if (sensor->type == "SD")   // state duration
          {
-            json_object_set_new(ojData, "text", json_string(currentState.stateinfo));
-            json_object_set_new(ojData, "image", json_string(getStateImage(currentState.state)));
+            const auto it = stateDurations.find(sensor->address);
 
-            if (!webOnly)
+            if (it == stateDurations.end())
+               return done;
+
+            double theValue = stateDurations[sensor->address] / 60;
+
+            if (sensors[sensor->type][sensor->address].value != theValue)
             {
-               store(lastSampleTime, name, unit, title, type, udState, currentState.state, factor, groupid, currentState.stateinfo);
-               addParameter2Mail(title, currentState.stateinfo);
+               sensors[sensor->type][sensor->address].value = theValue;
+               sensors[sensor->type][sensor->address].valid = true;
+               sensors[sensor->type][sensor->address].last = now;
+            }
+         }
+         else if (sensor->type == "UD")
+         {
+            std::string oldText = sensors[sensor->type][sensor->address].text;
+            double oldValue = sensors[sensor->type][sensor->address].value;
+
+            if (sensor->address == udState)
+            {
+               sensors[sensor->type][sensor->address].value = currentState.state;
+               sensors[sensor->type][sensor->address].text = currentState.stateinfo;
+            }
+            else if (sensor->address == udMode)
+            {
+               sensors[sensor->type][sensor->address].text = currentState.modeinfo;
+               sensors[sensor->type][sensor->address].value = currentState.mode;
+            }
+            else if (sensor->address == udTime)
+            {
+               sensors[sensor->type][sensor->address].text = l2pTime(currentState.time, "%A, %d. %b. %Y %H:%M:%S");
+               sensors[sensor->type][sensor->address].value = currentState.time;
+               break;
             }
 
-            break;
-         }
-         case udMode:
-         {
-            json_object_set_new(ojData, "text", json_string(currentState.modeinfo));
+            sensors[sensor->type][sensor->address].valid = true;
 
-            if (!webOnly)
+            if (sensors[sensor->type][sensor->address].text != oldText || sensors[sensor->type][sensor->address].value != oldValue)
+               sensors[sensor->type][sensor->address].last = now;
+         }
+         else if (sensor->type == "DO")
+         {
+            Fs::IoValue v(sensor->address);
+
+            if ((status = request->getDigitalOut(&v)) != success)
             {
-               store(lastSampleTime, name, title, unit, type, udMode, currentState.mode, factor, groupid, currentState.modeinfo);
-               addParameter2Mail(title, currentState.modeinfo);
+               tell(eloAlways, "Error: Getting digital out 0x%04x failed, error %d", sensor->address, status);
+               continue;
             }
 
-            break;
-         }
-         case udTime:
-         {
-            std::string date = l2pTime(currentState.time, "%A, %d. %b. %Y %H:%M:%S");
-            json_object_set_new(ojData, "text", json_string(date.c_str()));
-
-            if (!webOnly)
+            if (sensors[sensor->type][sensor->address].state != (bool)v.state)
             {
-               store(lastSampleTime, name, title, unit, type, udTime, currentState.time, factor, groupid, date.c_str());
-               addParameter2Mail(title, date.c_str());
+               sensors[sensor->type][sensor->address].state = v.state;
+               sensors[sensor->type][sensor->address].valid = true;
+               sensors[sensor->type][sensor->address].last = now;
+            }
+         }
+         else if (sensor->type == "DI")
+         {
+            Fs::IoValue v(sensor->address);
+
+            if ((status = request->getDigitalIn(&v)) != success)
+            {
+               tell(eloAlways, "Error: Getting digital in 0x%04x failed, error %d", sensor->address, status);
+               continue;
             }
 
-            break;
+            if (sensors[sensor->type][sensor->address].state != (bool)v.state)
+            {
+               sensors[sensor->type][sensor->address].state = v.state;
+               sensors[sensor->type][sensor->address].valid = true;
+               sensors[sensor->type][sensor->address].last = now;
+            }
          }
+         else if (sensor->type == "AO")
+         {
+            Fs::IoValue v(sensor->address);
+
+            if ((status = request->getAnalogOut(&v)) != success)
+            {
+               tell(eloAlways, "Error: Getting analog out 0x%04x failed, error %d", sensor->address, status);
+               continue;
+            }
+
+            if (sensors[sensor->type][sensor->address].state != (bool)v.state)
+            {
+               sensors[sensor->type][sensor->address].value = v.state;
+               sensors[sensor->type][sensor->address].valid = true;
+               sensors[sensor->type][sensor->address].last = now;
+            }
+         }
+         else if (sensor->type == "VA")
+         {
+            Value v(sensor->address);
+
+            if ((status = request->getValue(&v)) != success)
+            {
+               tell(eloAlways, "Error: Getting value 0x%04x failed, error %d", sensor->address, status);
+               continue;
+            }
+
+            int dataType = row->getIntValue("SUBTYPE");
+            int value = dataType == 1 ? (word)v.value : (sword)v.value;
+            double theValue = value / (double)sensor->factor;
+
+            if (sensors[sensor->type][sensor->address].value != theValue)
+            {
+               sensors[sensor->type][sensor->address].kind = "value";
+               sensors[sensor->type][sensor->address].value = theValue;
+               sensors[sensor->type][sensor->address].valid = true;
+               sensors[sensor->type][sensor->address].last = now;
+            }
+         }
+
+         if (sensors[sensor->type][sensor->address].last == now)
+            mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
       }
    }
-   else if (tableValueFacts->hasValue("TYPE", "VA"))
-   {
-      int status {success};
-      Value v(addr);
 
-      if ((status = request->getValue(&v)) != success)
-      {
-         tell(eloAlways, "Getting value 0x%04x failed, error %d", addr, status);
-         return done;
-      }
-
-      int dataType = tableValueFacts->getIntValue("SUBTYPE");
-      int value = dataType == 1 ? (word)v.value : (sword)v.value;
-      double theValue = value / factor;
-
-      json_object_set_new(ojData, "value", json_real(theValue));
-
-      if (!webOnly)
-      {
-         double theValue = value / (double)factor;
-         bool changed = vaSensors[v.address].value != theValue;
-
-         vaSensors[v.address].kind = "value";
-         vaSensors[v.address].value = theValue;
-         vaSensors[v.address].valid = true;
-         vaSensors[v.address].last = lastSampleTime;
-
-         store(lastSampleTime, name, title, unit, type, v.address, value, factor, groupid);
-         sprintf(num, "%.2f%s", theValue, unit);
-         addParameter2Mail(title, num);
-
-         if (changed)
-            mqttNodeRedPublishSensor(type, addr, iotSensor, name, title, unit, theValue);
-      }
-   }
+   selectActiveValueFacts->freeResult();
 
    return done;
 }
@@ -604,6 +641,26 @@ void P4d::scheduleTimeSyncIn(int offset)
 int P4d::sendStateMail()
 {
    std::string subject = "Heizung - Status: " + std::string(currentState.stateinfo);
+   std::string mailBodyHtml;
+
+   for (const auto& typeSensorsIt : sensors)
+   {
+      for (const auto& sensorIt : typeSensorsIt.second)
+      {
+         const SensorData* sensor = &sensorIt.second;
+
+         if (sensor->text.length())
+            mailBodyHtml += "        <tr><td>" + sensor->title + "</td><td>" + sensor->text + "</td></tr>\n";
+         else if (sensor->kind == "status")
+            mailBodyHtml += "        <tr><td>" + sensor->title + "</td><td>" + std::string(sensor->state ? "on" : "off") + "</td></tr>\n";
+         else
+         {
+            char value[100];
+            sprintf(value, "%.2f", sensor->value);
+            mailBodyHtml += "        <tr><td>" + sensor->title + "</td><td>" + std::string(value) + "</td></tr>\n";
+         }
+      }
+   }
 
    // check
 
@@ -636,7 +693,7 @@ int P4d::sendStateMail()
             "   <br/>\n"
             "  </body>\n"
             "</html>\n",
-            htmlHeader.memory, webUrl, mailBodyHtml.c_str());
+            htmlHeader.c_str(), webUrl, mailBodyHtml.c_str());
 
    int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
    free(html);
@@ -700,7 +757,7 @@ void P4d::afterUpdate()
    if (mail && stateChanged)
       sendStateMail();
 
-   oJson = json_object();
+   json_t* oJson = json_object();
    s3200State2Json(oJson);
    pushOutMessage(oJson, "s3200-state");
 }
@@ -720,100 +777,6 @@ int P4d::process()
 
 void P4d::logReport()
 {
-}
-
-//***************************************************************************
-// Initialize
-//***************************************************************************
-
-int P4d::initialize(bool truncate)
-{
-   sem->p();
-
-   tell(0, "opening %s", ttyDevice);
-
-   if (serial->open(ttyDevice) != success)
-   {
-      sem->v();
-      return fail;
-   }
-
-   if (request->check() != success)
-   {
-      tell(0, "request->check failed");
-      serial->close();
-      return fail;
-   }
-
-   updateTimeRangeData();
-
-   if (!connection)
-      return fail;
-
-   // truncate config tables ?
-
-   if (truncate)
-   {
-      tell(eloAlways, "Truncate configuration tables!");
-
-      tableValueFacts->truncate();
-      tableSchemaConf->truncate();
-      tableMenu->truncate();
-   }
-
-   tell(eloAlways, "Requesting value facts from s 3200");
-   initValueFacts();
-   tell(eloAlways, "Update html schema configuration");
-   updateSchemaConfTable();
-   tell(eloAlways, "Requesting menu structure from s 3200");
-   initMenu();
-
-   serial->close();
-   sem->v();
-
-   return done;
-}
-
-//***************************************************************************
-// Setup
-//***************************************************************************
-
-int P4d::setup()
-{
-   if (!connection)
-      return fail;
-
-   for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
-   {
-      char* res {nullptr};
-      char buf[100+TB] {""};
-      char oldState = tableValueFacts->getStrValue("STATE")[0];
-      char state {oldState};
-
-      printf("%s 0x%04lx '%s' (%s)",
-             tableValueFacts->getStrValue("TYPE"),
-             tableValueFacts->getIntValue("ADDRESS"),
-             tableValueFacts->getStrValue("UNIT"),
-             tableValueFacts->getStrValue("TITLE"));
-
-      printf(" - aufzeichnen? (%s): ", oldState == 'A' ? "Y/n" : "y/N");
-
-      if ((res = fgets(buf, 100, stdin)) && strlen(res) > 1)
-         state = toupper(res[0]) == 'Y' ? 'A' : 'D';
-
-      if (state != oldState && tableValueFacts->find())
-      {
-         tableValueFacts->setCharValue("STATE", state);
-         tableValueFacts->store();
-      }
-   }
-
-   selectAllValueFacts->freeResult();
-
-   tell(eloAlways, "Update html schema configuration");
-   updateSchemaConfTable();
-
-   return done;
 }
 
 //***************************************************************************
@@ -902,7 +865,7 @@ int P4d::updateParameter(cDbTable* tableMenu)
    int paddr = tableMenu->getIntValue("ADDRESS");
    int child = tableMenu->getIntValue("CHILD");
 
-   tell(3, "Update parameter %d/%d ...", type, paddr);
+   tell(eloDetail, "Update parameter %d/%d ...", type, paddr);
 
    sem->p();
 
@@ -1051,11 +1014,11 @@ int P4d::updateTimeRangeData()
    char fName[10+TB];
    char tName[10+TB];
 
-   tell(0, "Updating time ranges data ...");
+   tell(eloAlways, "Updating time ranges data ...");
 
    if (request->check() != success)
    {
-      tell(0, "request->check failed");
+      tell(eloAlways, "request->check failed");
       serial->close();
       return fail;
    }
@@ -1080,7 +1043,7 @@ int P4d::updateTimeRangeData()
 
    }
 
-   tell(0, "Updating time ranges data done");
+   tell(eloAlways, "Updating time ranges data done");
 
    return done;
 }
@@ -1243,7 +1206,7 @@ int P4d::sendErrorMail()
             "   <br/>\n"
             "  </body>\n"
             "</html>\n",
-            htmlHeader.memory, webUrl, currentState.stateinfo, body.c_str());
+            htmlHeader.c_str(), webUrl, currentState.stateinfo, body.c_str());
 
    int result = sendMail(errorMailTo, subject, html, "text/html");
 
@@ -1289,7 +1252,7 @@ int P4d::calcStateDuration()
       if (beginTime)
       {
          stateDurations[thisState] += eTime-beginTime;
-         tell(3, "%s:0x%02x (%s) '%d/%s' %.2f minutes", "SD", thisState,
+         tell(eloDetail, "%s:0x%02x (%s) '%d/%s' %.2f minutes", "SD", thisState,
               l2pTime(beginTime).c_str(), thisState, text.c_str(), (eTime-beginTime) / 60.0);
       }
 
@@ -1311,17 +1274,17 @@ int P4d::calcStateDuration()
 
    selectStateDuration->freeResult();
 
-   if (loglevel >= 2)
+   if (eloquence % eloDetail)
    {
       int total {0};
 
       for (const auto& d : stateDurations)
       {
-         tell(2, "%d: %ld minutes", d.first, d.second / 60);
+         tell(eloDebug, "%d: %ld minutes", d.first, d.second / 60);
          total += d.second;
       }
 
-      tell(2, "total: %d minutes", total / 60);
+      tell(eloDetail, "total: %d minutes", total / 60);
    }
 
    return success;
@@ -1342,7 +1305,6 @@ void P4d::sensorAlertCheck(time_t now)
    {
       alertMailBody = "";
       alertMailSubject = "";
-
       performAlertCheck(tableSensorAlert->getRow(), now, 0);
    }
 
@@ -1812,8 +1774,8 @@ int P4d::performPellets(json_t* oObject, long client)
    json_object_set_new(oData, "price", json_real(tPrice));
    json_object_set_new(oData, "comment", json_string("Total"));
    json_object_set_new(oData, "consumptionHint", json_string(hint));
-   json_object_set_new(oData, "stokerHours", json_integer(vaSensors[0xad].value - stokerHhLast));
-   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (vaSensors[0xad].value-stokerHhLast)));
+   json_object_set_new(oData, "stokerHours", json_integer(sensors["VA"][0xad].value - stokerHhLast));
+   json_object_set_new(oData, "consumptionDelta", json_integer(consumptionH * (sensors["VA"][0xad].value-stokerHhLast)));
 
    free(hint);
 
@@ -1948,7 +1910,7 @@ int P4d::performParEditRequest(json_t* oObject, long client)
 
    if (!tableMenu->find())
    {
-      tell(0, "Info: Id %d for 'pareditrequest' not found!", id);
+      tell(eloAlways, "Info: Id %d for 'pareditrequest' not found!", id);
       return fail;
    }
 
@@ -2000,7 +1962,7 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
 
    if (!tableTimeRanges->find())
    {
-      tell(0, "Info: Address %d or 'pareditrequest' in timetanges not found!", trAddr);
+      tell(eloAlways, "Info: Address %d or 'pareditrequest' in timetanges not found!", trAddr);
       return fail;
    }
 
@@ -2056,7 +2018,7 @@ int P4d::performParStore(json_t* oObject, long client)
    if (!tableMenu->find())
    {
       replyResult(fail, "Parameter not found", client);
-      tell(0, "Info: Id %d for 'parstore' not found!", id);
+      tell(eloAlways, "Info: Id %d for 'parstore' not found!", id);
       return done;
    }
 
@@ -2123,7 +2085,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
    if (!tableTimeRanges->find() || range < 1)
    {
       replyResult(fail, "Parameter not found", client);
-      tell(0, "Info: Address %d for 'parstore' not found!", trAddr);
+      tell(eloAlways, "Info: Address %d for 'parstore' not found!", trAddr);
       return done;
    }
 
@@ -2168,7 +2130,7 @@ int P4d::performTimeParStore(json_t* oObject, long client)
       tell(eloAlways, "Set of time range parameter failed, wrong format");
    }
 
-   tell(4, "Value was: '%s'-'%s'", valueFrom, valueTo);
+   tell(eloDebug, "Value was: '%s'-'%s'", valueFrom, valueTo);
    tell(eloAlways, "Storing '%s' for time range '%d' of parameter 0x%x", t.getTimeRange(range-1), range, t.address);
 
    if (request->setTimeRanges(&t) != success)
@@ -2275,7 +2237,7 @@ int P4d::performMenu(json_t* oObject, long client)
          json_object_set_new(oData, "digits", json_integer(digits));
 
          if (type == mstMesswert || type == mstMesswert1)
-            json_object_set_new(oData, "value", json_real(vaSensors[address].value));
+            json_object_set_new(oData, "value", json_real(sensors["VA"][address].value));
          else
             json_object_set_new(oData, "value", json_string(tableMenu->getStrValue("VALUE")));
 
@@ -2510,6 +2472,8 @@ int P4d::initValueFacts(bool truncate)
    int added {0};
    int modified {0};
 
+   tell(eloAlways, "Update value facts");
+
    // check serial communication
 
    if (request->check() != success)
@@ -2557,7 +2521,7 @@ int P4d::initValueFacts(bool truncate)
    tell(eloAlways, "Read %d value facts, modified %d and added %d", count, modified, added);
 
    // count = 0;
-   // tell(0, "Update example value of table valuefacts");
+   // tell(eloAlways, "Update example value of table valuefacts");
 
    // for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
    // {
@@ -2582,7 +2546,7 @@ int P4d::initValueFacts(bool truncate)
    // }
 
    // selectAllValueFacts->freeResult();
-   // tell(0, "Updated %d example values", count);
+   // tell(eloAlways, "Updated %d example values", count);
 
    // ---------------------------------
    // add default for digital outputs
@@ -2650,7 +2614,7 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
 
-   addValueFact(udTime, "UD", 1, "Uhrzeit", "T", "Datum Uhrzeit der Heizung");
+   addValueFact(udTime, "UD", 1, "Uhrzeit", "txt", "Datum Uhrzeit der Heizung");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udTime);       // 3  -> Kessel Zeit
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined
@@ -2681,11 +2645,11 @@ int P4d::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
 
       if (!json_is_integer(jAddress) || address == -1)
       {
-         tell(0, "Error: Missing address or invalid object type for MQTT command 'parget', ignoring");
+         tell(eloAlways, "Error: Missing address or invalid object type for MQTT command 'parget', ignoring");
          return fail;
       }
 
-      tell(0, "Perform MQTT command '%s' for address %d", command, address);
+      tell(eloAlways, "Perform MQTT command '%s' for address %d", command, address);
 
       ConfigParameter p(address);
 
@@ -2710,17 +2674,17 @@ int P4d::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
 
       if (!json_is_integer(jAddress) || address == -1)
       {
-         tell(0, "Error: Missing address or invalid object type for MQTT command 'parstore', ignoring");
+         tell(eloAlways, "Error: Missing address or invalid object type for MQTT command 'parstore', ignoring");
          return fail;
       }
 
       if (isEmpty(value))
       {
-         tell(0, "Error: Missing value for MQTT command 'parstore', ignoring");
+         tell(eloAlways, "Error: Missing value for MQTT command 'parstore', ignoring");
          return fail;
       }
 
-      tell(0, "Perform MQTT command '%s' for address %d with value '%s'", command, address, value);
+      tell(eloAlways, "Perform MQTT command '%s' for address %d with value '%s'", command, address, value);
 
       ConfigParameter p(address);
 
@@ -2763,7 +2727,7 @@ int P4d::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
    }
    else
    {
-      tell(0, "Error: Got unexpected command '%s' in MQTT request, ignoring", command);
+      tell(eloAlways, "Error: Got unexpected command '%s' in MQTT request, ignoring", command);
    }
 
    return success;
@@ -2796,7 +2760,7 @@ int P4d::s3200State2Json(json_t* obj)
    json_object_set_new(obj, "mode", json_integer(currentState.mode));
    json_object_set_new(obj, "modeinfo", json_string(currentState.modeinfo));
    json_object_set_new(obj, "version", json_string(currentState.version));
-   json_object_set_new(obj, "image", json_string(getStateImage(currentState.state)));
+   json_object_set_new(obj, "image", json_string(getTextImage("UD:0x01", currentState.stateinfo)));
 
    return done;
 }
@@ -2859,12 +2823,19 @@ int P4d::configChoice2json(json_t* obj, const char* name)
 // Get State Image
 //***************************************************************************
 
-const char* P4d::getStateImage(int state)
+const char* P4d::getTextImage(const char* key, const char* text)
 {
    static char result[100] = "";
    const char* image {nullptr};
 
-   if (state <= 0)
+   // it's only for UD / udState
+
+   if (strcmp(key, "UD:0x01") != 0)
+      return "";
+
+   int state = FroelingService::toState(text);
+
+   if (state == 0)
       image = "state-error.gif";
    else if (state == 1)
       image = "state-fireoff.gif";

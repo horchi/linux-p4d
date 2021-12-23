@@ -1,12 +1,37 @@
 
 // ----------------------------------------------------------------
+// Table ValueFacts
+// ----------------------------------------------------------------
+
+Table valuefacts
+{
+   ADDRESS              ""          address              UInt         4 Primary,
+   TYPE                 ""          type                 Ascii        8 Primary,
+
+   INSSP                ""          inssp                Int         10 Meta,
+   UPDSP                ""          updsp                Int         10 Meta,
+
+   GROUPID              ""          groupid              Int         10 Data,
+   STATE                ""          state                Ascii        1 Data,
+   RECORD               ""          record               Ascii        1 Data,
+   UNIT                 ""          unit                 Ascii        5 Data,
+   FACTOR               ""          factor               Int          4 Data,
+   NAME                 ""          name                 Ascii      100 Data,
+   TITLE                ""          title                Ascii      100 Data,
+   USRTITLE             ""          usrtitle             Ascii      100 Data,
+   SUBTYPE              "data type" res1                 Int          4 Data,
+   CHOICES              ""          choices              Ascii      250 Data,
+   RIGHTS   "needed control rights" rights               Int          0 Data,
+}
+
+// ----------------------------------------------------------------
 // Table Samples
 // ----------------------------------------------------------------
 
 Table samples
 {
    ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
+   TYPE                 ""  type                 Ascii        8 Primary,
    AGGREGATE            ""  aggregate            Ascii        1 Primary,
    TIME                 ""  time                 DateTime     0 Primary,
 
@@ -37,37 +62,13 @@ Index samples
 Table peaks
 {
    ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
+   TYPE                 ""  type                 Ascii        8 Primary,
 
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
 
    MIN                  ""  minv                 Float      122 Data,
    MAX                  ""  maxv                 Float      122 Data,
-}
-
-// ----------------------------------------------------------------
-// Table ValueFacts
-// ----------------------------------------------------------------
-
-Table valuefacts
-{
-   ADDRESS              ""          address              UInt         4 Primary,
-   TYPE                 ""          type                 Ascii        2 Primary,
-
-   INSSP                ""          inssp                Int         10 Meta,
-   UPDSP                ""          updsp                Int         10 Meta,
-
-   GROUPID              ""          groupid              Int         10 Data,
-   STATE                ""          state                Ascii        1 Data,
-   UNIT                 ""          unit                 Ascii        5 Data,
-   FACTOR               ""          factor               Int          4 Data,
-   NAME                 ""          name                 Ascii      100 Data,
-   TITLE                ""          title                Ascii      100 Data,
-   USRTITLE             ""          usrtitle             Ascii      100 Data,
-   SUBTYPE              "data type" res1                 Int          4 Data,
-   CHOICES              ""          choices              Ascii      250 Data,
-   RIGHTS   "needed control rights" rights               Int          0 Data,
 }
 
 // ----------------------------------------------------------------
@@ -107,6 +108,7 @@ Table dashboards
    TITLE                ""  title                Ascii      100 Data,
    SYMBOL               ""  symbol               Ascii      100 Data,
    ORDER                ""  ord                  Int         10 Data,
+   OPTS                 ""  opts                 Ascii      200 Data,
 }
 
 // ----------------------------------------------------------------
@@ -117,7 +119,7 @@ Table dashboardwidgets
 {
    DASHBOARDID          ""  dashboardid          UInt         4 Primary,
    ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
+   TYPE                 ""  type                 Ascii        8 Primary,
 
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
@@ -156,7 +158,7 @@ Table sensoralert
    LGOP                 ""  lgop                 UInt         0 Data,  // logical operator
 
    ADDRESS              ""  address              UInt         4 Data,
-   TYPE                 ""  type                 Ascii        2 Data,
+   TYPE                 ""  type                 Ascii        8 Data,
    STATE                ""  state                Ascii        1 Data,
    MIN                  ""  min                  Int         10 Data,
    MAX                  ""  max                  Int         10 Data,
@@ -199,7 +201,7 @@ Index scripts
 Table schemaconf
 {
    ADDRESS              ""  address              UInt         4 Primary,
-   TYPE                 ""  type                 Ascii        2 Primary,
+   TYPE                 ""  type                 Ascii        8 Primary,
 
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
@@ -213,6 +215,83 @@ Table schemaconf
    USRTEXT              ""  usrtext              Ascii      100 Data,
    FUNCTION             ""  function             Text      2000 Data,
    PROPERTIES           ""  properties           Text      1000 Data,
+}
+
+// ----------------------------------------------------------------
+// Table states
+// ----------------------------------------------------------------
+
+Table states
+{
+   ADDRESS              ""  address              UInt         4 Primary,
+   TYPE                 ""  type                 Ascii        8 Primary,
+
+   VALUE                ""  value                Float      122 Data,
+   STATE                ""  state                Int         10 Data,
+   BATTERY              ""  battery              Int         10 Data,
+   REACHABLE            ""  reachable            Int         10 Data,
+}
+
+// ----------------------------------------------------------------
+// Table HomeMatic
+// ----------------------------------------------------------------
+
+Table homematic
+{
+   ADDRESS              ""  address              UInt         4 Primary|Autoinc,
+
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+
+   TYPE                 ""  type                 Ascii        8 Data,
+   UUID                 ""  uuid                 Ascii       50 Data,
+   KIND     "light|sensor"  kind                 Ascii       10 Data,
+   NAME                 ""  name                 Ascii       50 Data,
+   OPTIONS              ""  options              Ascii     1000 Data,
+}
+
+// ----------------------------------------------------------------
+// Table deCONZs - Sensoren
+// ----------------------------------------------------------------
+
+Table deconzs
+{
+   ADDRESS              ""  address              UInt         4 Primary|Autoinc,
+
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+
+   TYPE                 ""  type                 Ascii        8 Data,
+   UUID                 ""  uuid                 Ascii       50 Data,
+   KIND     "light|sensor"  kind                 Ascii       10 Data,
+   NAME                 ""  name                 Ascii       50 Data,
+   OPTIONS              ""  options              Ascii     1000 Data,
+
+   DZTYPE               ""  dztype               Ascii       50 Data,
+   MANUFACTURER         ""  manufacturer         Ascii       50 Data,
+   MODEL                ""  model                Ascii       50 Data,
+}
+
+// ----------------------------------------------------------------
+// Table deCONZl - Lights
+// ----------------------------------------------------------------
+
+Table deconzl
+{
+   ADDRESS              ""  address              UInt         4 Primary|Autoinc,
+
+   INSSP                ""  inssp                Int         10 Meta,
+   UPDSP                ""  updsp                Int         10 Meta,
+
+   TYPE                 ""  type                 Ascii        8 Data,
+   UUID                 ""  uuid                 Ascii       50 Data,
+   KIND     "light|sensor"  kind                 Ascii       10 Data,
+   NAME                 ""  name                 Ascii       50 Data,
+   OPTIONS              ""  options              Ascii     1000 Data,
+
+   DZTYPE               ""  dztype               Ascii       50 Data,
+   MANUFACTURER         ""  manufacturer         Ascii       50 Data,
+   MODEL                ""  model                Ascii       50 Data,
 }
 
 // ----------------------------------------------------------------
@@ -300,4 +379,3 @@ Table errors
    TEXT                 ""                text       Ascii      100 Data,
    MAILCNT              ""                mailcnt    Int          0 Data,
 }
-

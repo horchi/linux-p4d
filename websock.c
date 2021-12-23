@@ -137,19 +137,19 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 
    if (!context)
    {
-      tell(0, "Error: libwebsocket init failed");
+      tell(eloAlways, "Error: libwebsocket init failed");
       return fail;
    }
 
-   tell(0, "WebSocket Listener at port (%d) established", port);
-   tell(1, "Using libwebsocket version '%s'", lws_get_library_version());
+   tell(eloAlways, "WebSocket Listener at port (%d) established", port);
+   tell(eloDetail, "Using libwebsocket version '%s'", lws_get_library_version());
 
    threadCtl.webSock = this;
    threadCtl.timeout = timeout;
 
    if (pthread_create(&syncThread, NULL, syncFct, &threadCtl))
    {
-      tell(0, "Error: Failed to start client daemon thread");
+      tell(eloAlways, "Error: Failed to start client daemon thread");
       return fail;
    }
 
@@ -159,7 +159,7 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 void cWebSock::writeLog(int level, const char* line)
 {
    std::string message = strReplace("\n", "", line);
-   tell(0, "WS: (%d) %s", level, message.c_str());
+   tell(eloAlways, "WS: (%d) %s", level, message.c_str());
 }
 
 int cWebSock::exit()
@@ -196,7 +196,7 @@ void* cWebSock::syncFct(void* user)
    ThreadControl* threadCtl = (ThreadControl*)user;
    threadCtl->active = true;
 
-   // tell(0, " :: started syncThread");
+   tell(eloDebugWebSock, " :: started syncThread");
 
    while (!threadCtl->close)
    {
@@ -291,7 +291,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
    SessionData* sessionData = (SessionData*)user;
    std::string clientInfo = "unknown";
 
-   tell(4, "DEBUG: 'callbackHttp' got (%d)", reason);
+   tell(eloDebugWebSock, "DEBUG: 'callbackHttp' got (%d)", reason);
 
    switch (reason)
    {
@@ -299,7 +299,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       {
          getClientInfo(wsi, &clientInfo);
 
-         tell(2, "DEBUG: Got unecpected LWS_CALLBACK_CLOSED for client '%s' (%p)",
+         tell(eloDebugWebSock, "DEBUG: Got unecpected LWS_CALLBACK_CLOSED for client '%s' (%p)",
               clientInfo.c_str(), (void*)wsi);
          break;
       }
@@ -308,14 +308,14 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          const char* message = (const char*)in;
          int s = lws_hdr_total_length(wsi, WSI_TOKEN_POST_URI);
 
-         tell(1, "DEBUG: Got unecpected LWS_CALLBACK_HTTP_BODY with [%.*s] lws_hdr_total_length is (%d)",
+         tell(eloDebugWebSock, "DEBUG: Got unecpected LWS_CALLBACK_HTTP_BODY with [%.*s] lws_hdr_total_length is (%d)",
               (int)len+1, message, s);
          break;
       }
 
       case LWS_CALLBACK_CLIENT_WRITEABLE:
       {
-         tell(4, "HTTP: Client writeable");
+         tell(eloDebugWebSock, "HTTP: Client writeable");
          break;
       }
 
@@ -323,32 +323,32 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       {
          int res;
 
-         tell(3, "HTTP: LWS_CALLBACK_HTTP_WRITEABLE");
+         tell(eloDebugWebSock, "HTTP: LWS_CALLBACK_HTTP_WRITEABLE");
 
          // data to write?
 
          if (!sessionData->dataPending)
          {
-            tell(1, "Info: No more session data pending");
+            tell(eloDebugWebSock, "Info: No more session data pending");
             return -1;
          }
 
          int m = lws_get_peer_write_allowance(wsi);
 
          if (!m)
-            tell(3, "Right now, peer can't handle anything :o");
+            tell(eloDebugWebSock, "Right now, peer can't handle anything :o");
          else if (m != -1 && m < sessionData->payloadSize)
-            tell(0, "Peer can't handle %d but %d is needed", m, sessionData->payloadSize);
+            tell(eloAlways, "Peer can't handle %d but %d is needed", m, sessionData->payloadSize);
          else if (m != -1)
-            tell(3, "All fine, peer can handle %d bytes", m);
+            tell(eloDebugWebSock, "All fine, peer can handle %d bytes", m);
 
          res = lws_write(wsi, (unsigned char*)sessionData->buffer+sizeLwsPreFrame,
                          sessionData->payloadSize, LWS_WRITE_HTTP);
 
          if (res < 0)
-            tell(0, "Failed writing '%s'", sessionData->buffer+sizeLwsPreFrame);
+            tell(eloAlways, "Failed writing '%s'", sessionData->buffer+sizeLwsPreFrame);
          else
-            tell(3, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
+            tell(eloDebugWebSock, "WROTE '%s' (%d)", sessionData->buffer+sizeLwsPreFrame, res);
 
          free(sessionData->buffer);
          memset(sessionData, 0, sizeof(SessionData));
@@ -367,7 +367,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
          memset(sessionData, 0, sizeof(SessionData));
 
-         tell(1, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
+         tell(eloWebSock, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
 
          // data or file request ...
 
@@ -375,7 +375,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          {
             // data request
 
-            tell(0, "Got unexpected HTTP request!");
+            tell(eloAlways, "Got unexpected HTTP request!");
             res = dispatchDataRequest(wsi, sessionData, url);
 
             if (res < 0 || (res > 0 && lws_http_transaction_completed(wsi)))
@@ -396,11 +396,11 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
             if (res < 0)
             {
-               tell(0, "HTTP: Failed to serve url '%s' (%d)", url, res);
+               tell(eloAlways, "HTTP: Failed to serve url '%s' (%d)", url, res);
                return -1;
             }
 
-            tell(2, "HTTP: Done, url: '%s'", url);
+            tell(eloWebSock, "HTTP: Done, url: '%s'", url);
          }
 
          break;
@@ -440,7 +440,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          break;
 
       default:
-         tell(1, "DEBUG: Unhandled 'callbackHttp' got (%d)", reason);
+         tell(eloDetail, "DEBUG: Unhandled 'callbackHttp' got (%d)", reason);
          break;
    }
 
@@ -486,7 +486,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 {
    std::string clientInfo = "unknown";
 
-   tell(4, "DEBUG: 'callback' got (%d)", reason);
+   tell(eloDebugWebSock, "DEBUG: 'callback' got (%d)", reason);
 
    switch (reason)
    {
@@ -511,7 +511,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          if (msgType == mtPing)
          {
             char buffer[sizeLwsFrame];
-            tell(4, "DEBUG: Write 'PING' to '%s' (%p)", clientInfo.c_str(), (void*)wsi);
+            tell(eloDebugWebSock, "DEBUG: Write 'PING' to '%s' (%p)", clientInfo.c_str(), (void*)wsi);
             lws_write(wsi, (unsigned char*)buffer + sizeLwsPreFrame, 0, LWS_WRITE_PING);
          }
 
@@ -533,11 +533,11 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
                if (neededSize > clients[wsi].msgBufferSize)
                {
-                  // tell(0, "Debug: re-allocate buffer to %d bytes", neededSize);
+                  // tell(eloDebugWebSock, "Debug: re-allocate buffer to %d bytes", neededSize);
 
                   if (!(newBuffer = (unsigned char*)realloc(clients[wsi].msgBuffer, neededSize)))
                   {
-                     // tell(0, "Fatal: Can't allocate memory!");
+                     tell(eloDebugWebSock, "Fatal: Can't allocate memory!");
                      return -1;
                   }
 
@@ -550,7 +550,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
                clients[wsi].msgBufferSendOffset = 0;
                clients[wsi].messagesOut.pop();  // remove sent message
 
-               tell(2, "=> (%d) %.*s -> to '%s' (%p)\n", msgSize, msgSize,
+               tell(eloWebSock, "=> (%d) %.*s -> to '%s' (%p)", msgSize, msgSize,
                     clients[wsi].msgBuffer+sizeLwsPreFrame, clientInfo.c_str(), (void*)wsi);
             }
 
@@ -566,7 +566,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
                if (res < 0)
                {
-                  tell(0, "Error: lws_write chunk failed with (%d) to (%p) failed (%d) [%.*s]", res, (void*)wsi, chunkSize, chunkSize, p);
+                  tell(eloAlways, "Error: lws_write chunk failed with (%d) to (%p) failed (%d) [%.*s]", res, (void*)wsi, chunkSize, chunkSize, p);
                   return -1;
                }
 
@@ -591,7 +591,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          json_error_t error;
          Event event;
 
-         tell(4, "DEBUG: 'LWS_CALLBACK_RECEIVE' [%.*s]", (int)len, (const char*)in);
+         tell(eloDebugWebSock, "DEBUG: 'LWS_CALLBACK_RECEIVE' [%.*s]", (int)len, (const char*)in);
 
          {
             cMyMutexLock lock(&clientsMutex);
@@ -603,7 +603,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
             if (!lws_is_final_fragment(wsi))
             {
-               tell(4, "DEBUG: Got %zd bytes, have now %zd -> more to get", len, clients[wsi].buffer.length());
+               tell(eloDebugWebSock, "DEBUG: Got %zd bytes, have now %zd -> more to get", len, clients[wsi].buffer.length());
                break;
             }
 
@@ -611,8 +611,8 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
             if (!oData)
             {
-               tell(0, "Error: Ignoring invalid jason request [%s]", clients[wsi].buffer.c_str());
-               tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+               tell(eloAlways, "Error: Ignoring invalid jason request [%s]", clients[wsi].buffer.c_str());
+               tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
                     error.text, error.source, error.line, error.column, error.position);
                break;
             }
@@ -625,7 +625,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          event = cWebService::toEvent(strEvent);
          oObject = json_object_get(oData, "object");
 
-         tell(3, "GOT '%s'", message);
+         tell(eloDebugWebSock, "GOT '%s'", message);
 
          if (event == evLogin)                              // { "event" : "login", "object" : { "type" : "foo" } }
          {
@@ -644,7 +644,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          }
          else if (event == evLogMessage)                     // { "event" : "logmessage", "object" : { "message" : "....." } }
          {
-            tell(0, "Browser message: '%s'", getStringFromJson(oObject, "message", "<null>"));
+            tell(eloAlways, "Browser message: '%s'", getStringFromJson(oObject, "message", "<null>"));
          }
          else //  if (clients[wsi].type == ctWithLogin)
          {
@@ -655,7 +655,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          }
 /*         else
          {
-            tell(1, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
+            tell(eloDebugWebSock, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
             } */
 
          json_decref(oData);
@@ -666,7 +666,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
       case LWS_CALLBACK_ESTABLISHED:                       // someone connecting
       {
-         tell(1, "Client '%s' connected (%p), ping time set to (%d)", clientInfo.c_str(), (void*)wsi, timeout);
+         tell(eloWebSock, "Client '%s' connected (%p), ping time set to (%d)", clientInfo.c_str(), (void*)wsi, timeout);
          clients[wsi].wsi = wsi;
          clients[wsi].type = ctActive;
          clients[wsi].tftprio = 100;
@@ -688,7 +688,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
       case LWS_CALLBACK_RECEIVE_PONG:                      // ping / pong
       {
-         tell(4, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
+         tell(eloDebugWebSock, "DEBUG: Got 'PONG' from client '%s' (%p)", clientInfo.c_str(), (void*)wsi);
          break;
       }
 
@@ -702,7 +702,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
          break;
 
       default:
-         tell(1, "DEBUG: Unhandled 'callbackWs' got (%d)", reason);
+         tell(eloDebugWebSock, "DEBUG: Unhandled 'callbackWs' got (%d)", reason);
          break;
    }
 
@@ -715,7 +715,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
 
 void cWebSock::atLogin(lws* wsi, const char* message, const char* clientInfo, json_t* object)
 {
-   tell(1, "Client login '%s' (%p) [%s]", clientInfo, (void*)wsi, message);
+   tell(eloWebSock, "Client login '%s' (%p) [%s]", clientInfo, (void*)wsi, message);
 
    {
       cMyMutexLock lock(&clientsMutex);
@@ -735,7 +735,7 @@ void cWebSock::atLogin(lws* wsi, const char* message, const char* clientInfo, js
 
 void cWebSock::atLogout(lws* wsi, const char* message, const char* clientInfo)
 {
-   tell(2, "%s '%s' (%p)", clientInfo, message, (void*)wsi);
+   tell(eloDebugWebSock, "%s '%s' (%p)", clientInfo, message, (void*)wsi);
 
    auto it = clients.find(wsi);
 
@@ -799,7 +799,7 @@ void cWebSock::pushOutMessage(const char* message, lws* wsi)
       if (clients.find(wsi) != clients.end())
          clients[wsi].pushMessage(message);
       else if ((ulong)wsi != (ulong)-1)
-         tell(0, "client %ld not found!", (ulong)wsi);
+         tell(eloAlways, "client %ld not found!", (ulong)wsi);
    }
    else
    {

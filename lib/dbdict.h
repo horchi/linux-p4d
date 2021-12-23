@@ -208,11 +208,11 @@ class cDbFieldDef : public cDbService
 
       int isValid()
       {
-         if (!name)               { tell(0, "Missing field name");               return no; }
-         if (!dbname)             { tell(0, "Missing fields database name");     return no; }
-         if (size == na)          { tell(0, "Missing field size");               return no; }
-         if (type == ftUnknown)   { tell(0, "Missing or invalid field type");    return no; }
-         if (format == ffUnknown) { tell(0, "Missing or invalid field format");  return no; }
+         if (!name)               { tell(eloAlways, "Missing field name");               return no; }
+         if (!dbname)             { tell(eloAlways, "Missing fields database name");     return no; }
+         if (size == na)          { tell(eloAlways, "Missing field size");               return no; }
+         if (type == ftUnknown)   { tell(eloAlways, "Missing or invalid field type");    return no; }
+         if (format == ffUnknown) { tell(eloAlways, "Missing or invalid field format");  return no; }
 
          return yes;
       }
@@ -225,7 +225,7 @@ class cDbFieldDef : public cDbService
 
          sprintf(fType, "(%s)", toName((FieldType)type, tmp));
 
-         tell(0, "%-20s %-25s %-17s %-20s (0x%04X) default '%s' '%s'", name, dbname,
+         tell(eloAlways, "%-20s %-25s %-17s %-20s (0x%04X) default '%s' '%s'", name, dbname,
               toColumnFormat(colFmt), fType, filter, notNull(def, ""), description);
       }
 
@@ -273,7 +273,7 @@ class cDbIndexDef
 
          s.erase(s.find_last_not_of(' ')+1);
 
-         tell(0, "Index %-25s (%s)", getName(), s.c_str());
+         tell(eloAlways, "Index %-25s (%s)", getName(), s.c_str());
       }
 
    protected:
@@ -322,7 +322,7 @@ class cDbTableDef : public cDbService
             return f->second;
 
          if (!silent)
-            tell(0, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, fname);
+            tell(eloAlways, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, fname);
 
          return 0;
       }
@@ -337,7 +337,7 @@ class cDbTableDef : public cDbService
                return it->second;
          }
 
-         tell(5, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, dbname);
+         tell(eloDebug, "Fatal: Missing definition of field '%s.%s' in dictionary!", name, dbname);
 
          return 0;
       }
@@ -350,7 +350,7 @@ class cDbTableDef : public cDbService
             _dfields.push_back(f);       // add to indexed list
          }
          else
-            tell(0, "Fatal: Field '%s.%s' doubly defined", getName(), f->getName());
+            tell(eloAlways, "Fatal: Field '%s.%s' doubly defined", getName(), f->getName());
       }
 
       int indexCount()                    { return indices.size(); }
@@ -381,18 +381,18 @@ class cDbTableDef : public cDbService
 
          if (!indices.size())
          {
-            tell(0, " ");
+            tell(eloAlways, " ");
             return;
          }
 
-         tell(0, "-----------------------------------------------------");
-         tell(0, "Indices from '%s'", getName());
-         tell(0, "-----------------------------------------------------");
+         tell(eloAlways, "-----------------------------------------------------");
+         tell(eloAlways, "Indices from '%s'", getName());
+         tell(eloAlways, "-----------------------------------------------------");
 
          for (uint i = 0; i < indices.size(); i++)
             indices[i]->show();
 
-         tell(0, " ");
+         tell(eloAlways, " ");
       }
 
    private:

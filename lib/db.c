@@ -104,7 +104,7 @@ int cDbStatement::execute(int noResult)
 //          {
 //             while ((row = mysql_fetch_row(result)))
 //             {
-//                tell(0, "EXPLAIN: %s) %s %s %s %s %s %s %s %s %s",
+//                tell(eloAlways, "EXPLAIN: %s) %s %s %s %s %s %s %s %s %s",
 //                     row[0], row[1], row[2], row[3],
 //                     row[4], row[5], row[6], row[7], row[8], row[9]);
 //             }
@@ -114,7 +114,7 @@ int cDbStatement::execute(int noResult)
 //       }
 //    }
 
-   // tell(0, "execute %d [%s]", stmt, stmtTxt.c_str());
+   // tell(eloAlways, "execute %d [%s]", stmt, stmtTxt.c_str());
 
    double start = usNow();
 
@@ -250,7 +250,7 @@ int cDbStatement::bind(cDbValue* value, int mode, const char* delim)
 {
    if (!value || !value->getField())
    {
-      tell(0, "Error: Missing %s value", !value ? "bind" : "field of bind");
+      tell(eloAlways, "Error: Missing %s value", !value ? "bind" : "field of bind");
       buildErrors++;
       return fail;
    }
@@ -556,7 +556,7 @@ int cDbStatement::prepare()
 {
    if (!connection->getMySql())
    {
-      tell(0, "Error: Lost connection, can't prepare statement");
+      tell(eloAlways, "Error: Lost connection, can't prepare statement");
       return fail;
    }
 
@@ -585,7 +585,7 @@ int cDbStatement::prepare()
          return connection->errorSql(connection, "buildPrimarySelect(bind_param)", stmt);
    }
 
-   tell(3, "Statement '%s' with (%ld) in parameters and (%d) out bindings prepared",
+   tell(eloDebugDb, "Statement '%s' with (%ld) in parameters and (%d) out bindings prepared",
         stmtTxt.c_str(), mysql_stmt_param_count(stmt), outCount);
 
    return success;
@@ -599,7 +599,7 @@ void cDbStatement::showStat()
 {
    if (callsPeriod)
    {
-      tell(0, "calls %4ld in %6.2fms; total %4ld [%s]",
+      tell(eloAlways, "calls %4ld in %6.2fms; total %4ld [%s]",
            callsPeriod, duration/1000, callsTotal, stmtTxt.c_str());
 
       callsPeriod = 0;
@@ -646,7 +646,7 @@ cDbTable::cDbTable(cDbConnection* aConnection, const char* name)
    if (tableDef)
       row = new cDbRow(tableDef);
    else
-      tell(0, "Fatal: Table '%s' missing in dictionary '%s'!", name, dbDict.getPath());
+      tell(eloAlways, "Fatal: Table '%s' missing in dictionary '%s'!", name, dbDict.getPath());
 }
 
 cDbTable::~cDbTable()
@@ -667,7 +667,7 @@ int cDbTable::open(int allowAlter)
 
    if (attach() != success)
    {
-      tell(0, "Could not access database '%s:%d' (tried to open %s)",
+      tell(eloAlways, "Could not access database '%s:%d' (tried to open %s)",
            connection->getHost(), connection->getPort(), TableName());
 
       return fail;
@@ -698,7 +698,7 @@ int cDbTable::attach()
 
    if (connection->attachConnection() != success)
    {
-      tell(0, "Could not access database '%s:%d'",
+      tell(eloAlways, "Could not access database '%s:%d'",
            connection->getHost(), connection->getPort());
 
       return fail;
@@ -741,11 +741,11 @@ int cDbTable::init(int allowAlter)
       validateStructure(allowAlter);
 
       if (!exist() && createTable() != success)
-         return fail;
+      return fail;
 
-      // check/create indices
+   // check/create indices
 
-      createIndices();
+   createIndices();
    }
 
    // ------------------------------
@@ -897,8 +897,8 @@ int cDbTable::validateStructure(int allowAlter)
    {
       needDetach = yes;
 
-      if (attach() != success)
-         return fail;
+   if (attach() != success)
+      return fail;
    }
 
    // ------------------------
@@ -946,7 +946,7 @@ int cDbTable::validateStructure(int allowAlter)
    {
       char colType[100];
 
-      tell(4, "Check field '%s'", getField(i)->getName());
+      tell(eloDebugDb, "Check field '%s'", getField(i)->getName());
 
       if (fields.find(getField(i)->getDbName()) == fields.end())
          alterAddField(getField(i));
@@ -962,15 +962,15 @@ int cDbTable::validateStructure(int allowAlter)
              (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
          {
             if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0)
-               tell(5, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+               tell(eloDebugDb, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
                     fieldInfo->columnFormat.c_str(), colType);
 
             if (strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0)
-               tell(5, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+               tell(eloDebugDb, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
                     fieldInfo->description.c_str(), getField(i)->getDescription());
 
             if (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary))
-               tell(5, "Debug: Default value of '%s' changed from from '%s' to '%s'", getField(i)->getDbName(),
+               tell(eloDebugDb, "Debug: Default value of '%s' changed from from '%s' to '%s'", getField(i)->getDbName(),
                     fieldInfo->defaulValue.c_str(), getField(i)->getDefault());
 
             alterModifyField(getField(i));
@@ -989,7 +989,7 @@ int cDbTable::validateStructure(int allowAlter)
          if (allowAlter == 2)
             alterDropField(it->first.c_str());
          else
-            tell(0, "Info: Field '%s' not used anymore, "
+            tell(eloAlways, "Info: Field '%s' not used anymore, "
                  "to remove it call 'ALTER TABLE %s DROP COLUMN %s;' manually",
                  it->first.c_str(), TableName(), it->first.c_str());
       }
@@ -1009,7 +1009,7 @@ int cDbTable::alterModifyField(cDbFieldDef* def)
    char* statement;
    char colType[100];
 
-   tell(0, "  Info: Definition of field '%s.%s' modified, try to alter table",
+   tell(eloAlways, "  Info: Definition of field '%s.%s' modified, try to alter table",
         TableName(), def->getName());
 
    // alter table events modify column guest varchar(50)
@@ -1024,7 +1024,7 @@ int cDbTable::alterModifyField(cDbFieldDef* def)
             !isEmpty(def->getDefault()) ? "'" : ""
       );
 
-   tell(1, "Execute [%s]", statement);
+   tell(eloDetail, "Execute [%s]", statement);
 
    if (connection->query("%s", statement))
       return connection->errorSql(getConnection(), "alterAddField()",
@@ -1044,7 +1044,7 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    std::string statement;
    char colType[100];
 
-   tell(0, "Info: Missing field '%s.%s', try to alter table",
+   tell(eloAlways, "Info: Missing field '%s.%s', try to alter table",
         TableName(), def->getName());
 
    // alter table channelmap add column ord int(11) [after source]
@@ -1066,7 +1066,7 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    if (def->getIndex() > 0)
       statement += std::string(" after ") + getField(def->getIndex()-1)->getDbName();
 
-   tell(1, "Execute [%s]", statement.c_str());
+   tell(eloDetail, "Execute [%s]", statement.c_str());
 
    if (connection->query("%s", statement.c_str()))
       return connection->errorSql(getConnection(), "alterAddField()",
@@ -1083,13 +1083,13 @@ int cDbTable::alterDropField(const char* name)
 {
    char* statement;
 
-   tell(0, "Info: Unused field '%s', try to drop it", name);
+   tell(eloAlways, "Info: Unused field '%s', try to drop it", name);
 
    // alter table channelmap add column ord int(11) [after source]
 
    asprintf(&statement, "alter table %s drop column %s", TableName(), name);
 
-   tell(1, "Execute [%s]", statement);
+   tell(eloDetail, "Execute [%s]", statement);
 
    if (connection->query("%s", statement))
       return connection->errorSql(getConnection(), "alterDropField()",
@@ -1129,7 +1129,7 @@ int cDbTable::createTable()
       return done;
    }
 
-   tell(0, "Initialy creating table '%s'", TableName());
+   tell(eloAlways, "Initialy creating table '%s'", TableName());
 
    // build 'create' statement ...
 
@@ -1193,7 +1193,7 @@ int cDbTable::createTable()
 
    statement += std::string(") ENGINE=InnoDB ROW_FORMAT=DYNAMIC;");
 
-   tell(1, "%s", statement.c_str());
+   tell(eloDetail, "%s", statement.c_str());
 
    if (connection->query("%s", statement.c_str()))
    {
@@ -1215,7 +1215,7 @@ int cDbTable::createIndices()
 {
    std::string statement;
 
-   tell(5, "Initialy checking indices for '%s'", TableName());
+   tell(eloDebugDb, "Initialy checking indices for '%s'", TableName());
 
    // check/create indexes
 
@@ -1257,7 +1257,7 @@ int cDbTable::createIndices()
          if (!n) continue;
 
          statement += ");";
-         tell(1, "%s", statement.c_str());
+         tell(eloDetail, "%s", statement.c_str());
 
          if (connection->query("%s", statement.c_str()))
             return connection->errorSql(getConnection(), "createIndices()",
@@ -1309,7 +1309,7 @@ int cDbTable::checkIndex(const char* idxName, int& fieldCount)
    {
       while ((row = mysql_fetch_row(result)))
       {
-         tell(5, "%s:  %-20s %s %s",
+         tell(eloDebugDb, "%s:  %-20s %s %s",
               row[idTable], row[idKeyName],
               row[idSeqInIndex], row[idColumnName]);
 
@@ -1373,7 +1373,7 @@ void cDbTable::copyValues(cDbRow* r, int typesFilter)
             break;
 
          default:
-            tell(0, "Fatal unhandled field type %d", fld->getFormat());
+            tell(eloAlways, "Fatal unhandled field type %d", fld->getFormat());
       }
    }
 }
@@ -1387,7 +1387,7 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
 {
    if (!connection || !connection->mysql)
    {
-      tell(0, "SQL-Error in '%s'", prefix);
+      tell(eloAlways, "SQL-Error in '%s'", prefix);
       return fail;
    }
 
@@ -1442,14 +1442,14 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
                stmt ? mysql_stmt_error(stmt) : "",
                stmtTxt ? stmtTxt : "");
 
-   tell(0, "SQL-Error in '%s' - %s%s", prefix,
+   tell(eloAlways, "SQL-Error in '%s' - %s%s", prefix,
         conErr ? conErr : "", stmtErr ? stmtErr : "");
 
    free(conErr);
    free(stmtErr);
 
    if (connectDropped)
-      tell(0, "Fatal, lost connection to mysql server, aborting pending actions");
+      tell(eloAlways, "Fatal, lost connection to mysql server, aborting pending actions");
 
    return fail;
 }
@@ -1573,7 +1573,7 @@ int cDbTable::insert(time_t inssp)
 
    if (!stmtInsert)
    {
-      tell(0, "Fatal missing insert statement\n");
+      tell(eloAlways, "Fatal missing insert statement\n");
       return fail;
    }
 
@@ -1606,7 +1606,7 @@ int cDbTable::update(time_t updsp)
 
    if (!stmtUpdate)
    {
-      tell(0, "Fatal missing update statement\n");
+      tell(eloAlways, "Fatal missing update statement\n");
       return fail;
    }
 

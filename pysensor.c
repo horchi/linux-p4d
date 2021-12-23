@@ -26,7 +26,7 @@ PyObject* PySensor::getData(PyObject* self, PyObject* args)
    if (!PyArg_ParseTuple(args, "si", &type, &address))
       return nullptr;
 
-   tell(0, "Python: PySensor::getData: %s:%d  [%s]\n", type, address, singletonDaemon->sensorJsonStringOf(type, address).c_str());
+   tell(eloAlways, "Python: PySensor::getData: %s:%d  [%s]\n", type, address, singletonDaemon->sensorJsonStringOf(type, address).c_str());
 
    return Py_BuildValue("s", singletonDaemon->sensorJsonStringOf(type, address).c_str());
 }
@@ -117,7 +117,7 @@ int PySensor::init()
    if (!pModule)
    {
       showError("pModule");
-      tell(0, "Failed to load python module '%s.py'", moduleName);
+      tell(eloAlways, "Failed to load python module '%s.py'", moduleName);
       return fail;
    }
 
@@ -127,12 +127,12 @@ int PySensor::init()
 
    if (!pFunc || !PyCallable_Check(pFunc))
    {
-      tell(0, "python pFunc = %p", (void*)pFunc);
+      tell(eloAlways, "python pFunc = %p", (void*)pFunc);
 
       if (PyErr_Occurred())
          showError("PyCallable_Check");
 
-      tell(0, "Cannot init python function '%s'", function);
+      tell(eloAlways, "Cannot init python function '%s'", function);
       return fail;
    }
 
@@ -176,7 +176,7 @@ int PySensor::execute(const char* command)
    if (!pValue)
    {
       showError("execute");
-      tell(0, "Error: Python, call of function '%s()' failed", function);
+      tell(eloAlways, "Error: Python, call of function '%s()' failed", function);
       return fail;
    }
 
@@ -185,7 +185,7 @@ int PySensor::execute(const char* command)
    if (!pyStr)
    {
       Py_DECREF(pValue);
-      tell(0, "Error: Python, unexpected result of call to %s()", function);
+      tell(eloAlways, "Error: Python, unexpected result of call to %s()", function);
       return fail;
    }
 
@@ -237,7 +237,7 @@ void PySensor::showError(const char* info)
    error = dupPyString(pError);
    moduleName = PyUnicode_FromString("traceback");
 
-   tell(0, "Python error at '%s' was %s", info, error);
+   tell(eloAlways, "Python error at '%s' was %s", info, error);
 
    pythModule = PyImport_Import(moduleName);
    Py_DECREF(moduleName);
@@ -258,7 +258,7 @@ void PySensor::showError(const char* info)
          if (pythVal)
          {
             s = dupPyString(pystr = PyObject_Str(pythVal));
-            tell(0, "   %s", s);
+            tell(eloAlways, "   %s", s);
 
             free(s);
             Py_DECREF(pystr);

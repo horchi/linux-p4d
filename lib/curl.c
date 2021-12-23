@@ -65,7 +65,7 @@ int cCurl::create()
 
       if (curl_global_init(CURL_GLOBAL_NOTHING /*CURL_GLOBAL_ALL*/) != 0)
       {
-         tell(0, "Error, something went wrong with curl_global_init()");
+         tell(eloAlways, "Error, something went wrong with curl_global_init()");
          return fail;
       }
 
@@ -95,7 +95,7 @@ int cCurl::init(const char* httpproxy)
    {
       if (!(handle = curl_easy_init()))
       {
-         tell(0, "Could not create new curl instance");
+         tell(eloAlways, "Could not create new curl instance");
          return fail;
       }
    }
@@ -164,7 +164,7 @@ int cCurl::GetUrl(const char *url, std::string *sOutput, const std::string &sRef
       long httpCode = 0;
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
+      tell(eloAlways, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
            curl_easy_strerror(res), res, httpCode, url);
 
      *sOutput = "";
@@ -179,121 +179,145 @@ int cCurl::GetUrl(const char *url, std::string *sOutput, const std::string &sRef
 
 int cCurl::GetUrlFile(const char *url, const char *filename, const std::string &sReferer)
 {
-  int nRet = 0;
+   int nRet = 0;
 
-  init();
+   init();
 
-  // Point the output to a file
+   // Point the output to a file
 
-  FILE *fp;
+   FILE *fp;
 
-  if ((fp = fopen(filename, "w")) == NULL)
-    return 0;
-
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);       // Set option to write to file
-  curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
-
-  if (sReferer != "")
-    curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
-
-  curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
-
-  if (curl_easy_perform(handle) == 0)
-    nRet = 1;
-  else
-    nRet = 0;
-
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);     // Set option back to default (string)
-  fclose(fp);
-  return nRet;
-}
-
-int cCurl::PostUrl(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer)
-{
-  init();
-
-  int retval = 1;
-  std::string::size_type nStart = 0, nEnd, nPos;
-  std::string sTmp, sName, sValue;
-  struct curl_httppost *formpost=NULL;
-  struct curl_httppost *lastptr=NULL;
-  struct curl_slist *headerlist=NULL;
-
-  // Add the POST variables here
-  while ((nEnd = sPost.find("##", nStart)) != std::string::npos) {
-    sTmp = sPost.substr(nStart, nEnd - nStart);
-    if ((nPos = sTmp.find("=")) == std::string::npos)
+   if ((fp = fopen(filename, "w")) == NULL)
       return 0;
-    sName = sTmp.substr(0, nPos);
-    sValue = sTmp.substr(nPos+1);
-    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
-    nStart = nEnd + 2;
-  }
-  sTmp = sPost.substr(nStart);
-  if ((nPos = sTmp.find("=")) == std::string::npos)
-    return 0;
-  sName = sTmp.substr(0, nPos);
-  sValue = sTmp.substr(nPos+1);
-  curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
 
-  retval = curl.DoPost(url, sOutput, sReferer, formpost, headerlist);
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);       // Set option to write to file
+   curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
 
-  curl_formfree(formpost);
-  curl_slist_free_all(headerlist);
-  return retval;
+   if (sReferer != "")
+      curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
+
+   curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
+
+   if (curl_easy_perform(handle) == 0)
+      nRet = 1;
+   else
+      nRet = 0;
+
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);     // Set option back to default (string)
+   fclose(fp);
+
+   return nRet;
 }
 
-int cCurl::PostRaw(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer)
+int cCurl::postUrl(const char* url, const std::string& sPost, std::string* sOutput, const std::string& sReferer)
 {
-  init();
+   init();
 
-  int retval;
-  struct curl_httppost *formpost=NULL;
-  struct curl_slist *headerlist=NULL;
+   std::string::size_type nStart = 0, nEnd, nPos;
+   std::string sTmp, sName, sValue;
+   struct curl_httppost* formpost = NULL;
+   struct curl_httppost* lastptr = NULL;
+   struct curl_slist* headerlist = NULL;
 
-  curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
-  curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, 0); //FIXME: Should this be the size instead, in case this is binary string?
+   // Add the POST variables here
 
-  retval = curl.DoPost(url, sOutput, sReferer, formpost, headerlist);
+   while ((nEnd = sPost.find("##", nStart)) != std::string::npos)
+   {
+      sTmp = sPost.substr(nStart, nEnd - nStart);
 
-  curl_formfree(formpost);
-  curl_slist_free_all(headerlist);
-  return retval;
+      if ((nPos = sTmp.find("=")) == std::string::npos)
+         return fail;
+
+      sName = sTmp.substr(0, nPos);
+      sValue = sTmp.substr(nPos+1);
+      curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
+      nStart = nEnd + 2;
+   }
+
+   sTmp = sPost.substr(nStart);
+
+   if ((nPos = sTmp.find("=")) == std::string::npos)
+      return fail;
+
+   sName = sTmp.substr(0, nPos);
+   sValue = sTmp.substr(nPos+1);
+   curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
+
+   int status = curl.doPost(url, sOutput, sReferer, formpost, headerlist);
+
+   curl_formfree(formpost);
+   curl_slist_free_all(headerlist);
+
+   return status;
 }
 
-int cCurl::DoPost(const char *url, std::string *sOutput, const std::string &sReferer,
-                      struct curl_httppost *formpost, struct curl_slist *headerlist)
+int cCurl::postRaw(const char* url, const std::string& sPost, std::string* sOutput, const std::string& sReferer)
 {
-  headerlist = curl_slist_append(headerlist, "Expect:");
+   init();
 
-  // Now do the form post
-  curl_easy_setopt(handle, CURLOPT_URL, url);
-  if (sReferer != "")
-    curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
-  curl_easy_setopt(handle, CURLOPT_HTTPPOST, formpost);
+   struct curl_httppost* formpost = NULL;
+   struct curl_slist* headerlist = NULL;
 
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0); // Set option to write to string
-  sBuf = "";
-  if (curl_easy_perform(handle) == 0) {
-    *sOutput = sBuf;
-    return 1;
-  }
-  else {
-    // We have an error here mate!
-    *sOutput = "";
-    return 0;
-  }
+   curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
+   curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, sPost.length());
+
+   headerlist = curl_slist_append(headerlist, "Accept: application/json");
+   headerlist = curl_slist_append(headerlist, "Content-Type: application/json");
+   headerlist = curl_slist_append(headerlist, "charset: utf-8");
+
+   int status = curl.doPost(url, sOutput, sReferer, formpost, headerlist);
+
+   if (status != success)
+      tell(eloAlways, "Post '%s' to '%s' failed", sPost.c_str(), url);
+
+   curl_formfree(formpost);
+   curl_slist_free_all(headerlist);
+
+   return status;
+}
+
+int cCurl::doPost(const char *url, std::string* sOutput, const std::string &sReferer,
+                      struct curl_httppost* formpost, struct curl_slist* headerlist)
+{
+   // headerlist = curl_slist_append(headerlist, "Expect:");
+
+   // Now do the form post
+
+   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "POST");
+   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerlist);
+   curl_easy_setopt(handle, CURLOPT_URL, url);
+
+   curl_easy_setopt(handle, CURLOPT_HTTPPOST, formpost);
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0); // Set option to write to string
+
+   if (sReferer != "")
+      curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
+
+   sBuf = "";
+
+   if (curl_easy_perform(handle) == 0)
+   {
+      *sOutput = sBuf;
+      return success;
+   }
+   else
+   {
+      // We have an error
+      *sOutput = "";
+      return fail;
+   }
 }
 
 int cCurl::SetCookieFile(char *filename)
 {
-  init();
+   init();
 
-  if (curl_easy_setopt(handle, CURLOPT_COOKIEFILE, filename) != 0)
-    return 0;
-  if (curl_easy_setopt(handle, CURLOPT_COOKIEJAR, filename) != 0)
-    return 0;
-  return 1;
+   if (curl_easy_setopt(handle, CURLOPT_COOKIEFILE, filename) != 0)
+      return 0;
+   if (curl_easy_setopt(handle, CURLOPT_COOKIEJAR, filename) != 0)
+      return 0;
+
+   return 1;
 }
 
 char* cCurl::EscapeUrl(const char *url)
@@ -369,7 +393,7 @@ size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* da
             {
                p += strlen("filename=");
 
-               tell(4, "found filename at [%s]", p);
+               tell(eloDebug, "found filename at [%s]", p);
 
                if (*p == '"')
                   p++;
@@ -385,7 +409,7 @@ size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* da
                if ((p = strchr(mem->name, '"')))
                   *p = 0;
 
-               tell(4, "set name to '%s'", mem->name);
+               tell(eloDebug, "set name to '%s'", mem->name);
             }
          }
       }
@@ -421,8 +445,8 @@ size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* da
 int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int timeout,
                         const char* userAgent, struct curl_slist* headerlist)
 {
-   long code;
-   CURLcode res = CURLE_OK;
+   long code {0};
+   CURLcode res {CURLE_OK};
 
    size = 0;
 
@@ -453,13 +477,11 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
       long httpCode = 0;
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
+      tell(eloAlways, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
            data->size, curl_easy_strerror(res), res, httpCode, url);
-
+      tell(eloAlways, "Error, download failed; %s (%d)", curl_easy_strerror(res), res);
       data->clear();
       exit();
-      tell(1, "Error, download failed; %s (%d)", curl_easy_strerror(res), res);
-
       return fail;
    }
 
@@ -476,4 +498,84 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    size = data->size;
 
    return success;
+}
+
+//***************************************************************************
+// Post
+//***************************************************************************
+
+int cCurl::post(const char* url, const std::string& sPost, std::string* sOutput)
+{
+   CURLcode res {CURLE_OK};
+
+   init();
+
+   struct curl_slist* headers {nullptr};
+   curl_slist_append(headers, "Accept: application/json");
+   curl_slist_append(headers, "Content-Type: application/json");
+   curl_slist_append(headers, "charset: utf-8");
+
+   curl_easy_setopt(handle, CURLOPT_URL, url);
+
+   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "POST");
+   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+   curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
+   curl_easy_setopt(handle, CURLOPT_USERAGENT, "libcrp/0.1");
+
+   res = curl_easy_perform(handle);
+
+   sBuf = "";
+
+   if (curl_easy_perform(handle) == 0)
+   {
+      *sOutput = sBuf;
+      return success;
+   }
+   else
+   {
+      *sOutput = "";
+      return fail;
+   }
+
+   return res;
+}
+
+//***************************************************************************
+// Put
+//***************************************************************************
+
+int cCurl::put(const char* url, const std::string& sPost, std::string* sOutput)
+{
+   CURLcode res {CURLE_OK};
+
+   init();
+
+   struct curl_slist* headers {nullptr};
+   curl_slist_append(headers, "Accept: application/json");
+   curl_slist_append(headers, "Content-Type: application/json");
+   curl_slist_append(headers, "charset: utf-8");
+
+   curl_easy_setopt(handle, CURLOPT_URL, url);
+
+   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "PUT");
+   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+   curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
+   curl_easy_setopt(handle, CURLOPT_USERAGENT, "libcrp/0.1");
+
+   res = curl_easy_perform(handle);
+
+   sBuf = "";
+
+   if (curl_easy_perform(handle) == 0)
+   {
+      *sOutput = sBuf;
+      return success;
+   }
+   else
+   {
+      *sOutput = "";
+      return fail;
+   }
+
+   return res;
 }

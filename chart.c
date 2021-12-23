@@ -45,7 +45,7 @@ int initDb()
    {
       if (dbDict.in("/etc/p4d.dat") != success)
       {
-         tell(0, "Fatal: Dictionary not loaded, aborting!");
+         tell(eloAlways, "Fatal: Dictionary not loaded, aborting!");
          return 1;
       }
 
@@ -68,7 +68,7 @@ int initDb()
    sfDb = new cDbTable(connection, "valuefacts");
    if (sfDb->open() != success) return fail;
 
-   tell(0, "Connection to database established");
+   tell(eloAlways, "Connection to database established");
 
    return success;
 }
@@ -129,7 +129,7 @@ int printActual(FILE* fp, cDbStatement* s, long lastTime)
       const char* utitle = sfDb->getRow()->getValue("USRTITLE")->getStrValue();
       const char* text = sDb->getRow()->getValue("TEXT")->getStrValue();
 
-      tell(4, "check '%s' (%s)", utitle, title);
+      tell(eloDebug, "check '%s' (%s)", utitle, title);
 
       if (!isEmpty(utitle))
           title = utitle;
@@ -175,7 +175,7 @@ int printActual(FILE* fp, cDbStatement* s, long lastTime)
 
       if (!isEmpty(text))
          fprintf(fp, "%s = %s", title, text);
-      else if (strcmp(unit, "T") == 0)
+      else if (strcmp(unit, "txt") == 0)
          fprintf(fp, "%s = %s", title, l2pTime(value, "%d. %H:%M").c_str());
       else if (value != int(value))
          fprintf(fp, "%s = %2.1f%s", title, value, unit);
@@ -286,7 +286,7 @@ int actualAscii(const char* file)
 
       if (!fp)
       {
-         tell(0, "Error: Can't open file '%s' for writing, error was '%s'", file, strerror(errno));
+         tell(eloAlways, "Error: Can't open file '%s' for writing, error was '%s'", file, strerror(errno));
          return 0;
       }
 
@@ -309,7 +309,7 @@ int actualAscii(const char* file)
       // print the values
 
       printActual(fp, s, lastTime);
-      tell(0, "updated values");
+      tell(eloAlways, "updated values");
 
       s->freeResult();
 
@@ -322,7 +322,7 @@ int actualAscii(const char* file)
       sleep(intervall);
    }
 
-   tell(0, "Shutdown regular");
+   tell(eloAlways, "Shutdown regular");
 
    delete selMaxTime;
    delete s;
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
 {
    const char* file = 0;
 
-   loglevel = 0;
+   eloquence = eloAlways;
    logstdout = no;
 
    if (argc == 1 || (argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))))
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 
       switch (argv[i][1])
       {
-         case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]);  break;
+         case 'l': if (argv[i+1]) eloquence = (Eloquence)atoi(argv[++i]);  break;
          case 'P': if (argv[i+1]) dbport = atoi(argv[++i]);    break;
          case 'd': if (argv[i+1]) dbname = argv[++i];          break;
          case 'h': if (argv[i+1]) dbhost = argv[++i];          break;

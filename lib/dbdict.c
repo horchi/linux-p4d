@@ -213,7 +213,7 @@ int cDbDict::init(cDbFieldDef*& field, const char* tname, const char* fname)
       if ((field = table->getField(fname)))
          return success;
 
-   tell(0, "Fatal: Can't init field %s.%s, not found in dictionary", tname, fname);
+   tell(eloAlways, "Fatal: Can't init field %s.%s, not found in dictionary", tname, fname);
 
    return fail;
 }
@@ -238,7 +238,7 @@ int cDbDict::in(const char* file, int filter)
 
    if (!f)
    {
-      tell(0, "Error: Can' open file '%s', error was '%s'", path, strerror(errno));
+      tell(eloAlways, "Error: Can' open file '%s', error was '%s'", path, strerror(errno));
       return fail;
    }
 
@@ -255,7 +255,7 @@ int cDbDict::in(const char* file, int filter)
 
       if (atLine(line) != success)
       {
-         tell(0, "Error: Found unexpected definition '%s', aborting", line);
+         tell(eloAlways, "Error: Found unexpected definition '%s', aborting", line);
          free(path);
          return fail;
       }
@@ -302,9 +302,9 @@ void cDbDict::show()
 
    for (t = tables.begin(); t != tables.end(); t++)
    {
-      tell(0, "-------------------------------------------------------------------------------------------------");
-      tell(0, "Table '%s'", t->first.c_str());
-      tell(0, "-------------------------------------------------------------------------------------------------");
+      tell(eloAlways, "-------------------------------------------------------------------------------------------------");
+      tell(eloAlways, "Table '%s'", t->first.c_str());
+      tell(eloAlways, "-------------------------------------------------------------------------------------------------");
       t->second->show();
    }
 }
@@ -337,7 +337,7 @@ int cDbDict::atLine(const char* line)
          tables[tableName] = curTable;
       }
       else
-         tell(0, "Fatal: Table '%s' doubly defined", tableName);
+         tell(eloAlways, "Fatal: Table '%s' doubly defined", tableName);
    }
    else if (strncasecmp(line, "Index ", 6) == 0)
    {
@@ -362,7 +362,7 @@ int cDbDict::atLine(const char* line)
       status += parseIndex(line);
 
    else
-      tell(0, "Info: Ignoring extra line [%s]", line);
+      tell(eloAlways, "Info: Ignoring extra line [%s]", line);
 
    return status;
 }
@@ -408,7 +408,7 @@ int cDbDict::parseField(const char* line)
       return fail;
 
    // first parse fixed part of field definition up to the 'type'
-   
+
    for (int i = 0; i < dtCount; i++)
    {
       if (getToken(p, token, sizeTokenMax) != success)
@@ -417,7 +417,7 @@ int cDbDict::parseField(const char* line)
             break;
 
          delete f;
-         tell(0, "Error: Can't parse line [%s]", line);
+         tell(eloAlways, "Error: Can't parse line [%s]", line);
          return fail;
       }
 
@@ -438,7 +438,7 @@ int cDbDict::parseField(const char* line)
 
    if (!f->isValid())
    {
-      tell(0, "Error: Can't parse line [%s], invalid field configuration", line);
+      tell(eloAlways, "Error: Can't parse line [%s], invalid field configuration", line);
       delete f;
       return fail;
    }
@@ -450,7 +450,7 @@ int cDbDict::parseField(const char* line)
    }
    else
    {
-      tell(2, "Info: Ignoring field '%s' due to filter configiuration", f->getName());
+      tell(eloDetail, "Info: Ignoring field '%s' due to filter configiuration", f->getName());
       delete f;
    }
 
@@ -480,7 +480,7 @@ int cDbDict::parseIndex(const char* line)
          if (i <= idtFields)
          {
             delete index;
-            tell(0, "Error: Can't parse line [%s]", line);
+            tell(eloAlways, "Error: Can't parse line [%s]", line);
             return fail;
          }
 

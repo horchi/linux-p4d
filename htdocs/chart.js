@@ -16,12 +16,18 @@ function drawCharts(dataObject)
 
    if (!update) {
       $('#container').removeClass('hidden');
+      $('#dashboardMenu').removeClass('hidden');
+      $('#dashboardMenu').html('');
+
+      document.getElementById("dashboardMenu").innerHTML =
+         '<div id="chartTitle" class="rounded-border chartTitle"></div>' +
+         '<div id="chartBookmarks" class="rounded-border chartBookmarks"></div>';
+
+      //
 
       document.getElementById("container").innerHTML =
-         '<div id="chartTitle" class="rounded-border chartTitle"></div>' +
-         '<div id="chartBookmarks" class="chartBookmarks"></div>' +
          '<canvas id="chartContainer" class="chartCanvas" width="1600" height="600"></canvas>' +
-         '<div class="chartButtons">' +
+         '<div class="rounded-border chartButtons">' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevmonth\')">&lt; Monat</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prev\')">&lt; Tag</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'now\')">Jetzt</button>' +
@@ -29,7 +35,7 @@ function drawCharts(dataObject)
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextmonth\')">Monat &gt;</button>' +
          '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
          '</div>' +
-         '<div id="chartSelector" class="chartSelectors"></div>';
+         '<div id="chartSelector" class="rounded-border chartSelectors"></div>';
    }
 
    var root = document.getElementById("chartContainer");
@@ -68,15 +74,15 @@ function drawCharts(dataObject)
                   unit: 'hour',
                   unitStepSize: 1,
                   displayFormats: {
-                     millisecond: 'MMM DD - HH:mm',
-                     second: 'MMM DD - HH:mm',
-                     minute: 'HH:mm',
-                     hour: 'MMM DD - HH:mm',
-                     day: 'HH:mm',
-                     week: 'MMM DD - HH:mm',
-                     month: 'MMM DD - HH:mm',
-                     quarter: 'MMM DD - HH:mm',
-                     year: 'MMM DD - HH:mm' } },
+                  millisecond: 'MMM DD - HH:mm',
+                  second: 'MMM DD - HH:mm',
+                  minute: 'HH:mm',
+                  hour: 'MMM DD - HH:mm',
+                  day: 'HH:mm',
+                  week: 'MMM DD - HH:mm',
+                  month: 'MMM DD - HH:mm',
+                  quarter: 'MMM DD - HH:mm',
+                  year: 'MMM DD - HH:mm' } },
                distribution: "linear",
                display: true,
                ticks: {
@@ -144,12 +150,23 @@ function drawCharts(dataObject)
    updateChartBookmarks();
 
    for (var i = 0; i < dataObject.sensors.length; i++) {
-      var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id
-          + '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') + '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + '</label></div>';
+      console.log("sensor " + dataObject.sensors[i].id);
+      var fact = valueFacts[dataObject.sensors[i].id];
+
+      var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id +
+          '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') +
+          '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + ' [' + fact.unit + ']</label></div>';
       $("#chartSelector").append(html);
    }
 
    theChart = new Chart(root.getContext("2d"), data);
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
+   };
 }
 
 function getSensors()
@@ -272,6 +289,8 @@ function chartSelect(action)
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "now")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
+   else
+      theChartStart = new Date().subHours(theChartRange * 24);
 
    // console.log("sensors:  '" + sensors + "'" + ' Range:' + theChartRange);
 

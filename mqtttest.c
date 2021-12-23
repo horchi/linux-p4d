@@ -41,17 +41,17 @@ int main(int argc, const char** argv)
    {
       if (mqttWriter->connect() != success)
       {
-         tell(0, "Error: Connecting writer to '%s' failed", hassMqttUrl.c_str());
+         tell(eloAlways, "Error: Connecting writer to '%s' failed", hassMqttUrl.c_str());
          return fail;
       }
-      tell(0, "Connecting to '%s' succeeded", hassMqttUrl.c_str());
+      tell(eloAlways, "Connecting to '%s' succeeded", hassMqttUrl.c_str());
    }
 
    if (!mqttReader->isConnected())
    {
       if (mqttReader->connect() != success)
       {
-         tell(0, "Error: Connecting subscriber to '%s' failed", hassMqttUrl.c_str());
+         tell(eloAlways, "Error: Connecting subscriber to '%s' failed", hassMqttUrl.c_str());
          return fail;
       }
    }

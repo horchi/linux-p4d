@@ -17,8 +17,8 @@
 
 #include "HISTORY.h"
 
-#include "pysensor.h"
 #include "websock.h"
+#include "deconz.h"
 
 #include "p4io.h"
 
@@ -103,9 +103,8 @@ class Daemon : public FroelingService, public cWebInterface
       virtual const char* myTitle()  { return "Daemon"; }
       static void downF(int aSignal) { shutdown = true; }
 
-      // public interface for Python
-
-      std::string sensorJsonStringOf(const char* type, uint address);
+      int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit = "",
+                       const char* title = nullptr, int rights = 0, const char* choices = nullptr);
 
    protected:
 
@@ -122,6 +121,8 @@ class Daemon : public FroelingService, public cWebInterface
          wtPlainText,    // == 7  without title
          wtChoice,       // == 8  option choice
          wtSymbolValue,  // == 9
+         wtSpace,        // == 10
+         wtTime,         // == 11  // dummy to display current time at WEBIF
          wtCount
       };
 
@@ -147,23 +148,48 @@ class Daemon : public FroelingService, public cWebInterface
          ooAuto = 0x02         // Output automatic contolled
       };
 
-      struct OutputState
+      enum Direction
       {
+         dirOpen  = 1,
+         dirClose = 2
+      };
+
+      struct SensorData        // Sensor Data
+      {
+         bool record {false};
+         std::string kind {"value"};
+         time_t last {0};
+         double value {0.0};
+         bool working {false};             // actually working/moving (eg for blinds)
+         Direction lastDir {dirOpen};
          bool state {false};
+         std::string text;
+         bool disabled {false};
+         bool valid {false};               // set if the value, text or state is valid
+         time_t next {0};                  // calculated next switch time
+         int battery {na};
+
+         // fact
+
+         std::string type;
+         uint address {0};
+         std::string name;
+         std::string title;
+         std::string unit;
+         int factor {1};
+         int rights {cWebService::urView};
+         int group {0};
+
+         // 'DO' specials
+
          OutputMode mode {omAuto};
          uint opt {ooUser};
-         const char* name {nullptr};     // crash on init with nullptr :o
-         std::string title;
-         time_t last {0};                // last switch time
-         time_t next {0};                // calculated next switch time
-         bool valid {false};             // set if the value is valid
       };
 
       struct Range
       {
          uint from;
          uint to;
-
          bool inRange(uint t) const { return (from <= t && to >= t); }
       };
 
@@ -175,7 +201,8 @@ class Daemon : public FroelingService, public cWebInterface
          ctBool,
          ctRange,
          ctChoice,
-         ctMultiSelect
+         ctMultiSelect,
+         ctBitSelect,
       };
 
       struct ConfigItemDef
@@ -206,9 +233,6 @@ class Daemon : public FroelingService, public cWebInterface
       static DefaultWidgetProperty* getDefalutProperty(const char* type, const char* unit, int address = 0);
       std::string toWidgetOptionString(const char* type, const char* unit, const char* name, int address = 0);
 
-      std::map<uint,OutputState> digitalOutputStates;
-      std::map<int,bool> digitalInputStates;
-
       int exit();
       int initLocale();
       virtual int initDb();
@@ -216,9 +240,7 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int readConfiguration(bool initial);
       virtual int applyConfigurationSpecials() { return done; }
 
-      int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit = "",
-                       const char* title = nullptr, int rights = 0, const char* choices = nullptr);
-
+      int initSensorByFact(std::string type, uint address);
       int initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights = urControl);
       int initInput(uint pin, const char* name);
       int initScripts();
@@ -228,8 +250,8 @@ class Daemon : public FroelingService, public cWebInterface
       int meanwhile();
       virtual int atMeanwhile() { return done; }
 
-      int update(bool webOnly = false, long client = 0);   // called each (at least) 'interval'
-      virtual int onUpdate(bool webOnly, cDbTable* table, time_t lastSampleTime, json_t* ojData) { return done; }
+      virtual int updateSensors() { return done; }
+      int storeSamples();
       void updateScriptSensors();
       virtual int updateState() { return done; }
       virtual void afterUpdate();
@@ -239,26 +261,31 @@ class Daemon : public FroelingService, public cWebInterface
       int dispatchClientRequest();
       virtual int dispatchSpecialRequest(Event event, json_t* oObject, long client) { return ignore; }
       virtual int dispatchMqttHaCommandRequest(json_t* jData, const char* topic);
+      virtual int dispatchNodeRedCommands(const char* topic, json_t* jObject);
       virtual int dispatchNodeRedCommand(json_t* jObject);
+      virtual int dispatchNodeRedWeather(json_t* jObject);
+      virtual int dispatchDeconz();
+      virtual int dispatchHomematicRpcResult(const char* message);
+      virtual int dispatchHomematicEvents(const char* message);
       bool checkRights(long client, Event event, json_t* oObject);
       virtual bool onCheckRights(long client, Event event, uint rights) { return false; }
       int callScript(int addr, const char* command, const char* name, const char* title);
-      std::string executePython(PySensor* pySensor, const char* command);
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
 
-      int store(time_t now, const char* name, const char* title, const char* unit, const char* type, int address,
-                double value, uint factor, uint groupid, const char* text = 0);
+      int store(time_t now, const SensorData* sensor);
 
-      cDbRow* valueFactOf(const char* type, int addr);
+      cDbRow* valueFactOf(const char* type, uint addr);
+      SensorData* getSensor(const char* type, int addr);
       void setSpecialValue(uint addr, double value, const std::string& text = "");
 
       int performMqttRequests();
       int mqttCheckConnection();
       int mqttDisconnect();
-      int mqttHaPublishSensor(IoType iot, const char* name, const char* title, const char* unit, double value, const char* text = nullptr, bool forceConfig = false);
-      int mqttNodeRedPublishSensor(const char* type, uint address, IoType iot, const char* name, const char* title, const char* unit, double value, const char* text = nullptr);
+      int mqttHaPublishSensor(SensorData& sensor, bool forceConfig = false);
+      int mqttNodeRedPublishSensor(SensorData& sensor);
+      int mqttNodeRedPublishAction(SensorData& sensor, double value, bool publishOnly = false);
       int mqttHaWrite(json_t* obj, uint groupid);
-      int jsonAddValue(json_t* obj, const char* name, const char* title, const char* unit, double theValue, uint groupid, const char* text = 0, bool forceConfig = false);
+      int jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig = false);
       int updateSchemaConfTable();
 
       int scheduleAggregate();
@@ -266,7 +293,6 @@ class Daemon : public FroelingService, public cWebInterface
 
       int loadHtmlHeader();
       int sendMail(const char* receiver, const char* subject, const char* body, const char* mimeType);
-      void addParameter2Mail(const char* name, const char* value);
 
       int getConfigItem(const char* name, char*& value, const char* def = "");
       int setConfigItem(const char* name, const char* value);
@@ -300,11 +326,13 @@ class Daemon : public FroelingService, public cWebInterface
       int performLogout(json_t* oObject);
       int performTokenRequest(json_t* oObject, long client);
       int performPageChange(json_t* oObject, long client);
+      int performToggleIo(json_t* oObject, long client);
       int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performGroups(long client);
       int performSendMail(json_t* oObject, long client);
 
+      int performData(long client, const char* event = nullptr);
       int performChartData(json_t* oObject, long client);
       int performUserDetails(long client);
       int storeUserConfig(json_t* oObject, long client);
@@ -321,6 +349,7 @@ class Daemon : public FroelingService, public cWebInterface
       int storeSchema(json_t* oObject, long client);
       virtual int performReset(json_t* obj, long client);
       virtual int performAlertTestMail(int id, long client) { return done; }
+      virtual const char* getTextImage(const char* key, const char* text) { return nullptr; }
 
       int widgetTypes2Json(json_t* obj);
       int config2Json(json_t* obj);
@@ -332,14 +361,14 @@ class Daemon : public FroelingService, public cWebInterface
       int dashboards2Json(json_t* obj);
       int groups2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
-      int sensor2Json(json_t* obj, cDbTable* table);
+      int sensor2Json(json_t* obj, const char* type, uint address);
       int images2Json(json_t* obj);
       void pin2Json(json_t* ojData, int pin);
       void publishSpecialValue(int addr);
       bool webFileExists(const char* file, const char* base = nullptr);
 
-      const char* getImageFor(const char* title, int value);
-      int toggleIo(uint addr, const char* type);
+      const char* getImageFor(const char* type, const char* title, const char* unit, int value);
+      int toggleIo(uint addr, const char* type, int state = na, int brightness = na, int transitiontime = na);
       int toggleIoNext(uint pin);
       int toggleOutputMode(uint pin);
 
@@ -354,10 +383,9 @@ class Daemon : public FroelingService, public cWebInterface
 
       // W1
 
-      int initW1();
-      bool existW1(const char* id);
+      bool existW1(uint address);
       int dispatchW1Msg(const char* message);
-      double valueOfW1(const char* id, time_t& last);
+      double valueOfW1(uint address, time_t& last);
       uint toW1Id(const char* name);
       void updateW1(const char* id, double value, time_t stamp);
       void cleanupW1();
@@ -377,6 +405,7 @@ class Daemon : public FroelingService, public cWebInterface
       cDbTable* tableDashboards {nullptr};
       cDbTable* tableDashboardWidgets {nullptr};
       cDbTable* tableSchemaConf {nullptr};
+      cDbTable* tableHomeMatic {nullptr};
 
       cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};
@@ -394,6 +423,7 @@ class Daemon : public FroelingService, public cWebInterface
       cDbStatement* selectDashboardWidgetsFor {nullptr};
       cDbStatement* selectSchemaConfByState {nullptr};
       cDbStatement* selectAllSchemaConf {nullptr};
+      cDbStatement* selectHomeMaticByUuid {nullptr};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;
@@ -415,7 +445,6 @@ class Daemon : public FroelingService, public cWebInterface
       std::vector<std::string> addrsDashboard;
       std::vector<std::string> addrsList;
 
-      std::string mailBodyHtml;
       bool initialRun {true};
 
       // WS Interface stuff
@@ -448,11 +477,13 @@ class Daemon : public FroelingService, public cWebInterface
       struct Group
       {
          std::string name;
-         json_t* oJson {nullptr};
+         json_t* oHaJson {nullptr};
       };
 
       char* mqttUrl {nullptr};
-      Mqtt* mqttReader {nullptr};             // my own mqtt instance
+      Mqtt* mqttReader {nullptr};                // connection  to my own mqtt instance
+      Mqtt* mqttWriter {nullptr};                // connection to my own mqtt instance
+      std::vector<std::string> mqttSensorTopics;
 
       char* mqttNodeRedUrl {nullptr};
       Mqtt* mqttNodeRedWriter {nullptr};
@@ -471,7 +502,7 @@ class Daemon : public FroelingService, public cWebInterface
       time_t lastMqttConnectAt {0};
       std::map<std::string,std::string> hassCmdTopicMap; // 'topic' to 'name' map
 
-      json_t* oJson {nullptr};
+      json_t* oHaJson {nullptr};
       std::map<int,Group> groups;
 
       // config
@@ -492,8 +523,12 @@ class Daemon : public FroelingService, public cWebInterface
       char* mailScript {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
-      MemoryStruct htmlHeader;
+      std::string htmlHeader;
       int invertDO {no};
+
+      Deconz deconz;
+      bool homeMaticInterface {false};
+      std::map<uint,std::string> homeMaticUuids;
 
       // live data
 
@@ -510,39 +545,15 @@ class Daemon : public FroelingService, public cWebInterface
          bool valid {false};                // set if the value is valid
       };
 
-      std::map<int,AiSensorData> aiSensors;
-
-      struct W1SensorData
-      {
-         time_t last {0};
-         double value {0.0};
-         bool valid {false};                // set if the value is valid
-      };
-
-      std::map<std::string,W1SensorData> w1Sensors;
-
-      struct SensorData        // Sensor Data
-      {
-         std::string kind {"value"};
-         time_t last {0};
-         double value {0.0};
-         bool state {0};
-         std::string text;
-         bool disabled {false};
-         bool valid {false};                // set if the value, text or state is valid
-         PySensor* pySensor {nullptr};
-      };
-
-      std::map<int,SensorData> spSensors;
-      std::map<int,SensorData> scSensors;
-      std::map<int,SensorData> vaSensors;
-
-      std::map<std::string,json_t*> jsonSensorList;
+      std::map<int,AiSensorData> aiSensors;   // #TODO #FIXME -> to be ported to sensors!!
+      std::map<std::string,std::map<int,SensorData>> sensors;
 
       virtual std::list<ConfigItemDef>* getConfiguration() = 0;
 
       std::string alertMailBody;
       std::string alertMailSubject;
+
+      std::map<std::string,json_t*> jsonSensorList;
 
       // statics
 

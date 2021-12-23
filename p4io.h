@@ -111,7 +111,7 @@ class P4Request : public FroelingService
          return success;
       }
 
-      void show(const char* prefix = "", int elo = eloDebug2)
+      void show(const char* prefix = "", Eloquence elo = eloDebug2)
       {
          char tmp[1000];
          *tmp = 0;

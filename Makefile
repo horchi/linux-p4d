@@ -24,7 +24,7 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
-OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o gpio.o hass.o websock.o pysensor.o
+OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o gpio.o hass.o websock.o deconz.o
 OBJS        += p4io.o service.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
@@ -206,8 +206,7 @@ gpio.o          :  gpio.c          $(HEADER) daemon.h
 wsactions.o     :  wsactions.c     $(HEADER) daemon.h
 hass.o          :  hass.c          daemon.h
 websock.o       :  websock.c       websock.h
-pysensor.o      : pysensor.c      $(HEADER) pysensor.h
-
+deconz.o        :  deconz.c        deconz.h
 specific.o      : specific.c      $(HEADER) daemon.h specific.h
 
 p4io.o          :  p4io.c          $(HEADER)

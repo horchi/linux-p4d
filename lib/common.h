@@ -51,10 +51,6 @@
 //***************************************************************************
 
 class MemoryStruct;
-extern int loglevel;
-extern int argLoglevel;
-extern int logstdout;
-extern int logstamp;
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -97,16 +93,46 @@ enum Misc
 
 enum Eloquence
 {
-   eloOff = na,              // -1
-   eloAlways,                // 0
-   eloInfo,                  // 1
-   eloDetail,                // 2
-   eloDebug,                 // 3
-   eloDebug2,                // 4
-   eloDebug3                 // 5
+   eloInfo           = 0x0001,
+   eloDetail         = 0x0002,
+   eloDebug          = 0x0004,
+   eloDebug2         = 0x0008,
+   eloWebSock        = 0x0010,
+   eloDebugWebSock   = 0x0020,
+   eloMqtt           = 0x0040,
+   eloDb             = 0x0080,
+   eloDebugDb        = 0x0100,
+
+   eloNodeRed        = 0x0200,   // node-red MQTT topics
+   eloDeconz         = 0x0400,
+   eloDebugDeconz    = 0x0800,
+   eloMqttHome       = 0x1000,   // my own MQTT topics
+   eloHaMqtt         = 0x2000,   // MQTT topics for interface to extern HAs
+   eloHomeMatic      = 0x4000,
+   eloDebugHomeMatic = 0x8000,
+
+   eloAlways         = 0x0000,
 };
 
-void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* format, ...);
+class Elo
+{
+   public:
+
+      static const char* eloquences[];
+      static Eloquence stringToEloquence(const std::string string);
+      static int toEloquence(const char* str);
+};
+
+extern Eloquence eloquence;
+extern Eloquence argEloquence;
+extern bool logstdout;
+extern bool logstamp;
+
+void __attribute__ ((format(printf, 2, 3))) tell(Eloquence eloquence, const char* format, ...);
+
+//***************************************************************************
+//
+//***************************************************************************
 
 char* srealloc(void* ptr, size_t size);
 
@@ -201,7 +227,7 @@ class MemoryStruct
          {
             free(zmemory);
             zsize = 0;
-            tell(0, "Error gzip failed!");
+            tell(eloAlways, "Error gzip failed!");
 
             return fail;
          }
@@ -485,7 +511,7 @@ class LogDuration
 {
    public:
 
-      LogDuration(const char* aMessage, int aLogLevel = 2);
+      LogDuration(const char* aMessage, Eloquence aLogLevel = eloDetail);
       ~LogDuration();
 
       void show(const char* label = "");
@@ -494,7 +520,7 @@ class LogDuration
 
       char message[1000];
       uint64_t durationStart;
-      int logLevel;
+      Eloquence logLevel;
 };
 
 //***************************************************************************
@@ -562,7 +588,7 @@ class Sem
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
+               tell(eloAlways, "Error: Can't lock semaphore, errno was (%d) '%s'",
                     errno, strerror(errno));
 
             return fail;
@@ -595,7 +621,7 @@ class Sem
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
+               tell(eloAlways, "Error: Can't lock semaphore, errno was (%d) '%s'",
                     errno, strerror(errno));
 
             return fail;

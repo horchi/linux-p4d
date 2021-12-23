@@ -3,7 +3,7 @@
 // File daemon.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 25.04.2020  Jörg Wendel
+// Date 04.11.2010 - 16.12.2021  Jörg Wendel
 //***************************************************************************
 
 #include <stdio.h>
@@ -104,7 +104,7 @@ cWebService::Event cWebService::toEvent(const char* name)
 
 const char* Daemon::widgetTypes[] =
 {
-   "Image",
+   "Symbol",
    "Chart",
    "Text",
    "Value",
@@ -114,6 +114,8 @@ const char* Daemon::widgetTypes[] =
    "PlainText",
    "Choice",
    "SymbolValue",
+   "Spacer",
+   "Time",
    0
 };
 
@@ -146,6 +148,8 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
    // type, address,  unit,  widgetType, minScale, maxScale scaleStep, showPeak
 
    {  "-",       na,   "*",      wtMeter,        0,        45,      10, false },
+   { "SPACER",   na,   "*",      wtSpace,        0,         0,       0, false },
+   { "TIME",     na, "txt",  wtPlainText,        0,         0,       0, true },
    { "DO",       na,   "*",     wtSymbol,        0,         0,       0, false },
    { "DI",       na,   "*",     wtSymbol,        0,         0,       0, false },
    { "AO",       na,   "*",      wtMeter,        0,        45,      10, false },
@@ -153,19 +157,28 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
    { "SD",       na,   "*",      wtChart,        0,      2000,       0, true },
    { "SC",       na,    "",       wtText,        0,         0,       0, false },
    { "SC",       na, "zst",     wtSymbol,        0,         0,       0, false },
-   { "SC",       na,   "*",      wtMeter,        0,        40,       5, true },
+   { "SC",       na,   "*",      wtMeter,        0,        40,      10, true },
    { "SP",       na,    "",       wtText,        0,         0,       0, false },
-   { "SP",       na,   "%", wtMeterLevel,        0,       100,       5, false },
+   { "SP",       na,   "%", wtMeterLevel,        0,       100,      20, false },
    { "SP",       na, "kWh",      wtChart,        0,        50,       0, true },
    { "SP",       na,   "W",      wtMeter,        0,      3000,       0, true },
+   { "SP",       na, "txt",  wtPlainText,        0,         0,       0, true },
    { "SP",       na,   "*",      wtMeter,        0,       100,      10, true },
-   { "UD",  udState, "zst",     wtSymbol,        0,         0,       0, false },
-   { "UD",   udMode, "zst",       wtText,        0,         0,       0, false },
-   { "UD",   udTime,   "T",       wtText,        0,         0,       0, false },
+   { "UD",       na, "txt",       wtText,        0,         0,       0, false },
+   { "UD",       na, "zst",     wtSymbol,        0,         0,       0, false },
    { "UD",       na,   "*",       wtText,        0,         0,       0, false },
-   { "W1",       na,   "*", wtMeterLevel,        0,        40,       5, true },
-   { "VA",       na,   "%", wtMeterLevel,        0,       100,      10, true },
+   { "W1",       na,   "*", wtMeterLevel,        0,        40,      10, true },
+   { "VA",       na,   "%", wtMeterLevel,        0,       100,      20, true },
    { "VA",       na,   "*",      wtMeter,        0,        45,      10, true },
+   { "HMB",      na,   "*",wtSymbolValue,        0,         0,       0, true },
+   { "DZL",      na,   "*",     wtSymbol,        0,         0,       0, true },
+   { "DZS",      na, "zst",     wtSymbol,        0,         0,       0, true },
+   { "DZS",      na,  "°C", wtMeterLevel,        0,        45,      10, true },
+   { "DZS",      na,   "%",      wtChart,        0,         0,       0, true },
+   { "DZS",      na, "hPa",      wtChart,        0,         0,       0, true },
+   { "DZS",      na, "mov",     wtSymbol,        0,         0,       0, true },
+   { "DZS",      na,  "lx",      wtChart,        0,         0,       0, true },
+   { "DZS",      na,   "*",      wtMeter,        0,        45,      12, true },
    { "" }
 };
 
@@ -197,9 +210,19 @@ std::string Daemon::toWidgetOptionString(const char* type, const char* unit, con
 
    DefaultWidgetProperty* defProperty = getDefalutProperty(type, unit, address);
 
-   asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"showpeak\": %s, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d}",
+   const char* color {"rgba(128, 0, 0, 0.698)"};
+   const char* colorOn {"rgba(0, 99, 162, 0.76)"};
+   const char* symbol {""};
+
+   if (defProperty->unit == "mov")
+      symbol = "mdi:mdi-walk";
+   else if (strcmp(type, "HMB") == 0)
+      symbol = "mdi:mdi-blinds";
+
+   asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"showpeak\": %s, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d, \"symbol\": \"%s\", \"color\": \"%s\", \"colorOn\": \"%s\" }",
             unit, defProperty->maxScale, defProperty->minScale, defProperty->scaleStep, defProperty->showPeak ? "true" : "false",
-            getImageFor(name, true), getImageFor(name, false), defProperty->widgetType);
+            getImageFor(type, name, unit, true), getImageFor(type, name, unit, false),
+            defProperty->widgetType, symbol, color, colorOn);
    result = opt;
    free(opt);
 
@@ -279,7 +302,7 @@ int Daemon::pushOutMessage(json_t* oContents, const char* event, long client)
 
    if (!p)
    {
-      tell(0, "Error: Dumping json message for event '%s' failed", event);
+      tell(eloAlways, "Error: Dumping json message for event '%s' failed", event);
       return fail;
    }
 
@@ -354,11 +377,11 @@ int Daemon::init()
 
    if (dbDict.in(dictPath) != success)
    {
-      tell(0, "Fatal: Dictionary not loaded, aborting!");
+      tell(eloAlways, "Fatal: Dictionary not loaded, aborting!");
       return 1;
    }
 
-   tell(0, "Dictionary '%s' loaded", dictPath);
+   tell(eloAlways, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
    if ((status = initDb()) != success)
@@ -366,6 +389,8 @@ int Daemon::init()
       exitDb();
       return status;
    }
+
+   deconz.init(this, connection);
 
    // ---------------------------------
    // check users - add default user if empty
@@ -375,12 +400,12 @@ int Daemon::init()
 
    if (userCount <= 0)
    {
-      tell(0, "Initially adding default user (" TARGET "/" TARGET ")");
+      tell(eloAlways, "Initially adding default user (" NAME "/" NAME ")");
 
       md5Buf defaultPwd;
-      createMd5(TARGET, defaultPwd);
+      createMd5(NAME, defaultPwd);
       tableUsers->clear();
-      tableUsers->setValue("USER", TARGET);
+      tableUsers->setValue("USER", NAME);
       tableUsers->setValue("PASSWD", defaultPwd);
       tableUsers->setValue("TOKEN", "dein&&secret12login34token");
       tableUsers->setValue("RIGHTS", 0xff);  // all rights
@@ -417,18 +442,53 @@ int Daemon::init()
 
    applyConfigurationSpecials();
 
+   // homeMaticInterface
+
+   if (homeMaticInterface)
+   {
+      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/#");
+      mqttCheckConnection();
+
+      const char* request = "{ \"method\" : \"listDevices\" }";
+      mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
+      tell(eloHomeMatic, "-> (home-matic) '%s' to '%s'", TARGET "2mqtt/homematic/rpccall", request);
+   }
+
    // init web socket ...
 
    while (webSock->init(webPort, webSocketPingTime, confDir, webSsl) != success)
    {
-      tell(0, "Retrying in 2 seconds");
+      tell(eloAlways, "Retrying in 2 seconds");
       sleep(2);
    }
 
    initArduino();
    performMqttRequests();
    initScripts();
-   loadStates();
+   loadStates();           // load states of outputs on last exit
+
+   if (!isEmpty(deconz.getHttpUrl()) && !isEmpty(deconz.getApiKey()))
+      deconz.initDevices();
+
+   if (!isEmpty(deconz.getHttpUrl()) && isEmpty(deconz.getApiKey()))
+   {
+      tell(eloAlways, "DECONZ: No API key for '%s' jet, try to query", deconz.getHttpUrl());
+      std::string result;
+      int status = deconz.queryApiKey(result);
+
+      if (status != success)
+      {
+         tell(eloAlways, "DECONZ: Key result was '%s' (%d)", result.c_str(), status);
+         tell(eloAlways, "ACHTUNG: Initiale Registrierung bei deconz '%s' fehlgeschlagen! "   \
+              "Unlock the deCONZ gateway and restart homectrld within the 60 seconds", deconz.getHttpUrl());
+      }
+      else
+      {
+         setConfigItem("deconzApiKey", result.c_str());
+         deconz.setApiKey(result.c_str());
+         deconz.initDevices();
+      }
+   }
 
    initialized = true;
 
@@ -447,25 +507,65 @@ int Daemon::initLocale()
 
    if (!locale)
    {
-      tell(0, "Info: Detecting locale setting for LC_ALL failed");
+      tell(eloAlways, "Info: Detecting locale setting for LC_ALL failed");
       return fail;
    }
 
-   tell(1, "current locale is %s", locale);
+   tell(eloInfo, "Current locale is %s", locale);
 
    if ((strcasestr(locale, "UTF-8") != 0) || (strcasestr(locale, "UTF8") != 0))
-      tell(1, "Detected UTF-8");
+      tell(eloInfo, "Detected UTF-8");
 
    return done;
 }
 
 int Daemon::exit()
 {
-   for (auto it = digitalOutputStates.begin(); it != digitalOutputStates.end(); ++it)
+   for (auto it = sensors["DO"].begin(); it != sensors["DO"].end(); ++it)
       gpioWrite(it->first, false, false);
 
    exitDb();
    serial->close();
+
+   return success;
+}
+
+//***************************************************************************
+// Init Sensor
+//***************************************************************************
+
+int Daemon::initSensorByFact(std::string type, uint address)
+{
+   cDbRow* fact = valueFactOf(type.c_str(), address);
+
+   if (!fact)
+   {
+      tell(eloAlways, "Warning: valuefact for %s:0x%02x not found!", type.c_str(), address);
+      return fail;
+   }
+
+   sensors[type][address].type = type;
+   sensors[type][address].address = address;
+   sensors[type][address].record = fact->hasValue("RECORD", "A");
+   sensors[type][address].name = fact->getStrValue("NAME");
+   sensors[type][address].unit = fact->getStrValue("UNIT");
+   sensors[type][address].factor = fact->getIntValue("FACTOR");
+   sensors[type][address].group = fact->getIntValue("GROUPID");
+
+   if (type == "DO" || type == "DI" || type == "DZL")
+      sensors[type][address].kind = "status";
+
+   if (sensors[type][address].unit == "txt")
+      sensors[type][address].kind = "text";
+
+   if (!fact->getValue("USRTITLE")->isEmpty())
+      sensors[type][address].title = fact->getStrValue("USRTITLE");
+   else if (!fact->getValue("TITLE")->isEmpty())
+      sensors[type][address].title = fact->getStrValue("TITLE");
+   else
+      sensors[type][address].title = fact->getStrValue("NAME");
+
+   tell(eloDebug, "Debug: Init sensor %s/0x%02x - '%s'", type.c_str(), address, sensors[type][address].title.c_str());
 
    return success;
 }
@@ -476,28 +576,13 @@ int Daemon::exit()
 
 int Daemon::initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights)
 {
-   digitalOutputStates[pin].opt = opt;
-   digitalOutputStates[pin].mode = mode;
-   digitalOutputStates[pin].name = name;
+   addValueFact(pin, "DO", 1, name, "", "", rights);
 
-   cDbRow* fact = valueFactOf("DO", pin);
-
-   if (fact)
-   {
-      if (!fact->getValue("USRTITLE")->isEmpty())
-         digitalOutputStates[pin].title = fact->getStrValue("USRTITLE");
-      else
-         digitalOutputStates[pin].title = fact->getStrValue("TITLE");
-   }
-   else
-   {
-      digitalOutputStates[pin].title = name;
-      tableValueFacts->setValue("RIGHTS", (int)rights);
-   }
+   sensors["DO"][pin].opt = opt;
+   sensors["DO"][pin].mode = mode;
 
    pinMode(pin, OUTPUT);
    gpioWrite(pin, false, false);
-   addValueFact(pin, "DO", 1, name, "", "", urControl);
 
    return done;
 }
@@ -511,9 +596,10 @@ int Daemon::initInput(uint pin, const char* name)
    pinMode(pin, INPUT);
 
    if (!isEmpty(name))
+   {
       addValueFact(pin, "DI", 1, name);
-
-   digitalInputStates[pin] = gpioRead(pin);
+      sensors["DI"][pin].state = gpioRead(pin);
+   }
 
    return done;
 }
@@ -537,7 +623,7 @@ int Daemon::initScripts()
       {
          char* stmt {nullptr};
          asprintf(&stmt, "%s = '%s'", tableScripts->getField("PATH")->getDbName(), tableScripts->getStrValue("PATH"));
-         tableScripts->deleteWhere(stmt);
+         tableScripts->deleteWhere("%s", stmt);
          free(stmt);
          tell(eloAlways, "Removed script '%s'", tableScripts->getStrValue("PATH"));
       }
@@ -556,7 +642,7 @@ int Daemon::initScripts()
          asprintf(&stmt, "%s = %ld and %s = 'SC'",
                   tableValueFacts->getField("ADDRESS")->getDbName(), tableValueFacts->getIntValue("ADDRESS"),
                   tableValueFacts->getField("TYPE")->getDbName());
-         tableValueFacts->deleteWhere(stmt);
+         tableValueFacts->deleteWhere("%s", stmt);
          free(stmt);
          tell(eloAlways, "Removed valuefact 'SC/%ld'", tableValueFacts->getIntValue("ADDRESS"));
       }
@@ -569,7 +655,7 @@ int Daemon::initScripts()
    FileList scripts;
 
    asprintf(&path, "%s/scripts.d", confDir);
-   int status = getFileList(path, DT_REG, "sh py", false, &scripts, count);
+   int status = getFileList(path, DT_REG, "sh", false, &scripts, count);
 
    if (status != success)
    {
@@ -583,42 +669,24 @@ int Daemon::initScripts()
       uint addr {0};
       char* cmd {nullptr};
       std::string result;
-      PySensor* pySensor {nullptr};
 
-      // tell(eloAlways, "Found script '%s'", script.name.c_str());
+      tell(eloDetail, "Found script '%s'", script.name.c_str());
 
       asprintf(&scriptPath, "%s/%s", path, script.name.c_str());
 
-      if (strstr(script.name.c_str(), ".py"))
-      {
-         int status {success};
-         pySensor = new PySensor(this, path, script.name.c_str());
-
-         if ((status = pySensor->init()) != success || (result = executePython(pySensor, "status")) == "")
-         {
-            tell(0, "Initialized python script '%s' failed, status was %d, result was '%s'",
-                 script.name.c_str(), status, result.c_str());
-            delete pySensor;
-            continue;
-         }
-      }
-      else
-      {
-         asprintf(&cmd, "%s status", scriptPath);
-         result = executeCommand(cmd);
-         tell(5, "Calling '%s'", cmd);
-         free(cmd);
-      }
+      asprintf(&cmd, "%s status", scriptPath);
+      result = executeCommand(cmd);
+      tell(eloDebug, "Calling '%s'", cmd);
+      free(cmd);
 
       json_error_t error;
       json_t* oData = json_loads(result.c_str(), 0, &error);
 
       if (!oData)
       {
-         tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
-         tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+         tell(eloAlways, "Error: Ignoring invalid script result [%s]", result.c_str());
+         tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
               error.text, error.source, error.line, error.column, error.position);
-         delete pySensor;
          continue;
       }
 
@@ -652,23 +720,22 @@ int Daemon::initScripts()
       addValueFact(addr, "SC", 1, !isEmpty(title) ? title : script.name.c_str(), unit,
                    tuple[0].c_str(), urControl, choices);
 
-      tell(0, "Init script value of 'SC:%d' to %.2f", addr, value);
+      tell(eloAlways, "Init script value of 'SC:%d' to %.2f", addr, value);
 
-      scSensors[addr].kind = kind;
-      scSensors[addr].pySensor = pySensor;
-      scSensors[addr].last = time(0);
-      scSensors[addr].valid = valid;
+      sensors["SC"][addr].kind = kind;
+      sensors["SC"][addr].last = time(0);
+      sensors["SC"][addr].valid = valid;
 
       if (kind == "status")
-         scSensors[addr].state = (bool)value;
+         sensors["SC"][addr].state = (bool)value;
       else if (kind == "trigger")
-         scSensors[addr].state = (bool)value;
+         sensors["SC"][addr].state = (bool)value;
       else if (kind == "text")
-         scSensors[addr].text = text;
+         sensors["SC"][addr].text = text;
       else if (kind == "value")
-         scSensors[addr].value = value;
+         sensors["SC"][addr].value = value;
 
-      tell(0, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
+      tell(eloAlways, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
       free(scriptPath);
    }
 
@@ -690,22 +757,19 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
 
    if (!tableScripts->find())
    {
-      tell(0, "Fatal: Script with id (%d) not found", addr);
+      tell(eloAlways, "Fatal: Script with id (%d) not found", addr);
       return fail;
    }
 
    asprintf(&cmd, "%s %s", tableScripts->getStrValue("PATH"), command);
 
    std::string result;
-   tell(2, "Info: Calling '%s'", cmd);
+   tell(eloDetail, "Info: Calling '%s'", cmd);
 
-   if (scSensors[addr].pySensor != nullptr)
-      result = executePython(scSensors[addr].pySensor, command);
-   else
       result = executeCommand(cmd);
 
    tableScripts->reset();
-   tell(2, "Debug: Result of script '%s' was [%s]", cmd, result.c_str());
+   tell(eloDebug, "Debug: Result of script '%s' was [%s]", cmd, result.c_str());
    free(cmd);
 
    json_error_t error;
@@ -713,8 +777,8 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
 
    if (!oData)
    {
-      tell(0, "Error: Ignoring invalid script result [%s]", result.c_str());
-      tell(0, "Error decoding json: %s (%s, line %d column %d, position %d)",
+      tell(eloAlways, "Error: Ignoring invalid script result [%s]", result.c_str());
+      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
            error.text, error.source, error.line, error.column, error.position);
       return fail;
    }
@@ -724,36 +788,36 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    double value = getDoubleFromJson(oData, "value");
    const char* text = getStringFromJson(oData, "text");
    bool valid = getBoolFromJson(oData, "valid", false);
-   IoType iot = iotSensor;
+   // IoType iot = iotSensor;
 
-   tell(3, "DEBUG: Got '%s' from script (kind:%s unit:%s value:%0.2f) [SC:%d]", result.c_str(), kind.c_str(), unit, value, addr);
+   tell(eloDebug, "DEBUG: Got '%s' from script (kind:%s unit:%s value:%0.2f) [SC:%d]", result.c_str(), kind.c_str(), unit, value, addr);
 
-   scSensors[addr].kind = kind;
-   scSensors[addr].last = time(0);
-   scSensors[addr].valid = valid;
+   sensors["SC"][addr].kind = kind;
+   sensors["SC"][addr].last = time(0);
+   sensors["SC"][addr].valid = valid;
 
    bool changed {false};
 
    if (kind == "status")
    {
-      changed = scSensors[addr].state != (bool)value;
-      scSensors[addr].state = (bool)value;
-      iot = iotLight;
+      changed = sensors["SC"][addr].state != (bool)value;
+      sensors["SC"][addr].state = (bool)value;
+      // iot = iotLight;
    }
    else if (kind == "text")
    {
-      changed = scSensors[addr].text != text;
-      scSensors[addr].text = text;
-      iot = iotSensor;
+      changed = sensors["SC"][addr].text != text;
+      sensors["SC"][addr].text = text;
+      // iot = iotSensor;
    }
    else if (kind == "value")
    {
-      changed = scSensors[addr].value != value;
-      scSensors[addr].value = value;
-      iot = iotSensor;
+      changed = sensors["SC"][addr].value != value;
+      sensors["SC"][addr].value = value;
+      // iot = iotSensor;
    }
    else
-      tell(0, "Got unexpected script kind '%s' in '%s'", kind.c_str(), result.c_str());
+      tell(eloAlways, "Got unexpected script kind '%s' in '%s'", kind.c_str(), result.c_str());
 
    // update WS
    {
@@ -779,34 +843,23 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
       pushDataUpdate("update", 0L);
    }
 
-   mqttHaPublishSensor(iotLight, name, "", "", value, "", false /*forceConfig*/);
+   mqttHaPublishSensor(sensors["SC"][addr], false /*forceConfig*/);
 
    if (changed)
-      mqttNodeRedPublishSensor("SC", addr, iot, name, "", "", value, "");
+      mqttNodeRedPublishSensor(sensors["SC"][addr]);
 
    return success;
-}
-
-//***************************************************************************
-// Execute Python Sensor Script
-//***************************************************************************
-
-std::string Daemon::executePython(PySensor* pySensor, const char* command)
-{
-   pySensor->execute(command);
-
-   return pySensor->getResult();
 }
 
 //***************************************************************************
 // Value Fact Of
 //***************************************************************************
 
-cDbRow* Daemon::valueFactOf(const char* type, int addr)
+cDbRow* Daemon::valueFactOf(const char* type, uint addr)
 {
    tableValueFacts->clear();
 
-   tableValueFacts->setValue("ADDRESS", addr);
+   tableValueFacts->setValue("ADDRESS", (long)addr);
    tableValueFacts->setValue("TYPE", type);
 
    if (!tableValueFacts->find())
@@ -816,115 +869,38 @@ cDbRow* Daemon::valueFactOf(const char* type, int addr)
 }
 
 //***************************************************************************
+// Get Sensor
+//***************************************************************************
+
+Daemon::SensorData* Daemon::getSensor(const char* type, int addr)
+{
+   if (isEmpty(type))
+      return nullptr;
+
+   auto itType = sensors.find(type);
+
+   if (itType == sensors.end())
+      return nullptr;
+
+   auto itSensor = itType->second.find(addr);
+
+   if (itSensor == itType->second.end())
+      return nullptr;
+
+   return &itSensor->second;
+}
+
+//***************************************************************************
 // Set Special Value
 //***************************************************************************
 
 void Daemon::setSpecialValue(uint addr, double value, const std::string& text)
 {
-   spSensors[addr].last = time(0);
-   spSensors[addr].value = value;
-   spSensors[addr].text = text;
-   spSensors[addr].kind = text == "" ? "value" : "text";
-   spSensors[addr].valid = spSensors[addr].kind == "text" ? true : !isNan(value);
-}
-
-//***************************************************************************
-// Sensor Json String Of
-//***************************************************************************
-
-std::string Daemon::sensorJsonStringOf(const char* type, uint addr)
-{
-   cDbRow* fact = valueFactOf(type, addr);
-
-   if (!fact)
-      return "";
-
-   json_t* ojData = json_object();
-
-   sensor2Json(ojData, tableValueFacts);
-
-   if (strcmp(type, "W1") == 0)
-   {
-      bool w1Exist = existW1(fact->getStrValue("NAME"));
-      time_t w1Last {0};
-      double w1Value {0};
-
-      if (w1Exist)
-         w1Value = valueOfW1(fact->getStrValue("NAME"), w1Last);
-
-      json_object_set_new(ojData, "value", json_real(w1Value));
-      json_object_set_new(ojData, "last", json_integer(w1Last));
-      json_object_set_new(ojData, "valid", json_boolean(w1Exist && w1Last > time(0)-300));
-   }
-   else if (strcmp(type, "AI") == 0)
-   {
-      json_object_set_new(ojData, "value", json_real(aiSensors[addr].value));
-      json_object_set_new(ojData, "last", json_integer(aiSensors[addr].last));
-      json_object_set_new(ojData, "valid", json_boolean(aiSensors[addr].valid));
-      if (aiSensors[addr].disabled)
-         json_object_set_new(ojData, "disabled", json_boolean(true));
-   }
-   else if (strcmp(type, "DO") == 0)
-   {
-      json_object_set_new(ojData, "value", json_integer(digitalOutputStates[addr].state));
-      json_object_set_new(ojData, "last", json_integer(digitalOutputStates[addr].last));
-      json_object_set_new(ojData, "valid", json_boolean(digitalOutputStates[addr].valid));
-   }
-   else if (strcmp(type, "SC") == 0)
-   {
-      if (scSensors[addr].kind == "status")
-         json_object_set_new(ojData, "value", json_integer(scSensors[addr].state));
-      else if (scSensors[addr].kind == "text")
-         json_object_set_new(ojData, "text", json_string(scSensors[addr].text.c_str()));
-      else if (scSensors[addr].kind == "value")
-         json_object_set_new(ojData, "value", json_real(scSensors[addr].value));
-
-      json_object_set_new(ojData, "last", json_integer(scSensors[addr].last));
-      json_object_set_new(ojData, "valid", json_boolean(scSensors[addr].valid));
-
-      if (scSensors[addr].disabled)
-         json_object_set_new(ojData, "disabled", json_boolean(true));
-   }
-   else if (strcmp(type, "SP") == 0)
-   {
-      if (spSensors[addr].kind == "text")
-         json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
-      else if (spSensors[addr].kind == "value")
-         json_object_set_new(ojData, "value", json_real(spSensors[addr].value));
-
-      json_object_set_new(ojData, "last", json_integer(spSensors[addr].last));
-      json_object_set_new(ojData, "valid", json_integer(spSensors[addr].valid));
-
-      if (spSensors[addr].disabled)
-         json_object_set_new(ojData, "disabled", json_boolean(true));
-   }
-   else if (strcmp(type, "VA") == 0)
-   {
-      if (vaSensors[addr].kind == "text")
-         json_object_set_new(ojData, "text", json_string(vaSensors[addr].text.c_str()));
-      else if (vaSensors[addr].kind == "value")
-         json_object_set_new(ojData, "value", json_real(vaSensors[addr].value));
-
-      json_object_set_new(ojData, "last", json_integer(vaSensors[addr].last));
-      json_object_set_new(ojData, "valid", json_integer(vaSensors[addr].valid));
-
-      if (vaSensors[addr].disabled)
-         json_object_set_new(ojData, "disabled", json_boolean(true));
-   }
-
-   char* p = json_dumps(ojData, JSON_REAL_PRECISION(4));
-   json_decref(ojData);
-
-   if (!p)
-   {
-      tell(0, "Error: Dumping json message in 'sensorJsonStringOf' failed");
-      return "";
-   }
-
-   std::string str = p;
-   free(p);
-
-   return str;
+   sensors["SP"][addr].last = time(0);
+   sensors["SP"][addr].value = value;
+   sensors["SP"][addr].text = text;
+   sensors["SP"][addr].kind = text == "" ? "value" : "text";
+   sensors["SP"][addr].valid = sensors["SP"][addr].kind == "text" ? true : !isNan(value);
 }
 
 //***************************************************************************
@@ -955,21 +931,21 @@ int Daemon::initDb()
       // initially create/alter tables and indices
       // ------------------------------------------
 
-      tell(0, "Checking database connection ...");
+      tell(eloDb, "Checking database connection ...");
 
       if (connection->attachConnection() != success)
       {
-         tell(0, "Error: Initial database connect failed");
+         tell(eloAlways, "Error: Initial database connect failed");
          return fail;
       }
 
-      tell(0, "Checking table structure and indices ...");
+      tell(eloDb, "Checking table structure and indices ...");
 
       for (auto t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
       {
          cDbTable* table = new cDbTable(connection, t->first.c_str());
 
-         tell(1, "Checking table '%s'", t->first.c_str());
+         tell(eloDb, "Checking table '%s'", t->first.c_str());
 
          if (!table->exist())
          {
@@ -991,7 +967,7 @@ int Daemon::initDb()
       if (status != success)
          return abrt;
 
-      tell(0, "Checking table structure and indices succeeded");
+      tell(eloDb, "Checking table structure and indices succeeded");
    }
 
    // ------------------------
@@ -1028,6 +1004,9 @@ int Daemon::initDb()
    tableSchemaConf = new cDbTable(connection, "schemaconf");
    if (tableSchemaConf->open() != success) return fail;
 
+   tableHomeMatic = new cDbTable(connection, "homematic");
+   if (tableHomeMatic->open() != success) return fail;
+
    // prepare statements
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
@@ -1035,7 +1014,7 @@ int Daemon::initDb()
    selectActiveValueFacts->build("select ");
    selectActiveValueFacts->bindAllOut();
    selectActiveValueFacts->build(" from %s where ", tableValueFacts->TableName());
-   selectActiveValueFacts->bind("STATE", cDBS::bndIn | cDBS::bndSet);
+   selectActiveValueFacts->build("state = 'A' or record = 'A'");
 
    status += selectActiveValueFacts->prepare();
 
@@ -1236,7 +1215,7 @@ int Daemon::initDb()
    // ------------------
 
    if (status == success)
-      tell(eloAlways, "Connection to database established");
+      tell(eloDb, "Connection to database established");
 
    int gCount {0};
 
@@ -1249,64 +1228,38 @@ int Daemon::initDb()
       }
    }
 
-   // check about old and new dashboards and port if possible
+   // ------------------
 
-   tableDashboards->clear();
-   tableDashboardWidgets->clear();
+   selectHomeMaticByUuid = new cDbStatement(tableHomeMatic);
 
-   char* dashboards {nullptr};
-   getConfigItem("dashboards", dashboards, "");
-   json_t* oDashboards = json_loads(dashboards, 0, nullptr);
-   free(dashboards);
+   selectHomeMaticByUuid->build("select ");
+   selectHomeMaticByUuid->bindAllOut();
+   selectHomeMaticByUuid->build(" from %s where ", tableHomeMatic->TableName());
+   selectHomeMaticByUuid->bind("UUID", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectHomeMaticByUuid->prepare();
+
+   // -------------------
+
+   tableValueFacts->clear();
+
+   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+      initSensorByFact(tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
+
+   selectActiveValueFacts->freeResult();
+
+   // -------------------
+   // create at least one dashboard
 
    int count {0};
-   tableDashboards->countWhere("1=1", count);
-
-   if (!count && oDashboards)
-   {
-      json_t* oDashboard = getObjectFromJson(oDashboards, "dashboard");
-
-      if (oDashboard)
-      {
-         const char* key {nullptr};
-         json_t* jValue {nullptr};
-
-         tableDashboards->setValue("TITLE", "dashboard");
-         tableDashboards->store();
-         int dashboardId = tableDashboards->getLastInsertId();
-         int ord {0};
-         json_object_foreach(oDashboard, key, jValue)
-         {
-            auto tuple = split(key, ':');
-
-            tableValueFacts->clear();
-            tableValueFacts->setValue("TYPE", tuple[0].c_str());
-            tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
-
-            if (tableValueFacts->find())
-            {
-               std::string widgetOptionsDefault = toWidgetOptionString(tuple[0].c_str(), tableValueFacts->getStrValue("UNIT"),
-                                                                       tableValueFacts->getStrValue("NAME"), strtol(tuple[1].c_str(), nullptr, 0));
-
-               tableDashboardWidgets->clear();
-               tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
-               tableDashboardWidgets->setValue("ORDER", ord++);
-               tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
-               tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
-               tableDashboardWidgets->setValue("WIDGETOPTS", widgetOptionsDefault.c_str());
-               tableDashboardWidgets->store();
-               tell(0, "Ported dashboard widget '%s' [%s]", key, widgetOptionsDefault.c_str());
-            }
-         }
-      }
-   }
 
    tableDashboards->countWhere("1=1", count);
 
    if (!count)
    {
-      tell(0, "Starting with empty dashboard");
-      tableDashboards->setValue("TITLE", "dashboard");
+      tell(eloInfo, "Starting with empty dashboard");
+      tableDashboards->setValue("TITLE", "");
+      tableDashboards->setValue("SYMBOL", "mdi:mdi-home");
       tableDashboards->store();
    }
 
@@ -1324,6 +1277,7 @@ int Daemon::exitDb()
    delete tableDashboards;            tableDashboards = nullptr;
    delete tableDashboardWidgets;      tableDashboardWidgets = nullptr;
    delete tableSchemaConf;            tableSchemaConf = nullptr;
+   delete tableHomeMatic;          tableHomeMatic = nullptr;
 
    delete selectAllGroups;            selectAllGroups = nullptr;
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
@@ -1349,33 +1303,6 @@ int Daemon::exitDb()
 }
 
 //***************************************************************************
-// Init one wire sensors
-//***************************************************************************
-
-int Daemon::initW1()
-{
-   int count {0};
-   int added {0};
-   int modified {0};
-
-   for (const auto& it : w1Sensors)
-   {
-      int res = addValueFact((int)toW1Id(it.first.c_str()), "W1", 1, it.first.c_str(), "°C");
-
-      if (res == 1)
-         added++;
-      else if (res == 2)
-         modified++;
-
-      count++;
-   }
-
-   tell(eloAlways, "Found %d one wire sensors, added %d, modified %d", count, added, modified);
-
-   return success;
-}
-
-//***************************************************************************
 // Read Configuration
 //***************************************************************************
 
@@ -1383,12 +1310,21 @@ int Daemon::readConfiguration(bool initial)
 {
    // init configuration
 
-   if (argLoglevel != na)
-      loglevel = argLoglevel;
+   if (argEloquence != eloAlways)
+   {
+      eloquence = argEloquence;
+      argEloquence = eloAlways;
+   }
    else
-      getConfigItem("loglevel", loglevel, 1);
+   {
+      char* elo {nullptr};
+      getConfigItem("eloquence", elo, "");
+      eloquence = Elo::stringToEloquence(elo);
+      tell(eloDetail, "Info: Eloquence configured to '%s' => 0x%04x", elo, eloquence);
+      free(elo);
+   }
 
-   tell(0, "Info: LogLevel set to %d", loglevel);
+   tell(eloAlways, "Info: Eloquence set to 0x%04x", eloquence);
 
    getConfigItem("interval", interval, interval);
    getConfigItem("arduinoInterval", arduinoInterval, arduinoInterval);
@@ -1427,8 +1363,25 @@ int Daemon::readConfiguration(bool initial)
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
 
-   getConfigItem("aggregateInterval", aggregateInterval, aggregateInterval);
-   getConfigItem("aggregateHistory", aggregateHistory, aggregateHistory);
+   getConfigItem("aggregateInterval", aggregateInterval);
+   getConfigItem("aggregateHistory", aggregateHistory);
+
+   // DECONZ
+
+   char* deconzUrl {nullptr};
+   getConfigItem("deconzHttpUrl", deconzUrl, "");
+
+   if (!isEmpty(deconzUrl))
+   {
+      deconz.setHttpUrl(deconzUrl);
+      free(deconzUrl);
+      char* deconzKey {nullptr};
+      getConfigItem("deconzApiKey", deconzKey, "");
+
+      if (!isEmpty(deconzKey))
+         deconz.setApiKey(deconzKey);
+      free(deconzKey);
+   }
 
    // MQTT
 
@@ -1437,6 +1390,13 @@ int Daemon::readConfiguration(bool initial)
 
    if (url != mqttUrl)
       mqttDisconnect();
+
+   char* sensorTopics {nullptr};
+   getConfigItem("mqttSensorTopics", sensorTopics, "+/w1/#");
+   mqttSensorTopics = split(sensorTopics, ',');
+   free(sensorTopics);
+
+   getConfigItem("homeMaticInterface", homeMaticInterface, false);
 
    // Node-Red
 
@@ -1481,67 +1441,6 @@ int Daemon::readConfiguration(bool initial)
 }
 
 //***************************************************************************
-// Store
-//***************************************************************************
-
-int Daemon::store(time_t now, const char* name, const char* title, const char* unit,
-                  const char* type, int address, double value,
-                  uint factor, uint groupid, const char* text)
-{
-   double theValue = value / (double)factor;
-
-   tableSamples->clear();
-
-   tableSamples->setValue("TIME", now);
-   tableSamples->setValue("ADDRESS", address);
-   tableSamples->setValue("TYPE", type);
-   tableSamples->setValue("AGGREGATE", "S");
-
-   tableSamples->setValue("VALUE", theValue);
-   tableSamples->setValue("TEXT", text);
-   tableSamples->setValue("SAMPLES", 1);
-
-   tableSamples->store();
-
-   // peaks
-
-   tablePeaks->clear();
-
-   tablePeaks->setValue("ADDRESS", address);
-   tablePeaks->setValue("TYPE", type);
-
-   if (!tablePeaks->find())
-   {
-      tablePeaks->setValue("MIN", theValue);
-      tablePeaks->setValue("MAX", theValue);
-      tablePeaks->store();
-   }
-   else
-   {
-      if (theValue > tablePeaks->getFloatValue("MAX"))
-         tablePeaks->setValue("MAX", theValue);
-
-      if (theValue < tablePeaks->getFloatValue("MIN"))
-         tablePeaks->setValue("MIN", theValue);
-
-      tablePeaks->store();
-   }
-
-   // Home Assistant
-
-   IoType iot = strcmp(type, "DO") == 0 ? iotLight : iotSensor;
-
-   if (mqttInterfaceStyle == misSingleTopic)
-      jsonAddValue(oJson, name, title, unit, theValue, groupid, text, initialRun /*forceConfig*/);
-   else if (mqttInterfaceStyle == misGroupedTopic)
-      jsonAddValue(groups[groupid].oJson, name, title, unit, theValue, 0, text, initialRun /*forceConfig*/);
-   else if (mqttInterfaceStyle == misMultiTopic)
-      mqttHaPublishSensor(iot, name, title, unit, theValue, text);
-
-   return success;
-}
-
-//***************************************************************************
 // standby
 //***************************************************************************
 
@@ -1581,11 +1480,12 @@ int Daemon::meanwhile()
    if (!connection || !connection->isConnected())
       return fail;
 
-   tell(6, "loop ...");
+   tell(eloDebug2, "loop ...");
 
    atMeanwhile();
 
    dispatchClientRequest();
+   dispatchDeconz();
    performMqttRequests();
    performJobs();
 
@@ -1658,7 +1558,6 @@ int Daemon::loop()
 
       if (stateChanged)
       {
-         mailBodyHtml = "";
          lastState = currentState.state;
          nextRefreshAt = time(0);              // force on state change
          tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
@@ -1695,16 +1594,15 @@ int Daemon::loop()
 
       {
          sem->p();
-         update();
+         updateSensors();   // update some sensors for wich we get no trigger
          sem->v();
       }
 
-      afterUpdate();
-
-      // after update until update fetches data (at least for 'VA') -> #TODO
-
+      performData(0L);
       updateScriptSensors();
       process();
+      storeSamples();
+      afterUpdate();
 
       initialRun = false;
    }
@@ -1715,232 +1613,154 @@ int Daemon::loop()
 }
 
 //***************************************************************************
-// Update
+// Store Samples
 //***************************************************************************
 
-int Daemon::update(bool webOnly, long client)
+int Daemon::storeSamples()
 {
    int count {0};
-   int status {success};
-   char num[100] {'\0'};
-
-   if (!webOnly)
-   {
-      static size_t w1Count {0};
-
-      if (w1Count < w1Sensors.size())
-      {
-         initW1();
-         w1Count = w1Sensors.size();
-      }
-   }
 
    lastSampleTime = time(0);
-   tell(eloDetail, "Update ...");
-
-   tableValueFacts->clear();
-   tableValueFacts->setValue("STATE", "A");
-
-   if (!webOnly)
-      connection->startTransaction();
-
-   for (auto sj : jsonSensorList)
-      json_decref(sj.second);
-
-   jsonSensorList.clear();
+   tell(eloInfo, "Store samples ..");
+   connection->startTransaction();
 
    if (mqttInterfaceStyle == misSingleTopic)
-       oJson = json_object();
+       oHaJson = json_object();
 
-   for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
+   for (const auto& typeSensorsIt : sensors)
    {
-      uint addr = tableValueFacts->getIntValue("ADDRESS");
-      const char* type = tableValueFacts->getStrValue("TYPE");
-      double factor = tableValueFacts->getIntValue("FACTOR");
-      const char* title = tableValueFacts->getStrValue("TITLE");
-      const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
-      const char* unit = tableValueFacts->getStrValue("UNIT");
-      const char* name = tableValueFacts->getStrValue("NAME");
-      uint groupid = tableValueFacts->getIntValue("GROUPID");
-
-      if (!isEmpty(usrtitle))
-         title = usrtitle;
-
-      if (mqttInterfaceStyle == misGroupedTopic)
+      for (const auto& sensorIt : typeSensorsIt.second)
       {
-         if (!groups[groupid].oJson)
-            groups[groupid].oJson = json_object();
-      }
+         const SensorData* sensor = &sensorIt.second;
 
-      json_t* ojData = json_object();
-      char* tuple {nullptr};
-      asprintf(&tuple, "%s:0x%02x", type, addr);
-      jsonSensorList[tuple] = ojData;
-      free(tuple);
-
-      sensor2Json(ojData, tableValueFacts);
-
-      if (tableValueFacts->hasValue("TYPE", "W1"))
-      {
-         bool w1Exist = existW1(name);
-         time_t w1Last {0};
-         double w1Value {0};
-
-         if (w1Exist)
-            w1Value = valueOfW1(name, w1Last);
-
-         // exist and updated at least once in last 5 minutes?
-
-         if (w1Exist && w1Last > time(0)-300)
-         {
-            json_object_set_new(ojData, "value", json_real(w1Value));
-
-            if (!webOnly)
-               store(lastSampleTime, name, title, unit, type, addr, w1Value, factor, groupid);
-         }
-         else
-         {
-            if (!w1Exist)
-               tell(eloAlways, "Warning: W1 sensor '%s' missing", name);
-            else
-               tell(eloAlways, "Warning: Data of W1 sensor '%s' seems to be to old (%s)", name, l2pTime(w1Last).c_str());
-
-            json_object_set_new(ojData, "text", json_string("missing sensor"));
-         }
-      }
-      else if (tableValueFacts->hasValue("TYPE", "SC"))
-      {
-         if (scSensors[addr].kind == "status")
-            json_object_set_new(ojData, "value", json_integer(scSensors[addr].state));
-         else if (scSensors[addr].kind == "text")
-            json_object_set_new(ojData, "text", json_string(scSensors[addr].text.c_str()));
-         else if (scSensors[addr].kind == "value")
-            json_object_set_new(ojData, "value", json_real(scSensors[addr].value));
-
-         if (scSensors[addr].disabled)
-            json_object_set_new(ojData, "disabled", json_boolean(true));
-
-         if (!webOnly && !scSensors[addr].disabled)
-            store(lastSampleTime, name, title, unit, type, addr, scSensors[addr].kind == "value" ? scSensors[addr].value : scSensors[addr].state, factor, groupid);
-      }
-      else if (tableValueFacts->hasValue("TYPE", "SP"))            // Special Values
-      {
-         if (spSensors[addr].kind == "text")
-         {
-            json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
-
-            if (!webOnly && !spSensors[addr].disabled)
-               store(lastSampleTime, name, title, unit, type, addr, spSensors[addr].value, factor, groupid, spSensors[addr].text.c_str());
-         }
-         else if (spSensors[addr].kind == "value")
-         {
-            json_object_set_new(ojData, "value", json_integer(spSensors[addr].value));
-
-            if (!webOnly && !spSensors[addr].disabled)
-               store(lastSampleTime, name, title, unit, type, addr, spSensors[addr].value, factor, groupid);
-         }
-
-         if (spSensors[addr].disabled)
-            json_object_set_new(ojData, "disabled", json_boolean(true));
-      }
-      else if (tableValueFacts->hasValue("TYPE", "DO"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getDigitalOut(&v) != success)
-         {
-            tell(eloAlways, "Getting digital out 0x%04x failed, error %d", addr, status);
+         if (!sensor->record)
             continue;
-         }
 
-         json_object_set_new(ojData, "value", json_integer(v.state));
+         // tell(eloAlways, ":::: kind of '%s/%d' is '%s')  [%s/%d]",
+         //      sensor->type.c_str(), sensor->address, sensor->kind.c_str(),
+         //      typeSensorsIt.first.c_str(), sensorIt.first);
 
-         if (!webOnly)
+         store(lastSampleTime, sensor);
+         count++;
+
+         if (mqttInterfaceStyle == misGroupedTopic)
          {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
+            if (!groups[sensor->group].oHaJson)
+               groups[sensor->group].oHaJson = json_object();
          }
       }
-      else if (tableValueFacts->hasValue("TYPE", "DI"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getDigitalIn(&v) != success)
-         {
-            tell(eloAlways, "Getting digital in 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         json_object_set_new(ojData, "value", json_integer(v.state));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
-         }
-      }
-      else if (tableValueFacts->hasValue("TYPE", "AO"))
-      {
-         Fs::IoValue v(addr);
-
-         if (request->getAnalogOut(&v) != success)
-         {
-            tell(eloAlways, "Getting analog out 0x%04x failed, error %d", addr, status);
-            continue;
-         }
-
-         json_object_set_new(ojData, "value", json_integer(v.state));
-
-         if (!webOnly)
-         {
-            store(lastSampleTime, name, title, unit, type, v.address, v.state, factor, groupid);
-            sprintf(num, "%d", v.state);
-            addParameter2Mail(title, num);
-         }
-      }
-      else
-         onUpdate(webOnly, tableValueFacts, lastSampleTime, ojData);
-
-      count++;
    }
 
-   selectActiveValueFacts->freeResult();
-
-   if (!webOnly)
-      connection->commit();
-
-   // send result to all connected WEBIF clients
-
-   pushDataUpdate(webOnly ? "init" : "all", client);
-
-   if (!webOnly)
-      tell(eloAlways, "Updated %d samples", count);
+   connection->commit();
+   tell(eloAlways, "Stored %d samples", count);
 
    // MQTT
 
    if (mqttInterfaceStyle == misSingleTopic)
    {
-      mqttHaWrite(oJson, 0);
-      json_decref(oJson);
-      oJson = nullptr;
+      mqttHaWrite(oHaJson, 0);
+      json_decref(oHaJson);
+      oHaJson = nullptr;
    }
 
    else if (mqttInterfaceStyle == misGroupedTopic)
    {
-      tell(1, "Writing MQTT for %zu groups", groups.size());
+      tell(eloDebug2, "Debug: Writing MQTT for %zu groups", groups.size());
 
       for (auto it : groups)
       {
-         if (it.second.oJson)
+         if (it.second.oHaJson)
          {
-            mqttHaWrite(it.second.oJson, it.first);
-            json_decref(groups[it.first].oJson);
-            groups[it.first].oJson = nullptr;
+            mqttHaWrite(it.second.oHaJson, it.first);
+            json_decref(groups[it.first].oHaJson);
+            groups[it.first].oHaJson = nullptr;
          }
       }
    }
+
+   return success;
+}
+
+//***************************************************************************
+// Store
+//***************************************************************************
+
+int Daemon::store(time_t now, const SensorData* sensor)
+{
+   if (!sensor->type.length())
+      return done;
+
+   if (sensor->disabled)
+      return done;
+
+   if (sensor->type == "W1" || sensor->type == "AI")
+   {
+      if (sensor->last < time(0)-300)
+      {
+         tell(eloAlways, "Warning: Data of '%s' sensor '%s' seems to be to old (%s)",
+              sensor->type.c_str(), sensor->name.c_str(), l2pTime(sensor->last).c_str());
+         return done;
+      }
+   }
+
+   if (isNan(sensor->value))
+   {
+      tell(eloAlways, "Warning: Data of '%s' sensor '%s' is NaN, skipping",
+           sensor->type.c_str(), sensor->name.c_str());
+      return done;
+   }
+
+   tableSamples->clear();
+
+   tableSamples->setValue("TIME", now);
+   tableSamples->setValue("ADDRESS", (long)sensor->address);
+   tableSamples->setValue("TYPE", sensor->type.c_str());
+   tableSamples->setValue("AGGREGATE", "S");
+   tableSamples->setValue("SAMPLES", 1);
+
+   if (sensor->kind == "status")
+      tableSamples->setValue("VALUE", (double)sensor->state);
+   else if (sensor->kind == "value")
+      tableSamples->setValue("VALUE", sensor->value);
+
+   // send text if set, independent of 'kind'
+
+   if (sensor->text != "")
+      tableSamples->setValue("TEXT", sensor->text.c_str());
+
+   tableSamples->store();
+
+   // peaks
+
+   tablePeaks->clear();
+
+   tablePeaks->setValue("ADDRESS", (long)sensor->address);
+   tablePeaks->setValue("TYPE", sensor->type.c_str());
+
+   if (!tablePeaks->find())
+   {
+      tablePeaks->setValue("MIN", sensor->value);
+      tablePeaks->setValue("MAX", sensor->value);
+      tablePeaks->store();
+   }
+   else
+   {
+      if (sensor->value > tablePeaks->getFloatValue("MAX"))
+         tablePeaks->setValue("MAX", sensor->value);
+
+      if (sensor->value < tablePeaks->getFloatValue("MIN"))
+         tablePeaks->setValue("MIN", sensor->value);
+
+      tablePeaks->store();
+   }
+
+   // HA
+
+   if (mqttInterfaceStyle == misSingleTopic || mqttInterfaceStyle == misGroupedTopic)
+      jsonAddValue(mqttInterfaceStyle == misSingleTopic ? oHaJson : groups[sensor->group].oHaJson,
+                   sensors[sensor->type][sensor->address], initialRun);
+   else if (mqttInterfaceStyle == misMultiTopic)
+      mqttHaPublishSensor(sensors[sensor->type][sensor->address]);
 
    return success;
 }
@@ -1952,9 +1772,8 @@ int Daemon::update(bool webOnly, long client)
 void Daemon::updateScriptSensors()
 {
    tableValueFacts->clear();
-   tableValueFacts->setValue("STATE", "A");
 
-   tell(1, "Update script sensors");
+   tell(eloInfo, "Update script sensors");
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -1980,13 +1799,13 @@ void Daemon::updateScriptSensors()
 
 void Daemon::afterUpdate()
 {
-   char* path = 0;
+   char* path {nullptr};
 
    asprintf(&path, "%s/after-update.sh", confDir);
 
    if (fileExists(path))
    {
-      tell(0, "Calling '%s'", path);
+      tell(eloInfo, "Calling '%s'", path);
       system(path);
    }
 
@@ -2004,7 +1823,6 @@ int Daemon::updateSchemaConfTable()
    int added = 0;
 
    tableValueFacts->clear();
-   tableValueFacts->setValue("STATE", "A");
 
    for (int f = selectActiveValueFacts->find(); f; f = selectActiveValueFacts->fetch())
    {
@@ -2020,9 +1838,6 @@ int Daemon::updateSchemaConfTable()
       {
          tableSchemaConf->setValue("KIND", "value");
          tableSchemaConf->setValue("STATE", "A");
-         // tableSchemaConf->setValue("COLOR", "black");
-         // tableSchemaConf->setValue("XPOS", 12);
-         // tableSchemaConf->setValue("YPOS", y);
 
          tableSchemaConf->store();
          added++;
@@ -2030,19 +1845,9 @@ int Daemon::updateSchemaConfTable()
    }
 
    selectActiveValueFacts->freeResult();
-   tell(eloAlways, "Added %d html schema configurations", added);
+   tell(eloInfo, "Added %d html schema configurations", added);
 
    return success;
-}
-
-//***************************************************************************
-// Add Parameter To Mail
-//***************************************************************************
-
-void Daemon::addParameter2Mail(const char* name, const char* value)
-{
-   if (stateChanged)
-      mailBodyHtml += "        <tr><td>" + std::string(name) + "</td><td>" + std::string(value) + "</td></tr>\n";
 }
 
 //***************************************************************************
@@ -2074,7 +1879,7 @@ int Daemon::scheduleAggregate()
 
    if (!aggregateHistory)
    {
-      tell(0, "NO aggregateHistory configured!");
+      tell(eloInfo, "NO aggregateHistory configured!");
       return done;
    }
 
@@ -2139,7 +1944,7 @@ int Daemon::aggregate()
 
       asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%ld)", history);
 
-      if (tableSamples->deleteWhere(stmt) == success)
+      if (tableSamples->deleteWhere("%s", stmt) == success)
       {
          tell(eloAlways, "Aggregation with interval of %d minutes done; "
               "Created %d aggregation rows", aggregateInterval, aggCount);
@@ -2164,10 +1969,10 @@ int Daemon::sendMail(const char* receiver, const char* subject, const char* body
    result = system(command);
    free(command);
 
-   if (loglevel >= eloDebug)
-      tell(eloAlways, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
+   if (eloquence & eloDebug)
+      tell(eloInfo, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
    else
-      tell(eloAlways, "Send mail '%s' to '%s'", subject, receiver);
+      tell(eloInfo, "Send mail '%s' to '%s'", subject, receiver);
 
    return result;
 }
@@ -2182,54 +1987,59 @@ int Daemon::loadHtmlHeader()
 
    // load only once at first call
 
-   if (!htmlHeader.isEmpty())
+   if (htmlHeader.length())
       return done;
 
    asprintf(&file, "%s/mail-head.html", confDir);
 
    if (fileExists(file))
-      if (loadFromFile(file, &htmlHeader) == success)
-         htmlHeader.append("\0");
+   {
+      MemoryStruct data;
+      if (loadFromFile(file, &data) == success)
+      {
+         data.append("\0");
+         htmlHeader = data.memory;
+      }
+   }
 
    free(file);
 
-   if (!htmlHeader.isEmpty())
+   if (htmlHeader.length())
       return success;
 
-   htmlHeader.clear();
-
-   htmlHeader.append("  <head>\n"
-                     "    <style type=\"text/css\">\n"
-                     "      table {"
-                     "        border: 1px solid #d2d2d2;\n"
-                     "        border-collapse: collapse;\n"
-                     "      }\n"
-                     "      table tr.head {\n"
-                     "        background-color: #004d8f;\n"
-                     "        color: #fff;\n"
-                     "        font-weight: bold;\n"
-                     "        font-family: Helvetica, Arial, sans-serif;\n"
-                     "        font-size: 12px;\n"
-                     "      }\n"
-                     "      table tr th,\n"
-                     "      table tr td {\n"
-                     "        padding: 4px;\n"
-                     "        text-align: left;\n"
-                     "      }\n"
-                     "      table tr:nth-child(1n) td {\n"
-                     "        background-color: #fff;\n"
-                     "      }\n"
-                     "      table tr:nth-child(2n+2) td {\n"
-                     "        background-color: #eee;\n"
-                     "      }\n"
-                     "      td {\n"
-                     "        color: #333;\n"
-                     "        font-family: Helvetica, Arial, sans-serif;\n"
-                     "        font-size: 12px;\n"
-                     "        border: 1px solid #D2D2D2;\n"
-                     "      }\n"
-                     "      </style>\n"
-                     "  </head>\n\0");
+   htmlHeader =
+      "  <head>\n"
+      "    <style type=\"text/css\">\n"
+      "      table {"
+      "        border: 1px solid #d2d2d2;\n"
+      "        border-collapse: collapse;\n"
+      "      }\n"
+      "      table tr.head {\n"
+      "        background-color: #004d8f;\n"
+      "        color: #fff;\n"
+      "        font-weight: bold;\n"
+      "        font-family: Helvetica, Arial, sans-serif;\n"
+      "        font-size: 12px;\n"
+      "      }\n"
+      "      table tr th,\n"
+      "      table tr td {\n"
+      "        padding: 4px;\n"
+      "        text-align: left;\n"
+      "      }\n"
+      "      table tr:nth-child(1n) td {\n"
+      "        background-color: #fff;\n"
+      "      }\n"
+      "      table tr:nth-child(2n+2) td {\n"
+      "        background-color: #eee;\n"
+      "      }\n"
+      "      td {\n"
+      "        color: #333;\n"
+      "        font-family: Helvetica, Arial, sans-serif;\n"
+      "        font-size: 12px;\n"
+      "        border: 1px solid #D2D2D2;\n"
+      "      }\n"
+      "      </style>\n"
+      "  </head>\n";
 
    return success;
 }
@@ -2245,24 +2055,27 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    const char* title = !isEmpty(aTitle) ? aTitle : name;
 
    tableValueFacts->clear();
-   tableValueFacts->setValue("ADDRESS", addr);
    tableValueFacts->setValue("TYPE", type);
+   tableValueFacts->setValue("ADDRESS", addr);
 
    if (!tableValueFacts->find())
    {
-      tell(0, "Add ValueFact '%ld' '%s'", tableValueFacts->getIntValue("ADDRESS"), tableValueFacts->getStrValue("TYPE"));
+      tell(eloAlways, "Add ValueFact '%ul' '%s'", addr, type);
 
       tableValueFacts->setValue("NAME", name);
       tableValueFacts->setValue("TITLE", title);
       tableValueFacts->setValue("FACTOR", factor);
       tableValueFacts->setValue("RIGHTS", rights);
       tableValueFacts->setValue("STATE", "D");
-      tableValueFacts->setValue("UNIT", unit);
+
+      if (!isEmpty(unit))
+         tableValueFacts->setValue("UNIT", unit);
 
       if (!isEmpty(choices))
          tableValueFacts->setValue("CHOICES", choices);
 
       tableValueFacts->store();
+      initSensorByFact(type, addr);
       return 1;                               // 1 for 'added'
    }
 
@@ -2271,12 +2084,13 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    tableValueFacts->setValue("NAME", name);
    tableValueFacts->setValue("TITLE", title);
    tableValueFacts->setValue("FACTOR", factor);
+   tableValueFacts->setValue("RIGHTS", rights);
 
    if (!isEmpty(choices))
       tableValueFacts->setValue("CHOICES", choices);
 
-   if (tableValueFacts->getValue("RIGHTS")->isNull())
-      tableValueFacts->setValue("RIGHTS", rights);
+   if (tableValueFacts->getValue("UNIT")->isNull())
+      tableValueFacts->setValue("UNIT", unit);
 
    if (tableValueFacts->getChanges())
    {
@@ -2303,11 +2117,11 @@ int Daemon::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
       if (isEmpty(state))
          return fail;
 
-      for (auto itOutput = digitalOutputStates.begin(); itOutput != digitalOutputStates.end(); ++itOutput)
+      for (auto itOutput = sensors["DO"].begin(); itOutput != sensors["DO"].end(); ++itOutput)
       {
          bool bState = strcmp(state, "ON") == 0;
 
-         if (strcmp(it->second.c_str(), itOutput->second.name) == 0)
+         if (it->second == itOutput->second.name)
          {
             gpioWrite(itOutput->first, bState);
             break;
@@ -2319,27 +2133,316 @@ int Daemon::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
 }
 
 //***************************************************************************
+// Dispatch Node-Red Command's Request
+//   Format:  '[{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off" }, ...]'
+//***************************************************************************
+
+int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
+{
+   if (json_is_array(jObject))
+   {
+      size_t index {0};
+      json_t* jCommand {nullptr};
+
+      json_array_foreach(jObject, index, jCommand)
+         dispatchNodeRedCommand(jCommand);
+   }
+   else
+   {
+      if (strstr(topic, "/nodered/weather"))
+         dispatchNodeRedWeather(jObject);
+      else
+      dispatchNodeRedCommand(jObject);
+   }
+
+   return success;
+}
+
+//***************************************************************************
 // Dispatch Node-Red Command Request
-//   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off" }'
+//   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off", "brightness" : 255 }'
 //***************************************************************************
 
 int Daemon::dispatchNodeRedCommand(json_t* jObject)
 {
    const char* command = getStringFromJson(jObject, "command", "set");
-   const char* key = getStringFromJson(jObject, "id", "");
+   const char* key = getStringFromJson(jObject, "id");
 
-   if (isEmpty(key))
+   if (!key)
    {
-      tell(0, "Error: Node-Red: Got unexpected id '%s' from node-red, commad was '%s'", key, command);
+      tell(eloAlways, "Error: Node-Red: Got unexpected id '%s' from node-red, commad was '%s'", key, command);
       return fail;
    }
 
+   int brightness = getIntFromJson(jObject, "brightness", na);
+   int transitiontime = getIntFromJson(jObject, "transitiontime", na);
    const char* sState = getStringFromJson(jObject, "state", "");
    bool state = strcasecmp(sState, "on") == 0;
 
-   tell(0, "Node-Red: switch %s to %d", key, state);
+   auto tuple = split(key, ':');
+   uint address = strtol(tuple[1].c_str(), nullptr, 0);
+   tell(eloNodeRed, "Node-Red: switch %s to %d (%d/%d)", key, state, brightness, transitiontime);
+   toggleIo(address, tuple[0].c_str(), state, brightness, transitiontime);
 
    return success;
+}
+
+//***************************************************************************
+// Dispatch Weather (openweathermap)
+//   Format: {"id":804,"weather":"Clouds","detail":"Bedeckt","icon":"04d","tempk":274.11,
+//            "tempc":0.9,"temp_maxc":2.8,"temp_minc":-1.3,"humidity":79,"pressure":1025,
+//            "maxtemp":276.04,"mintemp":271.76,"windspeed":1.79,"winddirection":70,
+//            "location":"Assenheim","sunrise":1640157765,"sunset":1640186645,"clouds":100,
+//            "description":"Das Wetter in Assenheim bei Koordinaten: 50.3, 8.79 ist Clouds (Bedeckt)."}
+//***************************************************************************
+
+int Daemon::dispatchNodeRedWeather(json_t* jObject)
+{
+   json_t* jData = json_object();
+
+   json_object_set_new(jData, "type", json_string("WEA"));
+   json_object_set_new(jData, "address", json_integer(1));
+
+   json_object_set_new(jData, "detail", json_string(getStringFromJson(jObject, "detail")));
+   json_object_set_new(jData, "temp", json_real(getDoubleFromJson(jObject, "tempc")));
+   json_object_set_new(jData, "tempmax", json_real(getDoubleFromJson(jObject, "temp_maxc")));
+   json_object_set_new(jData, "tempmin", json_real(getDoubleFromJson(jObject, "temp_minc")));
+   json_object_set_new(jData, "humidity", json_real(getDoubleFromJson(jObject, "humidity")));
+   json_object_set_new(jData, "pressure", json_real(getDoubleFromJson(jObject, "pressure")));
+   json_object_set_new(jData, "windspeed", json_real(getDoubleFromJson(jObject, "windspeed")));
+
+   pushOutMessage(jData, "update");
+
+   return done;
+}
+
+//***************************************************************************
+// Dispatch Deconz
+//   Format: {"type": "DZL", "address": 29, "state": false, "brightness": 80}
+//***************************************************************************
+
+int Daemon::dispatchDeconz()
+{
+   cMyMutexLock lock(&Deconz::messagesInMutex);
+
+   while (!Deconz::messagesIn.empty())
+   {
+      tell(eloDeconz, "<- (DECONZ) '%s'", Deconz::messagesIn.front().c_str());
+      json_error_t error;
+      json_t* oData = json_loads(Deconz::messagesIn.front().c_str(), 0, &error);
+
+      const char* type = getStringFromJson(oData, "type");
+      uint address = getIntFromJson(oData, "address");
+      SensorData* sensor = getSensor(type, address);
+
+      if (sensor)
+      {
+         bool state = getBoolFromJson(oData, "state");
+         double value = getDoubleFromJson(oData, "value");
+
+         if (getObjectFromJson(oData, "state"))
+            sensor->state = state;
+         else if (getObjectFromJson(oData, "value"))
+            sensor->value = value;
+
+         sensor->last = time(0);
+
+         int battery = getIntFromJson(oData, "battery", na);
+         if (battery != na)
+            sensor->battery = battery;
+
+         // send update to WS
+         {
+            json_t* ojData = json_object();
+            sensor2Json(ojData, type, address);
+
+            if (getObjectFromJson(oData, "state"))
+               json_object_set_new(ojData, "value", json_integer(sensor->state));
+            else if (getObjectFromJson(oData, "value"))
+               json_object_set_new(ojData, "value", json_real(sensor->value));
+
+            json_object_set_new(ojData, "last", json_integer(sensor->last));
+
+            if (sensor->battery != na)
+               json_object_set_new(ojData, "battery", json_integer(sensor->battery));
+
+            char* tuple {nullptr};
+            asprintf(&tuple, "%s:0x%02x", type, address);
+            jsonSensorList[tuple] = ojData;
+            free(tuple);
+
+            pushDataUpdate("update", 0L);
+         }
+
+         mqttHaPublishSensor(sensors[type][address], false);
+         mqttNodeRedPublishSensor(sensors[type][address]);
+      }
+
+      json_decref(oData);      // free the json object
+      Deconz::messagesIn.pop();
+   }
+
+   return success;
+}
+
+//***************************************************************************
+// Homematic Interface (via node-red)
+//***************************************************************************
+
+int Daemon::dispatchHomematicRpcResult(const char* message)
+{
+   json_error_t error;
+   json_t* jData = json_loads(message, 0, &error);
+
+   if (!jData)
+   {
+      tell(eloAlways, "Error: (home-matic) Can't parse json in '%s'", message);
+      return fail;
+   }
+
+   if (!json_is_array(jData))
+      tell(eloHomeMatic, "<- (home-matic) '%s'", message);
+
+   size_t index {0};
+   json_t* jItem {nullptr};
+
+   json_array_foreach(jData, index, jItem)
+   {
+      std::string hmType = getStringFromJson(jItem, "TYPE", "");
+      const char* uuid = getStringFromJson(jItem, "ADDRESS");
+
+      if (!uuid || hmType != "BLIND")
+         continue;
+
+      if (eloquence & eloHomeMatic)
+      {
+         char* p = json_dumps(jItem, JSON_REAL_PRECISION(4));
+         tell(eloHomeMatic, "<- (home-matic) '%s'", p);
+         free(p);
+      }
+
+      tell(eloHomeMatic, "%zu) '%s', type '%s', direction %d", index, uuid, hmType.c_str(),
+           getIntFromJson(jItem, "DIRECTION", na));
+
+      // create value fact for home-matic sensors/actors
+
+      tableHomeMatic->clear();
+      tableHomeMatic->setValue("UUID", uuid);
+
+      if (!selectHomeMaticByUuid->find())
+      {
+         tableHomeMatic->setValue("TYPE", "HMB");
+         tableHomeMatic->insert();
+
+         tell(eloDebugHomeMatic, "HomeMatic: Added new '%s', uuid '%s'", hmType.c_str(), uuid);
+
+         tableHomeMatic->clear();
+         tableHomeMatic->setValue("UUID", uuid);
+         selectHomeMaticByUuid->find();
+      }
+
+      int address = tableHomeMatic->getIntValue("ADDRESS");
+
+      tableHomeMatic->setValue("KIND", hmType.c_str());
+      tableHomeMatic->setValue("NAME", uuid);
+      tableHomeMatic->store();
+      selectHomeMaticByUuid->freeResult();
+
+      homeMaticUuids[address] = uuid;
+
+      // HMB -> Home-Matic-Blind
+
+      addValueFact(address, "HMB", 1, uuid, "%", "", urControl);
+      sensors["HMB"][address].lastDir = getIntFromJson(jItem, "DIRECTION") == 2 ? dirClose : dirOpen;
+      sensors["HMB"][address].value = 100;   // #TODO: request the actual value/postiton !
+   }
+
+   json_decref(jData);
+   return done;
+}
+
+int Daemon::dispatchHomematicEvents(const char* message)
+{
+   // { "val" : 0.25,
+   //   "hm" : { "device"      : "OEQ1853240",
+   //            "channel"     : "OEQ1853240:1",
+   //            "channelType" : "BLIND",
+   //            "datapoint"   : "LEVEL",
+   //            "valueStable" : 0.25 }
+
+   tell(eloHomeMatic, "<- (home-matic) '%s'", message);
+
+   json_error_t error;
+   json_t* jData = json_loads(message, 0, &error);
+
+   if (!jData)
+   {
+      tell(eloAlways, "Error: (home-matic) Can't parse json in '%s'", message);
+      return fail;
+   }
+
+   const char* uuid = getStringByPath(jData, "/hm/channel");
+   std::string channelType = getStringByPath(jData, "/hm/channelType");
+   std::string datapoint = getStringByPath(jData, "/hm/datapoint");
+
+   if (!uuid || channelType != "BLIND")
+      return done;
+
+   tableHomeMatic->clear();
+   tableHomeMatic->setValue("UUID", uuid);
+
+   if (!selectHomeMaticByUuid->find())
+      return done;
+
+   const char* type = tableHomeMatic->getStrValue("TYPE");
+   long address = tableHomeMatic->getIntValue("ADDRESS");
+   double value {sensors[type][address].value};
+
+   tell(eloDebug, "Debug: Got (home-matic) '%s' last value is %d", datapoint.c_str(), (int)sensors[type][address].value);
+   selectHomeMaticByUuid->freeResult();
+
+   sensors[type][address].last = time(0);
+
+   // for blinds:
+   //  offen -> state true (on)
+   //           100% (value 100)
+
+   if (datapoint == "LEVEL")
+   {
+      value = getDoubleFromJson(jData, "val") * 100;     // to [%]
+      sensors[type][address].state = value == 100;        // on wenn ganz offen (offen entspricht=> 100%)
+   sensors[type][address].value = value;
+   }
+   else if (datapoint == "WORKING")
+      sensors[type][address].working = getBoolFromJson(jData, "val");
+   else if (datapoint == "DIRECTION")
+   {
+      if (getIntFromJson(jData, "val") != 0)
+         sensors[type][address].lastDir = getIntFromJson(jData, "val") == 2 ? dirClose : dirOpen;
+   }
+   else if (datapoint == "LEVEL_NOTWORKING")
+   {
+      value = getDoubleFromJson(jData, "val") * 100;    // to [%]
+      sensors[type][address].working = false;
+   }
+
+   {
+      json_t* ojData = json_object();
+      sensor2Json(ojData, type, address);
+      json_object_set_new(ojData, "value", json_real(value));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02lx", type, address);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
+
+   mqttHaPublishSensor(sensors[type][address], false /*forceConfig*/);
+   mqttNodeRedPublishSensor(sensors[type][address]);
+
+   return done;
 }
 
 //***************************************************************************
@@ -2372,7 +2475,7 @@ int Daemon::getConfigItem(const char* name, char*& value, const char* def)
 
 int Daemon::setConfigItem(const char* name, const char* value)
 {
-   tell(2, "Debug: Storing '%s' with value '%s'", name, value);
+   tell(eloDebug, "Debug: Storing '%s' with value '%s'", name, value);
    tableConfig->clear();
    tableConfig->setValue("OWNER", myName());
    tableConfig->setValue("NAME", name);
@@ -2434,7 +2537,7 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
 
    free(txt);
 
-   // tell(0, "getConfigItem '%s' now %.2f\n", name, value);
+   tell(eloDebug, "Debug: getConfigItem '%s' now %.2f", name, value);
 
    return success;
 }
@@ -2497,11 +2600,11 @@ int Daemon::getConfigTimeRangeItem(const char* name, std::vector<Range>& ranges)
          uint to = toHH*100 + toMM;
 
          ranges.push_back({from, to});
-         tell(3, "range: %d - %d", from, to);
+         tell(eloDebug2, "range: %d - %d", from, to);
       }
       else
       {
-         tell(0, "Error: Unexpected range '%s' for '%s'", r, name);
+         tell(eloAlways, "Error: Unexpected range '%s' for '%s'", r, name);
       }
    }
 
@@ -2514,11 +2617,13 @@ int Daemon::getConfigTimeRangeItem(const char* name, std::vector<Range>& ranges)
 // Get Image For
 //***************************************************************************
 
-const char* Daemon::getImageFor(const char* title, int value)
+const char* Daemon::getImageFor(const char* type, const char* title, const char* unit, int value)
 {
    const char* imagePath = "img/icon/unknown.png";
 
-   if (strcasestr(title, "Pump"))
+   if (strcmp(type, "DZL") == 0)
+      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
+   else if (strcasestr(title, "Pump"))
       imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
    else if (strcasestr(title, "Steckdose") || strcasestr(title, "Plug") )
       imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
@@ -2551,12 +2656,14 @@ const char* Daemon::getImageFor(const char* title, int value)
 // Digital IO Stuff
 //***************************************************************************
 
-int Daemon::toggleIo(uint addr, const char* type)
+int Daemon::toggleIo(uint addr, const char* type, int state, int brightness, int transitiontime)
 {
    cDbRow* fact = valueFactOf(type, addr);
 
    if (!fact)
       return fail;
+
+   bool newState = state == na ? !sensors[type][addr].state : state;
 
    const char* name = fact->getStrValue("NAME");
    const char* title = fact->getStrValue("USRTITLE");
@@ -2565,12 +2672,32 @@ int Daemon::toggleIo(uint addr, const char* type)
       title = fact->getStrValue("TITLE");
 
    if (strcmp(type, "DO") == 0)
-   {
-      gpioWrite(addr, !digitalOutputStates[addr].state);
-   }
+      gpioWrite(addr, newState);
    else if (strcmp(type, "SC") == 0)
-   {
       callScript(addr, "toggle", name, title);
+   else if (strcmp(type, "DZL") == 0)
+      deconz.toggle(type, addr, newState, brightness, transitiontime);
+
+   else if (strcmp(type, "HMB") == 0)
+   {
+      double value = sensors[type][addr].value;
+      // tell(eloDebug, "Debug: '%s' level %d", sensors[type][addr].lastDir == dirOpen ? "open":"close", (int)sensors[type][addr].value);
+
+      if (brightness == na && (sensors[type][addr].lastDir == dirOpen || sensors[type][addr].value == 100))
+         value = 0;
+      else if (brightness == na && (sensors[type][addr].lastDir == dirClose || sensors[type][addr].value == 0))
+         value = 100;
+      else
+         value = brightness;
+
+      sensors[type][addr].state = newState;
+      mqttNodeRedPublishAction(sensors[type][addr], value);
+
+      /* char* request {nullptr};
+      asprintf(&request, "{ \"method\" : \"getDeviceDescription\", \"parameters\" : [\"%s\"] }", uuid);
+      mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
+      tell(eloHomeMatic, "-> (home-matic) '%s' to '%s'", TARGET "2mqtt/homematic/rpccall", request);
+      free(request);*/
    }
 
    return success;
@@ -2578,7 +2705,7 @@ int Daemon::toggleIo(uint addr, const char* type)
 
 int Daemon::toggleIoNext(uint pin)
 {
-   if (digitalOutputStates[pin].state)
+   if (sensors["DO"][pin].state)
    {
       toggleIo(pin, "DO");
       usleep(300000);
@@ -2595,31 +2722,27 @@ void Daemon::pin2Json(json_t* ojData, int pin)
 {
    json_object_set_new(ojData, "address", json_integer(pin));
    json_object_set_new(ojData, "type", json_string("DO"));
-   json_object_set_new(ojData, "name", json_string(digitalOutputStates[pin].name));
-   json_object_set_new(ojData, "title", json_string(digitalOutputStates[pin].title.c_str()));
-   json_object_set_new(ojData, "mode", json_string(digitalOutputStates[pin].mode == omManual ? "manual" : "auto"));
-   json_object_set_new(ojData, "options", json_integer(digitalOutputStates[pin].opt));
-   json_object_set_new(ojData, "value", json_integer(digitalOutputStates[pin].state));
-   json_object_set_new(ojData, "last", json_integer(digitalOutputStates[pin].last));
-   json_object_set_new(ojData, "next", json_integer(digitalOutputStates[pin].next));
-// needed?   json_object_set_new(ojData, "image", json_string(getImageFor(digitalOutputStates[pin].title.c_str(), digitalOutputStates[pin].state)));
-   json_object_set_new(ojData, "widgettype", json_integer(wtSymbol));  // #TODO get type from valuefacts
+   json_object_set_new(ojData, "value", json_integer(sensors["DO"][pin].state));
+   json_object_set_new(ojData, "last", json_integer(sensors["DO"][pin].last));
+   json_object_set_new(ojData, "next", json_integer(sensors["DO"][pin].next));
+
+   // has to be moved to facts?
+   json_object_set_new(ojData, "mode", json_string(sensors["DO"][pin].mode == omManual ? "manual" : "auto"));
+   json_object_set_new(ojData, "options", json_integer(sensors["DO"][pin].opt));
 }
 
 int Daemon::toggleOutputMode(uint pin)
 {
    // allow mode toggle only if more than one option is given
 
-   if (digitalOutputStates[pin].opt & ooAuto && digitalOutputStates[pin].opt & ooUser)
+   if (sensors["DO"][pin].opt & ooAuto && sensors["DO"][pin].opt & ooUser)
    {
-      OutputMode mode = digitalOutputStates[pin].mode == omAuto ? omManual : omAuto;
-      digitalOutputStates[pin].mode = mode;
+      OutputMode mode = sensors["DO"][pin].mode == omAuto ? omManual : omAuto;
+      sensors["DO"][pin].mode = mode;
 
       storeStates();
 
-      // json_t* oJson = json_array();
       json_t* ojData = json_object();
-      // json_array_append_new(oJson, ojData);
       pin2Json(ojData, pin);
 
       char* tuple {nullptr};
@@ -2635,46 +2758,50 @@ int Daemon::toggleOutputMode(uint pin)
 
 void Daemon::gpioWrite(uint pin, bool state, bool store)
 {
-   digitalOutputStates[pin].state = state;
-   digitalOutputStates[pin].last = time(0);
-   digitalOutputStates[pin].valid = true;
+   if (pin != pinW1Power)
+   {
+      sensors["DO"][pin].state = state;
+      sensors["DO"][pin].last = time(0);
+      sensors["DO"][pin].valid = true;
 
-   if (!state)
-      digitalOutputStates[pin].next = 0;
+      if (!state)
+         sensors["DO"][pin].next = 0;
+   }
 
    // invert the state on 'invertDO' - some relay board are active at 'false'
 
    digitalWrite(pin, invertDO ? !state : state);
 
-   if (store)
-      storeStates();
-
-   performJobs();
-
-   // send update to WS
+   if (pin != pinW1Power)
    {
-      // json_t* oJson = json_array();
-      json_t* ojData = json_object();
-      // json_array_append_new(oJson, ojData);
-      pin2Json(ojData, pin);
 
-      char* tuple {nullptr};
-      asprintf(&tuple, "%s:0x%02x", "DO", pin);
-      jsonSensorList[tuple] = ojData;
-      free(tuple);
+      if (store)
+         storeStates();
 
-      pushDataUpdate("update", 0L);
-      // pushOutMessage(oJson, "update");
+      performJobs();
+
+      // send update to WS
+      {
+         json_t* ojData = json_object();
+         pin2Json(ojData, pin);
+
+         char* tuple {nullptr};
+         asprintf(&tuple, "%s:0x%02x", "DO", pin);
+         jsonSensorList[tuple] = ojData;
+         free(tuple);
+
+         pushDataUpdate("update", 0L);
+      }
+
+      mqttHaPublishSensor(sensors["DO"][pin], false /*forceConfig*/);
+      mqttNodeRedPublishSensor(sensors["DO"][pin]);
    }
-
-   mqttHaPublishSensor(iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "", false /*forceConfig*/);
-   mqttNodeRedPublishSensor("DO", pin, iotLight, digitalOutputStates[pin].name, "", "", digitalOutputStates[pin].state, "");
 }
 
 bool Daemon::gpioRead(uint pin)
 {
-   digitalInputStates[pin] = digitalRead(pin);
-   return digitalInputStates[pin];
+   sensors["DI"][pin].state = digitalRead(pin);
+   return sensors["DI"][pin].state;
 }
 
 //***************************************************************************
@@ -2685,27 +2812,27 @@ void Daemon::publishSpecialValue(int addr)
 {
    cDbRow* fact = valueFactOf("SP", addr);
 
-   if (fact)
-   {
-      json_t* ojData = json_object();
+   if (!fact)
+      return ;
 
-      sensor2Json(ojData, tableValueFacts);
+   json_t* ojData = json_object();
 
-      if (spSensors[addr].kind == "text")
-         json_object_set_new(ojData, "text", json_string(spSensors[addr].text.c_str()));
-      else if (spSensors[addr].kind == "value")
-         json_object_set_new(ojData, "value", json_real(spSensors[addr].value));
+   sensor2Json(ojData, "SP", addr);
 
-      if (spSensors[addr].disabled)
+   if (sensors["SP"][addr].kind == "text")
+      json_object_set_new(ojData, "text", json_string(sensors["SP"][addr].text.c_str()));
+   else if (sensors["SP"][addr].kind == "value")
+      json_object_set_new(ojData, "value", json_real(sensors["SP"][addr].value));
+
+   if (sensors["SP"][addr].disabled)
          json_object_set_new(ojData, "disabled", json_boolean(true));
 
-      char* tuple {nullptr};
-      asprintf(&tuple, "SP:0x%02x", addr);
-      jsonSensorList[tuple] = ojData;
-      free(tuple);
+   char* tuple {nullptr};
+   asprintf(&tuple, "SP:0x%02x", addr);
+   jsonSensorList[tuple] = ojData;
+   free(tuple);
 
-      pushDataUpdate("update", 0L);
-   }
+   pushDataUpdate("update", 0L);
 }
 
 //***************************************************************************
@@ -2718,7 +2845,7 @@ int Daemon::storeStates()
    long value {0};
    long mode {0};
 
-   for (const auto& output : digitalOutputStates)
+   for (const auto& output : sensors["DO"])
    {
       if (output.second.state)
          value += pow(2, output.first);
@@ -2729,7 +2856,7 @@ int Daemon::storeStates()
       setConfigItem("ioStates", value);
       setConfigItem("ioModes", mode);
 
-      // tell(0, "state bit (%d): %s: %d [%ld]", output.first, output.second.name, output.second.state, value);
+      tell(eloDebug2, "Debug: Store-IO-States State bit (%d): %s: %d [%ld]", output.first, output.second.name.c_str(), output.second.state, value);
    }
 
    return done;
@@ -2743,25 +2870,30 @@ int Daemon::loadStates()
    getConfigItem("ioStates", value, 0);
    getConfigItem("ioModes", mode, 0);
 
-   tell(2, "Debug: Loaded iostates: %ld", value);
+   // #TODO - use only for GPIO Pins (we need a other type for P4 'DO' !!
 
-   for (const auto& output : digitalOutputStates)
+   if (!value)
+      return done;
+
+   tell(eloDebug, "Debug: Loaded iostates: %ld", value);
+
+   for (const auto& output : sensors["DO"])
    {
-      if (digitalOutputStates[output.first].opt & ooUser)
+      if (sensors["DO"][output.first].opt & ooUser)
       {
          gpioWrite(output.first, value & (long)pow(2, output.first), false);
-         tell(0, "Info: IO %s/%d recovered to %d", output.second.name, output.first, output.second.state);
+         tell(eloDetail, "Info: IO %s/%d recovered to %d", output.second.name.c_str(), output.first, output.second.state);
       }
    }
 
    if (mode)
    {
-      for (const auto& output : digitalOutputStates)
+      for (const auto& output : sensors["DO"])
       {
-         if (digitalOutputStates[output.first].opt & ooAuto && digitalOutputStates[output.first].opt & ooUser)
+         if (sensors["DO"][output.first].opt & ooAuto && sensors["DO"][output.first].opt & ooUser)
          {
             OutputMode m = mode & (long)pow(2, output.first) ? omManual : omAuto;
-            digitalOutputStates[output.first].mode = m;
+            sensors["DO"][output.first].mode = m;
          }
       }
    }
@@ -2780,7 +2912,7 @@ int Daemon::dispatchArduinoMsg(const char* message)
 
    if (!jObject)
    {
-      tell(0, "Error: Can't parse json in '%s'", message);
+      tell(eloAlways, "Error: Can't parse json in '%s'", message);
       return fail;
    }
 
@@ -2803,7 +2935,7 @@ int Daemon::dispatchArduinoMsg(const char* message)
 
          if (stamp < time(0)-300)
          {
-            tell(eloAlways, "Skipping old (%ld seconds) arduino value", time(0)-stamp);
+            tell(eloInfo, "Skipping old (%ld seconds) arduino value", time(0)-stamp);
             continue;
          }
 
@@ -2841,12 +2973,12 @@ int Daemon::initArduino()
 
    if (!p)
    {
-      tell(0, "Error: Dumping json message failed");
+      tell(eloAlways, "Error: Dumping json message failed");
       return fail;
    }
 
    mqttReader->write(TARGET "2mqtt/arduino/in", p);
-   tell(1, "DEBUG: PushMessage to arduino [%s]", p);
+   tell(eloDebug, "DEBUG: PushMessage to arduino [%s]", p);
    free(p);
 
    return success;
@@ -2875,20 +3007,20 @@ void Daemon::updateAnalogInput(const char* id, double value, time_t stamp)
    if (aiSensors[input].round)
    {
       dValue = std::llround(dValue*aiSensors[input].round) / aiSensors[input].round;
-      tell(2, "Rouned %.2f to %.2f", m * value + b, dValue);
+      tell(eloDebug, "Rouned %.2f to %.2f", m * value + b, dValue);
    }
 
    aiSensors[input].value = dValue;
    aiSensors[input].last = stamp;
    aiSensors[input].valid = true;
 
-   tell(1, "Debug: Input A%d: %.3f%s [%.2f]", input, aiSensors[input].value, tableValueFacts->getStrValue("UNIT"), value);
+   tell(eloDebug, "Debug: Input A%d: %.3f%s [%.2f]", input, aiSensors[input].value, tableValueFacts->getStrValue("UNIT"), value);
 
    // ----------------------------------
 
    json_t* ojData = json_object();
 
-   sensor2Json(ojData, tableValueFacts);
+   sensor2Json(ojData, "AI", input);
    json_object_set_new(ojData, "value", json_real(aiSensors[input].value));
 
    char* tuple {nullptr};
@@ -2912,7 +3044,7 @@ int Daemon::dispatchW1Msg(const char* message)
 
    if (!jArray)
    {
-      tell(0, "Error: Can't parse json in '%s'", message);
+      tell(eloAlways, "Error: Can't parse json in '%s'", message);
       return fail;
    }
 
@@ -2927,13 +3059,14 @@ int Daemon::dispatchW1Msg(const char* message)
 
       if (stamp < time(0)-300)
       {
-         tell(eloAlways, "Skipping old (%ld seconds) w1 value", time(0)-stamp);
+         tell(eloInfo, "Skipping old (%ld seconds) w1 value", time(0)-stamp);
          continue;
       }
 
       updateW1(name, value, stamp);
    }
 
+   json_decref(jArray);
    cleanupW1();
    process();
 
@@ -2942,34 +3075,42 @@ int Daemon::dispatchW1Msg(const char* message)
 
 void Daemon::updateW1(const char* id, double value, time_t stamp)
 {
-   tell(2, "w1: %s : %0.2f", id, value);
-
-   bool changed = w1Sensors[id].value != value;
-
-   w1Sensors[id].value = value;
-   w1Sensors[id].last = stamp;
+   uint address = toW1Id(id);
 
    tableValueFacts->clear();
-   tableValueFacts->setValue("ADDRESS", (int)toW1Id(id));
+   tableValueFacts->setValue("ADDRESS", (int)address);
    tableValueFacts->setValue("TYPE", "W1");
 
-   if (tableValueFacts->find())
-   {
-      json_t* ojData = json_object();
+   if (!tableValueFacts->find())
+      addValueFact(address, "W1", 1, id, "°C");
 
-      sensor2Json(ojData, tableValueFacts);
-      json_object_set_new(ojData, "value", json_real(value));
+   tableValueFacts->clear();
+   tableValueFacts->setValue("ADDRESS", (int)address);
+   tableValueFacts->setValue("TYPE", "W1");
 
-      char* tuple {nullptr};
-      asprintf(&tuple, "W1:0x%02x", toW1Id(id));
-      jsonSensorList[tuple] = ojData;
-      free(tuple);
+   if (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A"))
+      return ;
 
-      pushDataUpdate("update", 0L);
+   bool changed = sensors["W1"][address].value != value;
 
-      if (changed)
-         mqttNodeRedPublishSensor("W1", (int)toW1Id(id), iotSensor, "", "", "", value, "");
-   }
+   sensors["W1"][address].value = value;
+   sensors["W1"][address].valid = true;
+   sensors["W1"][address].last = stamp;
+
+   json_t* ojData = json_object();
+
+   sensor2Json(ojData, "W1", address);
+   json_object_set_new(ojData, "value", json_real(value));
+
+   char* tuple {nullptr};
+   asprintf(&tuple, "W1:0x%02x", address);
+   jsonSensorList[tuple] = ojData;
+   free(tuple);
+
+   pushDataUpdate("update", 0L);
+
+   if (changed)
+      mqttNodeRedPublishSensor(sensors["W1"][address]);
 
    tableValueFacts->reset();
 }
@@ -2978,52 +3119,45 @@ void Daemon::cleanupW1()
 {
    uint detached {0};
 
-   for (auto it = w1Sensors.begin(); it != w1Sensors.end();)
+   for (auto it = sensors["W1"].begin(); it != sensors["W1"].end(); it++)
    {
       if (it->second.last < time(0) - 5*tmeSecondsPerMinute)
       {
-         tell(0, "Info: Missing sensor '%s', removing it from list", it->first.c_str());
+         tell(eloAlways, "Info: Missing w1 sensor '%d', removing it from list", it->first);
          detached++;
-         it = w1Sensors.erase(it--);
+         it->second.valid = false;
       }
-      else
-         it++;
    }
+
+   // #TODO move re-initialization to w1mqtt process!
 
    if (detached)
    {
-      tell(0, "Info: %d w1 sensors detached, reseting power line to force a re-initialization", detached);
+      tell(eloAlways, "Info: %d w1 sensors detached, reseting power line to force a re-initialization", detached);
       gpioWrite(pinW1Power, false);
       sleep(2);
       gpioWrite(pinW1Power, true);
    }
 }
 
-bool Daemon::existW1(const char* id)
+bool Daemon::existW1(uint address)
 {
-   if (isEmpty(id))
-      return false;
-
-   auto it = w1Sensors.find(id);
-
-   return it != w1Sensors.end();
+   auto it = sensors["W1"].find(address);
+   return it != sensors["W1"].end();
 }
 
-double Daemon::valueOfW1(const char* id, time_t& last)
+double Daemon::valueOfW1(uint address, time_t& last)
 {
    last = 0;
 
-   if (isEmpty(id))
+   auto it = sensors["W1"].find(address);
+
+   if (it == sensors["W1"].end())
       return 0;
 
-   auto it = w1Sensors.find(id);
+   last = sensors["W1"][address].last;
 
-   if (it == w1Sensors.end())
-      return 0;
-
-   last = w1Sensors[id].last;
-
-   return w1Sensors[id].value;
+   return sensors["W1"][address].value;
 }
 
 uint Daemon::toW1Id(const char* name)

@@ -37,7 +37,7 @@ W1::~W1()
 int W1::show()
 {
    for (auto it = sensors.begin(); it != sensors.end(); ++it)
-      tell(0, "%s: %2.3f, %sactive", it->first.c_str(), it->second.value, it->second.active ? "" : "in-");
+      tell(eloAlways, "%s: %2.3f, %sactive", it->first.c_str(), it->second.value, it->second.active ? "" : "in-");
 
    return done;
 }
@@ -53,7 +53,7 @@ int W1::scan()
 
    if (!(dir = opendir(w1Path)))
    {
-      tell(0, "Info: No One-Wire sensors found, path '%s' not exist (%s)", w1Path, strerror(errno));
+      tell(eloAlways, "Info: No One-Wire sensors found, path '%s' not exist (%s)", w1Path, strerror(errno));
       return fail;
    }
 
@@ -69,7 +69,7 @@ int W1::scan()
 
       if (!exist)
       {
-         tell(eloAlways, "%s seems not to be a temperatur sensor, skipping", dp->d_name);
+         tell(eloDetail, "%s seems not to be a temperatur sensor, skipping", dp->d_name);
          continue;
       }
 
@@ -118,7 +118,7 @@ int W1::loop()
 
 int W1::update()
 {
-   tell(0, "Updating ...");
+   tell(eloDetail, "Updating ...");
 
    scan();
 
@@ -136,7 +136,7 @@ int W1::update()
 
       asprintf(&path, "%s/%s/w1_slave", w1Path, it->first.c_str());
 
-      tell(0, "Query '%s'", it->first.c_str());
+      tell(eloDetail, "Query '%s'", it->first.c_str());
 
       if (!(in = fopen(path, "r")))
       {
@@ -156,7 +156,7 @@ int W1::update()
          {
             if (!strstr(line, " YES"))
             {
-               tell(0, "Error: CRC check for '%s' failed in [%s], skipping sample", it->first.c_str(), line);
+               tell(eloAlways, "Error: CRC check for '%s' failed in [%s], skipping sample", it->first.c_str(), line);
                break;
             }
          }
@@ -170,7 +170,7 @@ int W1::update()
                // at error we get sometimes +85 or -85 from the sensor so limit the range
                //  to -80 - +80
 
-               tell(0, "Error: Ignoring invalid value (%0.2f) of w1 sensor '%s'", value, it->first.c_str());
+               tell(eloAlways, "Error: Ignoring invalid value (%0.2f) of w1 sensor '%s'", value, it->first.c_str());
                break;
             }
 
@@ -180,11 +180,11 @@ int W1::update()
                double average = sum / sensors[it->first].values.size();
                double delta = std::abs(average - value);
 
-               tell(1, "Info: %s : %0.2f, the average of the last %zd samples is %0.2f (delta is %0.2f)",
+               tell(eloDetail, "Info: %s : %0.2f, the average of the last %zd samples is %0.2f (delta is %0.2f)",
                     it->first.c_str(), value, sensors[it->first].values.size(), average, average - value);
 
                if (delta > 5)
-                  tell(0, "Warning: delta %0.2f", delta);
+                  tell(eloDetail, "Warning: delta %0.2f", delta);
             }
 
             if (sensors[it->first].values.size() >= 3)
@@ -201,7 +201,7 @@ int W1::update()
             json_object_set_new(ojData, "value", json_real(value));
             json_object_set_new(ojData, "time", json_integer(time(0)));
 
-            tell(0, "%s : %0.2f", it->first.c_str(), value);
+            tell(eloDebug, "%s : %0.2f", it->first.c_str(), value);
          }
       }
 
@@ -227,7 +227,7 @@ int W1::update()
 
    free(p);
 
-   tell(0, " ... done");
+   tell(eloDetail, " ... done");
 
    return done;
 }
@@ -245,11 +245,11 @@ int W1::mqttConnection()
    {
       if (mqttW1Writer->connect(mqttUrl) != success)
       {
-         tell(0, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
+         tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
          return fail;
       }
 
-      tell(0, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
+      tell(eloAlways, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
    }
 
    return success;
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
    int nofork = no;
    int pid;
    int _stdout = na;
-   int _level = na;
+   Eloquence _eloquence {eloAlways};
    const char* url = "tcp://localhost:1883";
 
    logstdout = yes;
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
       switch (argv[i][1])
       {
          case 'u': url = argv[i+1];                         break;
-         case 'l': if (argv[i+1]) _level = atoi(argv[i+1]); break;
+         case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
          case 't': _stdout = yes;                           break;
          case 'n': nofork = yes;                            break;
       }
@@ -304,8 +304,7 @@ int main(int argc, char** argv)
    // if (readConfig() != success)
    //    return 1;
 
-   if (_level != na)
-      loglevel = _level;
+   eloquence = _eloquence;
 
    job = new W1(url);
 

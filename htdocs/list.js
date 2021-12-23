@@ -121,6 +121,13 @@ function initList()
    }
 
    updateList();
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('stateContainer') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('stateContainer') - 10);
+   };
 }
 
 function updateList()

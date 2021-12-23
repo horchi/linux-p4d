@@ -8,7 +8,7 @@
 {
     /* colors */
 
-    --menu: #171616;
+    --menu: #171717;
 
     --light1: #272727;
     --light2: lightgray;
@@ -17,13 +17,14 @@
     --blue: #2177AD;
     --blueshade: #495b67;
     --info: #f9f9ef;
-
+    --widgetBackground: #272727b8;
+    --dashboardMenuBackground: #7080907a;
     --caption1: #292929;
     --caption2: #565353;
     --edit: #f9f9ef;
     --editadd: #fffcab;
 
-    --background: #171616;
+    --background: #000000d1;
     --shadow: black;
 
     --borderColor: black;

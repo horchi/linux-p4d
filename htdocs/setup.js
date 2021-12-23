@@ -10,13 +10,14 @@
 
 var configCategories = {};
 var ioSections = {};
-var theConfiguration = null;
+var theConfigdetails = {}
 
-function initConfig(configuration)
+function initConfig(configdetails)
 {
+   theConfigdetails = configdetails;
+
    $('#container').removeClass('hidden');
    $("#container").height($(window).height() - $("#menu").height() - 8);
-
    window.onresize = function() {
       $("#container").height($(window).height() - $("#menu").height() - 8);
    };
@@ -27,7 +28,6 @@ function initConfig(configuration)
    var root = document.getElementById("setupContainer");
    var lastCat = "";
    root.innerHTML = "";
-   theConfiguration = configuration;
 
    $('#btnInitMenu').bind('click', function(event) {
       if (event.ctrlKey)
@@ -36,14 +36,10 @@ function initConfig(configuration)
          initTables('menu');
    });
 
-   // console.log(JSON.stringify(configuration, undefined, 4));
+   // console.log(JSON.stringify(configdetails, undefined, 4));
 
-   configuration.sort(function(a, b) {
-      return a.category.localeCompare(b.category);
-   });
-
-   for (var i = 0; i < configuration.length; i++) {
-      var item = configuration[i];
+   for (var i = 0; i < configdetails.length; i++) {
+      var item = configdetails[i];
       var html = "";
 
       if (lastCat != item.category) {
@@ -59,8 +55,10 @@ function initConfig(configuration)
          lastCat = item.category;
       }
 
-      if (!configCategories[item.category])
+      if (!configCategories[item.category]) {
+         console.log("!!!! skip category: " + item.category)
          continue;
+      }
 
       html += "    <span>" + item.title + ":</span>\n";
 
@@ -147,6 +145,24 @@ function initConfig(configuration)
             ' id="mselect_' + item.name + '" data-index="' + i +
             '" data-value="' + item.value + '" type="text" value=""/>\n';
          html += '</span>\n';
+         break;
+
+      case 7:    // BitSelect
+         html += '<span id="bmaskgroup_' + item.name + '" style="width:75%;">';
+
+         var array = item.value.split(',');
+
+         for (var o = 0; o < item.options.length; o++) {
+            var checked = false;
+            for (var n = 0; n < array.length; n++) {
+               if (array[n] == item.options[o])
+                  checked = true;
+            }
+            html += '<input class="rounded-border input" id="bmask' + item.name + '_' + item.options[o] + '"' +
+               ' type="checkbox" ' + (checked ? 'checked' : '') + '/>' +
+               '<label for="bmask' + item.name + '_' + item.options[o] + '">' + item.options[o] + '</label>';
+         }
+         html += '</span>';
 
          break;
       }
@@ -157,7 +173,7 @@ function initConfig(configuration)
    }
 
    $('input[id^="mselect_"]').each(function () {
-      var item = configuration[$(this).data("index")];
+      var item = configdetails[$(this).data("index")];
       $(this).autocomplete({
          source: item.options,
          multiselect: true});
@@ -222,6 +238,24 @@ function storeConfig()
       jsonObj[name] = value;
    }
 
+   // data type 7 - 'BitSelect' -> as string
+
+   var elements = rootConfig.querySelectorAll("[id^='bmaskgroup_']");
+
+   for (var i = 0; i < elements.length; i++) {
+      var name = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
+      var bits = rootConfig.querySelectorAll("[id^='bmask" + name + "_']");
+      var value = '';
+
+      for (var i = 0; i < bits.length; i++) {
+         var o = bits[i].id.substring(bits[i].id.indexOf("_") + 1);
+         if (bits[i].checked)
+            value += o + ','
+      }
+      console.log("store bitmak: " + value);
+      jsonObj[name] = value;
+   }
+
    // console.log(JSON.stringify(jsonObj, undefined, 4));
 
    socket.send({ "event" : "storeconfig", "object" : jsonObj });
@@ -248,7 +282,8 @@ function toTimeRangesString(base)
 
 window.resetPeaks = function()
 {
-   socket.send({ "event" : "reset", "object" : { "what" : "peaks" } });
+   if (confirm("Peaks zurücksetzen?"))
+      socket.send({ "event" : "reset", "object" : { "what" : "peaks" } });
 }
 
 var filterActive = false;
@@ -271,7 +306,7 @@ function foldCategory(category)
 {
    configCategories[category] = !configCategories[category];
    console.log(category + ' : ' + configCategories[category]);
-   initConfig(theConfiguration)
+   initConfig(theConfigdetails);
 }
 
 function foldSection(sectionId)
@@ -294,9 +329,10 @@ function tableHeadline(title, sectionId)
       '    <thead>' +
       '      <tr>' +
       '        <td style="width:20%;">Name</td>' +
-      '        <td style="width:25%;">Bezeichnung</td>' +
+      '        <td style="width:25%;">Titel</td>' +
       '        <td style="width:4%;">Einheit</td>' +
       '        <td style="width:3%;">Aktiv</td>' +
+      '        <td style="width:3%;">Aufzeichnen</td>' +
       '        <td style="width:6%;">ID</td>' +
       '        <td style="width:10%;">Gruppe</td>' +
       '      </tr>' +
@@ -323,6 +359,9 @@ function initIoSetup(valueFacts)
       tableHeadline('Analog Ausgänge', 'ioAnalogOut') +
       tableHeadline('Analog Eingänge (arduino)', 'ioAnalog') +
       tableHeadline('Weitere Sensoren', 'ioOther') +
+      tableHeadline('DECONZ Lights', 'ioDeconzLights') +
+      tableHeadline('DECONZ Sensoren', 'ioDeconzSensor') +
+      tableHeadline('Home Matic', 'ioHomeMatic') +
       '</div>';
 
    for (var key in ioSections) {
@@ -346,6 +385,8 @@ function initIoSetup(valueFacts)
       if (filterExpression != null && !filterExpression.test(item.title) && !filterExpression.test(usrtitle))
          continue;
 
+      // console.log("item.type: " + item.type);
+
       switch (item.type) {
          case 'VA': sectionId = "ioValues";         break
          case 'SD': sectionId = "ioStateDurations"; break
@@ -356,6 +397,9 @@ function initIoSetup(valueFacts)
          case 'AO': sectionId = "ioAnalogOut";      break
          case 'AI': sectionId = "ioAnalog";         break
          case 'SC': sectionId = "ioScripts";        break
+         case 'DZL': sectionId = "ioDeconzLights";   break
+         case 'DZS': sectionId = "ioDeconzSensor";   break
+         case 'HMB': sectionId = "ioHomeMatic";      break
       }
 
       if (!ioSections[sectionId])
@@ -365,6 +409,7 @@ function initIoSetup(valueFacts)
       html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + usrtitle + '"/></td>';
       html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + item.unit + '"/></td>';
       html += '<td><input id="state_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.state ? 'checked' : '') + ' /><label for="state_' + item.type + item.address + '"></label></td>';
+      html += '<td><input id="record_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.record ? 'checked' : '') + ' /><label for="record_' + item.type + item.address + '"></label></td>';
       html += '<td>' + key + '</td>';
 
       html += '<td><select id="group_' + item.type + item.address + '" class="rounded-border inputSetting" name="group">';
@@ -406,6 +451,7 @@ function storeIoSetup()
       jsonObj["usrtitle"] = $("#usrtitle_" + type + address).val();
       jsonObj["unit"] = $("#unit_" + type + address).val();
       jsonObj["state"] = $("#state_" + type + address).is(":checked");
+      jsonObj["record"] = $("#record_" + type + address).is(":checked");
       jsonObj["groupid"] = parseInt($("#group_" + type + address).val());
 
       jsonArray[i] = jsonObj;

@@ -35,18 +35,65 @@
   cMutex logMutex;
 #endif
 
-int loglevel = 1;
-int argLoglevel = 1;
-int logstdout = no;
-int logstamp = no;
+Eloquence eloquence {eloAlways};
+Eloquence argEloquence {eloAlways};
+bool logstdout {false};
+bool logstamp {false};
 
 //***************************************************************************
-// Debug
+// Logging
 //***************************************************************************
 
-void tell(int eloquence, const char* format, ...)
+const char* Elo::eloquences[] =
 {
-   if (loglevel < eloquence)
+   "Info",
+   "Detail",
+   "Debug",
+   "Debug2",
+   "WebSock",
+   "DebugWebSock",
+   "Mqtt",
+   "Db",
+   "DebugDb",
+   "NodeRed",
+   "Deconz",
+   "DebugDeconz",
+   "MqttHome",
+   "HaMqtt",
+   "HomeMatic",
+   "DebugHomeMatic",
+
+   nullptr
+};
+
+Eloquence Elo::stringToEloquence(const std::string string)
+{
+   int elo {0};
+   int n {0};
+
+   auto elos = split(string, ',');
+
+   for (const auto& e : elos)
+   {
+      if ((n = toEloquence(e.c_str())) != na)
+         elo |= n;
+   }
+
+   return (Eloquence)elo;
+}
+
+int Elo::toEloquence(const char* str)
+{
+   for (int i = 0; eloquences[i]; i++)
+      if (strcasecmp(eloquences[i], str) == 0)
+         return (Eloquence)pow(2, i);
+
+   return na;
+}
+
+void tell(Eloquence elo, const char* format, ...)
+{
+   if (elo && !(eloquence & elo))
       return ;
 
    const int sizeBuffer = 100000;
@@ -87,7 +134,7 @@ void tell(int eloquence, const char* format, ...)
    }
    else
    {
-      int prio = eloquence == 0 ? LOG_ERR : LOG_NOTICE;
+      int prio = elo == eloAlways ? LOG_ERR : LOG_NOTICE;
       syslog(prio, "%s", t);
    }
 
@@ -236,7 +283,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    if (!(f = fopen(file, "r")))
    {
-      tell(0, "Fatal: Can't access '%s'; %s", file, strerror(errno));
+      tell(eloAlways, "Fatal: Can't access '%s'; %s", file, strerror(errno));
       free(file);
       return fail;
    }
@@ -718,7 +765,7 @@ int isLink(const char* path)
    if (lstat(path, &sb) == 0)
       return S_ISLNK(sb.st_mode);
 
-   tell(0, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(eloAlways, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
 
    return false;
 }
@@ -749,7 +796,7 @@ int createLink(const char* link, const char* dest, int force)
 
       if (symlink(dest, link) != 0)
       {
-         tell(0, "Failed to create symlink '%s', error was '%s'", link, strerror(errno));
+         tell(eloAlways, "Failed to create symlink '%s', error was '%s'", link, strerror(errno));
          return fail;
       }
    }
@@ -766,12 +813,12 @@ int removeFile(const char* filename)
 {
    if (unlink(filename) != 0)
    {
-      tell(0, "Can't remove file '%s', '%s'", filename, strerror(errno));
+      tell(eloAlways, "Can't remove file '%s', '%s'", filename, strerror(errno));
 
       return 1;
    }
 
-   tell(2, "Removed file '%s'", filename);
+   tell(eloDebug, "Removed file '%s'", filename);
 
    return 0;
 }
@@ -786,11 +833,11 @@ int chkDir(const char* path)
 
    if (stat(path, &fs) != 0 || !S_ISDIR(fs.st_mode))
    {
-      tell(0, "Creating directory '%s'", path);
+      tell(eloAlways, "Creating directory '%s'", path);
 
       if (mkdir(path, ACCESSPERMS) == -1)
       {
-         tell(0, "Can't create directory '%s'", strerror(errno));
+         tell(eloAlways, "Can't create directory '%s'", strerror(errno));
          return fail;
       }
    }
@@ -811,13 +858,13 @@ int loadFromFile(const char* infile, MemoryStruct* data)
 
    if (!fileExists(infile))
    {
-      tell(0, "File '%s' not found'", infile);
+      tell(eloAlways, "File '%s' not found'", infile);
       return fail;
    }
 
    if (stat(infile, &sb) < 0)
    {
-      tell(0, "Can't get info of '%s', error was '%s'", infile, strerror(errno));
+      tell(eloAlways, "Can't get info of '%s', error was '%s'", infile, strerror(errno));
       return fail;
    }
 
@@ -850,7 +897,7 @@ int loadFromFile(const char* infile, MemoryStruct* data)
    }
    else
    {
-      tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
+      tell(eloAlways, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
       return fail;
    }
 
@@ -939,13 +986,13 @@ int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool 
 
    if (!fileExists(infile))
    {
-      tell(0, "File '%s' not found'", infile);
+      tell(eloAlways, "File '%s' not found'", infile);
       return fail;
    }
 
    if (!(fp = fopen(infile, "r")))
    {
-      tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
+      tell(eloAlways, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
       return fail;
    }
 
@@ -983,7 +1030,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 
    if (!(dir = opendir(path)))
    {
-      tell(1, "Can't open directory '%s', '%s'", path, strerror(errno));
+      tell(eloDetail, "Can't open directory '%s', '%s'", path, strerror(errno));
       return fail;
    }
 
@@ -1027,7 +1074,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 
          if (isEmpty(ext) || !strcasestr(extensions, ext))
          {
-            tell(4, "Skipping file '%s' with extension '%s'", pEntry->d_name, ext);
+            tell(eloDebug, "Skipping file '%s' with extension '%s'", pEntry->d_name, ext);
             continue;
          }
       }
@@ -1183,11 +1230,11 @@ void tellZipError(int errorCode, const char* op, const char* msg)
    {
       case Z_OK:           return;
       case Z_STREAM_END:   return;
-      case Z_MEM_ERROR:    tell(0, "Error: Not enough memory to unzip file%s!\n", op); return;
-      case Z_BUF_ERROR:    tell(0, "Error: Couldn't unzip data due to output buffer size problem%s!\n", op); return;
-      case Z_DATA_ERROR:   tell(0, "Error: Zipped input data corrupted%s! Details: %s\n", op, msg); return;
-      case Z_STREAM_ERROR: tell(0, "Error: Invalid stream structure%s. Details: %s\n", op, msg); return;
-      default:             tell(0, "Error: Couldn't unzip data for unknown reason (%6d)%s!\n", errorCode, op); return;
+      case Z_MEM_ERROR:    tell(eloAlways, "Error: Not enough memory to unzip file%s!\n", op); return;
+      case Z_BUF_ERROR:    tell(eloAlways, "Error: Couldn't unzip data due to output buffer size problem%s!\n", op); return;
+      case Z_DATA_ERROR:   tell(eloAlways, "Error: Zipped input data corrupted%s! Details: %s\n", op, msg); return;
+      case Z_STREAM_ERROR: tell(eloAlways, "Error: Invalid stream structure%s. Details: %s\n", op, msg); return;
+      default:             tell(eloAlways, "Error: Couldn't unzip data for unknown reason (%6d)%s!\n", errorCode, op); return;
    }
 }
 
@@ -1218,7 +1265,7 @@ const char* getFirstIp()
 
    if (getifaddrs(&ifaddr) == -1)
    {
-      tell(0, "getifaddrs() failed");
+      tell(eloAlways, "getifaddrs() failed");
       return "";
    }
 
@@ -1240,7 +1287,7 @@ const char* getFirstIp()
 
          if (res)
          {
-            tell(0, "getnameinfo() failed: %s", gai_strerror(res));
+            tell(eloAlways, "getnameinfo() failed: %s", gai_strerror(res));
             return "";
          }
 
@@ -1249,7 +1296,7 @@ const char* getFirstIp()
          if (strcmp(host, "127.0.0.1") == 0)
             continue;
 
-         tell(5, "%-8s %-15s %s", ifa->ifa_name, host,
+         tell(eloDebug2, "%-8s %-15s %s", ifa->ifa_name, host,
               ifa->ifa_addr->sa_family == AF_INET   ? " (AF_INET)" :
               ifa->ifa_addr->sa_family == AF_INET6  ? " (AF_INET6)" : "");
       }
@@ -1302,7 +1349,7 @@ int toUTF8(char* out, int outMax, const char* in, const char* from_code)
 
    if (ret == (size_t)-1)
    {
-      tell(0, "Converting [%s] from '%s' to '%s' failed", fromPtr, from_code, to_code);
+      tell(eloAlways, "Converting [%s] from '%s' to '%s' failed", fromPtr, from_code, to_code);
 		return fail;
    }
 
@@ -1471,7 +1518,7 @@ uint64_t cTimeMs::Elapsed(void)
 // Class LogDuration
 //***************************************************************************
 
-LogDuration::LogDuration(const char* aMessage, int aLogLevel)
+LogDuration::LogDuration(const char* aMessage, Eloquence aLogLevel)
 {
    logLevel = aLogLevel;
    strcpy(message, aMessage);

@@ -164,7 +164,7 @@ class cWebSock : public cWebService
 
             // just in case client is not connected and wasted messages are pending
 
-            tell(0, "Info: Flushing (%zu) old 'wasted' messages of client (%p)", messagesOut.size(), wsi);
+            tell(eloAlways, "Info: Flushing (%zu) old 'wasted' messages of client (%p)", messagesOut.size(), wsi);
 
             while (!messagesOut.empty())
                messagesOut.pop();
