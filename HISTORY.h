@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.1"
+#define _VERSION     "0.9.2"
 #define VERSION_DATE "23.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-23:  version 0.9.2
+  - bugfix:  Fixed dashboard charts
 
 2021-12-23:  version 0.9.1
   - bugfix:  Fixed background image config

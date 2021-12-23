@@ -757,7 +757,7 @@ function updateWidget(sensor, refresh, widget)
 
       if (refresh) {
          var jsonRequest = {};
-         prepareChartRequest(jsonRequest, fact.type + ":0x" + fact.address.toString(16), 0, 1, "chartwidget");
+         prepareChartRequest(jsonRequest, toKey(fact.type, fact.address), 0, 1, "chartwidget");
          socket.send({ "event" : "chartdata", "object" : jsonRequest });
       }
    }
@@ -948,7 +948,7 @@ function toggleChartDialog(type, address)
 
       var jsonRequest = {};
 
-      prepareChartRequest(jsonRequest, type + ":0x" + address.toString(16), 0, 1, "chartdialog");
+      prepareChartRequest(jsonRequest, toKey(type, address), 0, 1, "chartdialog");
       socket.send({ "event" : "chartdata", "object" : jsonRequest });
 
       // EventListener für ESC-Taste
