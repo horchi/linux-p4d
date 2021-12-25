@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.2"
-#define VERSION_DATE "23.12.2021"
+#define _VERSION     "0.9.3"
+#define VERSION_DATE "25.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2021-12-25:  version 0.9.3
+  - bugfix:  Fixed widgeht config button
+  - change:  improved setup mode
+  - added:   Different MDI icon for on and off states
+  - added:   Filter to add widget dialog
 
 2021-12-23:  version 0.9.2
   - bugfix:  Fixed dashboard charts

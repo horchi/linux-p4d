@@ -200,33 +200,88 @@ Daemon::DefaultWidgetProperty* Daemon::getDefalutProperty(const char* type, cons
 }
 
 //***************************************************************************
-//
+// Widget Defaults 2 Json
 //***************************************************************************
 
-std::string Daemon::toWidgetOptionString(const char* type, const char* unit, const char* name, int address)
+int Daemon::widgetDefaults2Json(json_t* jDefaults, const char* type, const char* unit, const char* name, int address)
 {
    std::string result;
-   char* opt {nullptr};
-
    DefaultWidgetProperty* defProperty = getDefalutProperty(type, unit, address);
 
-   const char* color {"rgba(128, 0, 0, 0.698)"};
-   const char* colorOn {"rgba(0, 99, 162, 0.76)"};
+   const char* color {"rgb(255, 255, 255)"};
+   const char* colorOn {"rgb(235, 197, 5)"};
    const char* symbol {""};
+   const char* symbolOn {""};
 
    if (defProperty->unit == "mov")
+   {
       symbol = "mdi:mdi-walk";
+   }
    else if (strcmp(type, "HMB") == 0)
+   {
       symbol = "mdi:mdi-blinds";
+      symbolOn = "mdi:mdi-blinds-open";
+      color = "rgb(0, 99, 162)";
+      colorOn = "rgb(255, 255, 255)";
+   }
+   else if (strcmp(type, "DZL") == 0)
+   {
+      symbol = "mdi:mdi-lightbulb-variant-outline";
+      symbolOn = "mdi:mdi-lightbulb-variant";
+      color = "rgb(255, 255, 255)";
+      colorOn = "rgb(235, 197, 5)";
+   }
 
-   asprintf(&opt, "{\"unit\": \"%s\", \"scalemax\": %d, \"scalemin\": %d, \"scalestep\": %d, \"showpeak\": %s, \"imgon\": \"%s\", \"imgoff\": \"%s\", \"widgettype\": %d, \"symbol\": \"%s\", \"color\": \"%s\", \"colorOn\": \"%s\" }",
-            unit, defProperty->maxScale, defProperty->minScale, defProperty->scaleStep, defProperty->showPeak ? "true" : "false",
-            getImageFor(type, name, unit, true), getImageFor(type, name, unit, false),
-            defProperty->widgetType, symbol, color, colorOn);
-   result = opt;
-   free(opt);
+   json_object_set_new(jDefaults, "widgettype", json_integer(defProperty->widgetType));
+   json_object_set_new(jDefaults, "unit", json_string(unit));
+   json_object_set_new(jDefaults, "scalemax", json_integer(defProperty->maxScale));
+   json_object_set_new(jDefaults, "scalemin", json_integer(defProperty->minScale));
+   json_object_set_new(jDefaults, "scalestep", json_integer(defProperty->scaleStep));
+   json_object_set_new(jDefaults, "showpeak", json_boolean(defProperty->showPeak));
+   json_object_set_new(jDefaults, "imgon", json_string(getImageFor(type, name, unit, true)));
+   json_object_set_new(jDefaults, "imgoff", json_string(getImageFor(type, name, unit, false)));
+   json_object_set_new(jDefaults, "symbol", json_string(symbol));
+   json_object_set_new(jDefaults, "symbolOn", json_string(symbolOn));
+   json_object_set_new(jDefaults, "color", json_string(color));
+   json_object_set_new(jDefaults, "colorOn", json_string(colorOn));
 
-   return result;
+   return done;
+}
+
+//***************************************************************************
+// Get Image For
+//***************************************************************************
+
+const char* Daemon::getImageFor(const char* type, const char* title, const char* unit, int value)
+{
+   const char* imagePath = "img/icon/unknown.png";
+
+   if (strcmp(type, "DZL") == 0 || strcasestr(title, "Licht") || strcasestr(title, "Light"))
+      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
+   else if (strcasestr(title, "Pump"))
+      imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
+   else if (strcasestr(title, "Steckdose") || strcasestr(title, "Plug") )
+      imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
+   else if (strcasestr(title, "UV-C"))
+      imagePath = value ? "img/icon/uvc-on.png" : "img/icon/uvc-off.png";
+   else if (strcasestr(title, "Shower") || strcasestr(title, "Dusche"))
+      imagePath = value ? "img/icon/shower-on.png" : "img/icon/shower-off.png";
+   else if (strcasestr(title, "VDR"))
+      imagePath = value ? "img/icon/vdr-on.png" : "img/icon/vdr-off.png";
+   else if (strcasestr(title, "VPN"))
+      imagePath = value ? "img/icon/vpn-on.png" : "img/icon/vpn-off.png";
+   else if (strcasestr(title, "SATIP"))
+      imagePath = value ? "img/icon/satip-on.png" : "img/icon/satip-off.png";
+   else if (strcasestr(title, "Music") || strcasestr(title, "Musik"))
+      imagePath = value ? "img/icon/note-on.png" : "img/icon/note-off.png";
+   else if (strcasestr(title, "Fan") || strcasestr(title, "Lüfter"))
+      imagePath = value ? "img/icon/fan-on.png" : "img/icon/fan-off.png";
+   else if (strcasestr(title, "Desktop"))
+      imagePath = value ? "img/icon/desktop-on.png" : "img/icon/desktop-off.png";
+   else
+      imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
+
+   return imagePath;
 }
 
 //***************************************************************************
@@ -2611,45 +2666,6 @@ int Daemon::getConfigTimeRangeItem(const char* name, std::vector<Range>& ranges)
    free(tmp);
 
    return success;
-}
-
-//***************************************************************************
-// Get Image For
-//***************************************************************************
-
-const char* Daemon::getImageFor(const char* type, const char* title, const char* unit, int value)
-{
-   const char* imagePath = "img/icon/unknown.png";
-
-   if (strcmp(type, "DZL") == 0)
-      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
-   else if (strcasestr(title, "Pump"))
-      imagePath = value ? "img/icon/pump-on.gif" : "img/icon/pump-off.png";
-   else if (strcasestr(title, "Steckdose") || strcasestr(title, "Plug") )
-      imagePath = value ? "img/icon/plug-on.png" : "img/icon/plug-off.png";
-   else if (strcasestr(title, "UV-C"))
-      imagePath = value ? "img/icon/uvc-on.png" : "img/icon/uvc-off.png";
-   else if (strcasestr(title, "Licht") || strcasestr(title, "Light"))
-      imagePath = value ? "img/icon/light-on.png" : "img/icon/light-off.png";
-   else if (strcasestr(title, "Shower") || strcasestr(title, "Dusche"))
-      imagePath = value ? "img/icon/shower-on.png" : "img/icon/shower-off.png";
-   else if (strcasestr(title, "VDR"))
-      imagePath = value ? "img/icon/vdr-on.png" : "img/icon/vdr-off.png";
-   else if (strcasestr(title, "VPN"))
-      imagePath = value ? "img/icon/vpn-on.png" : "img/icon/vpn-off.png";
-   else if (strcasestr(title, "SATIP"))
-      imagePath = value ? "img/icon/satip-on.png" : "img/icon/satip-off.png";
-   else if (strcasestr(title, "Music") || strcasestr(title, "Musik"))
-      imagePath = value ? "img/icon/note-on.png" : "img/icon/note-off.png";
-   else if (strcasestr(title, "Fan") || strcasestr(title, "Lüfter"))
-      imagePath = value ? "img/icon/fan-on.png" : "img/icon/fan-off.png";
-   else if (strcasestr(title, "Desktop"))
-      imagePath = value ? "img/icon/desktop-on.png" : "img/icon/desktop-off.png";
-
-   else
-      imagePath = value ? "img/icon/boolean-on.png" : "img/icon/boolean-off.png";
-
-   return imagePath;
 }
 
 //***************************************************************************

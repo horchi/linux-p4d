@@ -382,7 +382,7 @@ function initIoSetup(valueFacts)
       if (!item.state && filterActive)
          continue;
 
-      if (filterExpression != null && !filterExpression.test(item.title) && !filterExpression.test(usrtitle))
+      if (filterExpression && !filterExpression.test(item.title) && !filterExpression.test(usrtitle))
          continue;
 
       // console.log("item.type: " + item.type);

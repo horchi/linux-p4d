@@ -231,7 +231,7 @@ class Daemon : public FroelingService, public cWebInterface
 
       static DefaultWidgetProperty defaultWidgetProperties[];
       static DefaultWidgetProperty* getDefalutProperty(const char* type, const char* unit, int address = 0);
-      std::string toWidgetOptionString(const char* type, const char* unit, const char* name, int address = 0);
+      int widgetDefaults2Json(json_t* jDefaults, const char* type, const char* unit, const char* name, int address = 0);
 
       int exit();
       int initLocale();

@@ -97,19 +97,6 @@ function initDashboard(update = false)
                                    );
    }
 
-   document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
-
-   var slider = document.createElement("div");
-   slider.className = "rounded-border slider";
-   slider.innerHTML = '<div id="dim_slider"></div>';
-   document.getElementById("container").appendChild(slider);
-
-   if (dashboards[actDashboard] != null) {
-      for (var key in dashboards[actDashboard].widgets) {
-         initWidget(key, dashboards[actDashboard].widgets[key]);
-         updateWidget(allSensors[key], true, dashboards[actDashboard].widgets[key]);
-      }
-   }
    // additional setup elements
 
    if (setupMode) {
@@ -136,6 +123,22 @@ function initDashboard(update = false)
                          .click(function() { newDashboard(); })
                         )
                 );
+   }
+
+   // widgets
+
+   document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
+
+   var slider = document.createElement("div");
+   slider.className = "rounded-border slider";
+   slider.innerHTML = '<div id="dim_slider"></div>';
+   document.getElementById("container").appendChild(slider);
+
+   if (dashboards[actDashboard] != null) {
+      for (var key in dashboards[actDashboard].widgets) {
+         initWidget(key, dashboards[actDashboard].widgets[key]);
+         updateWidget(allSensors[key], true, dashboards[actDashboard].widgets[key]);
+      }
    }
 
    // calc container size
@@ -188,8 +191,6 @@ function initWidget(key, widget, fact)
    // console.log("widget: " + JSON.stringify(widget, undefined, 4));
 
    var root = document.getElementById("widgetContainer");
-
-   var editButton = '';
    var id = 'div_' + key;
    var elem = document.getElementById(id);
    if (elem == null) {
@@ -206,12 +207,12 @@ function initWidget(key, widget, fact)
    }
 
    elem.innerHTML = "";
-   var marginPadding = 8;
 
    if (widgetWidthBase == null)
       widgetWidthBase = elem.clientWidth;
 
    // console.log("clientWidth: " + elem.clientWidth + ' : ' + widgetWidthBase);
+   const marginPadding = 8;
    elem.style.width = widgetWidthBase * widget.widthfactor + ((widget.widthfactor-1) * marginPadding-1) + 'px';
 
    if (setupMode && (widget.widgettype < 900 || widget.widgettype == null)) {
@@ -222,34 +223,37 @@ function initWidget(key, widget, fact)
       elem.addEventListener('dragover', function(event) {dragOver(event)}, false);
       elem.addEventListener('dragleave', function(event) {dragLeave(event)}, false);
       elem.addEventListener('drop', function(event) {dropWidget(event)}, false);
-
-      editButton += '  <button class="rounded-border widget-edit mdi mdi-lead-pencil" onclick="widgetSetup(\'' + key + '\')"></button>';
    }
 
-   var title = '';
+   var title = setupMode ? ' ' : '';
    if (fact != null)
-      title = fact.usrtitle != null && fact.usrtitle != '' ? fact.usrtitle : fact.title;
+      title += fact.usrtitle && fact.usrtitle != '' ? fact.usrtitle : fact.title;
 
-   switch (widget.widgettype) {
-     case 0:           // Symbol
-        var html = editButton;
-        if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights) {
-           html += '  <button class="widget-title" type="button" onclick="toggleMode(' + fact.address + ", '" + fact.type + '\')">' + title + '</button>';
-           html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button">';
-        }
-        else {
-           html += '  <button class="widget-title" type="button">' + title + '</button>';
-           html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button">';
-        }
-        html += '    <img id="widget' + fact.type + fact.address + '" draggable="false")/>';
-        html += "   </button>";
-        html += "<div id=\"progress" + fact.type + fact.address + "\" class=\"widget-progress\">";
-        html += "   <div id=\"progressBar" + fact.type + fact.address + "\" class=\"progress-bar\" style=\"visible\"></div>";
-        html += "</div>";
-
-        elem.className = "widget rounded-border widgetDropZone";
-        elem.innerHTML = html;
-        document.getElementById("progress" + fact.type + fact.address).style.visibility = "hidden";
+   switch (widget.widgettype)
+   {
+      case 0: {          // Symbol
+         $(elem)
+            .addClass("widget rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .html(title))
+            .append($('<button></button>')
+                    .attr('id', 'button' + fact.type + fact.address)
+                    .addClass('widget-main')
+                    .attr('type', 'button')
+                    .css('color', widget.color)
+                    .addClass('widget-value')
+                    .append($('<img></img>')
+                            .attr('id', 'widget' + fact.type + fact.address)
+                            .attr('draggable', false)))
+            .append($('<div></div>')
+                    .attr('id', 'progress' + fact.type + fact.address)
+                    .addClass('widget-progress')
+                    .css('visibility', 'hidden')
+                    .append($('<div></div>')
+                            .attr('id', 'progressBar' + fact.type + fact.address)
+                            .addClass('progress-bar')));   // .css('visible', true)));
 
          if (!setupMode && fact.dim) {
            $('#button' + fact.type + fact.address).on({
@@ -285,13 +289,16 @@ function initWidget(key, widget, fact)
         }
 
         $('#button' + fact.type + fact.address).css('color', widget.color);
-        break;
+         break;
+      }
 
-      case 1:          // Chart
+      case 1: {        // Chart
          elem.className = "widgetChart rounded-border widgetDropZone";
          var eTitle = document.createElement("div");
-         eTitle.className = "widget-title";
-         eTitle.innerHTML = title + editButton;
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         eTitle.className = "widget-title " + cls;
+         eTitle.innerHTML = title;
+         eTitle.addEventListener("click", function() {titleClick(fact.address, fact.type, key)}, false);
          elem.appendChild(eTitle);
 
          var ePeak = document.createElement("div");
@@ -315,9 +322,11 @@ function initWidget(key, widget, fact)
          eCanvas.className = "chart-canvas";
          eChart.appendChild(eCanvas);
          break;
+      }
 
-      case 3:   // type 3 (Value)
-         var html = '<div class="widget-title">' + title + editButton + '</div>';
+      case 3: {        // type 3 (Value)
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
          elem.className = "widgetValue rounded-border widgetDropZone";
          if (!setupMode)
@@ -329,9 +338,10 @@ function initWidget(key, widget, fact)
          elem.appendChild(ePeak);
          $("#widget" + fact.type + fact.address).css('color', widget.color);
          break;
-
-      case 4:           // Gauge
-         var html = "  <div class=\"widget-title\">" + title + editButton + "</div>";
+      }
+      case 4: {        // Gauge
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
 
          html += "  <svg class=\"widget-main-gauge\" viewBox=\"0 0 1000 600\" preserveAspectRatio=\"xMidYMin slice\">\n";
          html += "    <path id=\"pb" + fact.type + fact.address + "\"/>\n";
@@ -347,15 +357,17 @@ function initWidget(key, widget, fact)
             elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
          elem.innerHTML = html;
          break;
+      }
 
-      case 5:          // Meter
-      case 6:          // MeterLevel
+      case 5:            // Meter
+      case 6: {          // MeterLevel
          var radial = widget.widgettype == 5;
          elem.className = radial ? "widgetMeter rounded-border" : "widgetMeterLinear rounded-border";
          elem.className += " widgetDropZone";
          var eTitle = document.createElement("div");
-         eTitle.className = "widget-title";
-         eTitle.innerHTML = title + editButton;
+         eTitle.className = "widget-title" + (setupMode ? ' mdi mdi-lead-pencil widget-edit' : '');
+         eTitle.addEventListener("click", function() {titleClick(fact.address, fact.type, key)}, false);
+         eTitle.innerHTML = title;
          elem.appendChild(eTitle);
 
          var main = document.createElement("div");
@@ -484,18 +496,22 @@ function initWidget(key, widget, fact)
          $('#widget' + fact.type + fact.address).data('gauge', gauge);
 
          break;
+      }
 
-      case 7:     // 7 (PlainText)
-         var html = '<div class="widget-title">' + editButton + '</div>';
+      case 7: {    // 7 (PlainText)
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')"></button>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;"></div>';
          elem.className = "widgetPlain rounded-border widgetDropZone";
          elem.innerHTML = html;
          if (widget.color != null)
             $("#widget" + fact.type + fact.address).css('color', widget.color);
          break;
+      }
 
-      case 8:     // 8 (Choice)
-         var html = '<div class="widget-title">' + title + editButton + '</div>';
+      case 8: {     // 8 (Choice)
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')"></button>';
          html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
          elem.className = "widget rounded-border widgetDropZone";
          elem.style.cursor = 'pointer';
@@ -507,19 +523,13 @@ function initWidget(key, widget, fact)
             ;}, false);
          elem.innerHTML = html;
          $("#widget" + fact.type + fact.address).css('color', widget.color);
-         break;
+      break;
+      }
 
-      case 9:           // Symbol-Value
-         var html = editButton;
-         if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights) {
-            html += '  <button class="widget-title" type="button" onclick="toggleMode(' + fact.address + ", '" + fact.type + '\')">' + title + '</button>';
-            html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
-         }
-         else {
-            html += '  <button class="widget-title">' + title + '</button>';
-            html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button">';
-         }
-
+      case 9: {          // Symbol-Value
+         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
+         html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
          html += '    <img id="widget' + fact.type + fact.address + '" draggable="false"/>';
          html += "   </button>\n";
 
@@ -571,47 +581,74 @@ function initWidget(key, widget, fact)
 
          $("#button" + fact.type + fact.address).css('color', widget.color);
          break;
+      }
 
-      case 10:   // space
-         elem.className = "widgetSpacer rounded-border widgetDropZone";
-         elem.innerHTML = '<div class="widget-title">' + editButton + '</div>';
-         elem.style.backgroundColor = widget.color;
+      case 10: {   // space
+         $(elem).addClass("widgetSpacer rounded-border widgetDropZone");
+         $(elem).append($('<div></div>')
+                        .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                        .click(function() {titleClick(0, '', key);})
+                        .html(setupMode ? ' spacer' : ''));
+         if (!setupMode)
+            $(elem).css('background-color', widget.color);
          if (widget.linefeed) {
-            elem.style.flexBasis = '100%';
-            elem.style.height = setupMode ? '40px' : '0px';
-            elem.style.padding = '0px';
-            elem.style.margin = '0px';
+            $(elem)
+               .css('flex-basis', '100%')
+               .css('height', setupMode ? '40px' : '0px')
+               .css('padding', '0px')
+               .css('margin', '0px');
          }
          break;
+      }
 
-      case 11:   // actual time
-         var id = elem.getAttribute('id').replace(':', '\\:')
-         $('#'+id).addClass("widgetPlain rounded-border widgetDropZone");
-         $('#'+id).append($('<div></div>')
-                          .addClass('widget-title')
-                          .html(editButton));
-         $('#'+id).append($('<div></div>')
-                          .attr('id', 'widget' + key)
-                          .addClass('widget-value')
-                          .css('height', 'inherit')
-                          .css('color', widget.color)
-                          .html(moment().format('dddd Do<br/> MMMM YYYY<br/> hh:mm:ss')));
+      case 11: {   // actual time
+         $(elem)
+            .addClass("widgetPlain rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(0, '', key);})
+                    .html(setupMode ? ' time' : ''));
+         $(elem).append($('<div></div>')
+                        .attr('id', 'widget' + key)
+                        .addClass('widget-value')
+                        .css('height', 'inherit')
+                        .css('color', widget.color)
+                        .html(moment().format('dddd Do<br/> MMMM YYYY<br/> hh:mm:ss')));
          setInterval(function() {
             var timeId = '#widget'+key.replace(':', '\\:');
             $(timeId).html(moment().format('dddd Do<br/> MMMM YYYY<br/> hh:mm:ss'));
          }, 1*1000);
 
          break;
+      }
 
-      default:   // type 2 (Text)
-         var html = '<div class="widget-title">' + title + editButton + '</div>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
-         elem.className = "widget rounded-border widgetDropZone";
+      default: {      // type 2 (Text)
+         $(elem)
+            .addClass("widget rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .html(title))
+            .append($('<div></div>')
+                    .attr('id', 'widget' + fact.type + fact.address)
+                    .css('color', widget.color)
+                    .addClass('widget-value'));
+
          if (!setupMode)
-            elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
-         elem.innerHTML = html;
-         $("#widget" + fact.type + fact.address).css('color', widget.color);
+            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
          break;
+      }
+   }
+}
+
+function titleClick(address, type, key)
+{
+   if (setupMode)
+      widgetSetup(key);
+   else {
+      var fact = valueFacts[key];
+      if (fact && localStorage.getItem(storagePrefix + 'Rights') & fact.rights)
+         toggleMode(fact.address, fact.type);
    }
 }
 
@@ -684,34 +721,44 @@ function updateWidget(sensor, refresh, widget)
    if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
    {
       // console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
-      var image = 'img/icon/unknown.png';
+      var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
+      var image = '';
       var classes = '';
+
       if (sensor.image != null)
          image = sensor.image;
-      else if (widget.symbol != null && widget.symbol != '') {
+      else if (state && widget.symbolOn && widget.symbolOn != '') {
+         classes = widget.symbolOn.replace(':', ' ');
+         image = '';
+         $("#widget" + fact.type + fact.address).remove();
+      }
+      else if (!state && widget.symbol && widget.symbol != '') {
          classes = widget.symbol.replace(':', ' ');
          image = '';
          $("#widget" + fact.type + fact.address).remove();
       }
-      else if (fact.type == 'HMB')
-         image = sensor.value == 100 ? widget.imgon : widget.imgoff;
+      else if (widget.symbol && widget.symbol != '') {
+         classes = widget.symbol.replace(':', ' ');
+         image = '';
+         $("#widget" + fact.type + fact.address).remove();
+      }
       else
-         image = sensor.value != 0 ? widget.imgon : widget.imgoff;
+         image = state ? widget.imgon : widget.imgoff;
 
       if (image != '')
          $("#widget" + fact.type + fact.address).attr("src", image);
-      else
+      else {
+         $("#button" + fact.type + fact.address).removeClass();
+         $("#button" + fact.type + fact.address).addClass('widget-main');
          $("#button" + fact.type + fact.address).addClass(classes);
+      }
 
       $('#div_'+key).css('background-color', sensor.options == 3 && sensor.mode == 'manual' ? '#a27373' : '');
 
       widget.colorOn = widget.colorOn == null ? symbolOnColorDefault : widget.colorOn;
       widget.color = widget.color == null ? symbolColorDefault : widget.color;
 
-      if (fact.type == 'HMB')
-         $("#button" + fact.type + fact.address).css('color', sensor.value == 100 ? widget.colorOn : widget.color);
-      else
-         $("#button" + fact.type + fact.address).css('color', sensor.value != 0 ? widget.colorOn : widget.color);
+      $("#button" + fact.type + fact.address).css('color', state ? widget.colorOn : widget.color);
 
       if (widget.widgettype == 9) {
          $("#value" + fact.type + fact.address).text(sensor.value.toFixed(widget.unit=="%" ? 0 : 2) + (widget.unit!="" ? " " : "") + widget.unit);
@@ -826,7 +873,22 @@ function addWidget()
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
-                                  .css('width', '25%')
+                                  .css('width', '30%')
+                                  .css('text-align', 'end')
+                                  .css('align-self', 'center')
+                                  .css('margin-right', '10px')
+                                  .html('Filter'))
+                          .append($('<input></input>')
+                                  .attr('id', 'incFilter')
+                                  .attr('placeholder', 'expression...')
+                                  .addClass('rounded-border inputSetting')
+                                  .on('input', function() {updateSelection();})
+                                 ))
+                  .append($('<br></br>'))
+                  .append($('<div></div>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
@@ -835,9 +897,7 @@ function addWidget()
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'widgetKey')
-                                         )))
-                 );
-
+                                         ))));
 
    $(form).dialog({
       modal: true,
@@ -847,53 +907,7 @@ function addWidget()
       width: "auto",
       title: "Add Widget",
       open: function() {
-         var addrSpacer = -1;
-         var addrTime = -1;
-         for (var key in dashboards[actDashboard].widgets) {
-            n = parseInt(key.split(":")[1]);
-            if (key.split(":")[0] == 'SPACER' && n > addrSpacer)
-               addrSpacer = n;
-            if (key.split(":")[0] == 'TIME' && n > addrTime)
-               addrTime = n;
-         }
-         $('#widgetKey').append($('<option></option>')
-                                .val('SPACER:0x' + addrSpacer.toString(16)+1)
-                                .html('Spacer'));
-         $('#widgetKey').append($('<option></option>')
-                                .val('TIME:0x' + addrSpacer.toString(16)+1)
-                                .html('Time'));
-
-         var jArray = [];
-
-         for (var key in valueFacts) {
-            if (!valueFacts[key].state)   // use only active facts here
-               continue;
-            if (dashboards[actDashboard].widgets[key] != null)
-               continue;
-            jArray.push([key, valueFacts[key]]);
-         }
-         jArray.push(['ALL', { 'title': '- ALLE -'}]);
-         jArray.sort(function(a, b) {
-            var A = (a[1].usrtitle ? a[1].usrtitle : a[1].title).toLowerCase();
-            var B = (b[1].usrtitle ? b[1].usrtitle : b[1].title).toLowerCase();
-            if (B > A) return -1;
-            if (A > B) return  1;
-            return 0;
-
-         });
-         for (var i = 0; i < jArray.length; i++) {
-            var key = jArray[i][0];
-            var title = jArray[i][1].usrtitle ? jArray[i][1].usrtitle : jArray[i][1].title;
-
-            if (valueFacts[key] != null)
-               title += ' / ' + valueFacts[key].type;
-            if (jArray[i][1].unit != null && jArray[i][1].unit != '')
-               title += ' [' + jArray[i][1].unit + ']';
-
-            $('#widgetKey').append($('<option></option>')
-                                   .val(jArray[i][0])
-                                   .html(title));
-         }
+         updateSelection();
       },
       buttons: {
          'Cancel': function () {
@@ -930,6 +944,65 @@ function addWidget()
       },
       close: function() { $(this).dialog('destroy').remove(); }
    });
+
+   function updateSelection() {
+      var addrSpacer = -1;
+      var addrTime = -1;
+      $('#widgetKey').empty();
+      // console.log("update selection: " + $('#incFilter').val());
+      for (var key in dashboards[actDashboard].widgets) {
+         n = parseInt(key.split(":")[1]);
+         if (key.split(":")[0] == 'SPACER' && n > addrSpacer)
+            addrSpacer = n;
+         if (key.split(":")[0] == 'TIME' && n > addrTime)
+            addrTime = n;
+      }
+      $('#widgetKey').append($('<option></option>')
+                             .val('SPACER:0x' + addrSpacer.toString(16)+1)
+                             .html('Spacer'));
+      $('#widgetKey').append($('<option></option>')
+                             .val('TIME:0x' + addrSpacer.toString(16)+1)
+                             .html('Time'));
+
+      var jArray = [];
+      var filterExpression = null;
+      if ($('#incFilter').val() != '')
+         filterExpression = new RegExp($('#incFilter').val());
+
+      for (var key in valueFacts) {
+         if (!valueFacts[key].state)   // use only active facts here
+            continue;
+         if (dashboards[actDashboard].widgets[key] != null)
+            continue;
+
+         if (filterExpression && !filterExpression.test(valueFacts[key].title) && !filterExpression.test(valueFacts[key].usrtitle))
+            continue;
+
+         jArray.push([key, valueFacts[key]]);
+      }
+      jArray.push(['ALL', { 'title': '- ALLE -'}]);
+      jArray.sort(function(a, b) {
+         var A = (a[1].usrtitle ? a[1].usrtitle : a[1].title).toLowerCase();
+         var B = (b[1].usrtitle ? b[1].usrtitle : b[1].title).toLowerCase();
+         if (B > A) return -1;
+         if (A > B) return  1;
+         return 0;
+
+      });
+      for (var i = 0; i < jArray.length; i++) {
+         var key = jArray[i][0];
+         var title = jArray[i][1].usrtitle ? jArray[i][1].usrtitle : jArray[i][1].title;
+
+         if (valueFacts[key] != null)
+            title += ' / ' + valueFacts[key].type;
+         if (jArray[i][1].unit != null && jArray[i][1].unit != '')
+            title += ' [' + jArray[i][1].unit + ']';
+
+         $('#widgetKey').append($('<option></option>')
+                                .val(jArray[i][0])
+                                .html(title));
+      }
+   }
 }
 
 function toggleChartDialog(type, address)
@@ -1138,6 +1211,9 @@ function dashboardSetup(dashboardId)
 {
    var form = document.createElement("div");
 
+   if (dashboards[dashboardId].options == null)
+      dashboards[dashboardId].options = {};
+
    $(form).append($('<div></div>')
                   .css('z-index', '9999')
                   .css('minWidth', '40vh')
@@ -1210,6 +1286,11 @@ function dashboardSetup(dashboardId)
       title: "Dashbord - " + dashboards[dashboardId].title,
       open: function() {
          $(".ui-dialog-buttonpane button:contains('Dashboard löschen')").attr('style','color:red');
+
+         if (!dashboards[dashboardId].options.heightfactor)
+            dashboards[dashboardId].options.heightfactor = 1;
+         if (!dashboards[dashboardId].options.heightfactorKiosk)
+            dashboards[dashboardId].options.heightfactorKiosk = 1;
 
          for (var w = 0.5; w <= 2.0; w += 0.5) {
             $('#heightfactor').append($('<option></option>')
@@ -1447,12 +1528,15 @@ function widgetSetup(key)
                   .append($('<div></div>')
                           .attr('id', 'divSymbol')
                           .css('display', 'flex')
-                          .append($('<span></span>')
+                          .append($('<a></a>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
-                                  .html('Symbol'))
+                                  .css('color', 'blue')
+                                  .html('Icon')
+                                  .attr('target','_blank')
+                                  .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
                           .append($('<span></span>')
                                   .css('width', '300px')
                                   .append($('<input></input>')
@@ -1464,19 +1548,25 @@ function widgetSetup(key)
                                          )))
 
                   .append($('<div></div>')
-                          .attr('id', 'divImgon')
+                          .attr('id', 'divSymbolOn')
                           .css('display', 'flex')
-                          .append($('<span></span>')
+                          .append($('<a></a>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
-                                  .html('Symbol On'))
+                                  .css('color', 'blue')
+                                  .html('Icon an')
+                                  .attr('target','_blank')
+                                  .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
                           .append($('<span></span>')
                                   .css('width', '300px')
-                                  .append($('<select></select>')
+                                  .append($('<input></input>')
                                           .addClass('rounded-border inputSetting')
-                                          .attr('id', 'imgon')
+                                          .attr('id', 'symbolOn')
+                                          .attr('type', 'search')
+                                          .val(widget.symbolOn)
+                                          .change(function() {widgetTypeChanged();})
                                          )))
 
                   .append($('<div></div>')
@@ -1487,12 +1577,28 @@ function widgetSetup(key)
                                   .css('text-align', 'end')
                                   .css('align-self', 'center')
                                   .css('margin-right', '10px')
-                                  .html('Symbol Off'))
+                                  .html('Image'))
                           .append($('<span></span>')
                                   .css('width', '300px')
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'imgoff')
+                                         )))
+
+                  .append($('<div></div>')
+                          .attr('id', 'divImgon')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '30%')
+                                  .css('text-align', 'end')
+                                  .css('align-self', 'center')
+                                  .css('margin-right', '10px')
+                                  .html('Image An'))
+                          .append($('<span></span>')
+                                  .css('width', '300px')
+                                  .append($('<select></select>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('id', 'imgon')
                                          )))
 
                   .append($('<div></div>')
@@ -1513,7 +1619,6 @@ function widgetSetup(key)
                                           .attr('type', 'text')
                                           .val(widget.color)
                                          ))
-
                           .append($('<span></span>')
                                   .append($('<input></input>')
                                           .addClass('rounded-border inputSetting')
@@ -1591,14 +1696,24 @@ function widgetSetup(key)
       $("#divCritmin").css("display", [5,6].includes(wType) ? 'flex' : 'none');
       $("#divCritmax").css("display", [5,6].includes(wType) ? 'flex' : 'none');
       $("#divSymbol").css("display", [0,9].includes(wType) ? 'flex' : 'none');
+      $("#divSymbolOn").css("display", [0,9].includes(wType) ? 'flex' : 'none');
       $("#divImgon").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
       $("#divImgoff").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
       $("#divPeak").css("display", [1,3,6,9].includes(wType) ? 'flex' : 'none');
       $("#divColor").css("display", [0,1,3,4,6,7,9,10,11].includes(wType) ? 'flex' : 'none');
       $("#divLinefeed").css("display", [10].includes(wType) ? 'flex' : 'none');
 
-      if ([0].includes(wType) && $('#symbol').val() == '')
+      if ([0].includes(wType) && $('#symbol').val() == '' &&  $('#symbolOn').val() == '')
          $("#divColor").css("display", 'none');
+
+      if (![0,9].includes(wType) || $('#symbolOn').val() == '') {
+         $('.spColorOn').css('display', 'none');
+         $('#spanColor').html("Farbe");
+      }
+      else {
+         $('.spColorOn').css('display', 'flex');
+         $('#spanColor').html("Farbe aus / an");
+      }
    }
 
    var title = key.split(":")[0];
@@ -1665,7 +1780,7 @@ function widgetSetup(key)
 
          var wType = parseInt($('#widgettype').val());
 
-         if (![0,9].includes(wType) || $('#symbol').val() == '') {
+         if (![0,9].includes(wType) || $('#symbolOn').val() == '') {
             $('.spColorOn').css('display', 'none');
             $('#spanColor').html("Farbe");
          }
@@ -1710,6 +1825,7 @@ function widgetSetup(key)
             widget.critmin = parseFloat($("#critmin").val()) || -1;
             widget.critmax = parseFloat($("#critmax").val()) || -1;
             widget.symbol = $("#symbol").val();
+            widget.symbolOn = $("#symbolOn").val();
             widget.imgon = $("#imgon").val();
             widget.imgoff = $("#imgoff").val();
             widget.widgettype = parseInt($("#widgettype").val());
@@ -1732,6 +1848,7 @@ function widgetSetup(key)
             widget.critmin = parseFloat($("#critmin").val()) || -1;
             widget.critmax = parseFloat($("#critmax").val()) || -1;
             widget.symbol = $("#symbol").val();
+            widget.symbolOn = $("#symbolOn").val();
             widget.imgon = $("#imgon").val();
             widget.imgoff = $("#imgoff").val();
             widget.widgettype = parseInt($("#widgettype").val());
@@ -1767,6 +1884,8 @@ function widgetSetup(key)
                json[key]["critmax"] = parseFloat($("#critmax").val());
             if ($("#symbol").length)
                json[key]["symbol"] = $("#symbol").val();
+            if ($("#symbolOn").length)
+               json[key]["symbolOn"] = $("#symbolOn").val();
             if ($("#imgon").length)
                json[key]["imgon"] = $("#imgon").val();
             if ($("#imgoff").length)
