@@ -12,20 +12,24 @@
 
     --light1: #fdfddf;
     --light2: #ffffc6;
-    --light3old: #f6f694;
     --light3: #cccc93;
-    --light4: #efef65;
+    --light4: #818382;
+    --listFontColor: #ffffc6;
     --blue: #2177AD;
+    --blueshade: #495b67;
     --info: #f9f9ef;
 
+    --widgetBackground: #272727b8;
+    --dashboardMenuBackground: #7080907a;
     --caption1: #F90;
     --caption2: #ffc766;
     --edit: #f9f9ef;
+    --editadd: #fffcab;
 
-    --background: #ececb8;
+    --background: #000000d1;
     --shadow: black;
 
-    --borderColor: #ececb8;
+    --borderColor: #000000d1;
     --borderRadius: 3px;
 
     --borderColorSchemaValue: black;

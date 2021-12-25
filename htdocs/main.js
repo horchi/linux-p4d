@@ -1034,3 +1034,17 @@ function getTotalHeightOf(id)
 {
    return $('#' + id).height() + parseInt($('#' + id).css('padding')) + parseInt($('#' + id).css('margin'));
 }
+
+$.attrHooks['viewbox'] = {
+   set: function(elem, value, name) {
+      elem.setAttributeNS(null, 'viewBox', value + '');
+      return value;
+   }
+};
+
+$.attrHooks['preserveaspectratio'] = {
+   set: function(elem, value, name) {
+      elem.setAttributeNS(null, 'preserveAspectRatio', value + '');
+      return value;
+   }
+};

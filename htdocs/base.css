@@ -523,6 +523,7 @@ span > input
     display: inline-table;
     text-align: left;
     height: 24px;
+    color: var(--listFontColor);
 }
 
 .inputTableConfig > div > span:nth-child(3n)
@@ -532,6 +533,7 @@ span > input
     display: inline-table;
     text-align: left;
     height: 24px;
+    color: var(--listFontColor);
 }
 
 .container
@@ -559,6 +561,7 @@ span > input
     text-align: left;
     overflow: hidden;
     line-height: 45px;
+    color: var(--listFontColor);
 }
 
 .listSecondCol
@@ -567,6 +570,7 @@ span > input
     text-align: left;
     overflow: hidden;
     align-items: center;
+    color: var(--listFontColor);
 }
 
 .listRow {
@@ -787,7 +791,7 @@ table.tableMultiCol tr:nth-child(odd)
     border-radius: 15px;
     border-color: var(--borderColor);
     background-color: var(--background);
-    color: var(--buttonFont);
+    color: var(--light4);
     text-decoration: none;
     font-size: 5.0vh;
     height: 100%;
@@ -1110,7 +1114,7 @@ table.tableMultiCol tr:nth-child(odd)
     display: grid;
     grid-template-areas:
       'title'
-       'main';
+      'main';
     grid-template-rows: 15% 85%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
@@ -1193,7 +1197,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: transparent;
     cursor: pointer;
     border: none;
-    color: var(--buttonFont);
+    color: var(--listFontColor);
     justify-self: center;
     text-align: center;
     align-self: center;
@@ -1208,17 +1212,13 @@ table.tableMultiCol tr:nth-child(odd)
 
 .widget-edit
 {
-    grid-area: title;
-    justify-self: flex-end;
-    font-size: 1em;
-    z-index: 99;
     color: orange;
-    background-color: transparent;
 }
 
 .widget-edit:hover
 {
-    background-color: darkslategray;
+/*    font-size: 1em;*/
+    font-weight: bold;
 }
 
 .widget-progress {
@@ -1263,7 +1263,7 @@ table.tableMultiCol tr:nth-child(odd)
 .widget-main-gauge
 {
     grid-area: main;
-    width: 100%;
+    width: inherit;
     align-self: center;
 }
 

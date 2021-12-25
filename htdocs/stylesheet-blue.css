@@ -14,18 +14,23 @@
     --light2: white;
     --light3: #396992;
     --light4: white;
+    --listFontColor: white;
     --blue: #2177AD;
+    --blueshade: #495b67;
     --info: #f9f9ef;
 
+    --widgetBackground: #272727b8;
+    --dashboardMenuBackground: #7080907a;
     --caption1: #0d2546;
     --caption2: #113a77;
     --edit: #f9f9ef;
+    --editadd: #fffcab;
+
+    --background: #001129d1;
+    --shadow: black;
 
     --borderColor: #001129;
     --borderRadius: 3px;
-
-    --background: #001129;
-    --shadow: black;
 
     --borderColorSchemaValue: blue;
     --borderRadiusSchemaValue: 3px;

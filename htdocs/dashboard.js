@@ -229,6 +229,9 @@ function initWidget(key, widget, fact)
    if (fact != null)
       title += fact.usrtitle && fact.usrtitle != '' ? fact.usrtitle : fact.title;
 
+   if (!widget.color)
+      widget.color = 'white';
+
    switch (widget.widgettype)
    {
       case 0: {          // Symbol
@@ -286,9 +289,8 @@ function initWidget(key, widget, fact)
                  }
               }
            });
-        }
+         }
 
-        $('#button' + fact.type + fact.address).css('color', widget.color);
          break;
       }
 
@@ -309,6 +311,7 @@ function initWidget(key, widget, fact)
          var eValue = document.createElement("div");
          eValue.setAttribute('id', 'value' + fact.type + fact.address);
          eValue.className = "chart-value";
+         eValue.style.color = widget.color;
          elem.appendChild(eValue);
 
          var eChart = document.createElement("div");
@@ -325,37 +328,74 @@ function initWidget(key, widget, fact)
       }
 
       case 3: {        // type 3 (Value)
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
-         elem.className = "widgetValue rounded-border widgetDropZone";
+         $(elem)
+            .addClass("widgetValue rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .html(title))
+            .append($('<div></div>')
+                    .attr('id', 'widget' + fact.type + fact.address)
+                    .addClass('widget-value')
+                    .css('color', widget.color))
+            .append($('<div></div>')
+                    .attr('id', 'peak' + fact.type + fact.address)
+                    .addClass('chart-peak'));
+
          if (!setupMode)
-            elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
-         elem.innerHTML = html;
-         var ePeak = document.createElement("div");
-         ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
-         ePeak.className = "chart-peak";
-         elem.appendChild(ePeak);
-         $("#widget" + fact.type + fact.address).css('color', widget.color);
+            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
+
          break;
       }
       case 4: {        // Gauge
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
-
-         html += "  <svg class=\"widget-main-gauge\" viewBox=\"0 0 1000 600\" preserveAspectRatio=\"xMidYMin slice\">\n";
-         html += "    <path id=\"pb" + fact.type + fact.address + "\"/>\n";
-         html += "    <path class=\"data-arc\" id=\"pv" + fact.type + fact.address + "\"/>\n";
-         html += "    <path class=\"data-peak\" id=\"pp" + fact.type + fact.address + "\"/>\n";
-         html += "    <text id=\"value" + fact.type + fact.address + "\" class=\"gauge-value\" text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"500\" y=\"450\" font-size=\"140\" font-weight=\"bold\"></text>\n";
-         html += "    <text id=\"sMin" + fact.type + fact.address + "\" class=\"scale-text\" text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"50\" y=\"550\"></text>\n";
-         html += "    <text id=\"sMax" + fact.type + fact.address + "\" class=\"scale-text\" text-anchor=\"middle\" alignment-baseline=\"middle\" x=\"950\" y=\"550\"></text>\n";
-         html += "  </svg>\n";
-
-         elem.className = "widgetGauge rounded-border participation widgetDropZone";
+         $(elem)
+            .addClass("widgetGauge rounded-border participation widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .html(title))
+            .append($('<div></div>')
+                    .attr('id', 'svgDiv' + fact.type + fact.address)
+                    .addClass('widget-main-gauge')
+                    .append($('<svg></svg>')
+                            .attr('viewBox', '0 0 1000 600')
+                            .attr('preserveAspectRatio', 'xMidYMin slice')
+                            .append($('<path></path>')
+                                    .attr('id', 'pb' + fact.type + fact.address))
+                            .append($('<path></path>')
+                                    .attr('id', 'pv' + fact.type + fact.address)
+                                    .addClass('data-arc'))
+                            .append($('<path></path>')
+                                    .attr('id', 'pp' + fact.type + fact.address)
+                                    .addClass('data-peak'))
+                            .append($('<text></text>')
+                                    .attr('id', 'value' + fact.type + fact.address)
+                                    .addClass('gauge-value')
+                                    .attr('font-size', "140")
+                                    .attr('font-weight', 'bold')
+                                    .attr('text-anchor', 'middle')
+                                    .attr('alignment-baseline', 'middle')
+                                    .attr('x', '500')
+                                    .attr('y', '450'))
+                            .append($('<text></text>')
+                                    .attr('id', 'sMin' + fact.type + fact.address)
+                                    .addClass('scale-text')
+                                    .attr('text-anchor', 'middle')
+                                    .attr('alignment-baseline', 'middle')
+                                    .attr('x', '50')
+                                    .attr('y', '550'))
+                            .append($('<text></text>')
+                                    .attr('id', 'sMax' + fact.type + fact.address)
+                                    .addClass('scale-text')
+                                    .attr('text-anchor', 'middle')
+                                    .attr('alignment-baseline', 'middle')
+                                    .attr('x', '950')
+                                    .attr('y', '550'))));
          if (!setupMode)
-            elem.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
-         elem.innerHTML = html;
+            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
+
+         var divId = '#svgDiv' + fact.type + fact.address;
+         $(divId).html($(divId).html());  // redraw to activate the SVG !!
          break;
       }
 
@@ -499,52 +539,65 @@ function initWidget(key, widget, fact)
       }
 
       case 7: {    // 7 (PlainText)
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')"></button>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value" style="height:inherit;"></div>';
-         elem.className = "widgetPlain rounded-border widgetDropZone";
-         elem.innerHTML = html;
-         if (widget.color != null)
-            $("#widget" + fact.type + fact.address).css('color', widget.color);
+         $(elem)
+            .addClass("widgetPlain rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .html(title))
+            .append($('<div></div>')
+                    .attr('id', 'widget' + fact.type + fact.address)
+                    .addClass('widget-value')
+                    .css('color', widget.color)
+                    .css('height', 'inherit'));
          break;
       }
 
       case 8: {     // 8 (Choice)
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')"></button>';
-         html += '<div id="widget' + fact.type + fact.address + '" class="widget-value"></div>\n';
-         elem.className = "widget rounded-border widgetDropZone";
-         elem.style.cursor = 'pointer';
-         elem.addEventListener('click', function(event) {
-             socket.send({ "event": "toggleio", "object":
-                           { "address": fact.address,
-                             "type": fact.type }
-                         });
-            ;}, false);
-         elem.innerHTML = html;
-         $("#widget" + fact.type + fact.address).css('color', widget.color);
-      break;
+         $(elem)
+            .addClass("widget rounded-border widgetDropZone")
+            .css('cursor', 'pointer')
+            .click(function() {
+               socket.send({"event": "toggleio", "object": {"address": fact.address, "type": fact.type}});
+            })
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .html(title))
+            .append($('<div></div>')
+                    .attr('id', 'widget' + fact.type + fact.address)
+                    .addClass('widget-value')
+                    .css('color', widget.color));
+         break;
       }
 
       case 9: {          // Symbol-Value
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         var html = '  <button class="widget-title ' + cls + '" type="button" onclick="titleClick(' + fact.address + ", '" + fact.type + '\', \'' + key + '\')">' + title + '</button>';
-         html += '  <button id="button' + fact.type + fact.address + '" class="widget-main" type="button" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')" >';
-         html += '    <img id="widget' + fact.type + fact.address + '" draggable="false"/>';
-         html += "   </button>\n";
-
-         html += "<div id=\"progress" + fact.type + fact.address + "\" class=\"widget-progress\">";
-         html += "   <div id=\"progressBar" + fact.type + fact.address + "\" class=\"progress-bar\" style=\"visible\"></div>";
-         html += "</div>";
-
-         elem.className = "widgetSymbolValue rounded-border widgetDropZone";
-         elem.innerHTML = html;
-         document.getElementById("progress" + fact.type + fact.address).style.visibility = "hidden";
-
-         var eValue = document.createElement("div");
-         eValue.setAttribute('id', 'value' + fact.type + fact.address);
-         eValue.className = "symbol-value";
-         elem.appendChild(eValue);
+         $(elem)
+            .addClass("widgetSymbolValue rounded-border widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .html(title))
+            .append($('<button></button>')
+                    .attr('id', 'button' + fact.type + fact.address)
+                    .addClass('widget-main')
+                    .attr('type', 'button')
+                    .css('color', widget.color)
+                    .addClass('widget-value')
+                    .append($('<img></img>')
+                            .attr('id', 'widget' + fact.type + fact.address)
+                            .attr('draggable', false)))
+            .append($('<div></div>')
+                    .attr('id', 'progress' + fact.type + fact.address)
+                    .addClass('widget-progress')
+                    .css('visibility', 'hidden')
+                    .append($('<div></div>')
+                            .attr('id', 'progressBar' + fact.type + fact.address)
+                            .addClass('progress-bar')))
+            .append($('<div></div>')
+                    .attr('id', 'value' + fact.type + fact.address)
+                    .addClass('symbol-value')
+                   );
 
          if (!setupMode && fact.dim) {
             $('#button' + fact.type + fact.address).on({
@@ -579,7 +632,6 @@ function initWidget(key, widget, fact)
             });
          }
 
-         $("#button" + fact.type + fact.address).css('color', widget.color);
          break;
       }
 
@@ -788,19 +840,10 @@ function updateWidget(sensor, refresh, widget)
    }
    else if (widget.widgettype == 1)    // Chart
    {
-      // var elem = $("#widget" + fact.type + fact.address);
-
       if (widget.showpeak != null && widget.showpeak)
          $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
 
-      if (!sensor.disabled) {
-         $("#value" + fact.type + fact.address).text(sensor.value.toFixed(2) + " " + widget.unit);
-         $("#value" + fact.type + fact.address).css('color', "var(--buttonFont)")
-      }
-      else {
-         $("#value" + fact.type + fact.address).css('color', "var(--caption2)")
-         $("#value" + fact.type + fact.address).text("(" + sensor.value.toFixed(2) + (widget.unit!="" ? " " : "") + widget.unit + ")");
-      }
+      $("#value" + fact.type + fact.address).text(sensor.value.toFixed(2) + " " + widget.unit);
 
       if (refresh) {
          var jsonRequest = {};
@@ -827,15 +870,13 @@ function updateWidget(sensor, refresh, widget)
       var scaleMax = !widget.scalemax || widget.unit == '%' ? 100 : widget.scalemax.toFixed(0);
       var scaleMin = value >= 0 ? "0" : Math.ceil(value / 5) * 5 - 5;
       var _peak = sensor.peak != null ? sensor.peak : 0;
-      if (scaleMax < Math.ceil(value)) scaleMax = value;
-
+      if (scaleMax < Math.ceil(value))
+         scaleMax = value;
       if (widget.showpeak != null && widget.showpeak && scaleMax < Math.ceil(_peak))
          scaleMax = _peak.toFixed(0);
-
       $("#sMin" + fact.type + fact.address).text(scaleMin);
       $("#sMax" + fact.type + fact.address).text(scaleMax);
       $("#value" + fact.type + fact.address).text(value + " " + widget.unit);
-
       var ratio = (value - scaleMin) / (scaleMax - scaleMin);
       var peak = (_peak.toFixed(2) - scaleMin) / (scaleMax - scaleMin);
 
