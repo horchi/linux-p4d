@@ -1730,7 +1730,7 @@ int Daemon::loop()
          }
          else
          {
-            tell(eloAlways, "Error: Can't request home-matic data, MQTT connection failed");
+            tell(eloDetail, "Info: Can't trigger weather data, missing MQTT connection");
          }
       }
 
