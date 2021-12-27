@@ -732,9 +732,12 @@ function getTimeHtml()
 
    var cls = isDaytime ? 'mdi mdi-weather-sunny' : 'mdi mdi-weather-night';
 
-   return '<span class="' + cls + ' " style="color:orange;"></span>'
-      + '<span>' + moment().format('dddd Do<br/> MMMM YYYY<br/>') + '</span>'
-      + '<span style="font-size:2em">' + moment().format('HH:mm:ss') + '</span>';
+   return '<div>'
+      + '<span class="' + cls + ' " style="color:orange;"></span>'
+      + '<span> ' + moment().format('dddd Do') + '</span>'
+      + moment().format('MMMM YYYY')
+      + '</div>'
+      + '<div style="font-size:2em">' + moment().format('HH:mm:ss') + '</div>';
 }
 
 function getWeatherHtml(symbolView, wfact, weather)
