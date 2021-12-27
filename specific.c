@@ -614,6 +614,14 @@ int P4d::updateState()
       }
    }
 
+   sensors["UD"][udState].value = currentState.state;
+   sensors["UD"][udState].text = currentState.stateinfo;
+
+   mqttHaPublish(sensors["UD"][udState]);
+   mqttNodeRedPublishSensor(sensors["UD"][udState]);
+
+   // #TODO -> push also to WS ?
+
    return status;
 }
 

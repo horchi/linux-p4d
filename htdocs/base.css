@@ -1104,6 +1104,15 @@ table.tableMultiCol tr:nth-child(odd)
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
 
+.widget-weather
+{
+    text-align: left;
+    font-size: x-large;
+    font-weight: normal;
+    margin-top: 20px;
+    display: inline-block;
+}
+
 .widgetManuel
 {
     background-color: #a27373 !important;
@@ -1468,6 +1477,8 @@ dialog::backdrop, #backdrop
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 6em;}
 }
 
 @media only screen and (min-width:396px) and (max-width:1080px)
@@ -1488,9 +1499,11 @@ dialog::backdrop, #backdrop
     .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
     .widget-main-peak-lin      { font-size: 0.7em; }
     .widget-value              { font-size: 1.2em; }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 6em;}
 }
 
-@media only screen and (max-height:500px)
+@media only screen and (min-height:480px) and (max-height:500px)
 {
     .content                   { margin: 0px; }
     .widgetContainer > div     { width: 120px; height: 96px; margin: 2px; }
@@ -1502,14 +1515,21 @@ dialog::backdrop, #backdrop
     .widget-main               { font-size: 3.5em;}
     .widget-main-value-lin     { font-size: 0.9em;  }
     .widget-main-peak-lin      { margin-right: 0px; }
+    .widget-weather            { font-size: large; margin-top: 0px;  }
+    .widget-weather > br       { display: block; }
+    .symbol-value              { font-size: large;}
 }
 
 @media only screen and (max-width: 375px) and (min-width:321px)
 {
     .widgetContainer > div     { width: 175px; padding: 0px; margin: 1px; }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 6em;}
 }
 
 @media only screen and (max-width: 320px)
 {
     .widgetContainer > div     { width: 155px; padding: 0px; margin: 1px; }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 6em;}
 }

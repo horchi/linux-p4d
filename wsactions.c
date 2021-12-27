@@ -94,7 +94,7 @@ int Daemon::dispatchClientRequest()
          else
             tell(eloAlways, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
                  wsClients[(void*)client].user.c_str());
-         replyResult(fail, "Insufficient rights", client);
+         // replyResult(fail, "Insufficient rights", client);
       }
 
       json_decref(oData);      // free the json object

@@ -550,17 +550,17 @@ function initWidget(key, widget, fact)
       }
 
       case 7: {    // 7 (PlainText)
-         $(elem)
-            .addClass("widgetPlain rounded-border widgetDropZone")
-            .append($('<div></div>')
-                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(fact.type, fact.addClass, key);})
-                    .html(title))
-            .append($('<div></div>')
-                    .attr('id', 'widget' + fact.type + fact.address)
-                    .addClass('widget-value')
-                    .css('color', widget.color)
-                    .css('height', 'inherit'));
+         $(elem).addClass('widgetPlain rounded-border widgetDropZone');
+         if (setupMode)
+            $(elem).append($('<div></div>')
+                           .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                           .click(function() {titleClick(fact.type, fact.addClass, key);})
+                           .html(title));
+         $(elem).append($('<div></div>')
+                        .attr('id', 'widget' + fact.type + fact.address)
+                        .addClass(fact.type == 'WEA' ? 'widget-weather' : 'widget-value')
+                        .css('color', widget.color)
+                        .css('height', 'inherit'));
          break;
       }
 
@@ -875,7 +875,22 @@ function updateWidget(sensor, refresh, widget)
    }
    else if (widget.widgettype == 2 || widget.widgettype == 7 || widget.widgettype == 8)    // Text, PlainText, Choice
    {
-      if (sensor.text != null) {
+      // console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
+      if (sensor.type == 'WEA' && sensor.text != null) {
+         var weather = JSON.parse(sensor.text);
+         if (weather) {
+            var iconClass = 'mdi ' + getWeatherMdi(weather.detail);
+            var html = '';
+            html += '<div class="' + iconClass + '" style="text-align:center;color:orange;font-weight:bold;"> ' + weather.detail + '</div><br/>';
+            html += '<div>Temp: <span style="color:#00c3ff;font-weight:bold;">' + weather.temp + '°C</span>';
+            html += '<span style="font-size:smaller;"> (' + weather.tempmin + ' / ' + weather.tempmax + ')' + '</span></div>';
+            html += '<div>Luftdruck: <span style="color:#00c3ff;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';
+            html += '<div>Luftfeuchte: <span style="color:#00c3ff;font-weight:bold;">' + weather.humidity + ' %' + '</span></div>';
+            html += '<div>Wind: <span style="color:#00c3ff;font-weight:bold;">' + weather.windspeed + ' m/s' + '</span></div>';
+            $("#widget" + fact.type + fact.address).html(html);
+         }
+      }
+      else if (sensor.text != null) {
          var text = sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>');
          $("#widget" + fact.type + fact.address).html(text);
       }

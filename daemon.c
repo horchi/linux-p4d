@@ -160,6 +160,7 @@ Daemon::ValueTypes Daemon::defaultValueTypes[] =
    { "^DCS",   "DECONZ Sensoren" },
    { "^HM.*",  "Home Matic" },
    { "^P4.*",  "P4 Daemon" },
+   { "^WEA",   "Wetter" },
 
    { "",      "" }
 };
@@ -215,6 +216,7 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
    { "DZS",      na, "mov",     wtSymbol,        0,         0,       0, true },
    { "DZS",      na,  "lx",      wtChart,        0,         0,       0, true },
    { "DZS",      na,   "*",      wtMeter,        0,        45,      12, true },
+   { "WEA",      na,   "*",  wtPlainText,        0,         0,       0, true },
    { "" }
 };
 
@@ -1631,6 +1633,7 @@ int Daemon::meanwhile()
 
 int Daemon::loop()
 {
+   time_t nextWeatherAt {0};
    time_t nextStateAt {0};
    int lastState {na};
 
@@ -1702,6 +1705,14 @@ int Daemon::loop()
 
       if (time(0) < nextRefreshAt)
          continue;
+
+      // trigger weather
+
+      if (time(0) > nextWeatherAt)
+      {
+         mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", "{\"trg\" : true }");
+         nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
+      }
 
       // check serial connection
 
@@ -2181,6 +2192,15 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
 {
    const char* title = !isEmpty(aTitle) ? aTitle : name;
 
+   tableValueTypes->clear();
+   tableValueTypes->setValue("TYPE", type);
+
+   if (!tableValueTypes->find())
+   {
+      tableValueTypes->setValue("TITLE", getTitleOfType(type));
+      tableValueTypes->store();
+   }
+
    tableValueFacts->clear();
    tableValueFacts->setValue("TYPE", type);
    tableValueFacts->setValue("ADDRESS", addr);
@@ -2283,7 +2303,7 @@ int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
       if (strstr(topic, "/nodered/weather"))
          dispatchNodeRedWeather(jObject);
       else
-      dispatchNodeRedCommand(jObject);
+         dispatchNodeRedCommand(jObject);
    }
 
    return success;
@@ -2329,20 +2349,38 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
 
 int Daemon::dispatchNodeRedWeather(json_t* jObject)
 {
-   json_t* jData = json_object();
+   addValueFact(1, "WEA", 1, "weather", "txt", "Wetter");
 
-   json_object_set_new(jData, "type", json_string("WEA"));
-   json_object_set_new(jData, "address", json_integer(1));
+   json_t* oWeather = json_object();
 
-   json_object_set_new(jData, "detail", json_string(getStringFromJson(jObject, "detail")));
-   json_object_set_new(jData, "temp", json_real(getDoubleFromJson(jObject, "tempc")));
-   json_object_set_new(jData, "tempmax", json_real(getDoubleFromJson(jObject, "temp_maxc")));
-   json_object_set_new(jData, "tempmin", json_real(getDoubleFromJson(jObject, "temp_minc")));
-   json_object_set_new(jData, "humidity", json_real(getDoubleFromJson(jObject, "humidity")));
-   json_object_set_new(jData, "pressure", json_real(getDoubleFromJson(jObject, "pressure")));
-   json_object_set_new(jData, "windspeed", json_real(getDoubleFromJson(jObject, "windspeed")));
+   json_object_set_new(oWeather, "detail", json_string(getStringFromJson(jObject, "detail")));
+   json_object_set_new(oWeather, "temp", json_real(getDoubleFromJson(jObject, "tempc")));
+   json_object_set_new(oWeather, "tempmax", json_real(getDoubleFromJson(jObject, "temp_maxc")));
+   json_object_set_new(oWeather, "tempmin", json_real(getDoubleFromJson(jObject, "temp_minc")));
+   json_object_set_new(oWeather, "humidity", json_real(getDoubleFromJson(jObject, "humidity")));
+   json_object_set_new(oWeather, "pressure", json_real(getDoubleFromJson(jObject, "pressure")));
+   json_object_set_new(oWeather, "windspeed", json_real(getDoubleFromJson(jObject, "windspeed")));
 
-   pushOutMessage(jData, "update");
+   sensors["WEA"][1].kind = "text";
+   sensors["WEA"][1].last = time(0);
+
+   char* p = json_dumps(oWeather, JSON_REAL_PRECISION(4));
+   sensors["WEA"][1].text = p;
+   free(p);
+   json_decref(oWeather);
+
+   {
+      json_t* ojData = json_object();
+      sensor2Json(ojData, "WEA", 1);
+      json_object_set_new(ojData, "text", json_string(sensors["WEA"][1].text.c_str()));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", "WEA", 1);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
 
    return done;
 }

@@ -1041,16 +1041,51 @@ function getTotalHeightOf(id)
    return $('#' + id).height() + parseInt($('#' + id).css('padding')) + parseInt($('#' + id).css('margin'));
 }
 
-$.attrHooks['viewbox'] = {
-   set: function(elem, value, name) {
-      elem.setAttributeNS(null, 'viewBox', value + '');
-      return value;
-   }
-};
+// $.attrHooks['viewbox'] = {
+//    set: function(elem, value, name) {
+//       elem.setAttributeNS(null, 'viewBox', value + '');
+//       return value;
+//    }
+// };
 
-$.attrHooks['preserveaspectratio'] = {
-   set: function(elem, value, name) {
-      elem.setAttributeNS(null, 'preserveAspectRatio', value + '');
-      return value;
+// $.attrHooks['preserveaspectratio'] = {
+//    set: function(elem, value, name) {
+//       elem.setAttributeNS(null, 'preserveAspectRatio', value + '');
+//       return value;
+//    }
+// };
+
+const mdiWeather = [
+   { 'expression' : 'overcast clouds',    'mdi' : 'mdi-weather-cloudy' },
+   { 'expression' : 'cloudy-alert',       'mdi' : 'mdi-weather-cloudy-alert' },
+   { 'expression' : 'fog',                'mdi' : 'mdi-weather-fog' },
+   { 'expression' : 'hail',               'mdi' : 'mdi-weather-hail' },
+   { 'expression' : 'hazy',               'mdi' : 'mdi-weather-hazy' },
+   { 'expression' : 'hurricane',          'mdi' : 'mdi-weather-hurricane' },
+   { 'expression' : 'lightning',          'mdi' : 'mdi-weather-lightning' },
+   { 'expression' : 'lightning-rainy',    'mdi' : 'mdi-weather-lightning-rainy' },
+   { 'expression' : 'partly-cloudy',      'mdi' : 'mdi-weather-partly-cloudy' },
+   { 'expression' : 'partly-lightning',   'mdi' : 'mdi-weather-partly-lightning' },
+   { 'expression' : 'partly-rainy',       'mdi' : 'mdi-weather-partly-rainy' },
+   { 'expression' : 'partly-snowy',       'mdi' : 'mdi-weather-partly-snowy' },
+   { 'expression' : 'partly-snowy-rainy', 'mdi' : 'mdi-weather-partly-snowy-rainy' },
+   { 'expression' : 'pouring',            'mdi' : 'mdi-weather-pouring' },
+   { 'expression' : 'rainy',              'mdi' : 'mdi-weather-rainy' },
+   { 'expression' : 'snowy',              'mdi' : 'mdi-weather-snowy' },
+   { 'expression' : 'snowy-heavy',        'mdi' : 'mdi-weather-snowy-heavy' },
+   { 'expression' : 'snowy-rainy',        'mdi' : 'mdi-weather-snowy-rainy' },
+   { 'expression' : 'sunny',              'mdi' : 'mdi-weather-sunny' },
+   { 'expression' : 'tornado',            'mdi' : 'mdi-weather-tornado' },
+   { 'expression' : 'windy',              'mdi' : 'mdi-weather-windy' },
+   { 'expression' : 'windy-variant',      'mdi' : 'mdi-weather-windy-variant' }
+];
+
+function getWeatherMdi(weather)
+{
+   for (var i = 0; i < mdiWeather.length; i++) {
+      if (mdiWeather[i].expression == weather)
+         return mdiWeather[i].mdi;
    }
-};
+
+   return 'mdi-weather-sunny';
+}

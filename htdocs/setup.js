@@ -393,6 +393,11 @@ function initIoSetup(valueFacts)
             sectionId = 'io' + valueTypes[i].title.replace(' ', '');
       }
 
+      if (sectionId == '' || !ioSections[sectionId]) {
+         console.log("Ignoring unexpected sensor type  " + item.type);
+         continue;
+      }
+
       if (!ioSections[sectionId].visible)
          continue;
 
