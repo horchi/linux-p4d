@@ -879,9 +879,9 @@ function updateWidget(sensor, refresh, widget)
       if (sensor.type == 'WEA' && sensor.text != null) {
          var weather = JSON.parse(sensor.text);
          if (weather) {
-            var iconClass = 'mdi ' + getWeatherMdi(weather.detail);
+            var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
             var html = '';
-            html += '<div class="' + iconClass + '" style="text-align:center;color:orange;font-weight:bold;"> ' + weather.detail + '</div><br/>';
+            html += '<div style="display:inline-flex;color:orange;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
             html += '<div>Temp: <span style="color:#00c3ff;font-weight:bold;">' + weather.temp + '°C</span>';
             html += '<span style="font-size:smaller;"> (' + weather.tempmin + ' / ' + weather.tempmax + ')' + '</span></div>';
             html += '<div>Luftdruck: <span style="color:#00c3ff;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';

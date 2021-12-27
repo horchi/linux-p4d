@@ -2354,6 +2354,7 @@ int Daemon::dispatchNodeRedWeather(json_t* jObject)
    json_t* oWeather = json_object();
 
    json_object_set_new(oWeather, "detail", json_string(getStringFromJson(jObject, "detail")));
+   json_object_set_new(oWeather, "icon", json_string(getStringFromJson(jObject, "icon")));
    json_object_set_new(oWeather, "temp", json_real(getDoubleFromJson(jObject, "tempc")));
    json_object_set_new(oWeather, "tempmax", json_real(getDoubleFromJson(jObject, "temp_maxc")));
    json_object_set_new(oWeather, "tempmin", json_real(getDoubleFromJson(jObject, "temp_minc")));
