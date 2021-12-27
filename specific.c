@@ -28,8 +28,8 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 {
    // p4d
 
-   { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Längengrad", "" },
-   { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Breitengrad", "" },
+   { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
+   { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Breitengrad", "" },
 
    { "interval",                  ctInteger, "60",   false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
    { "webPort",                   ctInteger, "1111", false, "Daemon", "Port des Web Interfaces", "" },
@@ -69,7 +69,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // node-red MQTT interface
 
-   { "mqttNodeRedUrl",            ctString,  "",  false, "Node-Red Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttNodeRedUrl",            ctString,  "tcp://localhost:1883", false, "Node-Red Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
 
    // Home Automation MQTT interface
 

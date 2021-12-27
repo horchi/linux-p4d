@@ -541,9 +541,8 @@ int Daemon::init()
    {
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/rpcresult");
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/event");
-      mqttCheckConnection();
 
-      if (mqttCheckConnection() == success)
+      if (mqttCheckConnection() == success && mqttWriter->isConnected())
       {
          const char* request = "{ \"method\" : \"listDevices\" }";
          mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
@@ -1717,7 +1716,7 @@ int Daemon::loop()
 
       if (time(0) > nextWeatherAt)
       {
-         if (mqttCheckConnection() == success)
+         if (mqttCheckConnection() == success && mqttNodeRedWriter->isConnected())
          {
             json_t* j = json_object();
             json_object_set_new(j, "latitude", json_real(latitude));
@@ -3200,7 +3199,7 @@ int Daemon::initArduino()
       return fail;
    }
 
-   if (mqttCheckConnection() == success)
+   if (mqttReader->isConnected())
    {
       mqttReader->write(TARGET "2mqtt/arduino/in", p);
       tell(eloDebug, "DEBUG: PushMessage to arduino [%s]", p);

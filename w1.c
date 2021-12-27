@@ -165,7 +165,7 @@ int W1::update()
          {
             double value = atoi(p+3) / 1000.0;
 
-            if (value >= 80 || value <= -80)
+            if (value >= 85 || value <= -85)
             {
                // at error we get sometimes +85 or -85 from the sensor so limit the range
                //  to -80 - +80
