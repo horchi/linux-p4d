@@ -543,9 +543,16 @@ int Daemon::init()
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/event");
       mqttCheckConnection();
 
-      const char* request = "{ \"method\" : \"listDevices\" }";
-      mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
-      tell(eloHomeMatic, "-> (home-matic) '%s' to '%s'", TARGET "2mqtt/homematic/rpccall", request);
+      if (mqttCheckConnection() == success)
+      {
+         const char* request = "{ \"method\" : \"listDevices\" }";
+         mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
+         tell(eloHomeMatic, "-> (home-matic) '%s' to '%s'", TARGET "2mqtt/homematic/rpccall", request);
+      }
+      else
+      {
+         tell(eloAlways, "Error: Can't request home-matic data, MQTT connection failed");
+      }
    }
 
    // init web socket ...
@@ -1708,16 +1715,23 @@ int Daemon::loop()
 
       // trigger weather
 
-      if (time(0) > nextWeatherAt && mqttCheckConnection() == success)
+      if (time(0) > nextWeatherAt)
       {
-         json_t* j = json_object();
-         json_object_set_new(j, "latitude", json_real(latitude));
-         json_object_set_new(j, "longitude", json_real(longitude));
-         char* p = json_dumps(j, JSON_REAL_PRECISION(4));
-         mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
-         free(p);
-         json_decref(j);
-         nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
+         if (mqttCheckConnection() == success)
+         {
+            json_t* j = json_object();
+            json_object_set_new(j, "latitude", json_real(latitude));
+            json_object_set_new(j, "longitude", json_real(longitude));
+            char* p = json_dumps(j, JSON_REAL_PRECISION(4));
+            mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
+            free(p);
+            json_decref(j);
+            nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
+         }
+         else
+         {
+            tell(eloAlways, "Error: Can't request home-matic data, MQTT connection failed");
+         }
       }
 
       // check serial connection
@@ -3186,9 +3200,12 @@ int Daemon::initArduino()
       return fail;
    }
 
-   mqttReader->write(TARGET "2mqtt/arduino/in", p);
-   tell(eloDebug, "DEBUG: PushMessage to arduino [%s]", p);
-   free(p);
+   if (mqttCheckConnection() == success)
+   {
+      mqttReader->write(TARGET "2mqtt/arduino/in", p);
+      tell(eloDebug, "DEBUG: PushMessage to arduino [%s]", p);
+      free(p);
+   }
 
    return success;
 }

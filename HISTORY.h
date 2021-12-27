@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.7"
+#define _VERSION     "0.9.8"
 #define VERSION_DATE "27.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-27:  version 0.9.8
+  - bugfix:  Fixed potential crash on MQTT connect problems
 
 2021-12-27:  version 0.9.7
   - change:  Improvements weather widget
