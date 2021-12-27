@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.4"
-#define VERSION_DATE "25.12.2021"
+#define _VERSION     "0.9.5"
+#define VERSION_DATE "27.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-27:  version 0.9.5
+  - change:  Minor improvements and code merge
+  - bugfix:  Fixed potentially bug/crash id s3200 not reachable
 
 2021-12-25:  version 0.9.4
   - change:  Stylesheed fixes taken from the forum

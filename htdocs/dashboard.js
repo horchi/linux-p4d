@@ -257,35 +257,47 @@ function initWidget(key, widget, fact)
                             .attr('id', 'progressBar' + fact.type + fact.address)
                             .addClass('progress-bar')));   // .css('visible', true)));
 
-         if (!setupMode && fact.dim) {
+         if (!setupMode) {
            $('#button' + fact.type + fact.address).on({
               touchstart: function(e) {
-                 e.preventDefault();
-                 if (keyTimeout)
-                    clearTimeout(keyTimeout);
-                 keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                 if (fact.dim) {
+                    e.preventDefault();
+                    if (keyTimeout)
+                       clearTimeout(keyTimeout);
+                    keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                 }
               },
               mousedown: function(e) {
-                 e.preventDefault();
-                 if (keyTimeout)
-                    clearTimeout(keyTimeout);
-                 keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                 if (fact.dim) {
+                    e.preventDefault();
+                    if (keyTimeout)
+                       clearTimeout(keyTimeout);
+                    keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                 }
               },
               touchend: function(e) {
                  e.preventDefault();
-                 if (keyTimeout) {
-                    toggleIo(fact.address, fact.type);
-                    clearTimeout(keyTimeout);
-                    keyTimeout = null;
+                 if (fact.dim) {
+                    if (keyTimeout) {
+                       toggleIo(fact.address, fact.type);
+                       clearTimeout(keyTimeout);
+                       keyTimeout = null;
+                    }
                  }
+                 else
+                    toggleIo(fact.address, fact.type);
               },
               mouseup: function(e) {
                  e.preventDefault();
-                 if (keyTimeout) {
-                    toggleIo(fact.address, fact.type);
-                    clearTimeout(keyTimeout);
-                    keyTimeout = null;
+                 if (fact.dim) {
+                    if (keyTimeout) {
+                       toggleIo(fact.address, fact.type);
+                       clearTimeout(keyTimeout);
+                       keyTimeout = null;
+                    }
                  }
+                 else
+                    toggleIo(fact.address, fact.type);
               }
            });
          }
@@ -597,35 +609,47 @@ function initWidget(key, widget, fact)
                     .addClass('symbol-value')
                    );
 
-         if (!setupMode && fact.dim) {
+         if (!setupMode) {
             $('#button' + fact.type + fact.address).on({
                touchstart: function(e) {
-                  e.preventDefault();
-                  if (keyTimeout)
-                     clearTimeout(keyTimeout);
-                  keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                  if (fact.dim) {
+                     e.preventDefault();
+                     if (keyTimeout)
+                        clearTimeout(keyTimeout);
+                     keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                  }
                },
                mousedown: function(e) {
-                  e.preventDefault();
-                  if (keyTimeout)
-                     clearTimeout(keyTimeout);
-                  keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                  if (fact.dim) {
+                     e.preventDefault();
+                     if (keyTimeout)
+                        clearTimeout(keyTimeout);
+                     keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
+                  }
                },
                touchend: function(e) {
-                  e.preventDefault();
-                  if (keyTimeout) {
-                     toggleIo(fact.address, fact.type);
-                     clearTimeout(keyTimeout);
-                     keyTimeout = null;
-                  }
+                 e.preventDefault();
+                 if (fact.dim) {
+                    if (keyTimeout) {
+                       toggleIo(fact.address, fact.type);
+                       clearTimeout(keyTimeout);
+                       keyTimeout = null;
+                    }
+                 }
+                 else
+                    toggleIo(fact.address, fact.type);
                },
                mouseup: function(e) {
-                  e.preventDefault();
-                  if (keyTimeout) {
-                     toggleIo(fact.address, fact.type);
-                     clearTimeout(keyTimeout);
-                     keyTimeout = null;
-                  }
+                 e.preventDefault();
+                 if (fact.dim) {
+                    if (keyTimeout) {
+                       toggleIo(fact.address, fact.type);
+                       clearTimeout(keyTimeout);
+                       keyTimeout = null;
+                    }
+                 }
+                 else
+                    toggleIo(fact.address, fact.type);
                }
             });
          }
@@ -663,10 +687,10 @@ function initWidget(key, widget, fact)
                         .addClass('widget-value')
                         .css('height', 'inherit')
                         .css('color', widget.color)
-                        .html(moment().format('dddd Do<br/> MMMM YYYY<br/> hh:mm:ss')));
+                        .html(moment().format('dddd Do<br/> MMMM YYYY<br/> HH:mm:ss')));
          setInterval(function() {
             var timeId = '#widget'+key.replace(':', '\\:');
-            $(timeId).html(moment().format('dddd Do<br/> MMMM YYYY<br/> hh:mm:ss'));
+            $(timeId).html(moment().format('dddd Do<br/> MMMM YYYY<br/> HH:mm:ss'));
          }, 1*1000);
 
          break;

@@ -475,7 +475,7 @@ int P4Request::getStatus(Status* s)
 {
    RequestClean clean(this);
 
-   int status = success;
+   int status {success};
    byte b;
 
    cMyMutexLock lock(&mutex);
@@ -488,8 +488,8 @@ int P4Request::getStatus(Status* s)
 
    if ((status += readHeader()) == success)
    {
-      char* text = 0;
-      char* p;
+      char* text {nullptr};
+      char* p {nullptr};
       int size = getHeader()->size;
 
       status += readByte(s->mode);

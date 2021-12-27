@@ -164,6 +164,7 @@ class Daemon : public FroelingService, public cWebInterface
          Direction lastDir {dirOpen};
          bool state {false};
          std::string text;
+         std::string image;
          bool disabled {false};
          bool valid {false};               // set if the value, text or state is valid
          time_t next {0};                  // calculated next switch time
@@ -233,6 +234,15 @@ class Daemon : public FroelingService, public cWebInterface
       static DefaultWidgetProperty* getDefalutProperty(const char* type, const char* unit, int address = 0);
       int widgetDefaults2Json(json_t* jDefaults, const char* type, const char* unit, const char* name, int address = 0);
 
+      struct ValueTypes
+      {
+         std::string typeExpression;
+         std::string title;
+      };
+
+      static ValueTypes defaultValueTypes[];
+      static const char* getTitleOfType(const char* type);
+
       int exit();
       int initLocale();
       virtual int initDb();
@@ -267,6 +277,7 @@ class Daemon : public FroelingService, public cWebInterface
       virtual int dispatchDeconz();
       virtual int dispatchHomematicRpcResult(const char* message);
       virtual int dispatchHomematicEvents(const char* message);
+      virtual int dispatchOther(const char* topic, const char* message);
       bool checkRights(long client, Event event, json_t* oObject);
       virtual bool onCheckRights(long client, Event event, uint rights) { return false; }
       int callScript(int addr, const char* command, const char* name, const char* title);
@@ -281,6 +292,7 @@ class Daemon : public FroelingService, public cWebInterface
       int performMqttRequests();
       int mqttCheckConnection();
       int mqttDisconnect();
+      int mqttHaPublish(SensorData& sensor, bool forceConfig = false);
       int mqttHaPublishSensor(SensorData& sensor, bool forceConfig = false);
       int mqttNodeRedPublishSensor(SensorData& sensor);
       int mqttNodeRedPublishAction(SensorData& sensor, double value, bool publishOnly = false);
@@ -357,6 +369,7 @@ class Daemon : public FroelingService, public cWebInterface
       int userDetails2Json(json_t* obj);
       virtual int configChoice2json(json_t* obj, const char* name);
 
+      int valueTypes2Json(json_t* obj);
       int valueFacts2Json(json_t* obj, bool filterActive);
       int dashboards2Json(json_t* obj);
       int groups2Json(json_t* obj);
@@ -398,6 +411,7 @@ class Daemon : public FroelingService, public cWebInterface
       cDbTable* tableSamples {nullptr};
       cDbTable* tablePeaks {nullptr};
       cDbTable* tableValueFacts {nullptr};
+      cDbTable* tableValueTypes {nullptr};
       cDbTable* tableConfig {nullptr};
       cDbTable* tableScripts {nullptr};
       cDbTable* tableUsers {nullptr};
@@ -408,6 +422,7 @@ class Daemon : public FroelingService, public cWebInterface
       cDbTable* tableHomeMatic {nullptr};
 
       cDbStatement* selectAllGroups {nullptr};
+      cDbStatement* selectAllValueTypes {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};
       cDbStatement* selectValueFactsByType {nullptr};
       cDbStatement* selectAllValueFacts {nullptr};
@@ -493,6 +508,7 @@ class Daemon : public FroelingService, public cWebInterface
       char* mqttHassUser {nullptr};
       char* mqttHassPassword {nullptr};
       char* mqttDataTopic {nullptr};
+      char* mqttSendWithKeyPrefix {nullptr};
       bool mqttHaveConfigTopic {true};
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
       Mqtt* mqttHassWriter {nullptr};         // for HASS (Home Assistant, ...)

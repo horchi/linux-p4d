@@ -140,6 +140,42 @@ Daemon::WidgetType Daemon::toType(const char* name)
 }
 
 //***************************************************************************
+// Default Value Types
+//***************************************************************************
+
+Daemon::ValueTypes Daemon::defaultValueTypes[] =
+{
+   // expression, title
+
+   { "^VA",    "Messwerte" },
+   { "^SD",    "Status Laufzeiten" },
+   { "^DO",    "Digitale Ausgänge" },
+   { "^DI",    "Digitale Eingänge" },
+   { "^W1",    "One Wire Sensoren" },
+   { "^SC",    "Skripte" },
+   { "^AO",    "Analog Ausgänge" },
+   { "^AI",    "Analog Eingänge" },
+   { "^Sp",    "Weitere Sensoren" },
+   { "^DZL",   "DECONZ Lights" },
+   { "^DCS",   "DECONZ Sensoren" },
+   { "^HM.*",  "Home Matic" },
+   { "^P4.*",  "P4 Daemon" },
+
+   { "",      "" }
+};
+
+const char* Daemon::getTitleOfType(const char* type)
+{
+   for (int i = 0; defaultValueTypes[i].typeExpression != ""; i++)
+   {
+      if (rep(type, defaultValueTypes[i].typeExpression.c_str()) == success)
+         return defaultValueTypes[i].title.c_str();
+   }
+
+   return type;
+}
+
+//***************************************************************************
 // Widgets - Default Properties
 //***************************************************************************
 
@@ -501,7 +537,8 @@ int Daemon::init()
 
    if (homeMaticInterface)
    {
-      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/#");
+      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/rpcresult");
+      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/event");
       mqttCheckConnection();
 
       const char* request = "{ \"method\" : \"listDevices\" }";
@@ -898,10 +935,11 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
       pushDataUpdate("update", 0L);
    }
 
-   mqttHaPublishSensor(sensors["SC"][addr], false /*forceConfig*/);
-
    if (changed)
+   {
+      mqttHaPublish(sensors["SC"][addr]);
       mqttNodeRedPublishSensor(sensors["SC"][addr]);
+   }
 
    return success;
 }
@@ -1032,6 +1070,9 @@ int Daemon::initDb()
    tableValueFacts = new cDbTable(connection, "valuefacts");
    if (tableValueFacts->open() != success) return fail;
 
+   tableValueTypes = new cDbTable(connection, "valuetypes");
+   if (tableValueTypes->open() != success) return fail;
+
    tableSamples = new cDbTable(connection, "samples");
    if (tableSamples->open() != success) return fail;
 
@@ -1083,6 +1124,16 @@ int Daemon::initDb()
    selectValueFactsByType->bind("TYPE", cDBS::bndIn | cDBS::bndSet);
 
    status += selectValueFactsByType->prepare();
+
+   // ------------------
+
+   selectAllValueTypes = new cDbStatement(tableValueTypes);
+
+   selectAllValueTypes->build("select ");
+   selectAllValueTypes->bindAllOut();
+   selectAllValueTypes->build(" from %s", tableValueTypes->TableName());
+
+   status += selectAllValueTypes->prepare();
 
    // ------------------
 
@@ -1303,11 +1354,35 @@ int Daemon::initDb()
 
    selectActiveValueFacts->freeResult();
 
+   int count {0};
+
+   // -------------------
+   // init table valuetypes - is emty
+
+   count = 0;
+   tableValueTypes->countWhere("1=1", count);
+
+   if (!count)
+   {
+      tableValueFacts->clear();
+      for (int f = selectAllValueFacts->find(); f; f = selectAllValueFacts->fetch())
+      {
+         tableValueTypes->clear();
+         tableValueTypes->setValue("TYPE", tableValueFacts->getStrValue("TYPE"));
+
+         if (!tableValueTypes->find())
+         {
+            tableValueTypes->setValue("TITLE", getTitleOfType(tableValueFacts->getStrValue("TYPE")));
+            tableValueTypes->store();
+         }
+      }
+      selectAllValueFacts->freeResult();
+   }
+
    // -------------------
    // create at least one dashboard
 
-   int count {0};
-
+   count = 0;
    tableDashboards->countWhere("1=1", count);
 
    if (!count)
@@ -1326,6 +1401,7 @@ int Daemon::exitDb()
    delete tableSamples;               tableSamples = nullptr;
    delete tablePeaks;                 tablePeaks = nullptr;
    delete tableValueFacts;            tableValueFacts = nullptr;
+   delete tableValueTypes;         tableValueTypes = nullptr;
    delete tableConfig;                tableConfig = nullptr;
    delete tableUsers;                 tableUsers = nullptr;
    delete tableGroups;                tableGroups = nullptr;
@@ -1338,6 +1414,7 @@ int Daemon::exitDb()
    delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
    delete selectValueFactsByType;     selectValueFactsByType = nullptr;
    delete selectAllValueFacts;        selectAllValueFacts = nullptr;
+   delete selectAllValueTypes;     selectAllValueTypes = nullptr;
    delete selectAllConfig;            selectAllConfig = nullptr;
    delete selectAllUser;              selectAllUser = nullptr;
    delete selectMaxTime;              selectMaxTime = nullptr;
@@ -1473,6 +1550,7 @@ int Daemon::readConfiguration(bool initial)
    getConfigItem("mqttHassPassword", mqttHassPassword, mqttHassPassword);
 
    getConfigItem("mqttDataTopic", mqttDataTopic, TARGET "2mqtt/<TYPE>/<NAME>/state");
+   getConfigItem("mqttSendWithKeyPrefix", mqttSendWithKeyPrefix, "");
    getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
 
    if (mqttDataTopic[strlen(mqttDataTopic)-1] == '/')
@@ -1698,40 +1776,40 @@ int Daemon::storeSamples()
          store(lastSampleTime, sensor);
          count++;
 
-         if (mqttInterfaceStyle == misGroupedTopic)
-         {
-            if (!groups[sensor->group].oHaJson)
-               groups[sensor->group].oHaJson = json_object();
-         }
+         // if (mqttInterfaceStyle == misGroupedTopic)
+         // {
+         //    if (!groups[sensor->group].oHaJson)
+         //       groups[sensor->group].oHaJson = json_object();
+         // }
       }
    }
 
    connection->commit();
    tell(eloAlways, "Stored %d samples", count);
 
-   // MQTT
+   // // MQTT
 
-   if (mqttInterfaceStyle == misSingleTopic)
-   {
-      mqttHaWrite(oHaJson, 0);
-      json_decref(oHaJson);
-      oHaJson = nullptr;
-   }
+   // if (mqttInterfaceStyle == misSingleTopic)
+   // {
+   //    mqttHaWrite(oHaJson, 0);
+   //    json_decref(oHaJson);
+   //    oHaJson = nullptr;
+   // }
 
-   else if (mqttInterfaceStyle == misGroupedTopic)
-   {
-      tell(eloDebug2, "Debug: Writing MQTT for %zu groups", groups.size());
+   // else if (mqttInterfaceStyle == misGroupedTopic)
+   // {
+   //    tell(eloDebug2, "Debug: Writing MQTT for %zu groups", groups.size());
 
-      for (auto it : groups)
-      {
-         if (it.second.oHaJson)
-         {
-            mqttHaWrite(it.second.oHaJson, it.first);
-            json_decref(groups[it.first].oHaJson);
-            groups[it.first].oHaJson = nullptr;
-         }
-      }
-   }
+   //    for (auto it : groups)
+   //    {
+   //       if (it.second.oHaJson)
+   //       {
+   //          mqttHaWrite(it.second.oHaJson, it.first);
+   //          json_decref(groups[it.first].oHaJson);
+   //          groups[it.first].oHaJson = nullptr;
+   //       }
+   //    }
+   // }
 
    return success;
 }
@@ -1809,13 +1887,7 @@ int Daemon::store(time_t now, const SensorData* sensor)
       tablePeaks->store();
    }
 
-   // HA
-
-   if (mqttInterfaceStyle == misSingleTopic || mqttInterfaceStyle == misGroupedTopic)
-      jsonAddValue(mqttInterfaceStyle == misSingleTopic ? oHaJson : groups[sensor->group].oHaJson,
-                   sensors[sensor->type][sensor->address], initialRun);
-   else if (mqttInterfaceStyle == misMultiTopic)
-      mqttHaPublishSensor(sensors[sensor->type][sensor->address]);
+   // mqttHaPublish(sensors[sensor->type][sensor->address], initialRun);
 
    return success;
 }
@@ -2113,9 +2185,13 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    tableValueFacts->setValue("TYPE", type);
    tableValueFacts->setValue("ADDRESS", addr);
 
+   // check / add to valueTypes
+
+   // # TODO !!!
+
    if (!tableValueFacts->find())
    {
-      tell(eloAlways, "Add ValueFact '%ul' '%s'", addr, type);
+      tell(eloAlways, "Add ValueFact '%u' '%s'", addr, type);
 
       tableValueFacts->setValue("NAME", name);
       tableValueFacts->setValue("TITLE", title);
@@ -2329,7 +2405,7 @@ int Daemon::dispatchDeconz()
             pushDataUpdate("update", 0L);
          }
 
-         mqttHaPublishSensor(sensors[type][address], false);
+         mqttHaPublish(sensors[type][address]);
          mqttNodeRedPublishSensor(sensors[type][address]);
       }
 
@@ -2494,7 +2570,79 @@ int Daemon::dispatchHomematicEvents(const char* message)
       pushDataUpdate("update", 0L);
    }
 
-   mqttHaPublishSensor(sensors[type][address], false /*forceConfig*/);
+   mqttHaPublish(sensors[type][address]);
+   mqttNodeRedPublishSensor(sensors[type][address]);
+
+   return done;
+}
+
+//***************************************************************************
+// Dispatch Other
+//  (p4d2mqtt/p4/Heizung)
+//     { "value": 77.0,
+//                               "type": "P4VA", "address": 1,
+//       "unit": "°C", "title": "Abgas" }
+//***************************************************************************
+
+int Daemon::dispatchOther(const char* topic, const char* message)
+{
+   tell(eloAlways, "<- (%s) '%s'", topic, message);
+
+   json_t* jData = json_loads(message, 0, nullptr);
+
+   if (!jData)
+   {
+      tell(eloAlways, "Error: (%s) Can't parse json in '%s'", topic, message);
+      return fail;
+   }
+
+   const char* type = getStringFromJson(jData, "type");
+   int address = getIntFromJson(jData, "address");
+   const char* unit = getStringFromJson(jData, "unit");
+   const char* title = getStringFromJson(jData, "title");
+   std::string kind = getStringFromJson(jData, "kind", "");
+   const char* image = getStringFromJson(jData, "image", "");
+
+   if (!type || !title)
+   {
+      tell(eloAlways, "Error: Ingnoring unexpected message in '%s' [%s]", topic, message);
+      return fail;
+   }
+
+   addValueFact(address, type, 1, title, unit, title);
+
+   sensors[type][address].last = time(0);
+   sensors[type][address].kind = getStringFromJson(jData, "kind");
+   sensors[type][address].state = getBoolFromJson(jData, "state");
+   sensors[type][address].value = getDoubleFromJson(jData, "value");
+   sensors[type][address].text = getStringFromJson(jData, "text", "");
+   sensors[type][address].image = image;
+
+   // send update to WS
+   {
+      json_t* ojData = json_object();
+      sensor2Json(ojData, type, address);
+      json_object_set_new(ojData, "last", json_integer(sensors[type][address].last));
+
+      if (kind == "status")
+         json_object_set_new(ojData, "value", json_integer(sensors[type][address].state));
+      else
+         json_object_set_new(ojData, "value", json_real(sensors[type][address].value));
+
+      json_object_set_new(ojData, "text", json_string(sensors[type][address].text.c_str()));
+
+      if (!isEmpty(image))
+         json_object_set_new(ojData, "image", json_string(sensors[type][address].image.c_str()));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", type, address);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
+
+   mqttHaPublish(sensors[type][address]);
    mqttNodeRedPublishSensor(sensors[type][address]);
 
    return done;
@@ -2809,7 +2957,7 @@ void Daemon::gpioWrite(uint pin, bool state, bool store)
          pushDataUpdate("update", 0L);
       }
 
-      mqttHaPublishSensor(sensors["DO"][pin], false /*forceConfig*/);
+      mqttHaPublish(sensors["DO"][pin]);
       mqttNodeRedPublishSensor(sensors["DO"][pin]);
    }
 }
@@ -3126,7 +3274,10 @@ void Daemon::updateW1(const char* id, double value, time_t stamp)
    pushDataUpdate("update", 0L);
 
    if (changed)
+   {
+      mqttHaPublish(sensors["W1"][address]);
       mqttNodeRedPublishSensor(sensors["W1"][address]);
+   }
 
    tableValueFacts->reset();
 }

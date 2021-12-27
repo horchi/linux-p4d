@@ -59,7 +59,7 @@ if [ ${update} != 1 ]; then
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- You can reach the web interface at http://<raspi-ip>:1111${NC}"
    echo -e "${BLUE}- Your IP seems to be ${IP} therefore you can try:${NC} ${BWHITE}http://${IP}:1111${NC}"
-   echo -e "${BLUE}- Default user/password is p4d/p4d${NC}"
+   echo -e "${BLUE}- Default user/password is p4/p4${NC}"
    echo -e "${BLUE}- ${NC}"
    echo -e "${BLUE}- Added aliases for convenience:${NC}"
    echo -e "${BLUE}-  p4db  - go to the SQL prompt${NC}"

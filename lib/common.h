@@ -280,6 +280,24 @@ class MemoryStruct
 };
 
 //***************************************************************************
+// Wrapper for Regual Expression Library
+//***************************************************************************
+
+enum Option
+{
+   repUseRegularExpression = 1,
+   repIgnoreCase = 2
+};
+
+int rep(const char* string, const char* expression, Option options = repUseRegularExpression);
+
+int rep(const char* string, const char* expression,
+        const char*& s_location, Option options = repUseRegularExpression);
+
+int rep(const char* string, const char* expression, const char*& s_location,
+        const char*& e_location, Option options = repUseRegularExpression);
+
+//***************************************************************************
 // cMyMutex
 //***************************************************************************
 

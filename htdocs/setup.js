@@ -78,7 +78,7 @@ function initConfig(configdetails)
 
       case 2:     // string
 
-         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border input\" type=\"text\" value=\"" + item.value + "\"/></span>\n";
+         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border input\" type=\"search\" value=\"" + item.value + "\"/></span>\n";
          html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
          break;
 
@@ -104,8 +104,8 @@ function initConfig(configdetails)
                if (!range[1]) range[1] = "";
                if (n > 0) html += "  <span/>  </span>\n";
                html += "   <span>\n";
-               html += "     <input id=\"range_" + nameFrom + "\" type=\"text\" class=\"rounded-border inputTime\" value=\"" + range[0] + "\"/> -";
-               html += "     <input id=\"range_" + nameTo + "\" type=\"text\" class=\"rounded-border inputTime\" value=\"" + range[1] + "\"/>\n";
+               html += "     <input id=\"range_" + nameFrom + "\" type=\"search\" class=\"rounded-border inputTime\" value=\"" + range[0] + "\"/> -";
+               html += "     <input id=\"range_" + nameTo + "\" type=\"search\" class=\"rounded-border inputTime\" value=\"" + range[1] + "\"/>\n";
                html += "   </span>\n";
                html += "   <span></span>\n";
             }
@@ -116,8 +116,8 @@ function initConfig(configdetails)
 
          if (n > 0) html += "  <span/>  </span>\n";
          html += "  <span>\n";
-         html += "    <input id=\"range_" + nameFrom + "\" value=\"\" type=\"text\" class=\"rounded-border inputTime\" /> -";
-         html += "    <input id=\"range_" + nameTo + "\" value=\"\" type=\"text\" class=\"rounded-border inputTime\" />\n";
+         html += "    <input id=\"range_" + nameFrom + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" /> -";
+         html += "    <input id=\"range_" + nameTo + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" />\n";
          html += "  </span>\n";
          html += "  <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
 
@@ -205,7 +205,7 @@ function storeConfig()
              Number.isInteger(elements[i].getAttribute('step')) && elements[i].value != '')
             jsonObj[name] = parseFloat(elements[i].value).toLocaleString("de-DE");
          else
-      jsonObj[name] = elements[i].value;
+            jsonObj[name] = elements[i].value;
       }
    }
 
@@ -311,17 +311,14 @@ function foldCategory(category)
 
 function foldSection(sectionId)
 {
-   ioSections[sectionId] = !ioSections[sectionId];
-   console.log(sectionId + ' : ' + ioSections[sectionId]);
+   ioSections[sectionId].visible = !ioSections[sectionId].visible;
+   console.log(sectionId + ' : ' + ioSections[sectionId].visible);
    initIoSetup(valueFacts);
 }
 
 function tableHeadline(title, sectionId)
 {
-   if (!ioSections.hasOwnProperty(sectionId))
-      ioSections[sectionId] = true;
-
-   if (!ioSections[sectionId])
+   if (!ioSections[sectionId].visible)
       return '  <div id="fold_' + sectionId + '" class="rounded-border seperatorFold" onclick="foldSection(\'' + sectionId + '\')">' + '&#11015; ' + title + '</div>';
 
    return '  <div id="fold_' + sectionId + '" class="rounded-border seperatorFold" onclick="foldSection(\'' + sectionId + '\')">' + '&#11013; ' + title + '</div>' +
@@ -348,24 +345,28 @@ function initIoSetup(valueFacts)
 
    $('#container').removeClass('hidden');
 
-   document.getElementById("container").innerHTML =
-      '<div id="ioSetupContainer">' +
-      tableHeadline('Messwerte', 'ioValues') +
-      tableHeadline('Status Laufzeiten', 'ioStateDurations') +
-      tableHeadline('Digitale Ausgänge', 'ioDigitalOut') +
-      tableHeadline('Digitale Eingänge', 'ioDigitalIn') +
-      tableHeadline('One Wire Sensoren', 'ioOneWire') +
-      tableHeadline('Skripte', 'ioScripts') +
-      tableHeadline('Analog Ausgänge', 'ioAnalogOut') +
-      tableHeadline('Analog Eingänge (arduino)', 'ioAnalog') +
-      tableHeadline('Weitere Sensoren', 'ioOther') +
-      tableHeadline('DECONZ Lights', 'ioDeconzLights') +
-      tableHeadline('DECONZ Sensoren', 'ioDeconzSensor') +
-      tableHeadline('Home Matic', 'ioHomeMatic') +
-      '</div>';
+   for (var key in ioSections)
+      ioSections[key].exist = false;
+
+   var html = '<div id="ioSetupContainer">';
+
+   for (var i = 0; i < valueTypes.length; i++) {
+      var section = 'io' + valueTypes[i].title.replace(' ', '');
+      if (!ioSections.hasOwnProperty(section)) {
+         ioSections[section] = {};
+         ioSections[section].visible = true;
+      }
+      if (!ioSections[section].exist) {
+         html += tableHeadline(valueTypes[i].title, section);
+         ioSections[section].exist = true;
+      }
+   }
+
+   html += '</div>';
+   document.getElementById("container").innerHTML = html;
 
    for (var key in ioSections) {
-      if (ioSections[key])
+      if (ioSections[key].visible && document.getElementById(key))
          document.getElementById(key).innerHTML = "";
    }
 
@@ -387,27 +388,17 @@ function initIoSetup(valueFacts)
 
       // console.log("item.type: " + item.type);
 
-      switch (item.type) {
-         case 'VA': sectionId = "ioValues";         break
-         case 'SD': sectionId = "ioStateDurations"; break
-         case 'DO': sectionId = "ioDigitalOut";     break
-         case 'DI': sectionId = "ioDigitalIn";      break
-         case 'W1': sectionId = "ioOneWire";        break
-         case 'SP': sectionId = "ioOther";          break
-         case 'AO': sectionId = "ioAnalogOut";      break
-         case 'AI': sectionId = "ioAnalog";         break
-         case 'SC': sectionId = "ioScripts";        break
-         case 'DZL': sectionId = "ioDeconzLights";   break
-         case 'DZS': sectionId = "ioDeconzSensor";   break
-         case 'HMB': sectionId = "ioHomeMatic";      break
+      for (var i = 0; i < valueTypes.length; i++) {
+         if (valueTypes[i].type == item.type)
+            sectionId = 'io' + valueTypes[i].title.replace(' ', '');
       }
 
-      if (!ioSections[sectionId])
+      if (!ioSections[sectionId].visible)
          continue;
 
       var html = '<td id="row_' + item.type + item.address + '" data-address="' + item.address + '" data-type="' + item.type + '" >' + item.title + '</td>';
-      html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + usrtitle + '"/></td>';
-      html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="text" value="' + item.unit + '"/></td>';
+      html += '<td class="tableMultiColCell"><input id="usrtitle_' + item.type + item.address + '" class="rounded-border inputSetting" type="search" value="' + usrtitle + '"/></td>';
+      html += '<td class="tableMultiColCell"><input id="unit_' + item.type + item.address + '" class="rounded-border inputSetting" type="search" value="' + item.unit + '"/></td>';
       html += '<td><input id="state_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.state ? 'checked' : '') + ' /><label for="state_' + item.type + item.address + '"></label></td>';
       html += '<td><input id="record_' + item.type + item.address + '" class="rounded-border inputSetting" type="checkbox" ' + (item.record ? 'checked' : '') + ' /><label for="record_' + item.type + item.address + '"></label></td>';
       html += '<td>' + key + '</td>';

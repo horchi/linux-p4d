@@ -18,6 +18,7 @@ var config = {};
 var daemonState = {};
 
 var widgetTypes = {};
+var valueTypes = [];
 var valueFacts = {};
 var dashboards = {};
 var allSensors = [];
@@ -332,6 +333,11 @@ function dispatchMessage(message)
    else if (event == "dashboards") {
       dashboards = jMessage.object;
       // console.log("dashboards " + JSON.stringify(dashboards, undefined, 4));
+   }
+
+   else if (event == "valuetypes") {
+      valueTypes = jMessage.object;
+      // console.log("valueTypes " + JSON.stringify(valueTypes, undefined, 4));
    }
 
    else if (event == "valuefacts") {

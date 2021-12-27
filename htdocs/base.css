@@ -1322,10 +1322,10 @@ table.tableMultiCol tr:nth-child(odd)
     grid-area: peak;
     font-size: 0.9em;
     font-weight: bold;
-    padding-left: 12px;
+    padding-left: 2px;
     overflow: hidden;
     background-color: transparent;
-    margin-top: 10px;
+    margin-top: 5px;
     color: red;
     text-align: right;
     margin-right: 5px;
@@ -1500,7 +1500,8 @@ dialog::backdrop, #backdrop
     .widget-value              { font-size: 1.2em; }
     .chart-value               { font-size: 1.0em; }
     .widget-main               { font-size: 3.5em;}
-    .widget-main-value-lin     { font-size: 0.9em; }
+    .widget-main-value-lin     { font-size: 0.9em;  }
+    .widget-main-peak-lin      { margin-right: 0px; }
 }
 
 @media only screen and (max-width: 375px) and (min-width:321px)

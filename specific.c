@@ -70,11 +70,12 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // Home Automation MQTT interface
 
-   { "mqttHassUrl",               ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttHassUser",              ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA User", "" },
-   { "mqttHassPassword",          ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Password", "" },
-   { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttHaveConfigTopic",       ctBool,    "1", false, "Home Automation Interface (like Home-Assistant, ...)", "MQTT HA Config Topic", "Speziell für HomeAssistant" },
+   { "mqttHassUrl",               ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttHassUser",              ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "User", "" },
+   { "mqttHassPassword",          ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Password", "" },
+   { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
+   { "mqttSendWithKeyPrefix",     ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Adresse übertragen", "Wenn hier ein Präfix konfiguriert ist wird die Adresse der Sensoren nebst Präfix übertragen" },
+   { "mqttHaveConfigTopic",       ctBool,    "1", false, "Home Automation Interface (like Home-Assistant, ...)", "Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 
@@ -537,8 +538,11 @@ int P4d::updateSensors()
             }
          }
 
-         if (sensors[sensor->type][sensor->address].last == now)
+         if (sensors[sensor->type][sensor->address].last == now || sensor->type == "UD")
+         {
+            mqttHaPublish(sensors[sensor->type][sensor->address]);
             mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
+         }
       }
    }
 
@@ -1073,7 +1077,7 @@ int P4d::updateErrors()
       return fail;
    }
 
-   tell(eloAlways, "Updating error list");
+   tell(eloInfo, "Updating error list");
 
    sem->p();
 
@@ -1127,7 +1131,7 @@ int P4d::updateErrors()
    sem->v();
    delete select;
 
-   tell(eloAlways, "Updating error list done in %" PRIu64 "ms", timeMs.Elapsed());
+   tell(eloInfo, "Updating error list done in %" PRIu64 "ms", timeMs.Elapsed());
 
    // count pending (not 'quittiert' AND not mailed) errors
 

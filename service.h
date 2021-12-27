@@ -413,25 +413,25 @@ class FroelingService
 
       struct Status
       {
-         Status()  { modeinfo = 0; stateinfo = 0; clear(); }
+         Status()  { clear(); }
          ~Status() { clear(); }
 
          void clear()
          {
-            free(modeinfo);  modeinfo = 0;
-            free(stateinfo); stateinfo = 0;
-            *version = 0;
+            free(modeinfo);  modeinfo = strdup("");
+            free(stateinfo); stateinfo = strdup("");
+            *version = '\0';
             time = 0;
             mode = 0;
             state = 0;
          }
 
-         time_t time;
-         byte mode;           // Betriebsart
-         byte state;          // Zustand
-         char* modeinfo;      // Betriebsart Text
-         char* stateinfo;     // Zustand Text
-         char version[12+TB];
+         time_t time {0};
+         byte mode {0};                 // Betriebsart
+         byte state;                    // Zustand
+         char* modeinfo {nullptr};      // Betriebsart Text
+         char* stateinfo {nullptr};     // Zustand Text
+         char version[12+TB] {'\0'};
       };
 
       struct Value

@@ -15,9 +15,19 @@
 
 cMyMutex Deconz::mapsMutex;
 
-//*************************************************************************
+//***************************************************************************
 // API documentation:
 //    https://dresden-elektronik.github.io/deconz-rest-doc
+//***************************************************************************
+
+//***************************************************************************
+// Problem, API-Key ist nach deCONZ Restart wieder weg
+//  -> deCONZ trägt ihn nicht in die Tabelle ein
+//  ?? Mache ich nich einen fehler bei der Anmeldung ??
+// Workaround mauell eintragen:
+// sqlite3 zll.db
+// insert into auth (apikey,createdate,lastusedate,devicetype,useragent) values('372245F621','2021-12-25T07:23:29','2021-12-25T07:23:29','homectrld','homectrld');
+//  Dabei den Key (hier 372245F621) und ggf. das Datum anpassen!
 //***************************************************************************
 
 //***************************************************************************

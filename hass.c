@@ -15,6 +15,51 @@
 // Push Value to MQTT for Home Automation Systems
 //***************************************************************************
 
+int Daemon::mqttHaPublish(SensorData& sensor, bool forceConfig)
+{
+   if (mqttInterfaceStyle == misGroupedTopic)
+   {
+      if (!groups[sensor.group].oHaJson)
+         groups[sensor.group].oHaJson = json_object();
+   }
+
+   if (mqttInterfaceStyle == misSingleTopic || mqttInterfaceStyle == misGroupedTopic)
+      jsonAddValue(mqttInterfaceStyle == misSingleTopic ? oHaJson : groups[sensor.group].oHaJson,
+                   sensor, forceConfig);
+   else if (mqttInterfaceStyle == misMultiTopic)
+      mqttHaPublishSensor(sensor, forceConfig);
+
+   // write
+
+   if (mqttInterfaceStyle == misSingleTopic)
+   {
+      mqttHaWrite(oHaJson, 0);
+      json_decref(oHaJson);
+      oHaJson = nullptr;
+   }
+
+   else if (mqttInterfaceStyle == misGroupedTopic)
+   {
+      tell(eloDebug2, "Debug: Writing MQTT for %zu groups", groups.size());
+
+      for (auto it : groups)
+      {
+         if (it.second.oHaJson)
+         {
+            mqttHaWrite(it.second.oHaJson, it.first);
+            json_decref(groups[it.first].oHaJson);
+            groups[it.first].oHaJson = nullptr;
+         }
+      }
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Push Value to MQTT for Home Automation Systems
+//***************************************************************************
+
 int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 {
    // check/prepare reader/writer connection
@@ -213,6 +258,8 @@ int Daemon::performMqttRequests()
             dispatchHomematicRpcResult(message.memory);
          else if (strstr(tp.c_str(), "2mqtt/homematic/events"))
             dispatchHomematicEvents(message.memory);
+         else
+            dispatchOther(tp.c_str(), message.memory);
       }
    }
 
@@ -383,7 +430,7 @@ int Daemon::mqttCheckConnection()
             for (const auto& t : mqttSensorTopics)
             {
                mqttReader->subscribe(t.c_str());
-               tell(eloMqttHome, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, t.c_str());
+               tell(eloDetail, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, t.c_str());
             }
          }
       }
@@ -400,9 +447,9 @@ int Daemon::mqttCheckConnection()
          else
          {
             mqttNodeRedReader->subscribe(TARGET "2mqtt/command/#");
-            tell(eloNodeRed, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/command/#");
+            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/command/#");
             mqttNodeRedReader->subscribe(TARGET "2mqtt/nodered/#");
-            tell(eloNodeRed, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/nodered/#");
+            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/nodered/#");
          }
       }
 
@@ -519,9 +566,44 @@ int Daemon::jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig)
    sName = strReplace("ö", "oe", sName);
    sName = strReplace("ä", "ae", sName);
 
+   // create json
+
+   if (!isEmpty(mqttSendWithKeyPrefix))
+   {
+      std::string kType = mqttSendWithKeyPrefix + sensor.type;
+      json_object_set_new(obj, "type", json_string(kType.c_str()));
+      json_object_set_new(obj, "address", json_integer(sensor.address));
+      json_object_set_new(obj, "unit", json_string(sensor.unit.c_str()));
+      json_object_set_new(obj, "title", json_string(sensor.title.c_str()));
+      json_object_set_new(obj, "kind", json_string(sensor.kind.c_str()));
+
+      if (sensor.kind == "status")
+      {
+         json_object_set_new(obj, "state", json_boolean(sensor.state));
+         json_object_set_new(obj, "brightness", json_integer(sensor.value));
+      }
+      else if (sensor.text.length())
+         json_object_set_new(obj, "text", json_string(sensor.text.c_str()));
+      else if (sensor.kind == "value")
+         json_object_set_new(obj, "value", json_real(sensor.value));
+
+      char* key {nullptr};
+      asprintf(&key, "%s:0x%02x", sensor.type.c_str(), sensor.address);
+      if (getTextImage(key, sensor.text.c_str()))
+         json_object_set_new(obj, "image", json_string(getTextImage(key, sensor.text.c_str())));
+      free(key);
+
+      return success;
+   }
+   else if (forceConfig)
+   {
+      json_object_set_new(oSensor, "unit", json_string(sensor.unit.c_str()));
+      json_object_set_new(oSensor, "description", json_string(sensor.title.c_str()));
+   }
+
    if (sensor.kind == "status")
    {
-      json_object_set_new(oSensor, "state", json_string(sensor.value ? "ON" :"OFF"));
+      json_object_set_new(oSensor, "state", json_string(sensor.state ? "ON" :"OFF"));
       json_object_set_new(oSensor, "brightness", json_integer(255));
    }
    else if (sensor.text.length())
@@ -529,18 +611,7 @@ int Daemon::jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig)
    else if (sensor.kind == "value")
       json_object_set_new(oSensor, "value", json_real(sensor.value));
 
-   // if (strcmp(unit, "°") == 0)
-   //    unit = "°C";
-
-   // create json
-
-   if (forceConfig)
-   {
-      json_object_set_new(oSensor, "unit", json_string(sensor.unit.c_str()));
-      json_object_set_new(oSensor, "description", json_string(sensor.title.c_str()));
-   }
-
-   if (oGroup)
+   if (mqttInterfaceStyle == misSingleTopic)
    {
       json_object_set_new(oGroup, sName.c_str(), oSensor);
 

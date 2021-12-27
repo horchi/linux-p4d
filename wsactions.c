@@ -287,6 +287,10 @@ int Daemon::performLogin(json_t* oObject)
    daemonState2Json(oJson);
    pushOutMessage(oJson, "daemonstate", client);
 
+   oJson = json_array();
+   valueTypes2Json(oJson);
+   pushOutMessage(oJson, "valuetypes", client);
+
    oJson = json_object();
    valueFacts2Json(oJson, false);
    pushOutMessage(oJson, "valuefacts", client);
@@ -348,14 +352,17 @@ int Daemon::performData(long client, const char* event)
          else if (!sensor->kind.length())
             tell(eloAlways, "Info: Missing 'kind' property for sensor '%s'", key);
 
-         // send text if set, independent of 'kind'
+         // send text/image if set, independent of 'kind'
+
+         if (sensor->image != "")
+            json_object_set_new(ojData, "image", json_string(sensor->image.c_str()));
 
          if (sensor->text != "")
          {
             json_object_set_new(ojData, "text", json_string(sensor->text.c_str()));
             const char* txtImage = getTextImage(key, sensor->text.c_str());
 
-            if (txtImage)
+            if (sensor->image == "" && txtImage)
                json_object_set_new(ojData, "image", json_string(txtImage));
          }
 
@@ -1684,6 +1691,28 @@ int Daemon::userDetails2Json(json_t* obj)
    }
 
    selectAllUser->freeResult();
+
+   return done;
+}
+
+//***************************************************************************
+// Value Types 2 Json
+//***************************************************************************
+
+int Daemon::valueTypes2Json(json_t* obj)
+{
+   tableValueTypes->clear();
+
+   for (int f = selectAllValueTypes->find(); f; f = selectAllValueTypes->fetch())
+   {
+      json_t* oData = json_object();
+      json_array_append_new(obj, oData);
+
+      json_object_set_new(oData, "type", json_string(tableValueTypes->getStrValue("TYPE")));
+      json_object_set_new(oData, "title", json_string(tableValueTypes->getStrValue("TITLE")));
+   }
+
+   selectAllValueTypes->freeResult();
 
    return done;
 }
