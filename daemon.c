@@ -1708,7 +1708,7 @@ int Daemon::loop()
 
       // trigger weather
 
-      if (time(0) > nextWeatherAt)
+      if (time(0) > nextWeatherAt && mqttCheckConnection() == success)
       {
          json_t* j = json_object();
          json_object_set_new(j, "latitude", json_real(latitude));
