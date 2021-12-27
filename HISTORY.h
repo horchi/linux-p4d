@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.6"
+#define _VERSION     "0.9.7"
 #define VERSION_DATE "27.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-27:  version 0.9.7
+  - change:  Improvements weather widget
+  - added:   day/night indicator to Date/Time widget
 
 2021-12-27:  version 0.9.6
   - added:  Weather widget

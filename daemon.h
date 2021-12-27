@@ -523,6 +523,8 @@ class Daemon : public FroelingService, public cWebInterface
 
       // config
 
+      double latitude {50.30};
+      double longitude {8.79};
       int interval {60};
       int arduinoInterval {10};
       int stateCheckInterval {10};

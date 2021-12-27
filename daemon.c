@@ -1710,7 +1710,13 @@ int Daemon::loop()
 
       if (time(0) > nextWeatherAt)
       {
-         mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", "{\"trg\" : true }");
+         json_t* j = json_object();
+         json_object_set_new(j, "latitude", json_real(latitude));
+         json_object_set_new(j, "longitude", json_real(longitude));
+         char* p = json_dumps(j, JSON_REAL_PRECISION(4));
+         mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
+         free(p);
+         json_decref(j);
          nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
       }
 

@@ -28,6 +28,9 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 {
    // p4d
 
+   { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Längengrad", "" },
+   { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Breitengrad", "" },
+
    { "interval",                  ctInteger, "60",   false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
    { "webPort",                   ctInteger, "1111", false, "Daemon", "Port des Web Interfaces", "" },
    { "stateCheckInterval",        ctInteger, "10",   false, "Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
@@ -538,11 +541,12 @@ int P4d::updateSensors()
             }
          }
 
+         // publish to HA always - we like to draw charts ...
+
+         mqttHaPublish(sensors[sensor->type][sensor->address]);
+
          if (sensors[sensor->type][sensor->address].last == now || sensor->type == "UD")
-         {
-            mqttHaPublish(sensors[sensor->type][sensor->address]);
             mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
-         }
       }
    }
 
