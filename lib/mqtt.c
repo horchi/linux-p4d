@@ -344,6 +344,12 @@ int Mqtt::writeRetained(const char* topic, const char* message)
 
 int Mqtt::write(const char* topic, const char* message, size_t len, uint8_t flags)
 {
+   if (!isConnected())
+   {
+      tell(eloAlways, "Error: MQTT: Can't write to topic '%s', not connected", topic);
+      return fail;
+   }
+
    theTopic.clear();
 
    lastResult = mqtt_publish(mqttClient, topic, message, len, flags);
