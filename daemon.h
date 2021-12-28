@@ -20,8 +20,6 @@
 #include "websock.h"
 #include "deconz.h"
 
-#include "p4io.h"
-
 #define confDirDefault "/etc/" TARGET
 
 extern char dbHost[];
@@ -36,7 +34,7 @@ extern char* confDir;
 // Class Daemon
 //***************************************************************************
 
-class Daemon : public FroelingService, public cWebInterface
+class Daemon : public cWebInterface
 {
    public:
 
@@ -96,8 +94,8 @@ class Daemon : public FroelingService, public cWebInterface
       Daemon();
       virtual ~Daemon();
 
+      int loop();
       virtual int init();
-	   int loop();
 
       const char* myName() override  { return TARGET; }
       virtual const char* myTitle()  { return "Daemon"; }
@@ -243,8 +241,8 @@ class Daemon : public FroelingService, public cWebInterface
       static ValueTypes defaultValueTypes[];
       static const char* getTitleOfType(const char* type);
 
-      int exit();
-      int initLocale();
+      virtual int exit();
+      virtual int initLocale();
       virtual int initDb();
       virtual int exitDb();
       virtual int readConfiguration(bool initial);
@@ -256,14 +254,14 @@ class Daemon : public FroelingService, public cWebInterface
       int initScripts();
 
       int standby(int t);
-      int standbyUntil(time_t until);
+      virtual int standbyUntil();
       int meanwhile();
       virtual int atMeanwhile() { return done; }
 
       virtual int updateSensors() { return done; }
       int storeSamples();
       void updateScriptSensors();
-      virtual int updateState() { return done; }
+      virtual int doLoop()     { return done; }
       virtual void afterUpdate();
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
@@ -451,12 +449,6 @@ class Daemon : public FroelingService, public cWebInterface
       time_t nextAggregateAt {0};
       time_t lastSampleTime {0};
 
-      Sem* sem {nullptr};
-      P4Request* request {nullptr};
-      Serial* serial {nullptr};
-      Status currentState;
-      bool stateChanged {false};
-
       std::vector<std::string> addrsDashboard;
       std::vector<std::string> addrsList;
 
@@ -527,8 +519,6 @@ class Daemon : public FroelingService, public cWebInterface
       double longitude {8.79};
       int interval {60};
       int arduinoInterval {10};
-      int stateCheckInterval {10};
-      char* ttyDevice {nullptr};
 
       int webPort {0};
       char* webUrl {nullptr};

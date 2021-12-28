@@ -553,7 +553,6 @@ class Sem
 
       Sem(int aKey)
       {
-         locked = no;
          key = aKey;
 
          if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
@@ -584,13 +583,12 @@ class Sem
 
          if (semop(id, sops, 2) == -1)
          {
-            tell(eloAlways, "Error: Can't lock semaphore, errno (%d) '%s'",
-                 errno, strerror(errno));
+            tell(eloAlways, "Error: Can't lock semaphore '0x%x', errno (%d) '%s'", key, errno, strerror(errno));
 
             return fail;
          }
 
-         locked = yes;
+         locked = true;
 
          return success;
       }
@@ -612,7 +610,7 @@ class Sem
             return fail;
          }
 
-         locked = yes;
+         locked = true;
 
          return success;
       }
@@ -667,14 +665,14 @@ class Sem
             return fail;
          }
 
-         locked = no;
+         locked = false;
 
          return success;
       }
 
    private:
 
-      int key;
-      int id;
-      int locked;
+      int key {0};
+      int id {0};
+      bool locked {false};
 };

@@ -55,7 +55,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "heatingType",               ctChoice,  "",             false, "WEB Interface", "Typ der Heizung", "" },
    { "style",                     ctChoice,  "dark",         false, "WEB Interface", "Farbschema", "" },
-   { "iconSet",                   ctChoice,  "",             true,  "WEB Interface", "Status Icon Set", "" },
+   { "iconSet",                   ctChoice,  "light",        false, "WEB Interface", "Status Icon Set", "" },
    { "background",                ctChoice,  "",             false, "WEB Interface", "Background image", "" },
    { "schema",                    ctChoice,  "schema.jpg",   false, "WEB Interface", "Schematische Darstellung", "" },
 
@@ -102,11 +102,18 @@ P4d::P4d()
    : Daemon()
 {
    webPort = 1111;
+
+   sem = new Sem(0x3da00001);
+   serial = new Serial;
+   request = new P4Request(serial);
 }
 
 P4d::~P4d()
 {
    free(stateMailAtStates);
+   delete serial;
+   delete request;
+   delete sem;
 }
 
 //***************************************************************************
@@ -128,7 +135,18 @@ int P4d::init()
       tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
    }
 
+   sem->p();
+   serial->open(ttyDevice);
+   sem->v();
+
    return status;
+}
+
+int P4d::exit()
+{
+   serial->close();
+
+   return Daemon::exit();
 }
 
 //***************************************************************************
@@ -362,6 +380,9 @@ int P4d::readConfiguration(bool initial)
 {
    Daemon::readConfiguration(initial);
 
+   getConfigItem("stateCheckInterval", stateCheckInterval, 10);
+   getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
+
    getConfigItem("tsync", tSync, no);
    getConfigItem("maxTimeLeak", maxTimeLeak, 10);
    getConfigItem("stateMailStates", stateMailAtStates, "0,1,3,19");
@@ -415,6 +436,25 @@ int P4d::applyConfigurationSpecials()
 int P4d::updateSensors()
 {
    time_t now = time(0);
+   sem->p();
+
+   // check serial connection
+
+   int status = request->check();
+
+   if (status != success)
+   {
+      serial->close();
+      tell(eloAlways, "Error reading serial interface, reopen now");
+      serial->open(ttyDevice);
+
+      if (request->check() != success)
+      {
+         sem->v();
+         return fail;
+      }
+   }
+
    for (const auto& typeSensorsIt : sensors)
    {
       for (const auto& sensorIt : typeSensorsIt.second)
@@ -429,7 +469,7 @@ int P4d::updateSensors()
             const auto it = stateDurations.find(sensor->address);
 
             if (it == stateDurations.end())
-               return done;
+               continue;
 
             double theValue = stateDurations[sensor->address] / 60;
 
@@ -550,9 +590,63 @@ int P4d::updateSensors()
       }
    }
 
+   sem->v();
    selectActiveValueFacts->freeResult();
 
    return done;
+}
+
+int P4d::standbyUntil()
+{
+   time_t until = min(nextStateAt, nextRefreshAt);
+
+   while (time(0) < until && !doShutDown())
+   {
+      meanwhile();
+      usleep(5000);
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Do State
+//***************************************************************************
+
+int P4d::doLoop()
+{
+   int lastState {currentState.state};
+   int status = updateState();
+
+   if (status != success)
+   {
+      sem->p();
+      serial->close();
+      tell(eloAlways, "Error reading serial interface, reopen now!");
+      status = serial->open(ttyDevice);
+      sem->v();
+
+      if (status != success)
+      {
+         tell(eloAlways, "Retrying in 10 seconds");
+         standby(10);
+      }
+
+      return fail;
+   }
+
+   stateChanged = lastState != currentState.state;
+
+   if (stateChanged)
+   {
+      lastState = currentState.state;
+      nextRefreshAt = time(0);              // force on state change
+      tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
+   }
+
+   nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
+
+   return success;
 }
 
 //***************************************************************************
@@ -2622,7 +2716,7 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
 
-   addValueFact(udMode, "UD", 1, "Betriebsmodus", "zst", "Betriebsmodus");
+   addValueFact(udMode, "UD", 1, "Betriebsmodus", "txt", "Betriebsmodus");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined

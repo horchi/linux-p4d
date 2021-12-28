@@ -47,13 +47,12 @@ int atConfigItem(const char* Name, const char* Value)
 
 int readConfig()
 {
-   int count = 0;
-   FILE* f;
-   char* line = 0;
-   size_t size = 0;
-   char* value;
-   char* name;
-   char* fileName;
+   int count {0};
+   char* line {nullptr};
+   size_t size {0};
+   char* value {nullptr};
+   char* name {nullptr};
+   char* fileName {nullptr};
 
    asprintf(&fileName, "%s/daemon.conf", confDir);
 
@@ -64,7 +63,7 @@ int readConfig()
       return fail;
    }
 
-   f = fopen(fileName, "r");
+   FILE* f = fopen(fileName, "r");
 
    while (getline(&line, &size, f) > 0)
    {

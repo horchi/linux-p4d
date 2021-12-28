@@ -38,6 +38,11 @@ Deconz::Deconz()
 {
 }
 
+Deconz::~Deconz()
+{
+   exitWsClient();
+}
+
 //***************************************************************************
 // Init / Exit
 //***************************************************************************
@@ -640,7 +645,10 @@ int Deconz::atInMessage(const char* data)
       else if (resource == "sensors")
          address = sensors[uuid];
       else
+      {
+         json_decref(obj);
          return done;
+      }
 
       tell(eloDebugDeconz, "Got address %ld for uuid '%s'", address, uuid);
    }

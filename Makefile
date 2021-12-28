@@ -24,7 +24,7 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
-OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o gpio.o hass.o websock.o deconz.o
+OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o gpio.o hass.o websock.o webservice.o deconz.o
 OBJS        += p4io.o service.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
@@ -109,9 +109,9 @@ install-config:
 	fi
 	install --mode=644 -D ./configs/*.dat $(CONFDEST)/;
 	mkdir -p $(DESTDIR)/etc/rsyslog.d
-	@cp contrib/rsyslog.conf $(DESTDIR)/etc/rsyslog.d/10-$(TARGET).conf
+	cat contrib/rsyslog.conf | sed s:"<TARGET>":$(TARGET):g | install --mode=644 -C -D /dev/stdin $(DESTDIR)/etc/rsyslog.d/10-$(TARGET).conf; \
 	mkdir -p $(DESTDIR)/etc/logrotate.d
-	@cp contrib/logrotate $(DESTDIR)/etc/logrotate.d/$(TARGET)
+	cat contrib/logrotate | sed s:"<TARGET>":$(TARGET):g | install --mode=644 -C -D /dev/stdin $(DESTDIR)/etc/logrotate.d/$(TARGET); \
 	mkdir -p $(DESTDIR)/etc/default
 	if ! test -f $(DESTDIR)/etc/default/w1mqtt; then \
 	   cp contrib/w1mqtt $(DESTDIR)/etc/default/w1mqtt; \
@@ -165,7 +165,7 @@ activate: install
 #	tail -f /var/log/$(TARGET).log
 
 cppchk:
-	cppcheck --template="{file}:{line}:{severity}:{message}" --language=c++ --force *.c *.h
+	cppcheck --template="{file}:{line}:{severity}:{message}" --std=c++20 --language=c++ --force *.c *.h
 
 upload:
 	avrdude -q -V -p atmega328p -D -c arduino -b 57600 -P $(AVR_DEVICE) -U flash:w:arduino/build-nano-atmega328/ioctrl.hex:i
@@ -205,7 +205,8 @@ w1.o            :  w1.c            $(HEADER) w1.h lib/mqtt.h
 gpio.o          :  gpio.c          $(HEADER) daemon.h
 wsactions.o     :  wsactions.c     $(HEADER) daemon.h
 hass.o          :  hass.c          daemon.h
-websock.o       :  websock.c       websock.h
+websock.o       :  websock.c       websock.h webservice.h
+webservice.o    :  webservice.c    webservice.h
 deconz.o        :  deconz.c        deconz.h
 specific.o      : specific.c      $(HEADER) daemon.h specific.h
 

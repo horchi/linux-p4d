@@ -685,7 +685,7 @@ function initWidget(key, widget, fact)
                     .html(setupMode ? ' time' : ''));
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + key)
-                        .addClass('widget-value')
+                        .addClass('widget-time')
                         .css('height', 'inherit')
                         .css('color', widget.color)
                         .html(getTimeHtml()));
@@ -735,7 +735,7 @@ function getTimeHtml()
    return '<div>'
       + '<span class="' + cls + ' " style="color:orange;"></span>'
       + '<span> ' + moment().format('dddd Do') + '</span>'
-      + moment().format('MMMM YYYY')
+      + '<span> ' + moment().format('MMMM YYYY') + '</span>'
       + '</div>'
       + '<div style="font-size:2em">' + moment().format('HH:mm:ss') + '</div>';
 }
@@ -748,14 +748,14 @@ function getWeatherHtml(symbolView, wfact, weather)
 
    if (symbolView) {
       var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '@4x.png';
-      html += '<div style="display:inline-flex;color:orange;font-weight:bold;height:75%"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
-      html += '<div><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
+      html += '<div style="display:block;color:orange;font-weight:bold;height:75%"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
+      html += '<div style="padding-top:3px;"><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
       html += '<span style="font-size:smaller;"> (' + weather.tempmin.toFixed(1) + ' / ' + weather.tempmax.toFixed(1) + ')' + '</span></div>';
    }
    else {
       var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
       html += '<div style="display:inline-flex;color:orange;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
-      html += '<div>Temp: <span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
+      html += '<div><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
       html += '<span style="font-size:smaller;"> (' + weather.tempmin.toFixed(1) + ' / ' + weather.tempmax.toFixed(1) + ')' + '</span></div>';
       html += '<div>Luftdruck: <span style="color:#00c3ff;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';
       html += '<div>Luftfeuchte: <span style="color:#00c3ff;font-weight:bold;">' + weather.humidity + ' %' + '</span></div>';
@@ -844,7 +844,6 @@ function updateWidget(sensor, refresh, widget)
 
    if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
    {
-      // console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
       var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
       var image = '';
       var classes = '';
@@ -925,7 +924,6 @@ function updateWidget(sensor, refresh, widget)
    }
    else if (widget.widgettype == 2 || widget.widgettype == 7 || widget.widgettype == 8)    // Text, PlainText, Choice
    {
-      console.log("updateWidget" + JSON.stringify(sensor, undefined, 4));
       if (sensor.type == 'WEA' && sensor.text != null) {
          var weather = JSON.parse(sensor.text);
          var bigView = false;

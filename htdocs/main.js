@@ -10,6 +10,8 @@
 
 var WebSocketClient = window.WebSocketClient
 var colorStyle = null;
+var isDaytime = false;
+var daytimeCalcAt = null;
 
 var onSmalDevice = false;
 var isActive = null;

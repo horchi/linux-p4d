@@ -1,4 +1,4 @@
-/var/log/p4d.log
+/var/log/<TARGET>.log
 {
         rotate 2
         size 50M

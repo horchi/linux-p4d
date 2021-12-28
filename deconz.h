@@ -21,6 +21,7 @@ class Deconz
    public:
 
       Deconz();
+      ~Deconz();
 
       int init(Daemon* parent, cDbConnection* connection);
       int exit();

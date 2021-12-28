@@ -306,6 +306,7 @@ int Daemon::performMqttRequests()
 int Daemon::mqttDisconnect()
 {
    if (mqttReader)               mqttReader->disconnect();
+   if (mqttWriter)               mqttWriter->disconnect();
    if (mqttNodeRedReader)        mqttNodeRedReader->disconnect();
    if (mqttNodeRedWriter)        mqttNodeRedWriter->disconnect();
    if (mqttHassCommandReader)    mqttHassCommandReader->disconnect();
@@ -531,6 +532,7 @@ int Daemon::mqttNodeRedPublishAction(SensorData& sensor, double value, bool publ
       json_object_set_new(oJson, "action", json_string("CHANGE"));
 
    char* message = json_dumps(oJson, JSON_REAL_PRECISION(4));
+   json_decref(oJson);
    tell(eloNodeRed, "-> (node-red) (%s) [%s]", TARGET "2mqtt/changes", message);
 
    int status = mqttNodeRedWriter->write(TARGET "2mqtt/changes", message);
@@ -589,8 +591,9 @@ int Daemon::jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig)
 
       char* key {nullptr};
       asprintf(&key, "%s:0x%02x", sensor.type.c_str(), sensor.address);
-      if (getTextImage(key, sensor.text.c_str()))
-         json_object_set_new(obj, "image", json_string(getTextImage(key, sensor.text.c_str())));
+      const char* image = getTextImage(key, sensor.text.c_str());
+      if (!isEmpty(image))
+         json_object_set_new(obj, "image", json_string(image));
       free(key);
 
       return success;

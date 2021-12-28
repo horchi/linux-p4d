@@ -34,8 +34,8 @@ Mqtt::Mqtt(int aHeartBeat)
 
 Mqtt::~Mqtt()
 {
-   delete sendbuf;
-   delete recvbuf;
+   delete[] sendbuf;
+   delete[] recvbuf;
    delete mqttClient;
 }
 
@@ -132,8 +132,8 @@ int Mqtt::connect(const char* aUrl, const char* user, const char* password)
       return fail;
    }
 
-   delete sendbuf;
-   delete recvbuf;
+   delete[] sendbuf;
+   delete[] recvbuf;
 
    sizeSendBuf = 1024 * 1024;
    sendbuf = new uint8_t[sizeSendBuf];
@@ -201,7 +201,8 @@ int Mqtt::disconnect()
 
    // stop the refresh thread
 
-   tell(eloDebug, "Info: Stopping refresh thread for '%s'", theTopic.c_str());
+   tell(eloDebug, "Info: Stopping refresh thread for '%s' - '%s'", theTopic.c_str(),
+        mqttClient->close_now == 2 ? "succeeded" : "aborted");
 
    if (mqttClient->close_now == 2)
       pthread_join(refreshThread, 0);

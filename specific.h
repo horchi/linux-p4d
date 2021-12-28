@@ -9,12 +9,13 @@
 #pragma once
 
 #include "daemon.h"
+#include "p4io.h"
 
 //***************************************************************************
 // Class P4d
 //***************************************************************************
 
-class P4d : public Daemon
+class P4d : public Daemon, public FroelingService
 {
    public:
 
@@ -23,6 +24,7 @@ class P4d : public Daemon
 
       const char* myTitle() override { return "Heizung"; }
       int init() override;
+      int exit() override;
 
       enum PinMappings
       {
@@ -41,6 +43,7 @@ class P4d : public Daemon
       int initDb() override;
       int exitDb() override;
 
+      int standbyUntil() override;
       int readConfiguration(bool initial) override;
       int applyConfigurationSpecials() override;
       int loadStates() override;
@@ -49,7 +52,8 @@ class P4d : public Daemon
       int updateSensors() override;
       void afterUpdate() override;
       int updateErrors();
-      int updateState() override;
+      int doLoop() override;
+      int updateState();
       void scheduleTimeSyncIn(int offset = 0);
       int sendErrorMail();
       int sendStateMail();
@@ -98,6 +102,9 @@ class P4d : public Daemon
 
       // config
 
+      int stateCheckInterval {10};
+      char* ttyDevice {nullptr};
+
       int tSync {no};
       int maxTimeLeak {10};
       char* stateMailAtStates {nullptr};
@@ -130,6 +137,13 @@ class P4d : public Daemon
       cDbStatement* selectStokerHours {nullptr};
       cDbStatement* selectStateDuration {nullptr};
 
+      Sem* sem {nullptr};
+      P4Request* request {nullptr};
+      Serial* serial {nullptr};
+      Status currentState;
+      bool stateChanged {false};
+
+      time_t nextStateAt {0};
       std::map<int,time_t> stateDurations;
       int errorsPending {0};
       time_t nextTimeSyncAt {0};

@@ -26,79 +26,6 @@
 bool Daemon::shutdown {false};
 
 //***************************************************************************
-// Web Service
-//***************************************************************************
-
-const char* cWebService::events[] =
-{
-   "unknown",
-   "login",
-   "logout",
-   "pagechange",
-   "data",
-   "init",
-   "toggleio",
-   "toggleionext",
-   "togglemode",
-   "storeconfig",
-   "gettoken",
-   "setup",
-   "storeiosetup",
-   "chartdata",
-   "logmessage",
-
-   "userdetails",
-   "storeuserconfig",
-   "changepasswd",
-
-   "reset",
-   "groups",
-   "groupconfig",
-   "chartbookmarks",
-   "storechartbookmarks",
-   "sendmail",
-   "syslog",
-   "forcerefresh",
-   "storedashboards",
-   "alerts",
-   "storealerts",
-   "imageconfig",
-   "schema",
-   "storeschema",
-
-   "errors",
-   "menu",
-   "pareditrequest",
-   "parstore",
-   "inittables",
-   "updatetimeranges",
-   "pellets",
-   "pelletsadd",
-
-   0
-};
-
-const char* cWebService::toName(Event event)
-{
-   if (event >= evUnknown && event < evCount)
-      return events[event];
-
-   return events[evUnknown];
-}
-
-cWebService::Event cWebService::toEvent(const char* name)
-{
-   if (!name)
-      return evUnknown;
-
-   for (int e = evUnknown; e < evCount; e++)
-      if (strcasecmp(name, events[e]) == 0)
-         return (Event)e;
-
-   return evUnknown;
-}
-
-//***************************************************************************
 // Widgets
 //***************************************************************************
 
@@ -184,7 +111,7 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
 {
    // type, address,  unit,  widgetType, minScale, maxScale scaleStep, showPeak
 
-   {  "-",       na,   "*",      wtMeter,        0,        45,      10, false },
+   { "-",        na,   "*",      wtMeter,        0,        45,      10, false },
    { "SPACER",   na,   "*",      wtSpace,        0,         0,       0, false },
    { "TIME",     na, "txt",  wtPlainText,        0,         0,       0, true },
    { "DO",       na,   "*",     wtSymbol,        0,         0,       0, false },
@@ -339,9 +266,6 @@ Daemon::Daemon()
    cDbConnection::setUser(dbUser);
    cDbConnection::setPass(dbPass);
 
-   sem = new Sem(0x3da00001);
-   serial = new Serial;
-   request = new P4Request(serial);
    webSock = new cWebSock(this, httpPath);
 }
 
@@ -349,19 +273,11 @@ Daemon::~Daemon()
 {
    exit();
 
-   delete mqttReader;
-   delete mqttHassWriter;
-   delete mqttHassReader;
-   delete mqttHassCommandReader;
    delete webSock;
 
    free(mailScript);
    free(stateMailTo);
    free(errorMailTo);
-
-   delete serial;
-   delete request;
-   delete sem;
 
    cDbConnection::exit();
 }
@@ -624,8 +540,9 @@ int Daemon::exit()
    for (auto it = sensors["DO"].begin(); it != sensors["DO"].end(); ++it)
       gpioWrite(it->first, false, false);
 
+   deconz.exit();
+   mqttDisconnect();
    exitDb();
-   serial->close();
 
    return success;
 }
@@ -798,6 +715,8 @@ int Daemon::initScripts()
       bool valid = getBoolFromJson(oData, "valid", false);
       const char* text = getStringFromJson(oData, "text");
 
+      json_decref(oData);
+
       tableScripts->clear();
       tableScripts->setValue("PATH", scriptPath);
 
@@ -866,7 +785,7 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    std::string result;
    tell(eloDetail, "Info: Calling '%s'", cmd);
 
-      result = executeCommand(cmd);
+   result = executeCommand(cmd);
 
    tableScripts->reset();
    tell(eloDebug, "Debug: Result of script '%s' was [%s]", cmd, result.c_str());
@@ -888,8 +807,8 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    double value = getDoubleFromJson(oData, "value");
    const char* text = getStringFromJson(oData, "text");
    bool valid = getBoolFromJson(oData, "valid", false);
-   // IoType iot = iotSensor;
 
+   json_decref(oData);
    tell(eloDebug, "DEBUG: Got '%s' from script (kind:%s unit:%s value:%0.2f) [SC:%d]", result.c_str(), kind.c_str(), unit, value, addr);
 
    sensors["SC"][addr].kind = kind;
@@ -902,19 +821,16 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    {
       changed = sensors["SC"][addr].state != (bool)value;
       sensors["SC"][addr].state = (bool)value;
-      // iot = iotLight;
    }
    else if (kind == "text")
    {
       changed = sensors["SC"][addr].text != text;
       sensors["SC"][addr].text = text;
-      // iot = iotSensor;
    }
    else if (kind == "value")
    {
       changed = sensors["SC"][addr].value != value;
       sensors["SC"][addr].value = value;
-      // iot = iotSensor;
    }
    else
       tell(eloAlways, "Got unexpected script kind '%s' in '%s'", kind.c_str(), result.c_str());
@@ -1406,38 +1322,38 @@ int Daemon::initDb()
 
 int Daemon::exitDb()
 {
-   delete tableSamples;               tableSamples = nullptr;
-   delete tablePeaks;                 tablePeaks = nullptr;
-   delete tableValueFacts;            tableValueFacts = nullptr;
+   delete tableSamples;            tableSamples = nullptr;
+   delete tablePeaks;              tablePeaks = nullptr;
+   delete tableValueFacts;         tableValueFacts = nullptr;
    delete tableValueTypes;         tableValueTypes = nullptr;
-   delete tableConfig;                tableConfig = nullptr;
-   delete tableUsers;                 tableUsers = nullptr;
-   delete tableGroups;                tableGroups = nullptr;
-   delete tableDashboards;            tableDashboards = nullptr;
-   delete tableDashboardWidgets;      tableDashboardWidgets = nullptr;
-   delete tableSchemaConf;            tableSchemaConf = nullptr;
+   delete tableConfig;             tableConfig = nullptr;
+   delete tableUsers;              tableUsers = nullptr;
+   delete tableGroups;             tableGroups = nullptr;
+   delete tableDashboards;         tableDashboards = nullptr;
+   delete tableDashboardWidgets;   tableDashboardWidgets = nullptr;
+   delete tableSchemaConf;         tableSchemaConf = nullptr;
    delete tableHomeMatic;          tableHomeMatic = nullptr;
 
-   delete selectAllGroups;            selectAllGroups = nullptr;
-   delete selectActiveValueFacts;     selectActiveValueFacts = nullptr;
-   delete selectValueFactsByType;     selectValueFactsByType = nullptr;
-   delete selectAllValueFacts;        selectAllValueFacts = nullptr;
+   delete selectAllGroups;         selectAllGroups = nullptr;
+   delete selectActiveValueFacts;  selectActiveValueFacts = nullptr;
+   delete selectValueFactsByType;  selectValueFactsByType = nullptr;
+   delete selectAllValueFacts;     selectAllValueFacts = nullptr;
    delete selectAllValueTypes;     selectAllValueTypes = nullptr;
-   delete selectAllConfig;            selectAllConfig = nullptr;
-   delete selectAllUser;              selectAllUser = nullptr;
-   delete selectMaxTime;              selectMaxTime = nullptr;
-   delete selectSamplesRange;         selectSamplesRange = nullptr;
-   delete selectSamplesRange60;       selectSamplesRange60 = nullptr;
-   delete selectScriptByPath;         selectScriptByPath = nullptr;
-   delete selectScripts;              selectScripts = nullptr;
-   delete selectDashboards;           selectDashboards = nullptr;
-   delete selectDashboardById;        selectDashboardById = nullptr;
-   delete selectSchemaConfByState;    selectSchemaConfByState = nullptr;
-   delete selectAllSchemaConf;        selectAllSchemaConf = nullptr;
+   delete selectAllConfig;         selectAllConfig = nullptr;
+   delete selectAllUser;           selectAllUser = nullptr;
+   delete selectMaxTime;           selectMaxTime = nullptr;
+   delete selectSamplesRange;      selectSamplesRange = nullptr;
+   delete selectSamplesRange60;    selectSamplesRange60 = nullptr;
+   delete selectScriptByPath;      selectScriptByPath = nullptr;
+   delete selectScripts;           selectScripts = nullptr;
+   delete selectDashboards;        selectDashboards = nullptr;
+   delete selectDashboardById;     selectDashboardById = nullptr;
+   delete selectSchemaConfByState; selectSchemaConfByState = nullptr;
+   delete selectAllSchemaConf;     selectAllSchemaConf = nullptr;
 
-   delete selectDashboardWidgetsFor;  selectDashboardWidgetsFor = nullptr;
+   delete selectDashboardWidgetsFor; selectDashboardWidgetsFor = nullptr;
 
-   delete connection; connection = nullptr;
+   delete connection;              connection = nullptr;
 
    return done;
 }
@@ -1487,9 +1403,6 @@ int Daemon::readConfiguration(bool initial)
    free(port);
 
    getConfigItem("invertDO", invertDO, yes);
-
-   getConfigItem("stateCheckInterval", stateCheckInterval, 10);
-   getConfigItem("ttyDevice", ttyDevice, "/dev/ttyUSB0");
 
    char* addrs {nullptr};
    getConfigItem("addrsDashboard", addrs, "");
@@ -1598,9 +1511,9 @@ int Daemon::standby(int t)
    return done;
 }
 
-int Daemon::standbyUntil(time_t until)
+int Daemon::standbyUntil()
 {
-   while (time(0) < until && !doShutDown())
+   while (time(0) < nextRefreshAt && !doShutDown())
    {
       meanwhile();
       usleep(5000);
@@ -1640,19 +1553,11 @@ int Daemon::meanwhile()
 int Daemon::loop()
 {
    time_t nextWeatherAt {0};
-   time_t nextStateAt {0};
-   int lastState {na};
 
    scheduleAggregate();
 
-   sem->p();
-   serial->open(ttyDevice);
-   sem->v();
-
    while (!doShutDown())
    {
-      stateChanged = false;
-
       // check db connection
 
       while (!doShutDown() && (!connection || !connection->isConnected()))
@@ -1668,49 +1573,22 @@ int Daemon::loop()
       if (doShutDown())
          break;
 
-      standbyUntil(min(nextStateAt, nextRefreshAt));
+      standbyUntil();
 
-      // aggregate
-
-      if (aggregateHistory && nextAggregateAt <= time(0))
-         aggregate();
-
-      // update/check state
-
-      int status = updateState();
-
-      if (status != success)
-      {
-         sem->p();
-         serial->close();
-         tell(eloAlways, "Error reading serial interface, reopen now!");
-         status = serial->open(ttyDevice);
-         sem->v();
-
-         if (status != success)
-         {
-            tell(eloAlways, "Retrying in 10 seconds");
-            standby(10);
-         }
-
+      if (doLoop() != success)
          continue;
-      }
-
-      stateChanged = lastState != currentState.state;
-
-      if (stateChanged)
-      {
-         lastState = currentState.state;
-         nextRefreshAt = time(0);              // force on state change
-         tell(eloAlways, "State changed to '%s'", currentState.stateinfo);
-      }
-
-      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
 
       // refresh expected?
 
       if (time(0) < nextRefreshAt)
          continue;
+
+      nextRefreshAt = time(0) + interval;
+
+      // aggregate
+
+      if (aggregateHistory && nextAggregateAt <= time(0))
+         aggregate();
 
       // trigger weather
 
@@ -1733,33 +1611,9 @@ int Daemon::loop()
          }
       }
 
-      // check serial connection
-
-      sem->p();
-      status = request->check();
-      sem->v();
-
-      if (status != success)
-      {
-         sem->p();
-         serial->close();
-         tell(eloAlways, "Error reading serial interface, reopen now");
-         serial->open(ttyDevice);
-         sem->v();
-
-         continue;
-      }
-
       // perform update
 
-      nextRefreshAt = time(0) + interval;
-      nextStateAt = stateCheckInterval ? time(0) + stateCheckInterval : nextRefreshAt;
-
-      {
-         sem->p();
-         updateSensors();   // update some sensors for wich we get no trigger
-         sem->v();
-      }
+      updateSensors();  // update some sensors for wich we get no trigger
 
       performData(0L);
       updateScriptSensors();
@@ -1769,8 +1623,6 @@ int Daemon::loop()
 
       initialRun = false;
    }
-
-   serial->close();
 
    return success;
 }
@@ -1799,47 +1651,13 @@ int Daemon::storeSamples()
          if (!sensor->record)
             continue;
 
-         // tell(eloAlways, ":::: kind of '%s/%d' is '%s')  [%s/%d]",
-         //      sensor->type.c_str(), sensor->address, sensor->kind.c_str(),
-         //      typeSensorsIt.first.c_str(), sensorIt.first);
-
          store(lastSampleTime, sensor);
          count++;
-
-         // if (mqttInterfaceStyle == misGroupedTopic)
-         // {
-         //    if (!groups[sensor->group].oHaJson)
-         //       groups[sensor->group].oHaJson = json_object();
-         // }
       }
    }
 
    connection->commit();
-   tell(eloAlways, "Stored %d samples", count);
-
-   // // MQTT
-
-   // if (mqttInterfaceStyle == misSingleTopic)
-   // {
-   //    mqttHaWrite(oHaJson, 0);
-   //    json_decref(oHaJson);
-   //    oHaJson = nullptr;
-   // }
-
-   // else if (mqttInterfaceStyle == misGroupedTopic)
-   // {
-   //    tell(eloDebug2, "Debug: Writing MQTT for %zu groups", groups.size());
-
-   //    for (auto it : groups)
-   //    {
-   //       if (it.second.oHaJson)
-   //       {
-   //          mqttHaWrite(it.second.oHaJson, it.first);
-   //          json_decref(groups[it.first].oHaJson);
-   //          groups[it.first].oHaJson = nullptr;
-   //       }
-   //    }
-   // }
+   tell(eloInfo, "Stored %d samples", count);
 
    return success;
 }
@@ -2031,7 +1849,7 @@ bool Daemon::isInTimeRange(const std::vector<Range>* ranges, time_t t)
 
 int Daemon::scheduleAggregate()
 {
-   struct tm tm = { 0 };
+   struct tm tm = {0};
    time_t now {0};
 
    if (!aggregateHistory)
@@ -2600,7 +2418,7 @@ int Daemon::dispatchHomematicEvents(const char* message)
    {
       value = getDoubleFromJson(jData, "val") * 100;     // to [%]
       sensors[type][address].state = value == 100;        // on wenn ganz offen (offen entspricht=> 100%)
-   sensors[type][address].value = value;
+      sensors[type][address].value = value;
    }
    else if (datapoint == "WORKING")
       sensors[type][address].working = getBoolFromJson(jData, "val");
@@ -2638,13 +2456,13 @@ int Daemon::dispatchHomematicEvents(const char* message)
 // Dispatch Other
 //  (p4d2mqtt/p4/Heizung)
 //     { "value": 77.0,
-//                               "type": "P4VA", "address": 1,
+//       "type": "P4VA", "address": 1,
 //       "unit": "°C", "title": "Abgas" }
 //***************************************************************************
 
 int Daemon::dispatchOther(const char* topic, const char* message)
 {
-   tell(eloAlways, "<- (%s) '%s'", topic, message);
+   tell(eloHaMqtt, "<- (%s) '%s'", topic, message);
 
    json_t* jData = json_loads(message, 0, nullptr);
 
@@ -3047,7 +2865,7 @@ void Daemon::publishSpecialValue(int addr)
       json_object_set_new(ojData, "value", json_real(sensors["SP"][addr].value));
 
    if (sensors["SP"][addr].disabled)
-         json_object_set_new(ojData, "disabled", json_boolean(true));
+      json_object_set_new(ojData, "disabled", json_boolean(true));
 
    char* tuple {nullptr};
    asprintf(&tuple, "SP:0x%02x", addr);

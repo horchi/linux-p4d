@@ -1261,7 +1261,7 @@ table.tableMultiCol tr:nth-child(odd)
     text-align: center;
     color: white;
     padding: 0px;
-    font-size: 8em;
+    font-size: 15vh;
 }
 
 .widget-main > img
@@ -1347,6 +1347,18 @@ table.tableMultiCol tr:nth-child(odd)
 }
 
 .widget-value
+{
+    grid-area: main;
+    display: inline-grid;
+    text-align: center;
+    font-size: xx-large;
+    font-weight: bold;
+    align-items: center;
+    word-break: break-word;
+    color: var(--light4);
+}
+
+.widget-time
 {
     grid-area: main;
     display: inline-grid;
@@ -1477,8 +1489,9 @@ dialog::backdrop, #backdrop
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
+    .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 6em;}
+    .widget-main               { font-size: 15vh;}
 }
 
 @media only screen and (min-width:396px) and (max-width:1080px)
@@ -1499,37 +1512,41 @@ dialog::backdrop, #backdrop
     .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
     .widget-main-peak-lin      { font-size: 0.7em; }
     .widget-value              { font-size: 1.2em; }
+    .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 6em;}
+    .widget-main               { font-size: 15vh;}
 }
 
 @media only screen and (min-height:480px) and (max-height:500px)
 {
     .content                   { margin: 0px; }
-    .widgetContainer > div     { width: 120px; height: 96px; margin: 2px; }
+    .widgetContainer > div     { width: 120px; height: 95px; margin: 1px; }
     .widgetChart               { grid-template-rows: 15% 14% 71%; }
     .buttonDashboard           { padding: 4px; margin: 0px 0px 0px 0px; }
     .chart-peak                { font-size: 0.7em; margin-top: 4px; }
     .widget-value              { font-size: 1.2em; }
+    .widget-time               { font-size: 1.3em; }
     .chart-value               { font-size: 1.0em; }
-    .widget-main               { font-size: 3.5em;}
+    .widget-main               { font-size: 15vh;}
     .widget-main-value-lin     { font-size: 0.9em;  }
     .widget-main-peak-lin      { margin-right: 0px; }
-    .widget-weather            { font-size: large; margin-top: 0px;  }
+    .widget-weather            { font-size: 1.3em; margin-top: 0px;  }
     .widget-weather > br       { display: block; }
     .symbol-value              { font-size: large;}
 }
 
 @media only screen and (max-width: 375px) and (min-width:321px)
 {
-    .widgetContainer > div     { width: 175px; padding: 0px; margin: 1px; }
+    .widgetContainer > div     { width: 168px; padding: 0px; margin: 1px; }
+    .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 6em;}
+    .widget-main               { font-size: 15vh;}
 }
 
 @media only screen and (max-width: 320px)
 {
-    .widgetContainer > div     { width: 155px; padding: 0px; margin: 1px; }
+    .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; }
+    .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 6em;}
+    .widget-main               { font-size: 15vh;}
 }

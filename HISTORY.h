@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.10"
-#define VERSION_DATE "27.12.2021"
+#define _VERSION     "0.9.12"
+#define VERSION_DATE "28.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2021-12-28:  version 0.9.12
+  - change:  Enabled iconset option
+  - bugfix:  Fixed crash on MQTT reconnect
+
+2021-12-28:  version 0.9.11
+  - change:  Minor stylesheet improvements
 
 2021-12-27:  version 0.9.10
   - bugfix:  Fixed w1 sensor validity check
@@ -38,7 +45,7 @@
   - bugfix:  Fixed potentially bug/crash id s3200 not reachable
 
 2021-12-25:  version 0.9.4
-  - change:  Stylesheed fixes taken from the forum
+  - change:  Stylesheet fixes taken from the forum
 
 2021-12-25:  version 0.9.3
   - bugfix:  Fixed widget config button
