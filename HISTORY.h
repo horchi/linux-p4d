@@ -19,6 +19,7 @@
 
 2021-12-29:  version 0.9.13
   - change:  Integrated openweathermap interface
+  - addeed:  Weather forecast
 
 2021-12-28:  version 0.9.12
   - change:  Enabled iconset option

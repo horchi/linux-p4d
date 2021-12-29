@@ -2141,10 +2141,7 @@ int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
    }
    else
    {
-      if (strstr(topic, "/nodered/weather"))
-         dispatchNodeRedWeather(jObject);
-      else
-         dispatchNodeRedCommand(jObject);
+      dispatchNodeRedCommand(jObject);
    }
 
    return success;
@@ -2183,9 +2180,7 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
 // Update Weather
 //
 // Format:
-//   { "coord":{"lon":8.79,"lat":50.3},
-//     "weather":[{"id":804,"main":"Clouds","description":"Bedeckt","icon":"04d"}],
-//     "base":"stations",
+//   { "weather":[{"id":804,"main":"Clouds","description":"Bedeckt","icon":"04d"}],
 //     "main":{"temp":8.49,"feels_like":8.49,"temp_min":7.1,"temp_max":9.55,"pressure":1008,"humidity":89},
 //     "visibility":10000,
 //     "wind":{"speed":0.89,"deg":238,"gust":3.58},
@@ -2217,7 +2212,7 @@ int Daemon::updateWeather()
    int size {0};
    char* url {nullptr};
 
-   asprintf(&url, "http://api.openweathermap.org/data/2.5/weather?appid=%s&units=metric&lang=de&lat=%f&lon=%f",
+   asprintf(&url, "http://api.openweathermap.org/data/2.5/forecast?appid=%s&units=metric&lang=de&lat=%f&lon=%f",
             openWeatherApiKey, latitude, longitude);
 
    int status = curl.downloadFile(url, size, &data, 2);
@@ -2237,28 +2232,37 @@ int Daemon::updateWeather()
    if (!jData)
       return fail;
 
-   json_t* oWeather = json_object();
+   json_t* jArray = getObjectFromJson(jData, "list");
 
-   json_object_set_new(oWeather, "detail", json_string(getStringByPath(jData, "weather[0]/description")));
-   json_object_set_new(oWeather, "icon", json_string(getStringByPath(jData, "weather[0]/icon")));
-   json_object_set_new(oWeather, "temp", json_real(getDoubleByPath(jData, "main/temp")));
-   json_object_set_new(oWeather, "tempfeels", json_real(getDoubleByPath(jData, "main/feels_like")));
-   json_object_set_new(oWeather, "tempmax", json_real(getDoubleByPath(jData, "main/temp_max")));
-   json_object_set_new(oWeather, "tempmin", json_real(getDoubleByPath(jData, "main/temp_min")));
-   json_object_set_new(oWeather, "humidity", json_real(getIntByPath(jData, "main/humidity")));
-   json_object_set_new(oWeather, "pressure", json_real(getIntByPath(jData, "main/pressure")));
-   json_object_set_new(oWeather, "windspeed", json_real(getDoubleByPath(jData, "wind/speed")));
-   json_object_set_new(oWeather, "windgust", json_real(getDoubleByPath(jData, "wind/gust")));
-   json_object_set_new(oWeather, "winddir", json_real(getIntByPath(jData, "wind/deg")));
+   if (!jArray)
+      return fail;
+
+   json_t* jWeather = json_object();
+   json_t* jForecasts = json_array();
+
+   json_object_set_new(jWeather, "forecasts", jForecasts);
+
+   size_t index {0};
+   json_t* jObj {nullptr};
+
+   json_array_foreach(jArray, index, jObj)
+   {
+     if (index == 0)
+        weather2json(jWeather, jObj);
+
+     json_t* jFcItem = json_object();
+     json_array_append_new(jForecasts, jFcItem);
+     weather2json(jFcItem, jObj);
+   }
 
    addValueFact(1, "WEA", 1, "weather", "txt", "Wetter");
    sensors["WEA"][1].kind = "text";
    sensors["WEA"][1].last = time(0);
 
-   char* p = json_dumps(oWeather, JSON_REAL_PRECISION(4));
+   char* p = json_dumps(jWeather, JSON_REAL_PRECISION(4));
    sensors["WEA"][1].text = p;
    free(p);
-   json_decref(oWeather);
+   json_decref(jWeather);
 
    {
       json_t* ojData = json_object();
@@ -2274,7 +2278,6 @@ int Daemon::updateWeather()
    }
 
    json_decref(jData);
-   json_decref(oWeather);
 
    curl.exit();
 
@@ -2282,49 +2285,24 @@ int Daemon::updateWeather()
 }
 
 //***************************************************************************
-// Dispatch Weather (openweathermap)
-//   Format: {"id":804,"weather":"Clouds","detail":"Bedeckt","icon":"04d","tempk":274.11,
-//            "tempc":0.9,"temp_maxc":2.8,"temp_minc":-1.3,"humidity":79,"pressure":1025,
-//            "maxtemp":276.04,"mintemp":271.76,"windspeed":1.79,"winddirection":70,
-//            "location":"Assenheim","sunrise":1640157765,"sunset":1640186645,"clouds":100,
-//            "description":"Das Wetter in Assenheim bei Koordinaten: 50.3, 8.79 ist Clouds (Bedeckt)."}
+// Weather 2 Json
 //***************************************************************************
 
-int Daemon::dispatchNodeRedWeather(json_t* jObject)
+int Daemon::weather2json(json_t* jWeather, json_t* owmWeather)
 {
-   addValueFact(1, "WEA", 1, "weather", "txt", "Wetter");
-
-   json_t* oWeather = json_object();
-
-   json_object_set_new(oWeather, "detail", json_string(getStringFromJson(jObject, "detail")));
-   json_object_set_new(oWeather, "icon", json_string(getStringFromJson(jObject, "icon")));
-   json_object_set_new(oWeather, "temp", json_real(getDoubleFromJson(jObject, "tempc")));
-   json_object_set_new(oWeather, "tempmax", json_real(getDoubleFromJson(jObject, "temp_maxc")));
-   json_object_set_new(oWeather, "tempmin", json_real(getDoubleFromJson(jObject, "temp_minc")));
-   json_object_set_new(oWeather, "humidity", json_real(getDoubleFromJson(jObject, "humidity")));
-   json_object_set_new(oWeather, "pressure", json_real(getDoubleFromJson(jObject, "pressure")));
-   json_object_set_new(oWeather, "windspeed", json_real(getDoubleFromJson(jObject, "windspeed")));
-
-   sensors["WEA"][1].kind = "text";
-   sensors["WEA"][1].last = time(0);
-
-   char* p = json_dumps(oWeather, JSON_REAL_PRECISION(4));
-   sensors["WEA"][1].text = p;
-   free(p);
-   json_decref(oWeather);
-
-   {
-      json_t* ojData = json_object();
-      sensor2Json(ojData, "WEA", 1);
-      json_object_set_new(ojData, "text", json_string(sensors["WEA"][1].text.c_str()));
-
-      char* tuple {nullptr};
-      asprintf(&tuple, "%s:0x%02x", "WEA", 1);
-      jsonSensorList[tuple] = ojData;
-      free(tuple);
-
-      pushDataUpdate("update", 0L);
-   }
+   json_object_set_new(jWeather, "stime", json_string(l2pTime(getIntFromJson(owmWeather, "dt")).c_str()));
+   json_object_set_new(jWeather, "time", json_integer(getIntFromJson(owmWeather, "dt")));
+   json_object_set_new(jWeather, "detail", json_string(getStringByPath(owmWeather, "weather[0]/description")));
+   json_object_set_new(jWeather, "icon", json_string(getStringByPath(owmWeather, "weather[0]/icon")));
+   json_object_set_new(jWeather, "temp", json_real(getDoubleByPath(owmWeather, "main/temp")));
+   json_object_set_new(jWeather, "tempfeels", json_real(getDoubleByPath(owmWeather, "main/feels_like")));
+   json_object_set_new(jWeather, "tempmax", json_real(getDoubleByPath(owmWeather, "main/temp_max")));
+   json_object_set_new(jWeather, "tempmin", json_real(getDoubleByPath(owmWeather, "main/temp_min")));
+   json_object_set_new(jWeather, "humidity", json_real(getIntByPath(owmWeather, "main/humidity")));
+   json_object_set_new(jWeather, "pressure", json_real(getIntByPath(owmWeather, "main/pressure")));
+   json_object_set_new(jWeather, "windspeed", json_real(getDoubleByPath(owmWeather, "wind/speed")));
+   json_object_set_new(jWeather, "windgust", json_real(getDoubleByPath(owmWeather, "wind/gust")));
+   json_object_set_new(jWeather, "winddir", json_real(getIntByPath(owmWeather, "wind/deg")));
 
    return done;
 }

@@ -10,7 +10,7 @@
 
 var widgetWidthBase = null;
 var widgetHeightBase = null;
-
+var weatherData = null;
 var wInterval = null;
 var actDashboard = -1;
 var gauge = null;
@@ -557,11 +557,13 @@ function initWidget(key, widget, fact)
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                            .click(function() {titleClick(fact.type, fact.addClass, key);})
                            .html(title));
+         var wFact = fact;
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + fact.type + fact.address)
                         .addClass(fact.type == 'WEA' ? 'widget-weather' : 'widget-value')
                         .css('color', widget.color)
-                        .css('height', 'inherit'));
+                        .css('height', 'inherit')
+                        .click(function() { if (wFact.type == 'WEA') weatherForecast(); }));
          break;
       }
 
@@ -765,6 +767,46 @@ function getWeatherHtml(symbolView, wfact, weather)
    return html;
 }
 
+function weatherForecast()
+{
+   var lastDay = '';
+
+   console.log(weatherForecast);
+
+   var form = document.createElement("div");
+   $('#container').append(form);
+   $(form).addClass('rounded-border weatherForecast');
+   $(form).click(function() { $(form).remove(); });
+
+   var html = '';
+
+   for (var i = 0; i < weatherData.forecasts.length; i++) {
+      var weather = weatherData.forecasts[i];
+      var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
+      var day = moment(weather.time*1000).format('dddd Do');
+      var time = moment(weather.time*1000).format('H:00');
+
+      if (day != lastDay) {
+         lastDay = day;
+         html += '<div class="rounded-border" style="background-color:#2f2f2fd1;">' + day + '</div>';
+      }
+
+      html += '<div class="rounded-border">';
+
+      html += '<span>' + time + '</span>';
+      html += '<span><img src="' + wIconRef + '"></img></span>';
+      html += '<span class="mdi mdi-thermometer"> ' + weather.temp + ' °C</span>';
+      html += '<span class="mdi mdi-water-percent"> ' + weather.humidity + ' %</span>';
+      html += '<span>' + weather.pressure + ' hPa</span>';
+      html += '<span class="mdi mdi-weather-windy"> ' + weather.windspeed + ' m/s</span>';
+      html += '</div>'
+
+   }
+   html += '</div>'
+
+   $(form).html(html);
+}
+
 function titleClick(address, type, key)
 {
    if (setupMode)
@@ -925,16 +967,17 @@ function updateWidget(sensor, refresh, widget)
    else if (widget.widgettype == 2 || widget.widgettype == 7 || widget.widgettype == 8)    // Text, PlainText, Choice
    {
       if (sensor.type == 'WEA' && sensor.text != null) {
-         var weather = JSON.parse(sensor.text);
          var bigView = false;
          var wfact = fact;
-         $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weather));
+         weatherData = JSON.parse(sensor.text);
+         console.log("weather" + JSON.stringify(weatherData, undefined, 4));
+         $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
          if (wInterval)
             clearInterval(wInterval);
-         if (weather) {
+         if (weatherData) {
             wInterval = setInterval(function() {
                bigView = !bigView;
-               $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weather));
+               $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
             }, 5*1000);
          }
       }

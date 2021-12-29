@@ -271,7 +271,6 @@ class Daemon : public cWebInterface
       virtual int dispatchMqttHaCommandRequest(json_t* jData, const char* topic);
       virtual int dispatchNodeRedCommands(const char* topic, json_t* jObject);
       virtual int dispatchNodeRedCommand(json_t* jObject);
-      virtual int dispatchNodeRedWeather(json_t* jObject);
       virtual int dispatchDeconz();
       virtual int dispatchHomematicRpcResult(const char* message);
       virtual int dispatchHomematicEvents(const char* message);
@@ -282,6 +281,7 @@ class Daemon : public cWebInterface
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
 
       int updateWeather();
+      int weather2json(json_t* jWeather, json_t* owmWeather);
 
       int store(time_t now, const SensorData* sensor);
 

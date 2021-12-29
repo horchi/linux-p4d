@@ -1022,6 +1022,35 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: var(--light3);
 }
 
+
+.weatherForecast
+{
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    height: 80%;
+    width: 55%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    background-color: black;
+    color: white;
+}
+
+.weatherForecast > div
+{
+    height: 15px;
+    width: 95%;
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin: 8px;
+}
+
+.weatherForecast > div > span:nth-child(n+3)
+{
+    margin-right: 15px;
+}
+
 /* ----------------------- */
 /* Dashboard Widgets */
 
@@ -1492,6 +1521,7 @@ dialog::backdrop, #backdrop
     .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 15vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
 }
 
 @media only screen and (min-width:396px) and (max-width:1080px)
@@ -1515,6 +1545,7 @@ dialog::backdrop, #backdrop
     .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 15vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
 }
 
 @media only screen and (min-height:480px) and (max-height:500px)
@@ -1533,6 +1564,7 @@ dialog::backdrop, #backdrop
     .widget-weather            { font-size: 1.3em; margin-top: 0px;  }
     .widget-weather > br       { display: block; }
     .symbol-value              { font-size: large;}
+    .weatherForecast           { left: 5%; width: 90%; }
 }
 
 @media only screen and (max-width: 375px) and (min-width:321px)
@@ -1541,6 +1573,7 @@ dialog::backdrop, #backdrop
     .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 15vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
 }
 
 @media only screen and (max-width: 320px)
@@ -1549,4 +1582,5 @@ dialog::backdrop, #backdrop
     .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 15vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
 }
