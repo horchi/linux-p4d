@@ -473,8 +473,10 @@ function initWidget(key, widget, fact)
          var highlights = {};
          var critmin = (widget.critmin == null || widget.critmin == -1) ? widget.scalemin : widget.critmin;
          var critmax = (widget.critmax == null || widget.critmax == -1) ? scalemax : widget.critmax;
+         var minColor = widget.unit == '°C' ? 'blue' : 'rgba(255,0,0,.6)';
+
          highlights = [
-            { from: widget.scalemin, to: critmin,  color: 'rgba(255,0,0,.6)' },
+            { from: widget.scalemin, to: critmin,  color: minColor },
             { from: critmin,              to: critmax,  color: 'rgba(0,255,0,.6)' },
             { from: critmax,              to: scalemax, color: 'rgba(255,0,0,.6)' }
          ];
@@ -771,14 +773,13 @@ function weatherForecast()
 {
    var lastDay = '';
 
-   console.log(weatherForecast);
-
    var form = document.createElement("div");
    $('#container').append(form);
    $(form).addClass('rounded-border weatherForecast');
    $(form).click(function() { $(form).remove(); });
 
    var html = '';
+   html += '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
 
    for (var i = 0; i < weatherData.forecasts.length; i++) {
       var weather = weatherData.forecasts[i];

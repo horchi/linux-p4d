@@ -1437,6 +1437,11 @@ int Daemon::readConfiguration(bool initial)
       free(deconzKey);
    }
 
+   // location
+
+   getConfigItem("latitude", latitude);
+   getConfigItem("longitude", longitude);
+
    // OpenWeatherMap
 
    std::string apiKey = openWeatherApiKey ? openWeatherApiKey : "";
@@ -2155,6 +2160,7 @@ int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
 // Dispatch Node-Red Command Request
 //   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off", "brightness" : 255 }'
 //***************************************************************************
+// mosquitto_pub -t mqtt2p4d/command -p 1883 -m '{ "command" : "parstore", "address" : 60, "value" : "720" }
 
 int Daemon::dispatchNodeRedCommand(json_t* jObject)
 {
@@ -2219,6 +2225,7 @@ int Daemon::updateWeather()
    asprintf(&url, "http://api.openweathermap.org/data/2.5/forecast?appid=%s&units=metric&lang=de&lat=%f&lon=%f",
             openWeatherApiKey, latitude, longitude);
 
+   tell(eloDebug, "-> (openweathermap) [%s]", url);
    int status = curl.downloadFile(url, size, &data, 2);
 
    if (status != success)
@@ -2236,6 +2243,7 @@ int Daemon::updateWeather()
    if (!jData)
       return fail;
 
+   const char* city = getStringByPath(jData, "city/name");
    json_t* jArray = getObjectFromJson(jData, "list");
 
    if (!jArray)
@@ -2245,6 +2253,7 @@ int Daemon::updateWeather()
    json_t* jForecasts = json_array();
 
    json_object_set_new(jWeather, "forecasts", jForecasts);
+   json_object_set_new(jWeather, "city", json_string(city));
 
    size_t index {0};
    json_t* jObj {nullptr};
@@ -2702,9 +2711,8 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
    else
       value = 0.0;
 
+   tell(eloDebug, "Debug: getConfigItem '%s' now %.2f [%s]", name, value, txt);
    free(txt);
-
-   tell(eloDebug, "Debug: getConfigItem '%s' now %.2f", name, value);
 
    return success;
 }
@@ -2712,9 +2720,7 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
 int Daemon::setConfigItem(const char* name, double value)
 {
    char txt[16+TB];
-
    snprintf(txt, sizeof(txt), "%.2f", value);
-
    return setConfigItem(name, txt);
 }
 

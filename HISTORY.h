@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.13"
+#define _VERSION     "0.9.14"
 #define VERSION_DATE "29.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-29:  version 0.9.14
+  - bugfix:  Fixed latitude and longitude configuration
 
 2021-12-29:  version 0.9.13
   - change:  Integrated openweathermap interface
