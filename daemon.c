@@ -1439,7 +1439,11 @@ int Daemon::readConfiguration(bool initial)
 
    // OpenWeatherMap
 
+   std::string apiKey = openWeatherApiKey ? openWeatherApiKey : "";
    getConfigItem("openWeatherApiKey", openWeatherApiKey);
+
+   if (!isEmpty(openWeatherApiKey) && openWeatherApiKey != apiKey)
+      updateWeather();
 
    // MQTT
 
