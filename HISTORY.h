@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.12"
-#define VERSION_DATE "28.12.2021"
+#define _VERSION     "0.9.13"
+#define VERSION_DATE "29.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-29:  version 0.9.13
+  - change:  Integrated openweathermap interface
 
 2021-12-28:  version 0.9.12
   - change:  Enabled iconset option

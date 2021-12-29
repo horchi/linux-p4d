@@ -281,6 +281,8 @@ class Daemon : public cWebInterface
       int callScript(int addr, const char* command, const char* name, const char* title);
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
 
+      int updateWeather();
+
       int store(time_t now, const SensorData* sensor);
 
       cDbRow* valueFactOf(const char* type, uint addr);
@@ -517,6 +519,7 @@ class Daemon : public cWebInterface
 
       double latitude {50.30};
       double longitude {8.79};
+      char* openWeatherApiKey {nullptr};
       int interval {60};
       int arduinoInterval {10};
 

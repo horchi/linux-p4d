@@ -17,6 +17,7 @@ BASELIBS = -lrt -lz -luuid -lpthread
 BASELIBS += $(shell mysql_config --libs_r)
 
 BASELIBS += $(shell xml2-config --libs)
+BASELIBS += $(shell pkg-config --cflags --libs jansson)
 
 LIBOBJS += curl.o
 BASELIBS += -lcurl
@@ -43,8 +44,8 @@ $(LIBTARGET).a : $(LIBOBJS)
 	@echo Building Lib ...
 	$(doLib) $@ $(LIBOBJS)
 
-tst: test.o serial.o lib
-	$(doLink) test.o serial.o $(HLIB) -lcrypto $(BASELIBS) -o $@
+tst: demo.o serial.o json.o lib
+	$(doLink) demo.o json.o $(HLIB) -lcrypto $(BASELIBS) -o $@
 
 clean:
 	rm -f *.o *~ core $(TEST) $(DEMO) $(LIBTARGET).a
@@ -71,6 +72,6 @@ epgservice.o :  epgservice.c  $(HEADER) epgservice.h
 dbdict.o     :  dbdict.c      $(HEADER) dbdict.h
 json.o       :  json.c        $(HEADER) json.h
 serial.o     :  serial.c      $(HEADER) serial.h
+json.o       :  json.c        json.h $(HEADER)
 
 demo.o       :  demo.c        $(HEADER)
-test.o       :  test.c        $(HEADER)

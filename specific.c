@@ -47,6 +47,8 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "consumptionPerHour",        ctNum,     "4",    false, "Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
 
+   { "openWeatherApiKey",         ctString,  "",             false, "Daemon", "Openweathermap API Key", "" },
+
    // web
 
    { "webUrl",                    ctString,  "",             false, "WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },

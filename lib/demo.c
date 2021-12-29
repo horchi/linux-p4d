@@ -6,6 +6,7 @@
  */
 
 #include "common.h"
+#include "json.h"
 
 #include "db.h"
 
@@ -18,7 +19,7 @@ const char* logPrefix = "";
 
 void initConnection()
 {
-   cDbConnection::init(0x3db00012);
+   cDbConnection::init();
 
    cDbConnection::setEncoding("utf8");
    cDbConnection::setHost("localhost");
@@ -298,22 +299,53 @@ int insertDemo()
    return done;
 }
 
+void jsonExample()
+{
+   printf("-------------\n");
+   printf("jsonExample\n");
+   printf("-------------\n");
+
+   json_t* j = jsonLoad("{\"foo\" : [{ \"bar\" : 12.21 }, { \"bar\" : 44.21 }] }");
+
+   if (!j)
+   {
+      tell(eloAlways, "failed to parse json\n");
+      return;
+   }
+
+   const char* xPath = "foo[1]/bar";
+
+   if (getObjectByPath(j, xPath))
+   {
+      double bar = getDoubleByPath(j, xPath);
+      printf("bar: %.2f\n", bar);
+   }
+   else
+   {
+      printf("path '%s' not found\n", xPath);
+   }
+}
+
 //***************************************************************************
 // Main
 //***************************************************************************
 
 int main(int argc, char** argv)
 {
+   logstdout = true;
+
+   jsonExample();
+
+   return done;
+
    const char* path = "/etc/epgd/epg.dat";
 
    if (argc > 1)
       path = argv[1];
 
-   // read deictionary
+   // read dictionary
 
-   dbDict.setFilterFromNameFct(toFieldFilter);
-
-   if (dbDict.in(path, ffEpgd) != success)
+   if (dbDict.in(path) != success)
    {
       tell(eloAlways, "Invalid dictionary configuration, aborting!");
       return 1;

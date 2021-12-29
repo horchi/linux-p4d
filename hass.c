@@ -218,16 +218,10 @@ int Daemon::performMqttRequests()
    {
       if (mqttHassCommandReader->read(&message, 10) == success)
       {
-         json_error_t error;
-         json_t* jData = json_loads(message.memory, 0, &error);
+         json_t* jData = jsonLoad(message.memory);
 
          if (!jData)
-         {
-            tell(eloAlways, "Error: Ignoring invalid json in '%s'", message.memory);
-            tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-                 error.text, error.source, error.line, error.column, error.position);
             return fail;
-         }
 
          tell(eloHaMqtt, "<- (%s) [%s]", mqttHassCommandReader->getLastReadTopic().c_str(), message.memory);
          dispatchMqttHaCommandRequest(jData, mqttHassCommandReader->getLastReadTopic().c_str());
@@ -272,18 +266,13 @@ int Daemon::performMqttRequests()
 
          tell(eloNodeRed, "<- (node-red) [%s]", message.memory);
 
-         json_error_t error;
-         json_t* jData = json_loads(message.memory, 0, &error);
+         json_t* jData = jsonLoad(message.memory);
 
          if (!jData)
-         {
-            tell(eloAlways, "Error: Ignoring invalid json in '%s'", message.memory);
-            tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-                 error.text, error.source, error.line, error.column, error.position);
             return fail;
-         }
 
          dispatchNodeRedCommands(mqttNodeRedReader->getLastReadTopic().c_str(), jData);
+         json_decref(jData);
       }
    }
 

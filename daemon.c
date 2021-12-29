@@ -20,6 +20,7 @@
 #  include "gpio.h"
 #endif
 
+#include "lib/curl.h"
 #include "lib/json.h"
 #include "daemon.h"
 
@@ -1436,6 +1437,10 @@ int Daemon::readConfiguration(bool initial)
       free(deconzKey);
    }
 
+   // OpenWeatherMap
+
+   getConfigItem("openWeatherApiKey", openWeatherApiKey);
+
    // MQTT
 
    std::string url = mqttUrl ? mqttUrl : "";
@@ -1552,8 +1557,6 @@ int Daemon::meanwhile()
 
 int Daemon::loop()
 {
-   time_t nextWeatherAt {0};
-
    scheduleAggregate();
 
    while (!doShutDown())
@@ -1590,10 +1593,10 @@ int Daemon::loop()
       if (aggregateHistory && nextAggregateAt <= time(0))
          aggregate();
 
-      // trigger weather
-
-      if (time(0) > nextWeatherAt)
+      /* if (time(0) > nextWeatherAt)
       {
+         nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
+
          if (mqttCheckConnection() == success && mqttNodeRedWriter->isConnected())
          {
             json_t* j = json_object();
@@ -1609,10 +1612,11 @@ int Daemon::loop()
          {
             tell(eloDetail, "Info: Can't trigger weather data, missing MQTT connection");
          }
-      }
+      } */
 
-      // perform update
+      // work
 
+      updateWeather();
       updateSensors();  // update some sensors for wich we get no trigger
 
       performData(0L);
@@ -2173,6 +2177,108 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
    toggleIo(address, tuple[0].c_str(), state, brightness, transitiontime);
 
    return success;
+}
+
+//***************************************************************************
+// Update Weather
+//
+// Format:
+//   { "coord":{"lon":8.79,"lat":50.3},
+//     "weather":[{"id":804,"main":"Clouds","description":"Bedeckt","icon":"04d"}],
+//     "base":"stations",
+//     "main":{"temp":8.49,"feels_like":8.49,"temp_min":7.1,"temp_max":9.55,"pressure":1008,"humidity":89},
+//     "visibility":10000,
+//     "wind":{"speed":0.89,"deg":238,"gust":3.58},
+//     "clouds":{"all":100},
+//     "dt":1640765212,
+//     "sys":{"type":2,"id":2012565,"country":"DE","sunrise":1640762680,"sunset":1640791732},
+//     "timezone":3600, "id":2955014, "name":"Assenheim", "cod":200}
+//
+//  https://openweathermap.org/current#min
+//  https://openweathermap.org/forecast5
+//***************************************************************************
+
+int Daemon::updateWeather()
+{
+   static time_t nextWeatherAt {0};
+
+   if (isEmpty(openWeatherApiKey))
+      return done;
+
+   if (time(0) < nextWeatherAt)
+      return done;
+
+   nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
+
+   cCurl curl;
+   curl.init();
+
+   MemoryStruct data;
+   int size {0};
+   char* url {nullptr};
+
+   asprintf(&url, "http://api.openweathermap.org/data/2.5/weather?appid=%s&units=metric&lang=de&lat=%f&lon=%f",
+            openWeatherApiKey, latitude, longitude);
+
+   int status = curl.downloadFile(url, size, &data, 2);
+
+   if (status != success)
+   {
+      tell(eloAlways, "Error: Requesting weather at '%s' failed", url);
+      free(url);
+      return fail;
+   }
+
+   free(url);
+   tell(eloDetail, "<- (openweathermap) [%s]", data.memory);
+
+   json_t* jData = jsonLoad(data.memory);
+
+   if (!jData)
+      return fail;
+
+   json_t* oWeather = json_object();
+
+   json_object_set_new(oWeather, "detail", json_string(getStringByPath(jData, "weather[0]/description")));
+   json_object_set_new(oWeather, "icon", json_string(getStringByPath(jData, "weather[0]/icon")));
+   json_object_set_new(oWeather, "temp", json_real(getDoubleByPath(jData, "main/temp")));
+   json_object_set_new(oWeather, "tempfeels", json_real(getDoubleByPath(jData, "main/feels_like")));
+   json_object_set_new(oWeather, "tempmax", json_real(getDoubleByPath(jData, "main/temp_max")));
+   json_object_set_new(oWeather, "tempmin", json_real(getDoubleByPath(jData, "main/temp_min")));
+   json_object_set_new(oWeather, "humidity", json_real(getIntByPath(jData, "main/humidity")));
+   json_object_set_new(oWeather, "pressure", json_real(getIntByPath(jData, "main/pressure")));
+   json_object_set_new(oWeather, "windspeed", json_real(getDoubleByPath(jData, "wind/speed")));
+   json_object_set_new(oWeather, "windgust", json_real(getDoubleByPath(jData, "wind/gust")));
+   json_object_set_new(oWeather, "winddir", json_real(getIntByPath(jData, "wind/deg")));
+
+   addValueFact(1, "WEA", 1, "weather", "txt", "Wetter");
+   sensors["WEA"][1].kind = "text";
+   sensors["WEA"][1].last = time(0);
+
+   char* p = json_dumps(oWeather, JSON_REAL_PRECISION(4));
+   sensors["WEA"][1].text = p;
+   free(p);
+   json_decref(oWeather);
+
+   {
+      json_t* ojData = json_object();
+      sensor2Json(ojData, "WEA", 1);
+      json_object_set_new(ojData, "text", json_string(sensors["WEA"][1].text.c_str()));
+
+      char* tuple {nullptr};
+      asprintf(&tuple, "%s:0x%02x", "WEA", 1);
+      jsonSensorList[tuple] = ojData;
+      free(tuple);
+
+      pushDataUpdate("update", 0L);
+   }
+
+   json_decref(jData);
+   json_decref(oWeather);
+
+   curl.exit();
+
+   return done;
 }
 
 //***************************************************************************

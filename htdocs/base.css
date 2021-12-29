@@ -1261,7 +1261,7 @@ table.tableMultiCol tr:nth-child(odd)
     text-align: center;
     color: white;
     padding: 0px;
-    font-size: 15vh;
+    font-size: 12vh;
 }
 
 .widget-main > img

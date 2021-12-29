@@ -376,6 +376,8 @@ char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
 // #to-be-implemented: splitToInts(const char* string, char c, int& i1, int& i2);
 std::vector<std::string> split(const std::string& str, char delim);
+std::string getStringBetween(std::string str, const char* begin, const char* end);
+std::string getStringBefore(std::string str, const char* begin);
 int fileExists(const char* path);
 const char* suffixOf(const char* path);
 int createLink(const char* link, const char* dest, int force);

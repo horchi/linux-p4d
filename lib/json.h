@@ -24,6 +24,7 @@
 //***************************************************************************
 
 int json2Data(json_t* obj, MemoryStruct* data, const char* encoding = 0);
+json_t* jsonLoad(const char* data);
 
 #ifdef USEDB
 int addFieldToJson(json_t* obj, cDbTable* table, const char* fname, int ignoreEmpty = yes, const char* extName = 0);

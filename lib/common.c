@@ -684,6 +684,31 @@ std::vector<std::string> split(const std::string& str, char delim)
 }
 
 //***************************************************************************
+// Get String Before
+//***************************************************************************
+
+std::string getStringBefore(std::string str, const char* begin)
+{
+   size_t pos = str.find(begin);
+   return str.substr(0, pos);
+}
+
+//***************************************************************************
+// Get String Between
+//***************************************************************************
+
+std::string getStringBetween(std::string str, const char* begin, const char* end)
+{
+   size_t first = str.find(begin);
+   size_t last = str.find(end, first);
+
+   if (first == str.npos || last == str.npos)
+      return "";
+
+   return str.substr(first+1, last-(first+1));
+}
+
+//***************************************************************************
 // End Of String
 //***************************************************************************
 
@@ -1418,8 +1443,8 @@ int rep(const char* string, const char* expression, const char*& s_location,
    if (options & repIgnoreCase)
      opt = opt | REG_ICASE;
 
-   if (regcomp( &reg, expression, opt) != 0)
-     return fail;
+   if (regcomp(&reg, expression, opt) != 0)
+      return fail;
 
    // Suchen des ersten Vorkommens von reg in string
 
@@ -1427,7 +1452,7 @@ int rep(const char* string, const char* expression, const char*& s_location,
    regfree(&reg);
 
    if (status != 0)
-     return fail;
+      return fail;
 
    // Suche erfolgreich =>
    // Setzen der ermittelten Start- und Endpositionen
