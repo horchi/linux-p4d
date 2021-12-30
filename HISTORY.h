@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.14"
-#define VERSION_DATE "29.12.2021"
+#define _VERSION     "0.9.15"
+#define VERSION_DATE "30.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2021-12-30:  version 0.9.15
+  - added:  Delete option for images
+  - bugfix: Fixed store of float numbers in config
 
 2021-12-29:  version 0.9.14
   - bugfix:  Fixed latitude and longitude configuration

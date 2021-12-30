@@ -728,8 +728,8 @@ function getTimeHtml()
 
    if (!daytimeCalcAt || now.getTime() >= daytimeCalcAt.getTime()+60000){
       daytimeCalcAt = now;
-      var sunset = new Date().sunset(config.latitude, config.longitude);
-      var sunrise = new Date().sunrise(config.latitude, config.longitude);
+      var sunset = new Date().sunset(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
+      var sunrise = new Date().sunrise(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
       isDaytime = daytimeCalcAt > sunrise && daytimeCalcAt < sunset;
       // console.log("isDaytime: " + isDaytime + ' : ' + sunrise + ' : '+ sunset);
    }
@@ -971,7 +971,7 @@ function updateWidget(sensor, refresh, widget)
          var bigView = false;
          var wfact = fact;
          weatherData = JSON.parse(sensor.text);
-         console.log("weather" + JSON.stringify(weatherData, undefined, 4));
+         // console.log("weather" + JSON.stringify(weatherData, undefined, 4));
          $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
          if (wInterval)
             clearInterval(wInterval);

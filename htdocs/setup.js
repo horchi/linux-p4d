@@ -72,7 +72,7 @@ function initConfig(configdetails)
          break;
 
       case 1:     // number (float)
-         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputFloat\" type=\"number\" step=\"0.1\" value=\"" + item.value + "\"/></span>\n";
+         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputFloat\" type=\"number\" step=\"0.1\" value=\"" + parseFloat(item.value.replace(',', '.')) + "\"/></span>\n";
          html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
          break;
 
@@ -202,7 +202,7 @@ function storeConfig()
    for (var i = 0; i < elements.length; i++) {
       var name = elements[i].id.substring(elements[i].id.indexOf("_") + 1); {
          if (elements[i].getAttribute('type') == 'number' && elements[i].getAttribute('step') != undefined &&
-             Number.isInteger(elements[i].getAttribute('step')) && elements[i].value != '')
+             elements[i].value != '')
             jsonObj[name] = parseFloat(elements[i].value).toLocaleString("de-DE");
          else
             jsonObj[name] = elements[i].value;

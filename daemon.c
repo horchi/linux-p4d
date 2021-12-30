@@ -2160,7 +2160,6 @@ int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
 // Dispatch Node-Red Command Request
 //   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off", "brightness" : 255 }'
 //***************************************************************************
-// mosquitto_pub -t mqtt2p4d/command -p 1883 -m '{ "command" : "parstore", "address" : 60, "value" : "720" }
 
 int Daemon::dispatchNodeRedCommand(json_t* jObject)
 {

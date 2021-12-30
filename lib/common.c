@@ -1054,6 +1054,8 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 {
    DIR* dir {nullptr};
 
+   tell(eloDebug2, "Scanning directory '%s' with extensions '%s'", path, extensions);
+
    if (!(dir = opendir(path)))
    {
       tell(eloDetail, "Can't open directory '%s', '%s'", path, strerror(errno));
@@ -1100,7 +1102,7 @@ int getFileList(const char* path, int type, const char* extensions, int recursio
 
          if (isEmpty(ext) || !strcasestr(extensions, ext))
          {
-            tell(eloDebug, "Skipping file '%s' with extension '%s'", pEntry->d_name, ext);
+            tell(eloDebug2, "Skipping file '%s' with extension '%s'", pEntry->d_name, ext);
             continue;
          }
       }

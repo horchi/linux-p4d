@@ -1459,7 +1459,16 @@ int Daemon::performImageConfig(json_t* obj, long client)
 {
    const char* action = getStringFromJson(obj, "action");
 
-   if (strcmp(action, "upload") == 0)
+   if (strcmp(action, "delete") == 0)
+   {
+      const char* path = getStringFromJson(obj, "path");
+      char* tmp {nullptr};
+      asprintf(&tmp, "%s/%s", httpPath, path);
+      tell(eloAlways, "Deleting image '%s'", tmp);
+      removeFile(tmp);
+      free(tmp);
+   }
+   else if (strcmp(action, "upload") == 0)
    {
       const char* name = getStringFromJson(obj, "name");
       const char* data = getStringFromJson(obj, "data");
@@ -1490,11 +1499,15 @@ int Daemon::performImageConfig(json_t* obj, long client)
 
          free(tmp);
       }
-
-      json_t* oJson = json_array();
-      images2Json(oJson);
-      pushOutMessage(oJson, "images", client);
    }
+   else
+   {
+      return done;
+   }
+
+   json_t* oJson = json_array();
+   images2Json(oJson);
+   pushOutMessage(oJson, "images", client);
 
    return done;
 }

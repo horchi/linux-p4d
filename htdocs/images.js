@@ -28,7 +28,7 @@ function initImages()
       '  </table>' +
       '</div><br/>' +
       '<div id="addImageDiv" class="rounded-border inputTableConfig">' +
-      '  <button class="rounded-border button2" onclick="selectImage()">Image auwählen</button>' +
+      '  <button class="rounded-border button2" onclick="selectImage()">Bild auwählen</button>' +
       '<br/><br/>' +
       '  <img id="previewImg" style="height:100px;width:100px;margin-right:30px;"\>' +
       '  <br/><br/><span">Upload Name:   (ohne Endung!)</span>' +
@@ -47,7 +47,7 @@ function initImages()
 
       var html = '<td><img class="tableImage" src="' + images[img] + '"></img></td>';
       html += '<td class="tableMultiColCell">' + images[img] + '</td>';
-      // html += '<td><button class="rounded-border" style="margin-right:10px;" onclick="delImage(\'' + images[img] + '\')">Löschen</button></td>';
+      html += '<td><button class="rounded-border" style="margin-right:10px;" onclick="delImage(\'' + images[img] + '\')">Löschen</button></td>';
 
       var elem = document.createElement("tr");
       elem.innerHTML = html;
