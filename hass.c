@@ -64,7 +64,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 {
    // check/prepare reader/writer connection
 
-   if (isEmpty(mqttHassUrl))
+   if (isEmpty(mqttUrl))
       return done;
 
    mqttCheckConnection();
@@ -92,15 +92,15 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 
    if (mqttHaveConfigTopic && !sensor.title.length())
    {
-      if (!mqttHassReader->isConnected())
+      if (!mqttReader->isConnected())
          return fail;
 
       // Interface description:
       //   https://www.home-assistant.io/docs/mqtt/discovery/
 
-      mqttHassReader->subscribe(sDataTopic.c_str());
-      status = mqttHassReader->read(&message, 100);
-      tp = mqttHassReader->getLastReadTopic();
+      mqttReader->subscribe(sDataTopic.c_str());
+      status = mqttReader->read(&message, 100);
+      tp = mqttReader->getLastReadTopic();
 
       tell(eloHaMqtt, "Config topic '%s', state %d", tp.c_str(), status);
 
@@ -112,7 +112,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
          char* configTopic {nullptr};
          char* configJson {nullptr};
 
-         if (!mqttHassWriter->isConnected())
+         if (!mqttWriter->isConnected())
             return fail;
 
          // topic don't exists -> create sensor
@@ -160,18 +160,18 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                      sensor.unit.c_str(), sName.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
          }
 
-         mqttHassWriter->writeRetained(configTopic, configJson);
+         mqttWriter->writeRetained(configTopic, configJson);
 
          free(configTopic);
          free(configJson);
       }
 
-      mqttHassReader->unsubscribe(sDataTopic.c_str());
+      mqttReader->unsubscribe(sDataTopic.c_str());
    }
 
    // publish actual value
 
-   if (!mqttHassWriter->isConnected())
+   if (!mqttWriter->isConnected())
       return fail;
 
    json_t* oValue = json_object();
@@ -187,7 +187,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
       json_object_set_new(oValue, "value", json_real(sensor.value));
 
    char* j = json_dumps(oValue, JSON_PRESERVE_ORDER); // |JSON_REAL_PRECISION(5));
-   mqttHassWriter->writeRetained(sDataTopic.c_str(), j);
+   mqttWriter->writeRetained(sDataTopic.c_str(), j);
    free(j);
    json_decref(oValue);
 
@@ -214,20 +214,6 @@ int Daemon::performMqttRequests()
 
    MemoryStruct message;
 
-   if (!isEmpty(mqttHassUrl) && mqttHassCommandReader->isConnected())
-   {
-      if (mqttHassCommandReader->read(&message, 10) == success)
-      {
-         json_t* jData = jsonLoad(message.memory);
-
-         if (!jData)
-            return fail;
-
-         tell(eloHaMqtt, "<- (%s) [%s]", mqttHassCommandReader->getLastReadTopic().c_str(), message.memory);
-         dispatchMqttHaCommandRequest(jData, mqttHassCommandReader->getLastReadTopic().c_str());
-      }
-   }
-
    if (!isEmpty(mqttUrl) && mqttReader->isConnected())
    {
       // tell(eloMqttHome, "Try reading topic '%s'", mqttReader->getTopic());
@@ -252,27 +238,30 @@ int Daemon::performMqttRequests()
             dispatchHomematicRpcResult(message.memory);
          else if (strstr(tp.c_str(), "2mqtt/homematic/events"))
             dispatchHomematicEvents(message.memory);
+
+         else if (strstr(tp.c_str(), "2mqtt/light/"))
+         {
+            json_t* jData = jsonLoad(message.memory);
+
+            if (jData)
+            {
+               dispatchMqttHaCommandRequest(jData, mqttReader->getLastReadTopic().c_str());
+               json_decref(jData);
+            }
+         }
+
+         else if (strstr(tp.c_str(), "2mqtt/command/") || strstr(tp.c_str(), "2mqtt/nodered/"))
+         {
+            json_t* jData = jsonLoad(message.memory);
+
+            if (jData)
+            {
+               dispatchNodeRedCommands(mqttReader->getLastReadTopic().c_str(), jData);
+               json_decref(jData);
+            }
+         }
          else
             dispatchOther(tp.c_str(), message.memory);
-      }
-   }
-
-   if (!isEmpty(mqttNodeRedUrl) && mqttNodeRedReader->isConnected())
-   {
-      while (mqttNodeRedReader->read(&message, 10) == success)
-      {
-         if (isEmpty(message.memory))
-            continue;
-
-         tell(eloNodeRed, "<- (node-red) [%s]", message.memory);
-
-         json_t* jData = jsonLoad(message.memory);
-
-         if (!jData)
-            return fail;
-
-         dispatchNodeRedCommands(mqttNodeRedReader->getLastReadTopic().c_str(), jData);
-         json_decref(jData);
       }
    }
 
@@ -296,19 +285,9 @@ int Daemon::mqttDisconnect()
 {
    if (mqttReader)               mqttReader->disconnect();
    if (mqttWriter)               mqttWriter->disconnect();
-   if (mqttNodeRedReader)        mqttNodeRedReader->disconnect();
-   if (mqttNodeRedWriter)        mqttNodeRedWriter->disconnect();
-   if (mqttHassCommandReader)    mqttHassCommandReader->disconnect();
-   if (mqttHassWriter)           mqttHassWriter->disconnect();
-   if (mqttHassReader)           mqttHassReader->disconnect();
 
    delete mqttReader;            mqttReader = nullptr;
    delete mqttWriter;            mqttWriter = nullptr;
-   delete mqttNodeRedReader;     mqttNodeRedReader = nullptr;
-   delete mqttNodeRedWriter;     mqttNodeRedWriter = nullptr;
-   delete mqttHassCommandReader; mqttHassCommandReader = nullptr;
-   delete mqttHassWriter;        mqttHassWriter = nullptr;
-   delete mqttHassReader;        mqttHassReader = nullptr;
 
    return done;
 }
@@ -327,34 +306,10 @@ int Daemon::mqttCheckConnection()
    if (!mqttWriter)
       mqttWriter = new Mqtt();
 
-   if (!mqttNodeRedReader)
-      mqttNodeRedReader = new Mqtt();
-
-   if (!mqttNodeRedWriter)
-      mqttNodeRedWriter = new Mqtt();
-
-   if (!mqttHassCommandReader)
-      mqttHassCommandReader = new Mqtt();
-
-   if (!mqttHassWriter)
-      mqttHassWriter = new Mqtt();
-
-   if (!mqttHassReader)
-      mqttHassReader = new Mqtt();
-
-   if (!isEmpty(mqttHassUrl) && (!mqttHassCommandReader->isConnected() || !mqttHassWriter->isConnected() || !mqttHassReader->isConnected()))
-      renonnectNeeded = true;
-
    if (!isEmpty(mqttUrl) && !mqttReader->isConnected())
       renonnectNeeded = true;
 
    if (!isEmpty(mqttUrl) && !mqttWriter->isConnected())
-      renonnectNeeded = true;
-
-   if (!isEmpty(mqttNodeRedUrl) && !mqttNodeRedReader->isConnected())
-      renonnectNeeded = true;
-
-   if (!isEmpty(mqttNodeRedUrl) && !mqttNodeRedWriter->isConnected())
       renonnectNeeded = true;
 
    if (!renonnectNeeded)
@@ -365,45 +320,11 @@ int Daemon::mqttCheckConnection()
 
    lastMqttConnectAt = time(0);
 
-   if (!isEmpty(mqttHassUrl))
-   {
-      if (!mqttHassCommandReader->isConnected())
-      {
-         if (mqttHassCommandReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
-         {
-            tell(eloAlways, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
-         }
-         else
-         {
-            mqttHassCommandReader->subscribe(TARGET "2mqtt/light/+/set/#");
-            tell(eloHaMqtt, "MQTT: Connecting command subscriber to '%s' succeeded", mqttHassUrl);
-         }
-      }
-
-      if (!mqttHassWriter->isConnected())
-      {
-         if (mqttHassWriter->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
-            tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttHassUrl);
-         else
-            tell(eloHaMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttHassUrl);
-      }
-
-      if (!mqttHassReader->isConnected())
-      {
-         if (mqttHassReader->connect(mqttHassUrl, mqttHassUser, mqttHassPassword) != success)
-            tell(eloAlways, "Error: MQTT: Connecting subscriber to '%s' failed", mqttHassUrl);
-         else
-            tell(eloHaMqtt, "MQTT: Connecting subscriber to '%s' succeeded", mqttHassUrl);
-
-         // subscription is done in hassPush
-      }
-   }
-
    if (!isEmpty(mqttUrl))
    {
       if (!mqttWriter->isConnected())
       {
-         if (mqttWriter->connect(mqttUrl) != success)
+         if (mqttWriter->connect(mqttUrl, mqttUser, mqttPassword) != success)
             tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
          else
             tell(eloHaMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
@@ -411,44 +332,24 @@ int Daemon::mqttCheckConnection()
 
       if (!mqttReader->isConnected())
       {
-         if (mqttReader->connect(mqttUrl) != success)
+         if (mqttReader->connect(mqttUrl, mqttUser, mqttPassword) != success)
          {
             tell(eloAlways, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
          }
          else
          {
+            mqttReader->subscribe(TARGET "2mqtt/light/+/set/#");
+            mqttReader->subscribe(TARGET "2mqtt/command/#");
+            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/command/#");
+            mqttReader->subscribe(TARGET "2mqtt/nodered/#");
+            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/nodered/#");
+
             for (const auto& t : mqttSensorTopics)
             {
                mqttReader->subscribe(t.c_str());
                tell(eloDetail, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, t.c_str());
             }
          }
-      }
-   }
-
-   if (!isEmpty(mqttNodeRedUrl))
-   {
-      if (!mqttNodeRedReader->isConnected())
-      {
-         if (mqttNodeRedReader->connect(mqttNodeRedUrl) != success)
-         {
-            tell(eloAlways, "Error: MQTT: Connecting node-red subscriber to '%s' failed", mqttNodeRedUrl);
-         }
-         else
-         {
-            mqttNodeRedReader->subscribe(TARGET "2mqtt/command/#");
-            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/command/#");
-            mqttNodeRedReader->subscribe(TARGET "2mqtt/nodered/#");
-            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttNodeRedUrl, TARGET "2mqtt/nodered/#");
-         }
-      }
-
-      if (!mqttNodeRedWriter->isConnected())
-      {
-         if (mqttNodeRedWriter->connect(mqttNodeRedUrl) != success)
-            tell(eloAlways, "Error: MQTT: Connecting node-red publisher to '%s' failed", mqttNodeRedUrl);
-         else
-            tell(eloNodeRed, "MQTT: Connecting node-red publisher to '%s' succeeded", mqttNodeRedUrl);
       }
    }
 
@@ -474,7 +375,7 @@ int Daemon::mqttHaWrite(json_t* obj, uint groupid)
    if (mqttInterfaceStyle == misGroupedTopic)
       sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
 
-   int status = mqttHassWriter->write(sDataTopic.c_str(), message);
+   int status = mqttWriter->write(sDataTopic.c_str(), message);
    free(message);
 
    return status;
@@ -491,7 +392,7 @@ int Daemon::mqttNodeRedPublishSensor(SensorData& sensor)
 
 int Daemon::mqttNodeRedPublishAction(SensorData& sensor, double value, bool publishOnly)
 {
-   if (!mqttNodeRedWriter || !mqttNodeRedWriter->isConnected())
+   if (!mqttWriter || !mqttWriter->isConnected())
        return done;
 
    json_t* oJson = json_object();
@@ -524,7 +425,7 @@ int Daemon::mqttNodeRedPublishAction(SensorData& sensor, double value, bool publ
    json_decref(oJson);
    tell(eloNodeRed, "-> (node-red) (%s) [%s]", TARGET "2mqtt/changes", message);
 
-   int status = mqttNodeRedWriter->write(TARGET "2mqtt/changes", message);
+   int status = mqttWriter->write(TARGET "2mqtt/changes", message);
    free(message);
 
    return status;

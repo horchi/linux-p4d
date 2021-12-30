@@ -490,24 +490,17 @@ class Daemon : public cWebInterface
       };
 
       char* mqttUrl {nullptr};
-      Mqtt* mqttReader {nullptr};                // connection  to my own mqtt instance
-      Mqtt* mqttWriter {nullptr};                // connection to my own mqtt instance
-      std::vector<std::string> mqttSensorTopics;
+      char* mqttUser {nullptr};
+      char* mqttPassword {nullptr};
 
-      char* mqttNodeRedUrl {nullptr};
-      Mqtt* mqttNodeRedWriter {nullptr};
-      Mqtt* mqttNodeRedReader {nullptr};
-
-      char* mqttHassUrl {nullptr};
-      char* mqttHassUser {nullptr};
-      char* mqttHassPassword {nullptr};
       char* mqttDataTopic {nullptr};
       char* mqttSendWithKeyPrefix {nullptr};
       bool mqttHaveConfigTopic {true};
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
-      Mqtt* mqttHassWriter {nullptr};         // for HASS (Home Assistant, ...)
-      Mqtt* mqttHassReader {nullptr};         // for HASS (Home Assistant, ...)
-      Mqtt* mqttHassCommandReader {nullptr};  // for HASS (Home Assistant, ...)
+
+      Mqtt* mqttReader {nullptr};                // connection  to my own mqtt instance
+      Mqtt* mqttWriter {nullptr};                // connection to my own mqtt instance
+      std::vector<std::string> mqttSensorTopics;
 
       time_t lastMqttConnectAt {0};
       std::map<std::string,std::string> hassCmdTopicMap; // 'topic' to 'name' map

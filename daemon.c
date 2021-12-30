@@ -1452,6 +1452,9 @@ int Daemon::readConfiguration(bool initial)
 
    // MQTT
 
+   getConfigItem("mqttUser", mqttUser, mqttUser);
+   getConfigItem("mqttPassword", mqttPassword, mqttPassword);
+
    std::string url = mqttUrl ? mqttUrl : "";
    getConfigItem("mqttUrl", mqttUrl);
 
@@ -1465,24 +1468,7 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("homeMaticInterface", homeMaticInterface, false);
 
-   // Node-Red
-
-   url = mqttNodeRedUrl ? mqttNodeRedUrl : "";
-   getConfigItem("mqttNodeRedUrl", mqttNodeRedUrl);
-
-   if (url != mqttNodeRedUrl)
-      mqttDisconnect();
-
    // Home Automation MQTT
-
-   url = mqttHassUrl ? mqttHassUrl : "";
-   getConfigItem("mqttHassUrl", mqttHassUrl);
-
-   if (url != mqttHassUrl)
-      mqttDisconnect();
-
-   getConfigItem("mqttHassUser", mqttHassUser, mqttHassUser);
-   getConfigItem("mqttHassPassword", mqttHassPassword, mqttHassPassword);
 
    getConfigItem("mqttDataTopic", mqttDataTopic, TARGET "2mqtt/<TYPE>/<NAME>/state");
    getConfigItem("mqttSendWithKeyPrefix", mqttSendWithKeyPrefix, "");
@@ -1491,7 +1477,7 @@ int Daemon::readConfiguration(bool initial)
    if (mqttDataTopic[strlen(mqttDataTopic)-1] == '/')
       mqttDataTopic[strlen(mqttDataTopic)-1] = '\0';
 
-   if (isEmpty(mqttDataTopic) || isEmpty(mqttHassUrl))
+   if (isEmpty(mqttDataTopic) || isEmpty(mqttUrl))
       mqttInterfaceStyle = misNone;
    else if (strstr(mqttDataTopic, "<NAME>"))
       mqttInterfaceStyle = misMultiTopic;
@@ -1606,13 +1592,13 @@ int Daemon::loop()
       {
          nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
 
-         if (mqttCheckConnection() == success && mqttNodeRedWriter->isConnected())
+         if (mqttCheckConnection() == success && mqttWriter->isConnected())
          {
             json_t* j = json_object();
             json_object_set_new(j, "latitude", json_real(latitude));
             json_object_set_new(j, "longitude", json_real(longitude));
             char* p = json_dumps(j, JSON_REAL_PRECISION(4));
-            mqttNodeRedWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
+            mqttWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
             free(p);
             json_decref(j);
             nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;

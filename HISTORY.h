@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.15"
+#define _VERSION     "0.9.16"
 #define VERSION_DATE "30.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-30:  version 0.9.16
+  - changed: Only one MQTT broker
 
 2021-12-30:  version 0.9.15
   - added:  Delete option for images

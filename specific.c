@@ -64,20 +64,15 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "chartRange",                ctNum,     "1.5",          true, "WEB Interface", "Chart Range", "" },
    { "chartSensors",              ctNum,     "VA:0x0",       true, "WEB Interface", "Chart Sensors", "" },
 
-   // homectrld MQTT interface
+   // MQTT interface
 
-   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "Home-Control MQTT Interface", "MQTT Broker Url", "MQTT Instanz für den p4d. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttSensorTopics",          ctString,  TARGET "2mqtt/w1/#, " TARGET "2mqtt/arduino/out",  false, "Home-Control MQTT Interface", "Sensor Topics", "" },
-
-   // node-red MQTT interface
-
-   { "mqttNodeRedUrl",            ctString,  "tcp://localhost:1883", false, "Node-Red Interface", "MQTT Node-Red Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "MQTT Interface", "MQTT Broker Url", "URL der MQTT Instanz Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttUser",                  ctString,  "",                     false, "MQTT Interface", "User", "" },
+   { "mqttPassword",              ctString,  "",                     false, "MQTT Interface", "Password", "" },
+   { "mqttSensorTopics",          ctString,  TARGET "2mqtt/w1/#, " TARGET "2mqtt/arduino/out",  false, "MQTT Interface", "Zusätzliche sensor Topics", "" },
 
    // Home Automation MQTT interface
 
-   { "mqttHassUrl",               ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Broker Url", "Optional. Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttHassUser",              ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "User", "" },
-   { "mqttHassPassword",          ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Password", "" },
    { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
    { "mqttSendWithKeyPrefix",     ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Adresse übertragen", "Wenn hier ein Präfix konfiguriert ist wird die Adresse der Sensoren nebst Präfix übertragen" },
    { "mqttHaveConfigTopic",       ctBool,    "1", false, "Home Automation Interface (like Home-Assistant, ...)", "Config Topic", "Speziell für HomeAssistant" },

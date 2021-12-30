@@ -240,7 +240,7 @@ function initWidget(key, widget, fact)
             .addClass("widget rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<button></button>')
                     .attr('id', 'button' + fact.type + fact.address)
@@ -312,7 +312,7 @@ function initWidget(key, widget, fact)
          var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
          eTitle.className = "widget-title " + cls;
          eTitle.innerHTML = title;
-         eTitle.addEventListener("click", function() {titleClick(fact.address, fact.type, key)}, false);
+         eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
          elem.appendChild(eTitle);
 
          var ePeak = document.createElement("div");
@@ -328,8 +328,9 @@ function initWidget(key, widget, fact)
 
          var eChart = document.createElement("div");
          eChart.className = "chart-canvas-container";
-         if (!setupMode)
-            eChart.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
+         var cFact = fact;
+         if (!setupMode && fact.record)
+            eChart.setAttribute("onclick", "toggleChartDialog('" + cFact.type + "'," + cFact.address + ")");
          elem.appendChild(eChart);
 
          var eCanvas = document.createElement("canvas");
@@ -354,8 +355,9 @@ function initWidget(key, widget, fact)
                     .attr('id', 'peak' + fact.type + fact.address)
                     .addClass('chart-peak'));
 
-         if (!setupMode)
-            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
+         var cFact = fact;
+         if (!setupMode && fact.record)
+            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
 
          break;
       }
@@ -403,8 +405,9 @@ function initWidget(key, widget, fact)
                                     .attr('alignment-baseline', 'middle')
                                     .attr('x', '950')
                                     .attr('y', '550'))));
-         if (!setupMode)
-            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
+         var cFact = fact;
+         if (!setupMode && fact.record)
+            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
 
          var divId = '#svgDiv' + fact.type + fact.address;
          $(divId).html($(divId).html());  // redraw to activate the SVG !!
@@ -418,7 +421,7 @@ function initWidget(key, widget, fact)
          elem.className += " widgetDropZone";
          var eTitle = document.createElement("div");
          eTitle.className = "widget-title" + (setupMode ? ' mdi mdi-lead-pencil widget-edit' : '');
-         eTitle.addEventListener("click", function() {titleClick(fact.address, fact.type, key)}, false);
+         eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
          eTitle.innerHTML = title;
          elem.appendChild(eTitle);
 
@@ -428,8 +431,9 @@ function initWidget(key, widget, fact)
          var canvas = document.createElement('canvas');
          main.appendChild(canvas);
          canvas.setAttribute('id', 'widget' + fact.type + fact.address);
-         if (!setupMode)
-            canvas.setAttribute("onclick", "toggleChartDialog('" + fact.type + "'," + fact.address + ")");
+         var cFact = fact;
+         if (!setupMode && fact.record)
+            $(canvas).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
 
          if (!radial) {
             var value = document.createElement("div");
@@ -557,7 +561,7 @@ function initWidget(key, widget, fact)
          if (setupMode)
             $(elem).append($('<div></div>')
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                           .click(function() {titleClick(fact.type, fact.addClass, key);})
+                           .click(function() {titleClick(fact.type, fact.address, key);})
                            .html(title));
          var wFact = fact;
          $(elem).append($('<div></div>')
@@ -578,7 +582,7 @@ function initWidget(key, widget, fact)
             })
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
@@ -592,7 +596,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetSymbolValue rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<button></button>')
                     .attr('id', 'button' + fact.type + fact.address)
@@ -666,7 +670,7 @@ function initWidget(key, widget, fact)
          $(elem).addClass("widgetSpacer rounded-border widgetDropZone");
          $(elem).append($('<div></div>')
                         .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                        .click(function() {titleClick(0, '', key);})
+                        .click(function() {titleClick('', 0, key);})
                         .html(setupMode ? ' spacer' : ''));
          if (!setupMode)
             $(elem).css('background-color', widget.color);
@@ -685,7 +689,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetPlain rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(0, '', key);})
+                    .click(function() {titleClick('', 0, key);})
                     .html(setupMode ? ' time' : ''));
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + key)
@@ -706,15 +710,16 @@ function initWidget(key, widget, fact)
             .addClass("widget rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
-                    .click(function() {titleClick(fact.type, fact.addClass, key);})
+                    .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
                     .css('color', widget.color)
                     .addClass('widget-value'));
 
-         if (!setupMode)
-            $(elem).click(function() {toggleChartDialog(fact.type, fact.addClass, key);});
+         var cFact = fact;
+         if (!setupMode && fact.record)
+            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
          break;
       }
    }
@@ -784,8 +789,8 @@ function weatherForecast()
    for (var i = 0; i < weatherData.forecasts.length; i++) {
       var weather = weatherData.forecasts[i];
       var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
-      var day = moment(weather.time*1000).format('dddd Do');
-      var time = moment(weather.time*1000).format('H:00');
+      var day = moment(weather.time*1000).format('dddd Do MMMM');
+      var time = moment(weather.time*1000).format('HH:00');
 
       if (day != lastDay) {
          lastDay = day;
@@ -808,7 +813,7 @@ function weatherForecast()
    $(form).html(html);
 }
 
-function titleClick(address, type, key)
+function titleClick(type, address, key)
 {
    if (setupMode)
       widgetSetup(key);
@@ -1181,6 +1186,7 @@ function toggleChartDialog(type, address)
    var dialog = document.querySelector('dialog');
    dialog.style.position = 'fixed';
 
+   console.log("chart for " + type + address);
    if (type != "" && !dialog.hasAttribute('open')) {
       var canvas = document.querySelector("#chartDialog");
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
