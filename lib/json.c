@@ -305,6 +305,9 @@ double getDoubleByPath(json_t* jData, const char* aPath, double def)
    if (!jObj)
       return def;
 
+   if (json_is_integer(jObj))
+      return json_integer_value(jObj);
+
    return json_real_value(jObj);
 }
 
