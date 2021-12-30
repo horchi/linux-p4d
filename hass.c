@@ -245,18 +245,18 @@ int Daemon::performMqttRequests()
 
             if (jData)
             {
-               dispatchMqttHaCommandRequest(jData, mqttReader->getLastReadTopic().c_str());
+               dispatchMqttHaCommandRequest(jData, tp.c_str());
                json_decref(jData);
             }
          }
 
-         else if (strstr(tp.c_str(), "2mqtt/command/") || strstr(tp.c_str(), "2mqtt/nodered/"))
+         else if (strstr(tp.c_str(), "2mqtt/command") || strstr(tp.c_str(), "2mqtt/nodered"))
          {
             json_t* jData = jsonLoad(message.memory);
 
             if (jData)
             {
-               dispatchNodeRedCommands(mqttReader->getLastReadTopic().c_str(), jData);
+               dispatchNodeRedCommands(tp.c_str(), jData);
                json_decref(jData);
             }
          }
