@@ -1034,6 +1034,7 @@ table.tableMultiCol tr:nth-child(odd)
     overflow-y: scroll;
     background-color: black;
     color: white;
+    outline: none;
 }
 
 .weatherForecast > div
@@ -1080,7 +1081,7 @@ table.tableMultiCol tr:nth-child(odd)
       'title'
       'main'
       'progress';
-    grid-template-rows: 12% 86% 2%;
+    grid-template-rows: 12% 75% 13%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1265,6 +1266,8 @@ table.tableMultiCol tr:nth-child(odd)
     width: 80%;
     justify-self: center;
     border-radius: 8px;
+    margin-top: 7px;
+    margin-bottom: 7px;
 }
 
 .progress-bar {
@@ -1514,13 +1517,13 @@ dialog::backdrop, #backdrop
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 15% 81% 4%; }
+    .widget                    { grid-template-rows: 15% 70% 15%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
     .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 15vh;}
+    .widget-main               { font-size: 13vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
@@ -1536,7 +1539,7 @@ dialog::backdrop, #backdrop
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 15% 81% 4%; }
+    .widget                    { grid-template-rows: 15% 70% 15%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widgetMeterLinear         { grid-template-rows: 15% 25% 60%; }
     .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
@@ -1544,7 +1547,7 @@ dialog::backdrop, #backdrop
     .widget-value              { font-size: 1.2em; }
     .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 15vh;}
+    .widget-main               { font-size: 11vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
@@ -1552,6 +1555,7 @@ dialog::backdrop, #backdrop
 {
     .content                   { margin: 0px; }
     .widgetContainer > div     { width: 120px; height: 95px; margin: 1px; }
+    .widget                    { grid-template-rows: 15% 73% 12%; }
     .widgetChart               { grid-template-rows: 15% 14% 71%; }
     .buttonDashboard           { padding: 4px; margin: 0px 0px 0px 0px; }
     .chart-peak                { font-size: 0.7em; margin-top: 4px; }
@@ -1572,7 +1576,7 @@ dialog::backdrop, #backdrop
     .widgetContainer > div     { width: 168px; padding: 0px; margin: 1px; }
     .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 15vh;}
+    .widget-main               { font-size: 13vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
@@ -1581,6 +1585,6 @@ dialog::backdrop, #backdrop
     .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; }
     .widget-weather            { font-size: large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 15vh;}
+    .widget-main               { font-size: 13vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }

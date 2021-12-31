@@ -257,14 +257,15 @@ function dispatchMessage(message)
    var jMessage = JSON.parse(message);
    var event = jMessage.event;
 
-   if (event != "chartdata")
-      console.log("got event: " + event);
+   // if (event != "chartdata")
+   //    console.log("got event: " + event);
 
    if (event == "result") {
       hideProgressDialog();
       showInfoDialog(jMessage.object);
    }
    else if (event == "init") {
+      // console.log("init " + JSON.stringify(jMessage.object, undefined, 4));
       allSensors = jMessage.object;
       if (currentPage == 'dashboard')
          initDashboard();
@@ -274,6 +275,7 @@ function dispatchMessage(message)
          initList();
    }
    else if (event == "update" || event == "all") {
+      // console.log("update " + JSON.stringify(jMessage.object, undefined, 4));
       if (event == "all") {
          allSensors = jMessage.object;
       }
@@ -729,11 +731,12 @@ window.toggleMode = function(address, type)
                });
 }
 
-window.toggleIo = function(address, type)
+window.toggleIo = function(address, type, scale = -1)
 {
    socket.send({ "event": "toggleio", "object":
                  {
-                    'action': 'toggle',
+                    'action': scale == -1 ? 'toggle' : 'dim',
+                    'value': scale,
                     'address': address,
                     'type': type }
                });

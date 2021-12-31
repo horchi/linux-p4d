@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.17"
+#define _VERSION     "0.9.18"
 #define VERSION_DATE "31.12.2021"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2021-12-31:  version 0.9.18
+  - change: Exclude weather data from state mail
 
 2021-12-31:  version 0.9.17
   - added: Separate yAxis per unit for charts

@@ -155,7 +155,7 @@ class Daemon : public cWebInterface
       struct SensorData        // Sensor Data
       {
          bool record {false};
-         std::string kind {"value"};
+         std::string kind {"value"};       // { value | status | text | trigger }
          time_t last {0};
          double value {0.0};
          bool working {false};             // actually working/moving (eg for blinds)

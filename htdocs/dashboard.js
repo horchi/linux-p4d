@@ -226,9 +226,17 @@ function initWidget(key, widget, fact)
       elem.addEventListener('drop', function(event) {dropWidget(event)}, false);
    }
 
-   var title = setupMode ? ' ' : '';
+   var titleClass = '';
+   var title = setupMode ? ' ' : ' ';
    if (fact != null)
       title += fact.usrtitle && fact.usrtitle != '' ? fact.usrtitle : fact.title;
+
+   if (!setupMode && widget.unit == '°C')
+      titleClass = 'mdi mdi-thermometer';
+   else if (!setupMode && widget.unit == 'hPa')
+      titleClass = 'mdi mdi-gauge';
+   else if (!setupMode && widget.unit == 'xxxx')  // can't detect if '%' is humidity
+      titleClass = 'mdi mdi-water-percent';
 
    if (!widget.color)
       widget.color = 'white';
@@ -240,6 +248,7 @@ function initWidget(key, widget, fact)
             .addClass("widget rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<button></button>')
@@ -249,60 +258,27 @@ function initWidget(key, widget, fact)
                     .addClass('widget-main')
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
-                            .attr('draggable', false)))
+                            .attr('draggable', false))
+                    .click(function() { toggleIo(fact.address, fact.type); }))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
-                    .css('visibility', 'hidden')
+                    .click(function(e) {
+                       var scale = parseInt((e.pageX - $(this).position().left) / ($(this).innerWidth() / 100));
+                       console.log("dim: " + scale + '%');
+                       toggleIo(fact.address, fact.type, scale);
+                    })
                     .append($('<div></div>')
                             .attr('id', 'progressBar' + fact.type + fact.address)
-                            .addClass('progress-bar')));   // .css('visible', true)));
-
-         if (!setupMode) {
-           $('#button' + fact.type + fact.address).on({
-              touchstart: function(e) {
-                 if (fact.dim) {
-                    e.preventDefault();
-                    if (keyTimeout)
-                       clearTimeout(keyTimeout);
-                    keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
-                 }
-              },
-              mousedown: function(e) {
-                 if (fact.dim) {
-                    e.preventDefault();
-                    if (keyTimeout)
-                       clearTimeout(keyTimeout);
-                    keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
-                 }
-              },
-              touchend: function(e) {
-                 e.preventDefault();
-                 if (fact.dim) {
-                    if (keyTimeout) {
-                       toggleIo(fact.address, fact.type);
-                       clearTimeout(keyTimeout);
-                       keyTimeout = null;
-                    }
-                 }
-                 else
-                    toggleIo(fact.address, fact.type);
-              },
-              mouseup: function(e) {
-                 e.preventDefault();
-                 if (fact.dim) {
-                    if (keyTimeout) {
-                       toggleIo(fact.address, fact.type);
-                       clearTimeout(keyTimeout);
-                       keyTimeout = null;
-                    }
-                 }
-                 else
-                    toggleIo(fact.address, fact.type);
-              }
-           });
-         }
-
+                            .addClass('progress-bar')));
+         // needed for shower progress bar ?!?
+         //            .append($('<div></div>')
+         //                    .attr('id', 'progress' + fact.type + fact.address)
+         //                    .addClass('widget-progress')
+         //                    .css('visibility', 'hidden')
+         //                    .append($('<div></div>')
+         //                            .attr('id', 'progressBar' + fact.type + fact.address)
+         //                            .addClass('progress-bar')));   // .css('visible', true)));
          break;
       }
 
@@ -310,7 +286,7 @@ function initWidget(key, widget, fact)
          elem.className = "widgetChart rounded-border widgetDropZone";
          var eTitle = document.createElement("div");
          var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
-         eTitle.className = "widget-title " + cls;
+         eTitle.className = "widget-title " + cls + ' ' + titleClass;
          eTitle.innerHTML = title;
          eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
          elem.appendChild(eTitle);
@@ -345,6 +321,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetValue rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
@@ -366,6 +343,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetGauge rounded-border participation widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
@@ -420,7 +398,7 @@ function initWidget(key, widget, fact)
          elem.className = radial ? "widgetMeter rounded-border" : "widgetMeterLinear rounded-border";
          elem.className += " widgetDropZone";
          var eTitle = document.createElement("div");
-         eTitle.className = "widget-title" + (setupMode ? ' mdi mdi-lead-pencil widget-edit' : '');
+         eTitle.className = "widget-title " + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : titleClass);
          eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
          eTitle.innerHTML = title;
          elem.appendChild(eTitle);
@@ -561,6 +539,7 @@ function initWidget(key, widget, fact)
          if (setupMode)
             $(elem).append($('<div></div>')
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                           .addClass(titleClass)
                            .click(function() {titleClick(fact.type, fact.address, key);})
                            .html(title));
          var wFact = fact;
@@ -582,6 +561,7 @@ function initWidget(key, widget, fact)
             })
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
@@ -596,6 +576,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetSymbolValue rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<button></button>')
@@ -605,11 +586,16 @@ function initWidget(key, widget, fact)
                     .css('color', widget.color)
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
-                            .attr('draggable', false)))
+                            .attr('draggable', false))
+                    .click(function() { toggleIo(fact.address, fact.type); }))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
-                    .css('visibility', 'hidden')
+                    .click(function(e) {
+                       var scale = parseInt((e.pageX - $(this).position().left) / ($(this).innerWidth() / 100));
+                       console.log("dim: " + scale + '%');
+                       toggleIo(fact.address, fact.type, scale);
+                    })
                     .append($('<div></div>')
                             .attr('id', 'progressBar' + fact.type + fact.address)
                             .addClass('progress-bar')))
@@ -618,51 +604,6 @@ function initWidget(key, widget, fact)
                     .addClass('symbol-value')
                    );
 
-         if (!setupMode) {
-            $('#button' + fact.type + fact.address).on({
-               touchstart: function(e) {
-                  if (fact.dim) {
-                     e.preventDefault();
-                     if (keyTimeout)
-                        clearTimeout(keyTimeout);
-                     keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
-                  }
-               },
-               mousedown: function(e) {
-                  if (fact.dim) {
-                     e.preventDefault();
-                     if (keyTimeout)
-                        clearTimeout(keyTimeout);
-                     keyTimeout = setTimeout(dimIo.bind(null, fact.type, fact.address, key), 200);
-                  }
-               },
-               touchend: function(e) {
-                 e.preventDefault();
-                 if (fact.dim) {
-                    if (keyTimeout) {
-                       toggleIo(fact.address, fact.type);
-                       clearTimeout(keyTimeout);
-                       keyTimeout = null;
-                    }
-                 }
-                 else
-                    toggleIo(fact.address, fact.type);
-               },
-               mouseup: function(e) {
-                 e.preventDefault();
-                 if (fact.dim) {
-                    if (keyTimeout) {
-                       toggleIo(fact.address, fact.type);
-                       clearTimeout(keyTimeout);
-                       keyTimeout = null;
-                    }
-                 }
-                 else
-                    toggleIo(fact.address, fact.type);
-               }
-            });
-         }
-
          break;
       }
 
@@ -670,6 +611,7 @@ function initWidget(key, widget, fact)
          $(elem).addClass("widgetSpacer rounded-border widgetDropZone");
          $(elem).append($('<div></div>')
                         .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                        .addClass(titleClass)
                         .click(function() {titleClick('', 0, key);})
                         .html(setupMode ? ' spacer' : ''));
          if (!setupMode)
@@ -689,6 +631,7 @@ function initWidget(key, widget, fact)
             .addClass("widgetPlain rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick('', 0, key);})
                     .html(setupMode ? ' time' : ''));
          $(elem).append($('<div></div>')
@@ -710,6 +653,7 @@ function initWidget(key, widget, fact)
             .addClass("widget rounded-border widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
@@ -777,11 +721,15 @@ function getWeatherHtml(symbolView, wfact, weather)
 function weatherForecast()
 {
    var lastDay = '';
-
    var form = document.createElement("div");
-   $('#container').append(form);
+
    $(form).addClass('rounded-border weatherForecast');
+   $(form).attr('tabindex', 0);
    $(form).click(function() { $(form).remove(); });
+   $('#container').append(form);
+
+   var showExtras = $(form).outerWidth() > 580;
+   // console.log("outerWidth(): " + $(form).outerWidth());
 
    var html = '';
    html += '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
@@ -802,6 +750,8 @@ function weatherForecast()
       html += '<span>' + time + '</span>';
       html += '<span><img src="' + wIconRef + '"></img></span>';
       html += '<span class="mdi mdi-thermometer"> ' + weather.temp + ' °C</span>';
+      if (showExtras)
+         html += '<span> (gefühlt ' + weather.tempfeels + ' °C)</span>';
       html += '<span class="mdi mdi-water-percent"> ' + weather.humidity + ' %</span>';
       html += '<span>' + weather.pressure + ' hPa</span>';
       html += '<span class="mdi mdi-weather-windy"> ' + weather.windspeed + ' m/s</span>';
@@ -811,6 +761,13 @@ function weatherForecast()
    html += '</div>'
 
    $(form).html(html);
+   $(form).focus();
+   $(form).keydown(function(event) {
+      if (event.which == 27 || event.which == 13) {
+         event.preventDefault();
+         $(form).remove();
+      }
+   });
 }
 
 function titleClick(type, address, key)
@@ -822,40 +779,6 @@ function titleClick(type, address, key)
       if (fact && localStorage.getItem(storagePrefix + 'Rights') & fact.rights)
          toggleMode(fact.address, fact.type);
    }
-}
-
-var lastDimAt = 0;
-
-function dimIo(type, address, key)
-{
-   $('.slider').css('display', 'block');
-   keyTimeout = null;
-   console.log('on -' + type + ' : ' + address);
-
-   $('#dim_slider').slider();
-   $('#dim_slider').slider({
-      value: allSensors[key].value,
-      stop: function(event, ui) {
-         socket.send({ 'event': 'toggleio', 'object':
-                       { 'action': 'dim',
-                         'value': ui.value,
-                         'address': address,
-                         'type': type }
-                     });
-         $('.slider').css('display', 'none');
-      },
-      slide: function(event, ui) {
-         if (Date.now() - lastDimAt > 20) {
-            lastDimAt = Date.now();
-            socket.send({ 'event': 'toggleio', 'object':
-                          { 'action': 'dim',
-                            'value': ui.value,
-                            'address': address,
-                            'type': type }
-                        });
-         }
-      }
-   });
 }
 
 function updateDashboard(widgets, refresh)
@@ -892,6 +815,7 @@ function updateWidget(sensor, refresh, widget)
 
    if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
    {
+      console.log("sensor: ", JSON.stringify(sensor));
       var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
       var image = '';
       var classes = '';
@@ -935,10 +859,14 @@ function updateWidget(sensor, refresh, widget)
          $("#value" + fact.type + fact.address).text(sensor.value.toFixed(widget.unit=="%" ? 0 : 2) + (widget.unit!="" ? " " : "") + widget.unit);
       }
 
-      var e = document.getElementById("progress" + fact.type + fact.address);
-      if (e != null)
-         e.style.visibility = (sensor.next == null || sensor.next == 0) ? "hidden" : "visible";
-      // else console.log("Element '" + "progress" + sensor.type + sensor.address + "' not found");
+      var prs = $('#progressBar' + fact.type + fact.address);
+
+      $('#progress' + fact.type + fact.address).css('display', sensor.score == null || !sensor.value ? 'none' : 'block');
+
+      if (sensor.score && prs != null) {
+         $(prs).css('width', sensor.score + '%');
+         // prs.style.visibility = (sensor.next == null || sensor.next == 0) ? "hidden" : "visible";
+      }
 
       if (sensor.mode == "auto" && sensor.next > 0) {
          var pWidth = 100;

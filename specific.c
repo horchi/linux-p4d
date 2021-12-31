@@ -756,6 +756,9 @@ int P4d::sendStateMail()
       {
          const SensorData* sensor = &sensorIt.second;
 
+         if (sensor->type == "WEA")
+            continue;
+
          if (sensor->text.length())
             mailBodyHtml += "        <tr><td>" + sensor->title + "</td><td>" + sensor->text + "</td></tr>\n";
          else if (sensor->kind == "status")

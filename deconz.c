@@ -321,6 +321,9 @@ int Deconz::toggle(const char* type, uint address, bool state, int brightness, i
       }
    }
 
+   if (brightness != na && brightness < 5)
+      state = false;
+
    json_t* jObj = json_object();
    json_object_set_new(jObj, "on", json_boolean(state));
 

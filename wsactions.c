@@ -346,7 +346,10 @@ int Daemon::performData(long client, const char* event)
          json_object_set_new(ojData, "last", json_integer(sensor->last));
 
          if (sensor->kind == "status")
+         {
             json_object_set_new(ojData, "value", json_integer(sensor->state));
+            json_object_set_new(ojData, "score", json_integer(sensor->value));
+         }
          else if (sensor->kind == "value")
             json_object_set_new(ojData, "value", json_real(sensor->value));
          else if (!sensor->kind.length())

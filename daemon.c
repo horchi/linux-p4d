@@ -328,9 +328,9 @@ int Daemon::pushDataUpdate(const char* event, long client)
 {
    // push all in the jsonSensorList to the 'interested' clients
 
-   json_t* oJson = json_object();
-   daemonState2Json(oJson);
-   pushOutMessage(oJson, "daemonstate", client);
+   // json_t* oJson = json_object();
+   // daemonState2Json(oJson);
+   // pushOutMessage(oJson, "daemonstate", client);
 
    if (client)
    {
@@ -457,7 +457,7 @@ int Daemon::init()
    if (homeMaticInterface)
    {
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/rpcresult");
-      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/event");
+      mqttSensorTopics.push_back(TARGET "2mqtt/homematic/events");
 
       if (mqttCheckConnection() == success && mqttWriter->isConnected())
       {
@@ -2328,11 +2328,18 @@ int Daemon::dispatchDeconz()
       {
          bool state = getBoolFromJson(oData, "state");
          double value = getDoubleFromJson(oData, "value");
+         int brightness = getIntFromJson(oData, "brightness", na);
+
+         if (brightness != na)
+            brightness = brightness / 255.0 * 100.0;
 
          if (getObjectFromJson(oData, "state"))
             sensor->state = state;
          else if (getObjectFromJson(oData, "value"))
             sensor->value = value;
+
+         if (getObjectFromJson(oData, "brightness"))
+            sensor->value = brightness;
 
          sensor->last = time(0);
 
@@ -2346,7 +2353,11 @@ int Daemon::dispatchDeconz()
             sensor2Json(ojData, type, address);
 
             if (getObjectFromJson(oData, "state"))
+            {
                json_object_set_new(ojData, "value", json_integer(sensor->state));
+               if (getObjectFromJson(oData, "brightness"))
+                  json_object_set_new(ojData, "score", json_integer(brightness));
+            }
             else if (getObjectFromJson(oData, "value"))
                json_object_set_new(ojData, "value", json_real(sensor->value));
 
@@ -2800,7 +2811,7 @@ int Daemon::toggleIo(uint addr, const char* type, int state, int brightness, int
    else if (strcmp(type, "HMB") == 0)
    {
       double value = sensors[type][addr].value;
-      // tell(eloDebug, "Debug: '%s' level %d", sensors[type][addr].lastDir == dirOpen ? "open":"close", (int)sensors[type][addr].value);
+      tell(eloDebug, "Debug: toggleIo - last direction = '%s', level was %d", sensors[type][addr].lastDir == dirOpen ? "open" : "close", (int)sensors[type][addr].value);
 
       if (brightness == na && (sensors[type][addr].lastDir == dirOpen || sensors[type][addr].value == 100))
          value = 0;
@@ -2808,6 +2819,8 @@ int Daemon::toggleIo(uint addr, const char* type, int state, int brightness, int
          value = 100;
       else
          value = brightness;
+
+      tell(eloDebug, "Debug: toggleIo - sending level %d", (int)sensors[type][addr].value);
 
       sensors[type][addr].state = newState;
       mqttNodeRedPublishAction(sensors[type][addr], value);
