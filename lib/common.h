@@ -106,8 +106,7 @@ enum Eloquence
    eloNodeRed        = 0x0200,   // node-red MQTT topics
    eloDeconz         = 0x0400,
    eloDebugDeconz    = 0x0800,
-   eloMqttHome       = 0x1000,   // my own MQTT topics
-   eloHaMqtt         = 0x2000,   // MQTT topics for interface to extern HAs
+   eloWeather        = 0x1000,
    eloHomeMatic      = 0x4000,
    eloDebugHomeMatic = 0x8000,
 

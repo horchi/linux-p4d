@@ -59,8 +59,8 @@ const char* Elo::eloquences[] =
    "NodeRed",
    "Deconz",
    "DebugDeconz",
-   "MqttHome",
-   "HaMqtt",
+   "Weather",
+
    "HomeMatic",
    "DebugHomeMatic",
 

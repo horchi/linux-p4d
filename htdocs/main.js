@@ -965,6 +965,8 @@ function drawChartDialog(dataObject)
       }
    };
 
+   var key = '';
+
    for (var i = 0; i < dataObject.rows.length; i++)
    {
       var dataset = {};
@@ -977,7 +979,11 @@ function drawChartDialog(dataObject)
       dataset["label"] = dataObject.rows[i].title;
       dataset["pointRadius"] = 0;
       data.data.datasets.push(dataset);
+
+      key = dataObject.rows[i].key;  // we have olny one row here!
    }
+
+   data.options.scales.yAxes[0].scaleLabel.labelString = '[' + valueFacts[key].unit + ']';
 
    var canvas = root.querySelector("#chartDialog");
    theChart = new Chart(canvas, data);

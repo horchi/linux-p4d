@@ -100,35 +100,32 @@ function drawCharts(dataObject)
                   labelString: "Zeit"
                }
             }],
-            yAxes: [{
-               display: true,
-               ticks: {
-                  padding: 10,
-                  maxTicksLimit: 20,
-                  fontColor: "white"
-               },
-               gridLines: {
-                  color: "gray",
-                  zeroLineColor: 'gray',
-                  borderDash: [5,5]
-               },
-               scaleLabel: {
-                  display: true,
-                  fontColor: "white",
-                  labelString: "Temperatur [°C]"
-               }
-            }]
          }
       }
    };
 
    // console.log("dataObject: " + JSON.stringify(dataObject, undefined, 4));
 
-   var colors = ['yellow','white','red','lightblue','lightgreen','purple','blue','green','pink','#E69138'];
+   var colors = ['gray','yellow','white','red','lightblue','lightgreen','purple','blue','green','pink','#E69138'];
 
-   for (var i = 0; i < dataObject.rows.length; i++)
-   {
+   var yAxes = [];
+   var knownUnits = {};
+
+   for (var i = 0; i < dataObject.rows.length; i++) {
+      var unit = valueFacts[dataObject.rows[i].key].unit;
       var dataset = {};
+
+      if (knownUnits[unit] == null) {
+         // console.log("Adding yAxis for " + unit);
+         knownUnits[unit] = true;
+         yAxes.push({
+            id: unit,
+            display: true,
+            ticks: { padding: 10, maxTicksLimit: 20, fontColor: colors[i] },
+            gridLines: { color: colors[i], zeroLineColor: 'gray', borderDash: [5,5] },
+            scaleLabel: { display: true, fontColor: colors[i], labelString: '[' + unit + ']' }
+         });
+      }
 
       dataset["data"] = dataObject.rows[i].data;
       dataset["backgroundColor"] = colors[i];
@@ -137,10 +134,12 @@ function drawCharts(dataObject)
       dataset["borderWidth"] = 1.2;
       dataset["fill"] = false;
       dataset["pointRadius"] = 0;
+      dataset["yAxisID"] = unit;
 
       data.data.datasets.push(dataset);
    }
 
+   data.options.scales.yAxes = yAxes;
    var end = new Date();
    end.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+theChartRange);
 

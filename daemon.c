@@ -2210,7 +2210,7 @@ int Daemon::updateWeather()
    asprintf(&url, "http://api.openweathermap.org/data/2.5/forecast?appid=%s&units=metric&lang=de&lat=%f&lon=%f",
             openWeatherApiKey, latitude, longitude);
 
-   tell(eloDebug, "-> (openweathermap) [%s]", url);
+   tell(eloWeather, "-> (openweathermap) [%s]", url);
    int status = curl.downloadFile(url, size, &data, 2);
 
    if (status != success)
@@ -2221,7 +2221,7 @@ int Daemon::updateWeather()
    }
 
    free(url);
-   tell(eloDetail, "<- (openweathermap) [%s]", data.memory);
+   tell(eloWeather, "<- (openweathermap) [%s]", data.memory);
 
    json_t* jData = jsonLoad(data.memory);
 
@@ -2544,7 +2544,7 @@ int Daemon::dispatchHomematicEvents(const char* message)
 
 int Daemon::dispatchOther(const char* topic, const char* message)
 {
-   tell(eloHaMqtt, "<- (%s) '%s'", topic, message);
+   tell(eloMqtt, "<- (%s) '%s'", topic, message);
 
    json_t* jData = json_loads(message, 0, nullptr);
 
@@ -2563,7 +2563,7 @@ int Daemon::dispatchOther(const char* topic, const char* message)
 
    if (!type || !title)
    {
-      tell(eloAlways, "Error: Ingnoring unexpected message in '%s' [%s]", topic, message);
+      tell(eloAlways, "Error: Ingnoring unexpected message in '%s' (dispatchOther) [%s]", topic, message);
       return fail;
    }
 

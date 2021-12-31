@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.16"
-#define VERSION_DATE "30.12.2021"
+#define _VERSION     "0.9.17"
+#define VERSION_DATE "31.12.2021"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2021-12-31:  version 0.9.17
+  - added: Separate yAxis per unit for charts
+  - added: Log level for weather request
+  - change: Cleanup of mqtt log levels (only Mqtt is left)
 
 2021-12-30:  version 0.9.16
   - changed: Only one MQTT broker

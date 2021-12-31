@@ -722,6 +722,12 @@ int Daemon::performChartData(json_t* oObject, long client)
       char* sensor {nullptr};
       asprintf(&sensor, "%s%lu", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       json_object_set_new(oSample, "title", json_string(title));
+
+      char* key {nullptr};
+      asprintf(&key, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
+      json_object_set_new(oSample, "key", json_string(key));
+      free(key);
+
       json_object_set_new(oSample, "sensor", json_string(sensor));
       json_t* oData = json_array();
       json_object_set_new(oSample, "data", oData);

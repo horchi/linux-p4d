@@ -102,7 +102,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
       status = mqttReader->read(&message, 100);
       tp = mqttReader->getLastReadTopic();
 
-      tell(eloHaMqtt, "Config topic '%s', state %d", tp.c_str(), status);
+      tell(eloMqtt, "Config topic '%s', state %d", tp.c_str(), status);
 
       if (status != success && status != Mqtt::wrnTimeout)
          return fail;
@@ -124,7 +124,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                   sensor.unit == "txt")
             sensor.unit = "";
 
-         tell(eloHaMqtt, "Info: Sensor '%s' not found at home assistants MQTT, "
+         tell(eloMqtt, "Info: Sensor '%s' not found at home assistants MQTT, "
               "sendig config message", sName.c_str());
 
          asprintf(&configTopic, "homeassistant/%s/%s/%s/config",
@@ -216,7 +216,7 @@ int Daemon::performMqttRequests()
 
    if (!isEmpty(mqttUrl) && mqttReader->isConnected())
    {
-      // tell(eloMqttHome, "Try reading topic '%s'", mqttReader->getTopic());
+      // tell(eloMqtt, "Try reading topic '%s'", mqttReader->getTopic());
 
       while (mqttReader->read(&message, 10) == success)
       {
@@ -226,7 +226,7 @@ int Daemon::performMqttRequests()
          lastMqttRead = time(0);
 
          std::string tp = mqttReader->getLastReadTopic();
-         tell(eloMqttHome, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
+         tell(eloMqtt, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
 
          if (strstr(tp.c_str(), "2mqtt/ping"))
             ;
@@ -261,7 +261,9 @@ int Daemon::performMqttRequests()
             }
          }
          else
+         {
             dispatchOther(tp.c_str(), message.memory);
+         }
       }
    }
 
@@ -270,7 +272,7 @@ int Daemon::performMqttRequests()
    if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
    {
       lastMqttRecover = time(0);
-      tell(eloMqttHome, "Info: No update from MQTT since '%s', disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
+      tell(eloMqtt, "Info: No update from MQTT since '%s', disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
       mqttDisconnect();
    }
 
@@ -327,7 +329,7 @@ int Daemon::mqttCheckConnection()
          if (mqttWriter->connect(mqttUrl, mqttUser, mqttPassword) != success)
             tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
          else
-            tell(eloHaMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
+            tell(eloMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
       }
 
       if (!mqttReader->isConnected())
@@ -370,7 +372,7 @@ int Daemon::mqttHaWrite(json_t* obj, uint groupid)
       return fail;
 
    char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
-   tell(eloHaMqtt, "Debug: JSON: [%s]", message);
+   tell(eloMqtt, "Debug: JSON: [%s]", message);
 
    if (mqttInterfaceStyle == misGroupedTopic)
       sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
