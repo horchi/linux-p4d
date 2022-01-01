@@ -339,6 +339,7 @@ class Daemon : public cWebInterface
       int performTokenRequest(json_t* oObject, long client);
       int performPageChange(json_t* oObject, long client);
       int performToggleIo(json_t* oObject, long client);
+      int performSystem(json_t* oObject, long client);
       int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performGroups(long client);
@@ -408,6 +409,7 @@ class Daemon : public cWebInterface
       bool initialized {false};
       cDbConnection* connection {nullptr};
 
+      cDbTable* tableTableStatistics {nullptr};
       cDbTable* tableSamples {nullptr};
       cDbTable* tablePeaks {nullptr};
       cDbTable* tableValueFacts {nullptr};
@@ -421,6 +423,7 @@ class Daemon : public cWebInterface
       cDbTable* tableSchemaConf {nullptr};
       cDbTable* tableHomeMatic {nullptr};
 
+      cDbStatement* selectTableStatistic {nullptr};
       cDbStatement* selectAllGroups {nullptr};
       cDbStatement* selectAllValueTypes {nullptr};
       cDbStatement* selectActiveValueFacts {nullptr};

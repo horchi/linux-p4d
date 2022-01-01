@@ -45,6 +45,7 @@ class cWebService
          evStoreChartbookmarks,
          evSendMail,
          evSyslog,
+         evSystem,
          evForceRefresh,
          evStoreDashboards,
          evAlerts,

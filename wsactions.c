@@ -59,6 +59,8 @@ int Daemon::dispatchClientRequest()
             case evToggleMode:      status = toggleOutputMode(addr);                 break;
             case evStoreConfig:     status = storeConfig(oObject, client);           break;
             case evSetup:           status = performConfigDetails(client);           break;
+            case evSystem:          status = performSystem(oObject, client);         break;
+            case evSyslog:          status = performSyslog(oObject, client);         break;
 
             case evStoreIoSetup:    status = storeIoSetup(oObject, client);          break;
             case evChartData:       status = performChartData(oObject, client);      break;
@@ -71,7 +73,6 @@ int Daemon::dispatchClientRequest()
 
             case evReset:           status = performReset(oObject, client);          break;
             case evSendMail:        status = performSendMail(oObject, client);       break;
-            case evSyslog:          status = performSyslog(oObject, client);         break;
             case evForceRefresh:    status = performForceRefresh(oObject, client);   break;
             case evChartbookmarks:  status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
@@ -133,6 +134,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evReset:               return rights & urFullControl;
       case evSendMail:            return rights & urSettings;
       case evSyslog:              return rights & urAdmin;
+      case evSystem:              return rights & urAdmin;
       case evForceRefresh:        return true;
 
       case evChartbookmarks:      return rights & urView;
@@ -397,9 +399,16 @@ int Daemon::performData(long client, const char* event)
 
 int Daemon::performPageChange(json_t* oObject, long client)
 {
-   const char* page = getStringFromJson(oObject, "page", "");
+   std::string page = getStringFromJson(oObject, "page", "");
 
    wsClients[(void*)client].page = page;
+
+   if (page == "list")
+   {
+      json_t* oJson = json_object();
+      daemonState2Json(oJson);
+      pushOutMessage(oJson, "daemonstate", client);
+   }
 
    return done;
 }
@@ -481,6 +490,36 @@ int Daemon::performToggleIo(json_t* oObject, long client)
       int value = getIntFromJson(oObject, "value");
       return toggleIo(addr, type, true, value);
    }
+
+   return done;
+}
+
+//***************************************************************************
+// Perform System Data
+//***************************************************************************
+
+int Daemon::performSystem(json_t* oObject, long client)
+{
+   tableTableStatistics->clear();
+   tableTableStatistics->setValue("SCHEMA", connection->getName());
+
+   json_t* jObject = json_object();
+   json_t* jArray = json_array();
+   json_object_set_new(jObject, "tables", jArray);
+
+   for (int f = selectTableStatistic->find(); f; f = selectTableStatistic->fetch())
+   {
+      json_t* jItem = json_object();
+      json_array_append_new(jArray, jItem);
+
+      json_object_set_new(jItem, "name", json_string(tableTableStatistics->getStrValue("NAME")));
+      json_object_set_new(jItem, "tblsize", json_string(bytesPretty(tableTableStatistics->getIntValue("DATASZ"), 2)));
+      json_object_set_new(jItem, "idxsize", json_string(bytesPretty(tableTableStatistics->getIntValue("INDEXSZ"), 2)));
+      json_object_set_new(jItem, "rows", json_integer(tableTableStatistics->getIntValue("ROWS")));
+   }
+
+   selectTableStatistic->freeResult();
+   pushOutMessage(jObject, "system", client);
 
    return done;
 }

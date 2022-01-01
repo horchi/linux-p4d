@@ -815,7 +815,7 @@ function updateWidget(sensor, refresh, widget)
 
    if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
    {
-      console.log("sensor: ", JSON.stringify(sensor));
+      // console.log("sensor: ", JSON.stringify(sensor));
       var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
       var image = '';
       var classes = '';

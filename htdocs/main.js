@@ -322,6 +322,9 @@ function dispatchMessage(message)
    else if (event == "syslog") {
       showSyslog(jMessage.object);
    }
+   else if (event == "system") {
+      showSystem(jMessage.object);
+   }
    else if (event == "token") {
       localStorage.setItem(storagePrefix + 'Token', jMessage.object.value);
       localStorage.setItem(storagePrefix + 'User', jMessage.object.user);
@@ -432,7 +435,7 @@ function prepareMenu()
 
    // buttons below menu
 
-   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog" || currentPage == "images") {
+   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog" || currentPage == "system" || currentPage == "images") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div>";
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'setup\')">Allg. Konfiguration</button>';
@@ -442,6 +445,7 @@ function prepareMenu()
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'groups\')">Baugruppen</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'images\')">Images</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'syslog\')">Syslog</button>';
+         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'system\')">System</button>';
          html += "</div>";
       }
    }
@@ -585,6 +589,8 @@ function mainMenuSel(what)
       showProgressDialog();
       event = "syslog";
    }
+   else if (currentPage == "system")
+      event = "system";
    else if (currentPage == "list")
       initList();
    else if (currentPage == "dashboard")
@@ -672,6 +678,46 @@ function showSyslog(log)
    var root = document.getElementById("syslogContainer");
    root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
    hideProgressDialog();
+}
+
+function showSystem(system)
+{
+   console.log("system: " + JSON.stringify(system, undefined, 2));
+
+   $('#container').removeClass('hidden');
+   $('#container').html('<div id="systemContainer"></div>');
+
+   var html = '<div>';
+
+   html += '  <table class="tableMultiCol">' +
+      '    <thead>' +
+      '     <tr style="height:30px;font-weight:bold;">' +
+      '       <td style="width:20%;">Name</td>' +
+      '       <td style="width:10%;">Table</td>' +
+      '       <td style="width:10%;">Index</td>' +
+      '       <td style="width:10%;">Rows</td>' +
+      '     </tr>' +
+      '    </thead>' +
+      '    <tbody>';
+
+   for (var i = 0; i < system.tables.length; i++) {
+      var table = system.tables[i];
+
+      html += '<tr style="height:28px;">';
+      html += ' <td>' + table.name + '</td>';
+      html += ' <td>' + table.tblsize + '</td>';
+      html += ' <td>' + table.idxsize + '</td>';
+      html += '<td>' + table.rows.toLocaleString() + '</td>';
+      html += '</tr>';
+   }
+
+   html += '    </tbody>' +
+      '  </table>';
+
+   html += '</div>';
+
+   $('#systemContainer').html(html);
+
 }
 
 function initErrors(errors, root)

@@ -328,10 +328,6 @@ int Daemon::pushDataUpdate(const char* event, long client)
 {
    // push all in the jsonSensorList to the 'interested' clients
 
-   // json_t* oJson = json_object();
-   // daemonState2Json(oJson);
-   // pushOutMessage(oJson, "daemonstate", client);
-
    if (client)
    {
       auto cl = wsClients[(void*)client];
@@ -963,6 +959,12 @@ int Daemon::initDb()
       {
          cDbTable* table = new cDbTable(connection, t->first.c_str());
 
+         if (strstr(table->TableName(), "information_schema"))
+         {
+            tell(eloAlways, "Skipping check of table '%s'", t->first.c_str());
+            continue;
+         }
+
          tell(eloDb, "Checking table '%s'", t->first.c_str());
 
          if (!table->exist())
@@ -991,6 +993,9 @@ int Daemon::initDb()
    // ------------------------
    // create/open tables
    // ------------------------
+
+   tableTableStatistics = new cDbTable(connection, "information_schema.TABLES", true /*read-only*/);
+   if (tableTableStatistics->open() != success) return fail;
 
    tableValueFacts = new cDbTable(connection, "valuefacts");
    if (tableValueFacts->open() != success) return fail;
@@ -1029,6 +1034,18 @@ int Daemon::initDb()
    if (tableHomeMatic->open() != success) return fail;
 
    // prepare statements
+
+   selectTableStatistic = new cDbStatement(tableTableStatistics);
+
+   selectTableStatistic->build("select ");
+   selectTableStatistic->bindAllOut();
+   selectTableStatistic->build(" from %s where ", tableTableStatistics->TableName());
+   selectTableStatistic->bind("SCHEMA", cDBS::bndIn | cDBS::bndSet);
+   selectTableStatistic->build(" order by (data_length + index_length) desc");
+
+   status += selectTableStatistic->prepare();
+
+   // ------------------
 
    selectActiveValueFacts = new cDbStatement(tableValueFacts);
 
@@ -1323,6 +1340,7 @@ int Daemon::initDb()
 
 int Daemon::exitDb()
 {
+   delete tableTableStatistics;    tableTableStatistics = nullptr;
    delete tableSamples;            tableSamples = nullptr;
    delete tablePeaks;              tablePeaks = nullptr;
    delete tableValueFacts;         tableValueFacts = nullptr;
@@ -1335,6 +1353,7 @@ int Daemon::exitDb()
    delete tableSchemaConf;         tableSchemaConf = nullptr;
    delete tableHomeMatic;          tableHomeMatic = nullptr;
 
+   delete selectTableStatistic;    selectTableStatistic = nullptr;
    delete selectAllGroups;         selectAllGroups = nullptr;
    delete selectActiveValueFacts;  selectActiveValueFacts = nullptr;
    delete selectValueFactsByType;  selectValueFactsByType = nullptr;

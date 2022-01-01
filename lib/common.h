@@ -343,6 +343,7 @@ std::string executeCommand(const char* cmd);
   const char* getUniqueId();
 #endif
 
+const char* bytesPretty(double bytes, int precision = 0);
 double usNow();
 int l2hhmm(time_t t);
 time_t midnightOf(time_t t);

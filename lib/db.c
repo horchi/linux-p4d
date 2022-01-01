@@ -629,18 +629,10 @@ cMyMutex cDbConnection::initMutex;
 // Object
 //***************************************************************************
 
-cDbTable::cDbTable(cDbConnection* aConnection, const char* name)
+cDbTable::cDbTable(cDbConnection* aConnection, const char* name, bool readOnly)
 {
    connection = aConnection;
-   holdInMemory = no;
-   attached = no;
-
-   row = 0;
-   stmtSelect = 0;
-   stmtInsert = 0;
-   stmtUpdate = 0;
-   lastInsertId = na;
-
+   isReadOnly = readOnly;
    tableDef = dbDict.getTable(name);
 
    if (tableDef)
@@ -678,9 +670,9 @@ int cDbTable::open(int allowAlter)
 
 int cDbTable::close()
 {
-   if (stmtSelect) { delete stmtSelect; stmtSelect = 0; }
-   if (stmtInsert) { delete stmtInsert; stmtInsert = 0; }
-   if (stmtUpdate) { delete stmtUpdate; stmtUpdate = 0; }
+   if (stmtSelect) { delete stmtSelect; stmtSelect = nullptr; }
+   if (stmtInsert) { delete stmtInsert; stmtInsert = nullptr; }
+   if (stmtUpdate) { delete stmtUpdate; stmtUpdate = nullptr; }
 
    detach();
 
@@ -763,7 +755,7 @@ int cDbTable::init(int allowAlter)
    for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
       stmtSelect->bind(f->second, bndOut, n++ ? ", " : "");
 
-   stmtSelect->build(" from %s where ", TableName());
+   stmtSelect->build(" from %s ", TableName());
 
    n = 0;
 
@@ -771,6 +763,9 @@ int cDbTable::init(int allowAlter)
    {
       if (!(f->second->getType() & ftPrimary))
          continue;
+
+      if (!n)
+         stmtSelect->build("where ");
 
       stmtSelect->bind(f->second, bndIn | bndSet, n++ ? " and " : "");
    }
@@ -780,69 +775,72 @@ int cDbTable::init(int allowAlter)
    if (stmtSelect->prepare() != success)
       return fail;
 
-   // -----------------------------------------
-   // insert
-
-   stmtInsert = new cDbStatement(this);
-
-   stmtInsert->build("insert into %s set ", TableName());
-
-   n = 0;
-
-   for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+   if (!isReadOnly)
    {
-      // don't insert autoinc and calculated fields
+      // -----------------------------------------
+      // insert
 
-      if (f->second->getType() & ftAutoinc)
-         continue;
+      stmtInsert = new cDbStatement(this);
 
-      stmtInsert->bind(f->second, bndIn | bndSet, n++ ? ", " : "");
+      stmtInsert->build("insert into %s set ", TableName());
+
+      n = 0;
+
+      for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+      {
+         // don't insert autoinc and calculated fields
+
+         if (f->second->getType() & ftAutoinc)
+            continue;
+
+         stmtInsert->bind(f->second, bndIn | bndSet, n++ ? ", " : "");
+      }
+
+      stmtInsert->build(";");
+
+      if (stmtInsert->prepare() != success)
+         return fail;
+
+      // -----------------------------------------
+      // update via primary key ...
+
+      stmtUpdate = new cDbStatement(this);
+
+      stmtUpdate->build("update %s set ", TableName());
+
+      n = 0;
+
+      for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+      {
+         // don't update PKey, autoinc and not used fields
+
+         if (f->second->getType() & ftPrimary ||
+             f->second->getType() & ftAutoinc)
+            continue;
+
+         if (strcasecmp(f->second->getName(), "inssp") == 0)  // don't update the insert stamp
+            continue;
+
+         stmtUpdate->bind(f->second, bndIn | bndSet, n++ ? ", " : "");
+      }
+
+      stmtUpdate->build(" where ");
+
+      n = 0;
+
+      for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+      {
+         if (!(f->second->getType() & ftPrimary))
+            continue;
+
+         stmtUpdate->bind(f->second, bndIn | bndSet, n++ ? " and " : "");
+      }
+
+      stmtUpdate->build(";");
+
+      if (stmtUpdate->prepare() != success)
+         return fail;
    }
-
-   stmtInsert->build(";");
-
-   if (stmtInsert->prepare() != success)
-      return fail;
-
-   // -----------------------------------------
-   // update via primary key ...
-
-   stmtUpdate = new cDbStatement(this);
-
-   stmtUpdate->build("update %s set ", TableName());
-
-   n = 0;
-
-   for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
-   {
-      // don't update PKey, autoinc and not used fields
-
-      if (f->second->getType() & ftPrimary ||
-          f->second->getType() & ftAutoinc)
-         continue;
-
-      if (strcasecmp(f->second->getName(), "inssp") == 0)  // don't update the insert stamp
-         continue;
-
-      stmtUpdate->bind(f->second, bndIn | bndSet, n++ ? ", " : "");
-   }
-
-   stmtUpdate->build(" where ");
-
-   n = 0;
-
-   for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
-   {
-      if (!(f->second->getType() & ftPrimary))
-         continue;
-
-      stmtUpdate->bind(f->second, bndIn | bndSet, n++ ? " and " : "");
-   }
-
-   stmtUpdate->build(";");
-
-   if (stmtUpdate->prepare() != success)
-      return fail;
 
    return success;
 }

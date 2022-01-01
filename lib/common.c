@@ -192,6 +192,44 @@ double usNow()
 }
 
 //***************************************************************************
+// Bytes Pretty
+//***************************************************************************
+
+const char* bytesPretty(double bytes, int precision)
+{
+   const char* unit= "B";
+
+   if (bytes > 1024)
+   {
+      bytes /= 1024;
+      unit= "kB";
+   }
+
+   if (bytes > 1024)
+   {
+      bytes /= 1024;
+      unit= "MB";
+   }
+
+   if (bytes > 1024)
+   {
+      bytes /= 1024;
+      unit= "GB";
+   }
+
+   if (bytes > 1024)
+   {
+      bytes /= 1024;
+      unit= "TB";
+   }
+
+   static char res[100];
+   sprintf(res, "%.*f %s", precision, bytes, unit);
+
+   return res;
+}
+
+//***************************************************************************
 // time_t to hhmm like '2015'
 //***************************************************************************
 

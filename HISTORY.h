@@ -19,6 +19,7 @@
 
 2021-12-31:  version 0.9.18
   - change: Exclude weather data from state mail
+  - added:  System statistic
 
 2021-12-31:  version 0.9.17
   - added: Separate yAxis per unit for charts

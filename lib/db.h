@@ -1076,7 +1076,7 @@ class cDbTable : public cDbService
 {
    public:
 
-      cDbTable(cDbConnection* aConnection, const char* name);
+      cDbTable(cDbConnection* aConnection, const char* name, bool readOnly = false);
       virtual ~cDbTable();
 
       virtual const char* TableName()           { return tableDef ? tableDef->getName() : "<unknown>"; }
@@ -1178,19 +1178,20 @@ class cDbTable : public cDbService
 
       // data
 
-      cDbRow* row;
-      int holdInMemory;        // hold table additionally in memory (not implemented yet)
-      int attached;
-      int lastInsertId;
+      bool isReadOnly {false};
+      cDbRow* row {nullptr};
+      int holdInMemory {no};    // hold table additionally in memory (not implemented yet)
+      int attached {no};
+      int lastInsertId {na};
 
-      cDbConnection* connection;
-      cDbTableDef* tableDef;
+      cDbConnection* connection {nullptr};
+      cDbTableDef* tableDef {nullptr};
 
       // basic statements
 
-      cDbStatement* stmtSelect;
-      cDbStatement* stmtInsert;
-      cDbStatement* stmtUpdate;
+      cDbStatement* stmtSelect {nullptr};
+      cDbStatement* stmtInsert {nullptr};
+      cDbStatement* stmtUpdate {nullptr};
 };
 
 //***************************************************************************

@@ -43,6 +43,7 @@ const char* cWebService::events[] =
    "storechartbookmarks",
    "sendmail",
    "syslog",
+   "system",
    "forcerefresh",
    "storedashboards",
    "alerts",
