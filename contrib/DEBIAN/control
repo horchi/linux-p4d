@@ -3,9 +3,9 @@ Version: <VERSION>
 Section: base
 Priority: optional
 Architecture: armhf
-Depends: libssl1.1, libjansson4, libxml2, openssl, libmariadb3, bsd-mailx, msmtp, msmtp-mta,
-  libcurl4, mosquitto, mosquitto-clients, mariadb-server, libuuid1,
-  python3, libpython3.7, python-mysql.connector, wiringpi
+Depends: libssl1.1, libjansson4, libxml2, openssl, bsd-mailx, msmtp, msmtp-mta,
+  libcurl4, mosquitto, mosquitto-clients, libmariadbclient-dev, mariadb-server, libuuid1,
+  wiringpi
 Maintainer: Jörg Wendel <linux@jwendel.de>
 Description: p4 deamon
- Deamon to fetch sensor data of the 'Lambdatronic s3200' and store to a MySQL database
+ Deamon to fetch sensor data of the 'Lambdatronic s3200' and store to a MariaDb database

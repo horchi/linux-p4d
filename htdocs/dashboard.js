@@ -14,6 +14,7 @@ var weatherData = null;
 var wInterval = null;
 var actDashboard = -1;
 var gauge = null;
+var moseDownOn = { 'object' : null };
 
 const symbolColorDefault = '#ffffff';
 const symbolOnColorDefault = '#059eeb';
@@ -130,11 +131,6 @@ function initDashboard(update = false)
 
    document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
 
-   var slider = document.createElement("div");
-   slider.className = "rounded-border slider";
-   slider.innerHTML = '<div id="dim_slider"></div>';
-   document.getElementById("container").appendChild(slider);
-
    if (dashboards[actDashboard] != null) {
       for (var key in dashboards[actDashboard].widgets) {
          initWidget(key, dashboards[actDashboard].widgets[key]);
@@ -241,6 +237,28 @@ function initWidget(key, widget, fact)
    if (!widget.color)
       widget.color = 'white';
 
+   $(document).on({'mouseup touchend' : function(e){
+      if (!moseDownOn.object)
+         return;
+      e.preventDefault();
+      var scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
+      if (scale > 100) scale = 100;
+      if (scale < 0) scale = 0;
+      console.log("dim: " + scale + '%');
+      toggleIo(moseDownOn.fact.address, moseDownOn.fact.type, scale);
+      moseDownOn = { 'object' : null };
+   }});
+
+   $(document).on({'mousemove touchmove' : function(e){
+      if (!moseDownOn.object)
+         return;
+      e.preventDefault();
+      var scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
+      if (scale > 100) scale = 100;
+      if (scale < 0) scale = 0;
+      $(moseDownOn.object).css('width', scale + '%');
+   }})
+
    switch (widget.widgettype)
    {
       case 0: {          // Symbol
@@ -250,26 +268,33 @@ function initWidget(key, widget, fact)
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
+                    .css('user-select', 'none')
                     .html(title))
             .append($('<button></button>')
                     .attr('id', 'button' + fact.type + fact.address)
                     .attr('type', 'button')
                     .css('color', widget.color)
+                    .css('user-select', 'none')
                     .addClass('widget-main')
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
-                            .attr('draggable', false))
+                            .attr('draggable', false)
+                            .css('user-select', 'none'))
                     .click(function() { toggleIo(fact.address, fact.type); }))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
-                    .click(function(e) {
-                       var scale = parseInt((e.pageX - $(this).position().left) / ($(this).innerWidth() / 100));
-                       console.log("dim: " + scale + '%');
-                       toggleIo(fact.address, fact.type, scale);
-                    })
+                    .css('user-select', 'none')
+                    .on({'mousedown touchstart' : function(e){
+                       e.preventDefault();
+                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
+                       moseDownOn.fact = fact;
+                       moseDownOn.div = $(this);
+                       console.log("mousedown on " + moseDownOn.object.attr('id'));
+                    }})
                     .append($('<div></div>')
                             .attr('id', 'progressBar' + fact.type + fact.address)
+                            .css('user-select', 'none')
                             .addClass('progress-bar')));
          // needed for shower progress bar ?!?
          //            .append($('<div></div>')
@@ -322,14 +347,17 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
+                    .css('user-select', 'none')
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
                     .addClass('widget-value')
+                    .css('user-select', 'none')
                     .css('color', widget.color))
             .append($('<div></div>')
                     .attr('id', 'peak' + fact.type + fact.address)
+                    .css('user-select', 'none')
                     .addClass('chart-peak'));
 
          var cFact = fact;
@@ -344,11 +372,13 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
+                    .css('user-select', 'none')
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'svgDiv' + fact.type + fact.address)
                     .addClass('widget-main-gauge')
+                    .css('user-select', 'none')
                     .append($('<svg></svg>')
                             .attr('viewBox', '0 0 1000 600')
                             .attr('preserveAspectRatio', 'xMidYMin slice')
@@ -540,12 +570,14 @@ function initWidget(key, widget, fact)
             $(elem).append($('<div></div>')
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                            .addClass(titleClass)
+                           .css('user-select', 'none')
                            .click(function() {titleClick(fact.type, fact.address, key);})
                            .html(title));
          var wFact = fact;
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + fact.type + fact.address)
                         .addClass(fact.type == 'WEA' ? 'widget-weather' : 'widget-value')
+                        .css('user-select', 'none')
                         .css('color', widget.color)
                         .css('height', 'inherit')
                         .click(function() { if (wFact.type == 'WEA') weatherForecast(); }));
@@ -562,11 +594,13 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
+                    .css('user-select', 'none')
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
                     .addClass('widget-value')
+                    .css('user-select', 'none')
                     .css('color', widget.color));
          break;
       }
@@ -578,30 +612,38 @@ function initWidget(key, widget, fact)
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .click(function() {titleClick(fact.type, fact.address, key);})
+                    .css('user-select', 'none')
                     .html(title))
             .append($('<button></button>')
                     .attr('id', 'button' + fact.type + fact.address)
                     .addClass('widget-main')
                     .attr('type', 'button')
                     .css('color', widget.color)
+                    .css('user-select', 'none')
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
-                            .attr('draggable', false))
+                            .attr('draggable', false)
+                            .css('user-select', 'none'))
                     .click(function() { toggleIo(fact.address, fact.type); }))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
-                    .click(function(e) {
-                       var scale = parseInt((e.pageX - $(this).position().left) / ($(this).innerWidth() / 100));
-                       console.log("dim: " + scale + '%');
-                       toggleIo(fact.address, fact.type, scale);
-                    })
+                    .css('user-select', 'none')
+                    .on({'mousedown touchstart' : function(e){
+                       e.preventDefault();
+                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
+                       moseDownOn.fact = fact;
+                       moseDownOn.div = $(this);
+                       console.log("mousedown on " + moseDownOn.object.attr('id'));
+                    }})
                     .append($('<div></div>')
                             .attr('id', 'progressBar' + fact.type + fact.address)
+                            .css('user-select', 'none')
                             .addClass('progress-bar')))
             .append($('<div></div>')
                     .attr('id', 'value' + fact.type + fact.address)
                     .addClass('symbol-value')
+                    .css('user-select', 'none')
                    );
 
          break;
@@ -632,6 +674,7 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
+                    .css('user-select', 'none')
                     .click(function() {titleClick('', 0, key);})
                     .html(setupMode ? ' time' : ''));
          $(elem).append($('<div></div>')
@@ -639,6 +682,7 @@ function initWidget(key, widget, fact)
                         .addClass('widget-time')
                         .css('height', 'inherit')
                         .css('color', widget.color)
+                        .css('user-select', 'none')
                         .html(getTimeHtml()));
          setInterval(function() {
             var timeId = '#widget'+key.replace(':', '\\:');
@@ -654,10 +698,12 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
+                    .css('user-select', 'none')
                     .click(function() {titleClick(fact.type, fact.address, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
+                    .css('user-select', 'none')
                     .css('color', widget.color)
                     .addClass('widget-value'));
 
@@ -861,7 +907,7 @@ function updateWidget(sensor, refresh, widget)
 
       var prs = $('#progressBar' + fact.type + fact.address);
 
-      $('#progress' + fact.type + fact.address).css('display', sensor.score == null || !sensor.value ? 'none' : 'block');
+      $('#progress' + fact.type + fact.address).css('display', fact.options & 0x02 && sensor.value ? 'block' : 'none');
 
       if (sensor.score && prs != null) {
          $(prs).css('width', sensor.score + '%');

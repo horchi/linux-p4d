@@ -53,6 +53,13 @@ function initImages()
       elem.innerHTML = html;
       tableRoot.appendChild(elem);
    }
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   };
 }
 
 function delImage(path, action)

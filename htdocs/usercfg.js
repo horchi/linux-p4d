@@ -72,6 +72,13 @@ function initUserConfig(users)
    html += "  <button class=\"rounded-border button2\" onclick=\"addUser()\">+</button>";
 
    document.getElementById("addUserDiv").innerHTML = html;
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   };
 }
 
 function initUser()

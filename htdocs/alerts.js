@@ -38,6 +38,13 @@ function initAlerts(alerts)
    var elem = document.createElement("div");
    elem.innerHTML = html;
    root.appendChild(elem);
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   };
 }
 
 function printAlert(item)
@@ -108,11 +115,11 @@ function printAlert(item)
 function storeAlerts()
 {
    var jsonArray = [];
-   var alertContainer = document.getElementById("alertContainer");
+   var container = document.getElementById("container");
 
    console.log("storeAlerts");
 
-   var elements = alertContainer.querySelectorAll("[id^='row_']");
+   var elements = container.querySelectorAll("[id^='row_']");
    var n = 0;
 
    for (var e = 0; e < elements.length; e++) {

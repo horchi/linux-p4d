@@ -926,6 +926,7 @@ cDbFieldDef rangeFromDef("RANGE_FROM", "rfrom", cDBS::ffDateTime, 0, cDBS::ftDat
 cDbFieldDef rangeToDef("RANGE_TO", "rto", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef avgValueDef("AVG_VALUE", "avalue", cDBS::ffFloat, 122, cDBS::ftData);
 cDbFieldDef maxValueDef("MAX_VALUE", "mvalue", cDBS::ffInt, 0, cDBS::ftData);
+cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int Daemon::initDb()
 {
@@ -1014,6 +1015,9 @@ int Daemon::initDb()
 
    tableScripts = new cDbTable(connection, "scripts");
    if (tableScripts->open() != success) return fail;
+
+   tableSensorAlert = new cDbTable(connection, "sensoralert");
+   if (tableSensorAlert->open() != success) return fail;
 
    tableUsers = new cDbTable(connection, "users");
    if (tableUsers->open() != success) return fail;
@@ -1206,6 +1210,51 @@ int Daemon::initDb()
 
    // ------------------
 
+   selectSensorAlerts = new cDbStatement(tableSensorAlert);
+
+   selectSensorAlerts->build("select ");
+   selectSensorAlerts->bindAllOut();
+   selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
+   selectSensorAlerts->bind("KIND", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectSensorAlerts->prepare();
+
+   // ------------------
+
+   selectAllSensorAlerts = new cDbStatement(tableSensorAlert);
+
+   selectAllSensorAlerts->build("select ");
+   selectAllSensorAlerts->bindAllOut();
+   selectAllSensorAlerts->build(" from %s", tableSensorAlert->TableName());
+
+   status += selectAllSensorAlerts->prepare();
+
+   // ------------------
+   // select * from samples      (for alertCheck)
+   //    where type = ? and address = ?
+   //     and time <= ?
+   //     and time > ?
+
+   rangeEnd.setField(&rangeEndDef);
+
+   selectSampleInRange = new cDbStatement(tableSamples);
+
+   selectSampleInRange->build("select ");
+   selectSampleInRange->bind("ADDRESS", cDBS::bndOut);
+   selectSampleInRange->bind("TYPE", cDBS::bndOut, ", ");
+   selectSampleInRange->bind("TIME", cDBS::bndOut, ", ");
+   selectSampleInRange->bind("VALUE", cDBS::bndOut, ", ");
+   selectSampleInRange->build(" from %s where ", tableSamples->TableName());
+   selectSampleInRange->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
+   selectSampleInRange->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectSampleInRange->bindCmp(0, &rangeEnd, "<=", " and ");
+   selectSampleInRange->bindCmp(0, "TIME", 0, ">", " and ");
+   selectSampleInRange->build(" order by time");
+
+   status += selectSampleInRange->prepare();
+
+   // ------------------
+
    selectDashboards = new cDbStatement(tableDashboards);
 
    selectDashboards->build("select ");
@@ -1230,9 +1279,7 @@ int Daemon::initDb()
    selectDashboardWidgetsFor = new cDbStatement(tableDashboardWidgets);
 
    selectDashboardWidgetsFor->build("select ");
-   selectDashboardWidgetsFor->bind("TYPE", cDBS::bndOut);
-   selectDashboardWidgetsFor->bind("ADDRESS", cDBS::bndOut, ", ");
-   selectDashboardWidgetsFor->bind("WIDGETOPTS", cDBS::bndOut, ", ");
+   selectDashboardWidgetsFor->bindAllOut();
    selectDashboardWidgetsFor->build(" from %s where ", tableDashboardWidgets->TableName());
    selectDashboardWidgetsFor->bind("DASHBOARDID", cDBS::bndIn | cDBS::bndSet);
    selectDashboardWidgetsFor->build(" order by ord");
@@ -1296,6 +1343,37 @@ int Daemon::initDb()
 
    selectActiveValueFacts->freeResult();
 
+   /*
+   // patch dashbors widget options to default
+   tableDashboardWidgets->clear();
+   tableDashboardWidgets->setValue("DASHBOARDID", 5);
+   for (int f = selectDashboardWidgetsFor->find(); f; f = selectDashboardWidgetsFor->fetch())
+   {
+      if (tableDashboardWidgets->hasValue("TYPE", "DZL"))
+      {
+         tableValueFacts->clear();
+         tableValueFacts->setValue("TYPE", tableDashboardWidgets->getStrValue("TYPE"));
+         tableValueFacts->setValue("ADDRESS", tableDashboardWidgets->getIntValue("ADDRESS"));
+
+         if (tableValueFacts->find())
+         {
+            json_t* jDefaults = json_object();
+            widgetDefaults2Json(jDefaults, tableValueFacts->getStrValue("TYPE"),
+                                tableValueFacts->getStrValue("UNIT"), "",
+                                tableValueFacts->getIntValue("ADDRESS"));
+            char* opts = json_dumps(jDefaults, JSON_REAL_PRECISION(4));
+            tell(eloAlways, "PATCH: %s/%ld to '%s'", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"), opts);
+            tableDashboardWidgets->setValue("WIDGETOPTS", opts);
+            tableDashboardWidgets->store();
+            free(opts);
+            json_decref(jDefaults);
+         }
+         tableValueFacts->reset();
+      }
+   }
+   selectDashboardWidgetsFor->freeResult();
+   */
+
    int count {0};
 
    // -------------------
@@ -1348,6 +1426,8 @@ int Daemon::exitDb()
    delete tableConfig;             tableConfig = nullptr;
    delete tableUsers;              tableUsers = nullptr;
    delete tableGroups;             tableGroups = nullptr;
+   delete tableScripts;            tableScripts = nullptr;
+   delete tableSensorAlert;        tableSensorAlert = nullptr;
    delete tableDashboards;         tableDashboards = nullptr;
    delete tableDashboardWidgets;   tableDashboardWidgets = nullptr;
    delete tableSchemaConf;         tableSchemaConf = nullptr;
@@ -1364,8 +1444,11 @@ int Daemon::exitDb()
    delete selectMaxTime;           selectMaxTime = nullptr;
    delete selectSamplesRange;      selectSamplesRange = nullptr;
    delete selectSamplesRange60;    selectSamplesRange60 = nullptr;
+   delete selectSampleInRange;     selectSampleInRange = nullptr;
    delete selectScriptByPath;      selectScriptByPath = nullptr;
    delete selectScripts;           selectScripts = nullptr;
+   delete selectSensorAlerts;      selectSensorAlerts = nullptr;
+   delete selectAllSensorAlerts;   selectAllSensorAlerts = nullptr;
    delete selectDashboards;        selectDashboards = nullptr;
    delete selectDashboardById;     selectDashboardById = nullptr;
    delete selectSchemaConfByState; selectSchemaConfByState = nullptr;
@@ -1427,8 +1510,6 @@ int Daemon::readConfiguration(bool initial)
    char* addrs {nullptr};
    getConfigItem("addrsDashboard", addrs, "");
    addrsDashboard = split(addrs, ',');
-   // getConfigItem("addrsList", addrs, "");
-   // addrsList = split(addrs, ',');
    free(addrs);
 
    getConfigItem("mail", mail, no);
@@ -1607,27 +1688,6 @@ int Daemon::loop()
       if (aggregateHistory && nextAggregateAt <= time(0))
          aggregate();
 
-      /* if (time(0) > nextWeatherAt)
-      {
-         nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
-
-         if (mqttCheckConnection() == success && mqttWriter->isConnected())
-         {
-            json_t* j = json_object();
-            json_object_set_new(j, "latitude", json_real(latitude));
-            json_object_set_new(j, "longitude", json_real(longitude));
-            char* p = json_dumps(j, JSON_REAL_PRECISION(4));
-            mqttWriter->write(TARGET "2mqtt/nodered/weathertrg", p);
-            free(p);
-            json_decref(j);
-            nextWeatherAt = time(0) + 30 * tmeSecondsPerMinute;
-         }
-         else
-         {
-            tell(eloDetail, "Info: Can't trigger weather data, missing MQTT connection");
-         }
-      } */
-
       // work
 
       updateWeather();
@@ -1666,7 +1726,7 @@ int Daemon::storeSamples()
       {
          const SensorData* sensor = &sensorIt.second;
 
-         if (!sensor->record)
+         if (!sensor->record || sensor->type == "WEA")
             continue;
 
          store(lastSampleTime, sensor);
@@ -1753,8 +1813,6 @@ int Daemon::store(time_t now, const SensorData* sensor)
       tablePeaks->store();
    }
 
-   // mqttHaPublish(sensors[sensor->type][sensor->address], initialRun);
-
    return success;
 }
 
@@ -1792,8 +1850,9 @@ void Daemon::updateScriptSensors()
 
 void Daemon::afterUpdate()
 {
-   char* path {nullptr};
+   sensorAlertCheck(lastSampleTime);
 
+   char* path {nullptr};
    asprintf(&path, "%s/after-update.sh", confDir);
 
    if (fileExists(path))
@@ -1803,6 +1862,312 @@ void Daemon::afterUpdate()
    }
 
    free(path);
+}
+
+//***************************************************************************
+// Sensor Alert Check
+//***************************************************************************
+
+void Daemon::sensorAlertCheck(time_t now)
+{
+   tableSensorAlert->clear();
+   tableSensorAlert->setValue("KIND", "M");
+
+   // iterate over all alert roules ..
+
+   for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
+   {
+      alertMailBody = "";
+      alertMailSubject = "";
+      performAlertCheck(tableSensorAlert->getRow(), now, 0);
+   }
+
+   selectSensorAlerts->freeResult();
+}
+
+//***************************************************************************
+// Perform Alert Check
+//***************************************************************************
+
+int Daemon::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
+{
+   int alert = 0;
+
+   // data from alert row
+
+   int addr = alertRow->getIntValue("ADDRESS");
+   const char* type = alertRow->getStrValue("TYPE");
+
+   int id = alertRow->getIntValue("ID");
+   int lgop = alertRow->getIntValue("LGOP");
+   time_t lastAlert = alertRow->getIntValue("LASTALERT");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
+
+   int minIsNull = alertRow->getValue("MIN")->isNull();
+   int maxIsNull = alertRow->getValue("MAX")->isNull();
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+
+   // lookup value facts
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("ADDRESS", addr);
+   tableValueFacts->setValue("TYPE", type);
+
+   // lookup samples
+
+   tableSamples->clear();
+   tableSamples->setValue("ADDRESS", addr);
+   tableSamples->setValue("TYPE", type);
+   tableSamples->setValue("AGGREGATE", "S");
+   tableSamples->setValue("TIME", now);
+
+   if (!tableSamples->find() || !tableValueFacts->find())
+   {
+      tell(eloAlways, "Info: Can't perform sensor check for %s/%d '%s'", type, addr, l2pTime(now).c_str());
+      return 0;
+   }
+
+   // data from samples and value facts
+
+   double value = tableSamples->getFloatValue("VALUE");
+
+   const char* title = tableValueFacts->getStrValue("TITLE");
+   const char* unit = tableValueFacts->getStrValue("UNIT");
+
+   // -------------------------------
+   // check min / max threshold
+
+   if (!minIsNull || !maxIsNull)
+   {
+      if (force || (!minIsNull && value < min) || (!maxIsNull && value > max))
+      {
+         tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
+              id, type, addr, value, min, max);
+
+         // max one alert mail per maxRepeat [minutes]
+
+         if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+         {
+            alert = 1;
+            add2AlertMail(alertRow, title, value, unit);
+         }
+      }
+   }
+
+   // -------------------------------
+   // check range delta
+
+   if (range && delta)
+   {
+      // select value of this sensor around 'time = (now - range)'
+
+      time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
+      time_t rangeEndAt = rangeStartAt + interval;
+
+      tableSamples->clear();
+      tableSamples->setValue("ADDRESS", addr);
+      tableSamples->setValue("TYPE", type);
+      tableSamples->setValue("AGGREGATE", "S");
+      tableSamples->setValue("TIME", rangeStartAt);
+      rangeEnd.setValue(rangeEndAt);
+
+      if (selectSampleInRange->find())
+      {
+         double oldValue = tableSamples->getFloatValue("VALUE");
+
+         if (force || labs(value - oldValue) > delta)
+         {
+            tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes",
+                 id, type, addr, value, delta, range);
+
+            // max one alert mail per maxRepeat [minutes]
+
+            if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
+            {
+               alert = 1;
+               add2AlertMail(alertRow, title, value, unit);
+            }
+         }
+      }
+
+      selectSampleInRange->freeResult();
+      tableSamples->reset();
+   }
+
+   // ---------------------------
+   // Check sub rules recursive
+
+   if (alertRow->getIntValue("SUBID") > 0)
+   {
+      if (recurse > 50)
+      {
+         tell(eloAlways, "Info: Aborting recursion after 50 steps, seems to be a config error!");
+      }
+      else
+      {
+         tableSensorAlert->clear();
+         tableSensorAlert->setValue("ID", alertRow->getIntValue("SUBID"));
+
+         if (tableSensorAlert->find())
+         {
+            int sAlert = performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
+
+            switch (lgop)
+            {
+               case loAnd:    alert = alert &&  sAlert; break;
+               case loOr:     alert = alert ||  sAlert; break;
+               case loAndNot: alert = alert && !sAlert; break;
+               case loOrNot:  alert = alert || !sAlert; break;
+            }
+         }
+      }
+   }
+
+   // ---------------------------------
+   // update master row and send mail
+
+   if (alert && !recurse)
+   {
+      tableSensorAlert->clear();
+      tableSensorAlert->setValue("ID", id);
+
+      if (tableSensorAlert->find())
+      {
+         if (!force)
+         {
+            tableSensorAlert->setValue("LASTALERT", time(0));
+            tableSensorAlert->update();
+         }
+
+         sendAlertMail(tableSensorAlert->getStrValue("MADDRESS"));
+      }
+   }
+
+   return alert;
+}
+
+//***************************************************************************
+// Add To Alert Mail
+//***************************************************************************
+
+int Daemon::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
+{
+   char* sensor {nullptr};
+
+   std::string subject = alertRow->getStrValue("MSUBJECT");
+   std::string body = alertRow->getStrValue("MBODY");
+   int addr = alertRow->getIntValue("ADDRESS");
+   const char* type = alertRow->getStrValue("TYPE");
+
+   int min = alertRow->getIntValue("MIN");
+   int max = alertRow->getIntValue("MAX");
+   int range = alertRow->getIntValue("RANGEM");
+   int delta = alertRow->getIntValue("DELTA");
+   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
+   double minv {0};
+   double maxv {0};
+
+   tablePeaks->clear();
+   tablePeaks->setValue("ADDRESS", alertRow->getIntValue("ADDRESS"));
+   tablePeaks->setValue("TYPE", alertRow->getStrValue("TYPE"));
+
+   if (tablePeaks->find())
+   {
+      minv = tablePeaks->getFloatValue("MIN");
+      maxv = tablePeaks->getFloatValue("MAX");
+   }
+
+   tablePeaks->reset();
+
+   if (!body.length())
+      body = "- undefined -";
+
+   // prepare
+
+   asprintf(&sensor, "%s/0x%x", type, addr);
+
+   // templating
+
+   subject = strReplace("%sensorid%", sensor, subject);
+   subject = strReplace("%value%", value, subject);
+   subject = strReplace("%unit%", unit, subject);
+   subject = strReplace("%title%", title, subject);
+   subject = strReplace("%min%", (long)min, subject);
+   subject = strReplace("%max%", (long)max, subject);
+   subject = strReplace("%range%", (long)range, subject);
+   subject = strReplace("%delta%", (long)delta, subject);
+   subject = strReplace("%time%", l2pTime(time(0)).c_str(), subject);
+   subject = strReplace("%repeat%", (long)maxRepeat, subject);
+   subject = strReplace("%weburl%", webUrl, subject);
+   subject = strReplace("%minv%", minv, subject);
+   subject = strReplace("%maxv%", maxv, subject);
+
+   body = strReplace("%sensorid%", sensor, body);
+   body = strReplace("%value%", value, body);
+   body = strReplace("%unit%", unit, body);
+   body = strReplace("%title%", title, body);
+   body = strReplace("%min%", (long)min, body);
+   body = strReplace("%max%", (long)max, body);
+   body = strReplace("%range%", (long)range, body);
+   body = strReplace("%delta%", (long)delta, body);
+   body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
+   body = strReplace("%repeat%", (long)maxRepeat, body);
+   body = strReplace("%weburl%", webUrl, body);
+   body = strReplace("%minv%", minv, body);
+   body = strReplace("%maxv%", maxv, body);
+
+   alertMailSubject += std::string(" ") + subject;
+   alertMailBody += std::string("\n") + body;
+
+   free(sensor);
+
+   return success;
+}
+
+//***************************************************************************
+// Send Mail
+//***************************************************************************
+
+int Daemon::sendAlertMail(const char* to)
+{
+   // check
+
+   if (isEmpty(to) || isEmpty(mailScript))
+      return done;
+
+   if (alertMailBody.empty())
+      alertMailBody = "- undefined -";
+
+   char* html = 0;
+
+   alertMailBody = strReplace("\n", "<br/>\n", alertMailBody);
+
+   const char* htmlHead =
+      "<head>\n"
+      "  <style type=\"text/css\">\n"
+      "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
+      "  </style>\n"
+      "</head>\n";
+
+   asprintf(&html,
+            "<html>\n"
+            " %s"
+            " <body>\n"
+            "  %s\n"
+            " </body>\n"
+            "</html>\n",
+            htmlHead, alertMailBody.c_str());
+
+   alertMailBody = html;
+   free(html);
+
+   // send mail
+
+   return sendMail(to, alertMailSubject.c_str(), alertMailBody.c_str(), "text/html");
 }
 
 //***************************************************************************
@@ -2042,7 +2407,7 @@ int Daemon::loadHtmlHeader()
 //***************************************************************************
 
 int Daemon::addValueFact(int addr, const char* type, int factor, const char* name, const char* unit,
-                         const char* aTitle, int rights, const char* choices)
+                         const char* aTitle, int rights, const char* choices, SensorOptions options)
 
 {
    const char* title = !isEmpty(aTitle) ? aTitle : name;
@@ -2073,6 +2438,7 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
       tableValueFacts->setValue("FACTOR", factor);
       tableValueFacts->setValue("RIGHTS", rights);
       tableValueFacts->setValue("STATE", "D");
+      tableValueFacts->setValue("OPTIONS", options);
 
       if (!isEmpty(unit))
          tableValueFacts->setValue("UNIT", unit);
@@ -2092,11 +2458,14 @@ int Daemon::addValueFact(int addr, const char* type, int factor, const char* nam
    tableValueFacts->setValue("FACTOR", factor);
    tableValueFacts->setValue("RIGHTS", rights);
 
-   if (!isEmpty(choices))
-      tableValueFacts->setValue("CHOICES", choices);
+   // if (tableValueFacts->getValue("OPTIONS")->isNull())
+   tableValueFacts->setValue("OPTIONS", options);
 
    if (tableValueFacts->getValue("UNIT")->isNull())
       tableValueFacts->setValue("UNIT", unit);
+
+   if (!isEmpty(choices))
+      tableValueFacts->setValue("CHOICES", choices);
 
    if (tableValueFacts->getChanges())
    {
@@ -2179,7 +2548,8 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
 
    int brightness = getIntFromJson(jObject, "brightness", na);
    int transitiontime = getIntFromJson(jObject, "transitiontime", na);
-   const char* sState = getStringFromJson(jObject, "state", "");
+   const char* sState = getStringFromJson(jObject, "state", "off");
+   if (!sState) sState = "off";
    bool state = strcasecmp(sState, "on") == 0;
 
    auto tuple = split(key, ':');
@@ -2327,6 +2697,8 @@ int Daemon::weather2json(json_t* jWeather, json_t* owmWeather)
 //***************************************************************************
 // Dispatch Deconz
 //   Format: {"type": "DZL", "address": 29, "state": false, "brightness": 80}
+//           {"type": "DZS", "address": 25, "btnevent": 1002}
+//           {"type": "DZS", "address": 33, "presence": true}
 //***************************************************************************
 
 int Daemon::dispatchDeconz()
@@ -2343,59 +2715,67 @@ int Daemon::dispatchDeconz()
       uint address = getIntFromJson(oData, "address");
       SensorData* sensor = getSensor(type, address);
 
-      if (sensor)
+      if (!sensor)
       {
-         bool state = getBoolFromJson(oData, "state");
-         double value = getDoubleFromJson(oData, "value");
-         int brightness = getIntFromJson(oData, "brightness", na);
+         json_decref(oData);      // free the json object
+         Deconz::messagesIn.pop();
+         return done;
+      }
 
-         if (brightness != na)
-            brightness = brightness / 255.0 * 100.0;
+      bool state = getBoolFromJson(oData, "state");
+      double value = getDoubleFromJson(oData, "value");
+      int brightness = getIntFromJson(oData, "brightness", na);
+
+      if (brightness != na)
+         brightness = brightness / 255.0 * 100.0;
+
+      if (getObjectFromJson(oData, "state"))
+         sensor->state = state;
+      else if (getObjectFromJson(oData, "value"))
+         sensor->value = value;
+      else if (getObjectFromJson(oData, "btnevent"))
+         sensor->value = getIntFromJson(oData, "btnevent");
+      else if (getObjectFromJson(oData, "presence"))
+         sensor->state = getBoolFromJson(oData, "presence");
+
+      if (getObjectFromJson(oData, "brightness"))
+         sensor->value = brightness;
+
+      sensor->last = time(0);
+
+      int battery = getIntFromJson(oData, "battery", na);
+      if (battery != na)
+         sensor->battery = battery;
+
+      // send update to WS
+      {
+         json_t* ojData = json_object();
+         sensor2Json(ojData, type, address);
 
          if (getObjectFromJson(oData, "state"))
-            sensor->state = state;
-         else if (getObjectFromJson(oData, "value"))
-            sensor->value = value;
-
-         if (getObjectFromJson(oData, "brightness"))
-            sensor->value = brightness;
-
-         sensor->last = time(0);
-
-         int battery = getIntFromJson(oData, "battery", na);
-         if (battery != na)
-            sensor->battery = battery;
-
-         // send update to WS
          {
-            json_t* ojData = json_object();
-            sensor2Json(ojData, type, address);
-
-            if (getObjectFromJson(oData, "state"))
-            {
-               json_object_set_new(ojData, "value", json_integer(sensor->state));
-               if (getObjectFromJson(oData, "brightness"))
-                  json_object_set_new(ojData, "score", json_integer(brightness));
-            }
-            else if (getObjectFromJson(oData, "value"))
-               json_object_set_new(ojData, "value", json_real(sensor->value));
-
-            json_object_set_new(ojData, "last", json_integer(sensor->last));
-
-            if (sensor->battery != na)
-               json_object_set_new(ojData, "battery", json_integer(sensor->battery));
-
-            char* tuple {nullptr};
-            asprintf(&tuple, "%s:0x%02x", type, address);
-            jsonSensorList[tuple] = ojData;
-            free(tuple);
-
-            pushDataUpdate("update", 0L);
+            json_object_set_new(ojData, "value", json_integer(sensor->state));
+            if (getObjectFromJson(oData, "brightness"))
+               json_object_set_new(ojData, "score", json_integer(brightness));
          }
+         else if (getObjectFromJson(oData, "value"))
+            json_object_set_new(ojData, "value", json_real(sensor->value));
 
-         mqttHaPublish(sensors[type][address]);
-         mqttNodeRedPublishSensor(sensors[type][address]);
+         json_object_set_new(ojData, "last", json_integer(sensor->last));
+
+         if (sensor->battery != na)
+            json_object_set_new(ojData, "battery", json_integer(sensor->battery));
+
+         char* tuple {nullptr};
+         asprintf(&tuple, "%s:0x%02x", type, address);
+         jsonSensorList[tuple] = ojData;
+         free(tuple);
+
+         pushDataUpdate("update", 0L);
       }
+
+      mqttHaPublish(sensors[type][address]);
+      mqttNodeRedPublishSensor(sensors[type][address]);
 
       json_decref(oData);      // free the json object
       Deconz::messagesIn.pop();

@@ -1,6 +1,6 @@
 # Linux - P4 Daemon (p4d)
 
-This daemon is fetching data from the S 3200 and store it in a MySQL database.
+This daemon is fetching data from the S 3200 and store it in a MariaDb database.
 
 Written by: *Jörg Wendel (linux at jwendel dot de)*
 
@@ -74,11 +74,9 @@ and, if you like, update your installation:
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
-## Installation of the MySQL Database:
+## Installation of the MariaDb Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
 
-`apt install mysql-server`
-some distributions like raspbian buster switched to mariadb, in this case:
 `apt install mariadb-server`
 
 (set database password for root user during installation)
@@ -117,7 +115,7 @@ install mosquitto-clients
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential pkg-config libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev libmariadb-dev-compat uuid-dev
+apt install build-essential pkg-config libssl-dev libjansson-dev libxml2-dev libcurl4-openssl-dev libssl-dev libmariadbclient-dev uuid-dev
 ```
 Depending on the OS you may need the package libmariadb-dev instead of libmariadbclient-dev
 
@@ -277,7 +275,7 @@ The import deletes at first all the data and then imports the dumped data. To ap
 
 ## Additional information
 
-### MySQL HINTS
+### MariaDb HINTS
 If you cannot figure out why you get Access denied, remove all entries from the user table that have Host values with wildcars contained (entries that match `%` or `_` characters). A very common error is to insert a new entry with `Host='%'` and `User='some_user'`, thinking that this allows you to specify localhost to connect from the same machine. The reason that this does not work is that the default privileges include an entry with `Host='localhost'` and `User=''`. Because that entry has a Host value `localhost` that is more specific than `%`, it is used in preference to the new entry when connecting from localhost! The correct procedure is to insert a second entry with `Host='localhost'` and `User='some_user'`, or to delete the entry with `Host='localhost'` and `User=''`. After deleting the entry, remember to issue a `FLUSH PRIVILEGES` statement to reload the grant tables.
 
 To analyze this you can show all users:

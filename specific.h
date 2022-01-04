@@ -71,10 +71,7 @@ class P4d : public Daemon, public FroelingService
       int initMenu(bool updateParameters = false);
       int updateParameter(cDbTable* tableMenu);
       int calcStateDuration();
-      void sensorAlertCheck(time_t now);
-      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
-      int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
-      int sendAlertMail(const char* to);
+
       int initValueFacts(bool truncate = false);
       const char* getTextImage(const char* key, const char* text) override;
 
@@ -82,21 +79,19 @@ class P4d : public Daemon, public FroelingService
 
       int dispatchSpecialRequest(Event event, json_t* oObject, long client) override;
       int performLogin(json_t* oObject) override;
-      int performInitTables(json_t* oObject, long client);
-      int performUpdateTimeRanges(json_t* array, long client);
+   // int performInitTables(json_t* oObject, long client);
+   // int performUpdateTimeRanges(json_t* array, long client);
       int performPellets(json_t* array, long client);
       int performPelletsAdd(json_t* array, long client);
-
+      int performCommand(json_t* obj, long client) override;
       int performErrors(long client);
       int performMenu(json_t* oObject, long client);
-      int storeAlerts(json_t* oObject, long client);
-      int performAlerts(json_t* oObject, long client);
-      int performAlertTestMail(int id, long client) override;
       int performParEditRequest(json_t* oObject, long client);
       int performTimeParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);
       int performTimeParStore(json_t* oObject, long client);
 
+      int commands2Json(json_t* obj) override;
       int s3200State2Json(json_t* obj);
       int configChoice2json(json_t* obj, const char* name) override;
 
@@ -116,20 +111,15 @@ class P4d : public Daemon, public FroelingService
 
       cDbTable* tablePellets {nullptr};
       cDbTable* tableMenu {nullptr};
-      cDbTable* tableSensorAlert {nullptr};
       cDbTable* tableErrors {nullptr};
       cDbTable* tableTimeRanges {nullptr};
 
       cDbValue minValue;
       cDbValue endTime;
-      cDbValue rangeEnd;
 
       cDbStatement* selectAllMenuItems {nullptr};
       cDbStatement* selectMenuItemsByParent {nullptr};
       cDbStatement* selectMenuItemsByChild {nullptr};
-      cDbStatement* selectSensorAlerts {nullptr};
-      cDbStatement* selectAllSensorAlerts {nullptr};
-      cDbStatement* selectSampleInRange {nullptr};    // for alert check
       cDbStatement* selectAllErrors {nullptr};
       cDbStatement* selectPendingErrors {nullptr};
 

@@ -7,7 +7,7 @@ include Make.config
 
 HISTFILE = "HISTORY.h"
 
-LIBS += $(shell mysql_config --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid
+LIBS += $(shell $(SQLCFG) --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid
 
 VERSION      = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
 ARCHIVE      = $(TARGET)-$(VERSION)
@@ -29,7 +29,7 @@ OBJS        += p4io.o service.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
 
-CFLAGS      += $(shell mysql_config --include)
+CFLAGS    	+= $(shell $(SQLCFG) --include)
 OBJS        += specific.o
 W1OBJS       = w1.o lib/common.o lib/thread.o $(MQTTOBJS)
 

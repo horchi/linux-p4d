@@ -182,12 +182,11 @@ function editMenuParameter(parameter)
    }
 }
 
-function updateTimeRanges()
-{
-   console.log("updateTimeRanges");
-   showProgressDialog();
-   socket.send({ "event" : "updatetimeranges", "object" : { "parent" : actualParent } });
-}
+//function updateTimeRanges()
+//{
+//   showProgressDialog();
+//   socket.send({ "event" : "updatetimeranges", "object" : { "parent" : actualParent } });
+//}
 
 window.menuSelected = function(child)
 {

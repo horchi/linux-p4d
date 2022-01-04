@@ -17,6 +17,7 @@ var onSmalDevice = false;
 var isActive = null;
 var socket = null;
 var config = {};
+var commands = {};
 var daemonState = {};
 
 var widgetTypes = {};
@@ -80,7 +81,7 @@ function onSocketConnect(protocol)
                    "token" : token }
                });
 
-   prepareMenu();
+   // prepareMenu();
    document.title = pageTitle;
    onSmalDevice = window.matchMedia("(max-width: 740px)").matches;
    console.log("onSmalDevice : " + onSmalDevice);
@@ -298,6 +299,10 @@ function dispatchMessage(message)
       chartBookmarks = jMessage.object;
       updateChartBookmarks();
    }
+   else if (event == "commands") {
+      commands = jMessage.object;
+      console.log("commands " + JSON.stringify(commands, undefined, 4));
+   }
    else if (event == "config") {
       config = jMessage.object;
       // console.log("config " + JSON.stringify(config, undefined, 4));
@@ -306,6 +311,7 @@ function dispatchMessage(message)
          $(document.body).css('background', 'transparent url(' + config.background + ') no-repeat 50% 0 fixed');
          $(document.body).css('background-size', 'cover');
       }
+      prepareMenu();
    }
    else if (event == "configdetails" && currentPage == 'setup') {
       initConfig(jMessage.object)
@@ -415,7 +421,9 @@ function prepareMenu()
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'chart\')">Charts</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Schema</button>';
-   // html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'vdr\')">VDR</button>';
+
+   if (config.vdr === '1')
+      html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'vdr\')">VDR</button>';
 
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'menu\')">Service Menü</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'errors\')">Fehler</button>';
@@ -435,7 +443,8 @@ function prepareMenu()
 
    // buttons below menu
 
-   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" || currentPage == "alerts" || currentPage == "syslog" || currentPage == "system" || currentPage == "images") {
+   if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" ||
+       currentPage == "alerts" || currentPage == "syslog" || currentPage == "system" || currentPage == "images" || currentPage == "commands") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div>";
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'setup\')">Allg. Konfiguration</button>';
@@ -446,6 +455,7 @@ function prepareMenu()
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'images\')">Images</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'syslog\')">Syslog</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'system\')">System</button>';
+         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'commands\')">Commands</button>';
          html += "</div>";
       }
    }
@@ -453,10 +463,6 @@ function prepareMenu()
    if (currentPage == "setup") {
       html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" title=\"Letzter Reset: " + config.peakResetAt + "\" id=\"buttonResPeaks\" onclick=\"resetPeaks()\">Reset Peaks</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"sendMail('Test Mail', 'test')\">Test Mail</button>";
-      html += "  <button id='btnInitMenu' class='rounded-border buttonOptions'>Init Service Menü</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"initTables('valuefacts')\">Init Sensoren</button>";
       html += "</div>";
    }
    else if (currentPage == "iosetup") {
@@ -487,14 +493,6 @@ function prepareMenu()
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
-         html += "</div>";
-      }
-   }
-
-   if (currentPage == "menu") {
-      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
-         html += "<div class=\"confirmDiv\">";
-         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"updateTimeRanges()\">Zeiten aktualisieren</button>";
          html += "</div>";
       }
    }
@@ -579,6 +577,8 @@ function mainMenuSel(what)
       event = "setup";
    else if (currentPage == "iosetup")
       initIoSetup(valueFacts);
+   else if (currentPage == "commands")
+      initCommands();
    else if (currentPage == "user")
       initUser();
    else if (currentPage == "userdetails")
@@ -645,11 +645,6 @@ function setupDashboard()
    initDashboard();
 }
 
-function resetBatt(what)
-{
-   socket.send({ "event" : "reset", what : {}});
-}
-
 function initLogin()
 {
    $('#container').removeClass('hidden');
@@ -689,6 +684,7 @@ function showSystem(system)
 
    var html = '<div>';
 
+   html += '  <div class="rounded-border seperatorFold">Tabellen</div>';
    html += '  <table class="tableMultiCol">' +
       '    <thead>' +
       '     <tr style="height:30px;font-weight:bold;">' +
@@ -718,55 +714,6 @@ function showSystem(system)
 
    $('#systemContainer').html(html);
 
-}
-
-function initErrors(errors, root)
-{
-   // console.log(JSON.stringify(errors, undefined, 4));
-
-   $('#container').removeClass('hidden');
-
-   document.getElementById("container").innerHTML =
-      '<div class="rounded-border seperatorFold">Fehlerspeicher</div>' +
-      ' <table class="tableMultiCol">' +
-      '   <thead>' +
-      '     <tr>' +
-      '       <td style="width:30px;"></td>' +
-      '       <td>Zeit</td>' +
-      '       <td>Dauer [m]</td>' +
-      '       <td>Fehler</td>' +
-      '       <td>Status</td>' +
-      '     </tr>' +
-      '   </thead>' +
-      '   <tbody id="errors">' +
-      '   </tbody>' +
-      ' </table>' +
-      '</div>';
-
-   tableRoot = document.getElementById("errors");
-   tableRoot.innerHTML = "";
-
-   for (var i = 0; i < errors.length; i++) {
-      var item = errors[i];
-
-      var style = item.state == "quittiert" || item.state == "gegangen" ? "greenCircle" : "redCircle";
-      var html = "<td><div class=\"" + style + "\"></div></td>";
-      html += "<td class=\"tableMultiColCell\">" + item.time + "</td>";
-      html += "<td class=\"tableMultiColCell\">" + (item.duration / 60).toFixed(0) + "</td>";
-      html += "<td class=\"tableMultiColCell\">" + item.text + "</td>";
-      html += "<td class=\"tableMultiColCell\">" + item.state + "</td>";
-
-      if (tableRoot != null) {
-         var elem = document.createElement("tr");
-         elem.innerHTML = html;
-         tableRoot.appendChild(elem);
-      }
-   }
-}
-
-window.sendMail = function(subject, body)
-{
-   socket.send({ "event" : "sendmail", "object" : { "subject" : subject, "body" : body } });
 }
 
 window.toggleMode = function(address, type)

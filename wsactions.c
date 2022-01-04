@@ -61,6 +61,8 @@ int Daemon::dispatchClientRequest()
             case evSetup:           status = performConfigDetails(client);           break;
             case evSystem:          status = performSystem(oObject, client);         break;
             case evSyslog:          status = performSyslog(oObject, client);         break;
+            case evAlerts:          status = performAlerts(oObject, client);         break;
+            case evStoreAlerts:     status = storeAlerts(oObject, client);           break;
 
             case evStoreIoSetup:    status = storeIoSetup(oObject, client);          break;
             case evChartData:       status = performChartData(oObject, client);      break;
@@ -71,8 +73,7 @@ int Daemon::dispatchClientRequest()
             case evGroupConfig:     status = storeGroups(oObject, client);           break;
             case evStoreDashboards: status = storeDashboards(oObject, client);       break;
 
-            case evReset:           status = performReset(oObject, client);          break;
-            case evSendMail:        status = performSendMail(oObject, client);       break;
+            case evCommand:         status = performCommand(oObject, client);        break;
             case evForceRefresh:    status = performForceRefresh(oObject, client);   break;
             case evChartbookmarks:  status = performChartbookmarks(client);          break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
@@ -131,8 +132,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evStoreUserConfig:     return rights & urAdmin;
       case evUserDetails:         return rights & urAdmin;
       case evChangePasswd:        return true;   // check will done in performPasswChange()
-      case evReset:               return rights & urFullControl;
-      case evSendMail:            return rights & urSettings;
+      case evCommand:             return rights & urFullControl;
       case evSyslog:              return rights & urAdmin;
       case evSystem:              return rights & urAdmin;
       case evForceRefresh:        return true;
@@ -308,6 +308,10 @@ int Daemon::performLogin(json_t* oObject)
    oJson = json_array();
    groups2Json(oJson);
    pushOutMessage(oJson, "grouplist", client);
+
+   oJson = json_array();
+   commands2Json(oJson);
+   pushOutMessage(oJson, "commands", client);
 
    performData(client, "init");
 
@@ -495,6 +499,151 @@ int Daemon::performToggleIo(json_t* oObject, long client)
 }
 
 //***************************************************************************
+// Alert Test Mail
+//***************************************************************************
+
+int Daemon::performAlertTestMail(int id, long client)
+{
+   tell(eloDetail, "Test mail for alert (%d) requested", id);
+
+   if (isEmpty(mailScript))
+      return replyResult(fail, "missing mail script", client);
+
+   if (!fileExists(mailScript))
+      return replyResult(fail, "mail script not found", client);
+
+   if (!selectMaxTime->find())
+      tell(eloAlways, "Warning: Got no result by 'select max(time) from samples'");
+
+   time_t  last = tableSamples->getTimeValue("TIME");
+   selectMaxTime->freeResult();
+
+   tableSensorAlert->clear();
+   tableSensorAlert->setValue("ID", id);
+
+   if (!tableSensorAlert->find())
+      return replyResult(fail, "requested alert ID not found", client);
+
+   alertMailBody = "";
+   alertMailSubject = "";
+
+   if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
+      return replyResult(fail, "send failed", client);
+
+   tableSensorAlert->reset();
+
+   return replyResult(success, "mail sended", client);
+}
+
+//***************************************************************************
+// Perform WS Sensor Alert Request
+//***************************************************************************
+
+int Daemon::performAlerts(json_t* oObject, long client)
+{
+   json_t* oArray = json_array();
+
+   tableSensorAlert->clear();
+
+   for (int f = selectAllSensorAlerts->find(); f; f = selectAllSensorAlerts->fetch())
+   {
+      json_t* oData = json_object();
+      json_array_append_new(oArray, oData);
+
+      json_object_set_new(oData, "id", json_integer(tableSensorAlert->getIntValue("ID")));
+      json_object_set_new(oData, "kind", json_string(tableSensorAlert->getStrValue("ID")));
+      json_object_set_new(oData, "subid", json_integer(tableSensorAlert->getIntValue("SUBID")));
+      json_object_set_new(oData, "lgop", json_integer(tableSensorAlert->getIntValue("LGOP")));
+      json_object_set_new(oData, "type", json_string(tableSensorAlert->getStrValue("TYPE")));
+      json_object_set_new(oData, "address", json_integer(tableSensorAlert->getIntValue("ADDRESS")));
+      json_object_set_new(oData, "state", json_string(tableSensorAlert->getStrValue("STATE")));
+      json_object_set_new(oData, "min", json_integer(tableSensorAlert->getIntValue("MIN")));
+      json_object_set_new(oData, "max", json_integer(tableSensorAlert->getIntValue("MAX")));
+      json_object_set_new(oData, "rangem", json_integer(tableSensorAlert->getIntValue("RANGEM")));
+      json_object_set_new(oData, "delta", json_integer(tableSensorAlert->getIntValue("DELTA")));
+      json_object_set_new(oData, "maddress", json_string(tableSensorAlert->getStrValue("MADDRESS")));
+      json_object_set_new(oData, "msubject", json_string(tableSensorAlert->getStrValue("MSUBJECT")));
+      json_object_set_new(oData, "mbody", json_string(tableSensorAlert->getStrValue("MBODY")));
+      json_object_set_new(oData, "maxrepeat", json_integer(tableSensorAlert->getIntValue("MAXREPEAT")));
+
+      //json_object_set_new(oData, "lastalert", json_integer(0));
+   }
+
+   selectAllSensorAlerts->freeResult();
+   pushOutMessage(oArray, "alerts", client);
+
+   return done;
+}
+
+//***************************************************************************
+// Store Sensor Alerts
+//***************************************************************************
+
+int Daemon::storeAlerts(json_t* oObject, long client)
+{
+   const char* action = getStringFromJson(oObject, "action", "");
+
+   if (strcmp(action, "delete") == 0)
+   {
+      int alertid = getIntFromJson(oObject, "alertid", na);
+
+      tableSensorAlert->deleteWhere("id = %d", alertid);
+
+      performAlerts(0, client);
+      replyResult(success, "Sensor Alert gelöscht", client);
+   }
+
+   else if (strcmp(action, "store") == 0)
+   {
+      json_t* array = json_object_get(oObject, "alerts");
+      size_t index {0};
+      json_t* jObj {nullptr};
+
+      json_array_foreach(array, index, jObj)
+      {
+         int id = getIntFromJson(jObj, "id", na);
+         tell(eloAlways, "Store alert %d", id);
+         tableSensorAlert->clear();
+
+         if (id != na)
+         {
+            tableSensorAlert->setValue("ID", id);
+
+            if (!tableSensorAlert->find())
+            {
+               tell(eloAlways, "Warming: Alert id %d not found, aborting", id);
+               continue;
+            }
+         }
+
+         tableSensorAlert->clearChanged();
+         tableSensorAlert->setValue("STATE", getStringFromJson(jObj, "state"));
+         tableSensorAlert->setValue("MAXREPEAT", getIntFromJson(jObj, "maxrepeat"));
+
+         tableSensorAlert->setValue("ADDRESS", getIntFromJson(jObj, "address"));
+         tableSensorAlert->setValue("TYPE", getStringFromJson(jObj, "type"));
+         tableSensorAlert->setValue("MIN", getIntFromJson(jObj, "min"));
+         tableSensorAlert->setValue("MAX", getIntFromJson(jObj, "max"));
+         tableSensorAlert->setValue("DELTA", getIntFromJson(jObj, "delta"));
+         tableSensorAlert->setValue("RANGEM", getIntFromJson(jObj, "rangem"));
+         tableSensorAlert->setValue("MADDRESS", getStringFromJson(jObj, "maddress"));
+         tableSensorAlert->setValue("MSUBJECT", getStringFromJson(jObj, "msubject"));
+         tableSensorAlert->setValue("MBODY", getStringFromJson(jObj, "mbody"));
+
+         if (id == na)
+            tableSensorAlert->insert();
+         else if (tableSensorAlert->getChanges())
+            tableSensorAlert->update();
+      }
+
+      performAlerts(0, client);
+      replyResult(success, "Konfiguration gespeichert", client);
+   }
+
+   return success;
+}
+
+//***************************************************************************
 // Perform System Data
 //***************************************************************************
 
@@ -519,6 +668,22 @@ int Daemon::performSystem(json_t* oObject, long client)
    }
 
    selectTableStatistic->freeResult();
+
+   FsStat stat;
+
+   jArray = json_array();
+   json_object_set_new(jObject, "filesystems", jArray);
+
+   if (fsStat("/", &stat) == success)
+   {
+      json_t* jItem = json_object();
+      json_array_append_new(jArray, jItem);
+
+      json_object_set_new(jItem, "name", json_string("/"));
+      json_object_set_new(jItem, "total", json_string(bytesPretty(stat.total, 2)));
+      json_object_set_new(jItem, "available", json_string(bytesPretty(stat.available, 2)));
+   }
+
    pushOutMessage(jObject, "system", client);
 
    return done;
@@ -618,15 +783,15 @@ int Daemon::performGroups(long client)
 // Perform Send Mail
 //***************************************************************************
 
-int Daemon::performSendMail(json_t* oObject, long client)
+int Daemon::performTestMail(json_t* oObject, long client)
 {
    int alertid = getIntFromJson(oObject, "alertid", na);
 
    if (alertid != na)
       return performAlertTestMail(alertid, client);
 
-   const char* subject = getStringFromJson(oObject, "subject");
-   const char* body = getStringFromJson(oObject, "body");
+   const char* subject = "Test Mail";
+   const char* body = "Test";
 
    tell(eloDebugWebSock, "Test mail requested with: '%s/%s'", subject, body);
 
@@ -984,27 +1149,6 @@ int Daemon::performPasswChange(json_t* oObject, long client)
    tableUsers->reset();
 
    return done;
-}
-
-//***************************************************************************
-// Perform Reset
-//***************************************************************************
-
-int Daemon::performReset(json_t* obj, long client)
-{
-   std::string what = getStringFromJson(obj, "what");
-
-   if (what == "peaks")
-   {
-      tablePeaks->truncate();
-      setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
-
-      json_t* oJson = json_object();
-      config2Json(oJson);
-      pushOutMessage(oJson, "config", client);
-   }
-
-   return replyResult(success, "Peaks zurückgesetzt", client);
 }
 
 //***************************************************************************
@@ -1599,7 +1743,7 @@ int Daemon::configDetails2Json(json_t* obj)
       json_object_set_new(oDetail, "type", json_integer(it.type));
       json_object_set_new(oDetail, "category", json_string(it.category));
       json_object_set_new(oDetail, "title", json_string(it.title));
-      json_object_set_new(oDetail, "descrtiption", json_string(it.description));
+      json_object_set_new(oDetail, "description", json_string(it.description));
 
       if (it.type == ctChoice || it.type == ctMultiSelect || it.type == ctBitSelect)
          configChoice2json(oDetail, it.name.c_str());
@@ -1807,6 +1951,7 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       json_object_set_new(oData, "usrtitle", json_string(tableValueFacts->getStrValue("USRTITLE")));
       json_object_set_new(oData, "unit", json_string(tableValueFacts->getStrValue("UNIT")));
       json_object_set_new(oData, "rights", json_integer(tableValueFacts->getIntValue("RIGHTS")));
+      json_object_set_new(oData, "options", json_integer(tableValueFacts->getIntValue("OPTIONS")));
       // #TODO check actor properties if dimmable ...
       json_object_set_new(oData, "dim", json_boolean(type == "DZL" || type == "HMB"));
 
@@ -1904,6 +2049,54 @@ int Daemon::groups2Json(json_t* obj)
    selectAllGroups->freeResult();
 
    return done;
+}
+
+//***************************************************************************
+// Commands 2 Json
+//***************************************************************************
+
+int Daemon::commands2Json(json_t* obj)
+{
+   json_t* jCommand = json_object();
+   json_array_append_new(obj, jCommand);
+   json_object_set_new(jCommand, "title", json_string("Reset Peaks"));
+   json_object_set_new(jCommand, "cmd", json_string("peaks"));
+   json_object_set_new(jCommand, "description", json_string("Peaks zurücksetzen"));
+
+   jCommand = json_object();
+   json_array_append_new(obj, jCommand);
+   json_object_set_new(jCommand, "title", json_string("Test Mail"));
+   json_object_set_new(jCommand, "cmd", json_string("testmail"));
+   json_object_set_new(jCommand, "description", json_string("Test Mail senden"));
+
+   return done;
+}
+
+//***************************************************************************
+// Perform Command
+//***************************************************************************
+
+int Daemon::performCommand(json_t* obj, long client)
+{
+   std::string what = getStringFromJson(obj, "what");
+
+   if (what == "peaks")
+   {
+      tablePeaks->truncate();
+      setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
+
+      json_t* oJson = json_object();
+      config2Json(oJson);
+      pushOutMessage(oJson, "config", client);
+   }
+   else if (what == "testmail")
+   {
+      performTestMail(obj, client);
+   }
+   else
+      return fail;
+
+   return replyResult(success, "success", client);
 }
 
 //***************************************************************************

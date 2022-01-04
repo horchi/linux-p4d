@@ -16,7 +16,7 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#include <mysql/mysql.h>
+#include <mysql.h>
 
 #include <list>
 

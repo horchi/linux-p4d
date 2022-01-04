@@ -14,7 +14,7 @@ TEST = tst
 LIBOBJS = common.o db.o dbdict.o
 
 BASELIBS = -lrt -lz -luuid -lpthread
-BASELIBS += $(shell mysql_config --libs_r)
+BASELIBS += $(shell $(SQLCFG) --libs_r)
 
 BASELIBS += $(shell xml2-config --libs)
 BASELIBS += $(shell pkg-config --cflags --libs jansson)
@@ -32,7 +32,7 @@ CFLAGS += -pthread -fPIC -Wreturn-type -Wall -Wno-parentheses -Wformat -pedantic
           -Wunused-value -Wunused-function \
           -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
-CFLAGS += $(shell mysql_config --include)
+CFLAGS += $(shell $(SQLCFG) --include)
 CFLAGS += $(shell xml2-config --cflags)
 
 DEFINES = $(USES)

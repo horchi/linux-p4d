@@ -17,10 +17,6 @@ function initConfig(configdetails)
    theConfigdetails = configdetails;
 
    $('#container').removeClass('hidden');
-   $("#container").height($(window).height() - $("#menu").height() - 8);
-   window.onresize = function() {
-      $("#container").height($(window).height() - $("#menu").height() - 8);
-   };
 
    document.getElementById("container").innerHTML =
       '<div id="setupContainer" class="rounded-border inputTableConfig">';
@@ -62,30 +58,30 @@ function initConfig(configdetails)
 
       html += "    <span>" + item.title + ":</span>\n";
 
-      if (item.descrtiption == "")
-         item.descrtiption = "&nbsp;";  // on totally empty the line height not fit :(
+      if (item.description == "")
+         item.description = "&nbsp;";  // on totally empty the line height not fit :(
 
       switch (item.type) {
       case 0:     // integer
          html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputNum\" type=\"number\" value=\"" + item.value + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
+         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
          break;
 
       case 1:     // number (float)
          html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputFloat\" type=\"number\" step=\"0.1\" value=\"" + parseFloat(item.value.replace(',', '.')) + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
+         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
          break;
 
       case 2:     // string
 
          html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border input\" type=\"search\" value=\"" + item.value + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
+         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
          break;
 
       case 3:     // boolean
          html += "    <span><input id=\"checkbox_" + item.name + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (item.value == 1 ? "checked" : "") + "/>" +
             '<label for="checkbox_' + item.name + '"></label></span></span>\n';
-         html += "    <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
+         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
          break;
 
       case 4:     // range
@@ -119,7 +115,7 @@ function initConfig(configdetails)
          html += "    <input id=\"range_" + nameFrom + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" /> -";
          html += "    <input id=\"range_" + nameTo + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" />\n";
          html += "  </span>\n";
-         html += "  <span class=\"inputComment\">" + item.descrtiption + "</span>\n";
+         html += "  <span class=\"inputComment\">" + item.description + "</span>\n";
 
          break;
 
@@ -182,6 +178,11 @@ function initConfig(configdetails)
          setAutoCompleteValues($(this), $(this).data("value").trim().split(","));
       }
    });
+
+   $("#container").height($(window).height() - $("#menu").height() - 8);
+   window.onresize = function() {
+      $("#container").height($(window).height() - $("#menu").height() - 8);
+   };
 }
 
 function initTables(what)

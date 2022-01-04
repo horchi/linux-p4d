@@ -36,12 +36,11 @@ const char* cWebService::events[] =
    "storeuserconfig",
    "changepasswd",
 
-   "reset",
+   "command",
    "groups",
    "groupconfig",
    "chartbookmarks",
    "storechartbookmarks",
-   "sendmail",
    "syslog",
    "system",
    "forcerefresh",
@@ -56,8 +55,6 @@ const char* cWebService::events[] =
    "menu",
    "pareditrequest",
    "parstore",
-   "inittables",
-   "updatetimeranges",
    "pellets",
 
    0

@@ -994,7 +994,6 @@ int storeToFile(const char* filename, const char* data, int size)
 
 int fsStat(const char* mount, FsStat* stat)
 {
-   const unsigned int GB {1024 * 1024 * 1024};
    struct statvfs statVFS;
 
    if (statvfs(mount, &statVFS) != 0)
@@ -1004,10 +1003,6 @@ int fsStat(const char* mount, FsStat* stat)
    stat->available = (double)(statVFS.f_bfree * statVFS.f_frsize);
    stat->used = stat->total - stat->available;
    stat->usedP = (stat->used / stat->total) * 100.0;
-
-   stat->total /= GB;
-   stat->available /= GB;
-   stat->used /= GB;
 
    return success;
 }

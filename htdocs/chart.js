@@ -12,9 +12,9 @@ var currentRequest = null;
 
 function drawCharts(dataObject)
 {
-   var update = document.getElementById("chartTitle") != null;
+   var root = document.getElementById("chartContainer");
 
-   if (!update) {
+   if (!root) {
       $('#container').removeClass('hidden');
       $('#dashboardMenu').removeClass('hidden');
       $('#dashboardMenu').html('');
@@ -36,9 +36,9 @@ function drawCharts(dataObject)
          '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
          '</div>' +
          '<div id="chartSelector" class="rounded-border chartSelectors"></div>';
-   }
 
-   var root = document.getElementById("chartContainer");
+      root = document.getElementById("chartContainer");
+   }
 
    if (theChart != null) {
       theChart.destroy();

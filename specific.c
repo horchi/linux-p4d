@@ -60,9 +60,9 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "iconSet",                   ctChoice,  "light",        false, "WEB Interface", "Status Icon Set", "" },
    { "background",                ctChoice,  "",             false, "WEB Interface", "Background image", "" },
    { "schema",                    ctChoice,  "schema.jpg",   false, "WEB Interface", "Schematische Darstellung", "" },
-
-   { "chartRange",                ctNum,     "1.5",          true, "WEB Interface", "Chart Range", "" },
-   { "chartSensors",              ctNum,     "VA:0x0",       true, "WEB Interface", "Chart Sensors", "" },
+   { "vdr",                       ctBool,    "0",            false, "WEB Interface", "VDR (Video Disk Recorder) OSD verfügbar", "" },
+   { "chartRange",                ctNum,     "1.5",          true,  "WEB Interface", "Chart Range", "" },
+   { "chartSensors",              ctNum,     "VA:0x0",       true,  "WEB Interface", "Chart Sensors", "" },
 
    // MQTT interface
 
@@ -151,7 +151,6 @@ int P4d::exit()
 //***************************************************************************
 
 cDbFieldDef minValueDef("MIN_VALUE", "minvalue", cDBS::ffInt, 0, cDBS::ftData);
-cDbFieldDef rangeEndDef("time", "time", cDBS::ffDateTime, 0, cDBS::ftData);
 cDbFieldDef endTimeDef("END_TIME", "endtime", cDBS::ffDateTime, 0, cDBS::ftData);
 
 int P4d::initDb()
@@ -163,9 +162,6 @@ int P4d::initDb()
 
    tableMenu = new cDbTable(connection, "menu");
    if (tableMenu->open() != success) return fail;
-
-   tableSensorAlert = new cDbTable(connection, "sensoralert");
-   if (tableSensorAlert->open() != success) return fail;
 
    tableTimeRanges = new cDbTable(connection, "timeranges");  // #TODO - still needed
    if (tableTimeRanges->open() != success) return fail;
@@ -204,27 +200,6 @@ int P4d::initDb()
    selectMenuItemsByChild->bind("CHILD", cDBS::bndIn | cDBS::bndSet);
 
    status += selectMenuItemsByChild->prepare();
-
-   // ------------------
-
-   selectSensorAlerts = new cDbStatement(tableSensorAlert);
-
-   selectSensorAlerts->build("select ");
-   selectSensorAlerts->bindAllOut();
-   selectSensorAlerts->build(" from %s where state = 'A'", tableSensorAlert->TableName());
-   selectSensorAlerts->bind("KIND", cDBS::bndIn | cDBS::bndSet, " and ");
-
-   status += selectSensorAlerts->prepare();
-
-   // ------------------
-
-   selectAllSensorAlerts = new cDbStatement(tableSensorAlert);
-
-   selectAllSensorAlerts->build("select ");
-   selectAllSensorAlerts->bindAllOut();
-   selectAllSensorAlerts->build(" from %s", tableSensorAlert->TableName());
-
-   status += selectAllSensorAlerts->prepare();
 
    // ------------------
    // select min(value), time from samples
@@ -310,30 +285,6 @@ int P4d::initDb()
    selectAllPellets->build(" order by time");
    status += selectAllPellets->prepare();
 
-   // ------------------
-   // select * from samples      (for alertCheck)
-   //    where type = ? and address = ?
-   //     and time <= ?
-   //     and time > ?
-
-   rangeEnd.setField(&rangeEndDef);
-
-   selectSampleInRange = new cDbStatement(tableSamples);
-
-   selectSampleInRange->build("select ");
-   selectSampleInRange->bind("ADDRESS", cDBS::bndOut);
-   selectSampleInRange->bind("TYPE", cDBS::bndOut, ", ");
-   selectSampleInRange->bind("TIME", cDBS::bndOut, ", ");
-   selectSampleInRange->bind("VALUE", cDBS::bndOut, ", ");
-   selectSampleInRange->build(" from %s where ", tableSamples->TableName());
-   selectSampleInRange->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet);
-   selectSampleInRange->bind("TYPE", cDBS::bndIn | cDBS::bndSet, " and ");
-   selectSampleInRange->bindCmp(0, &rangeEnd, "<=", " and ");
-   selectSampleInRange->bindCmp(0, "TIME", 0, ">", " and ");
-   selectSampleInRange->build(" order by time");
-
-   status += selectSampleInRange->prepare();
-
    return status;
 
 }
@@ -342,16 +293,12 @@ int P4d::exitDb()
 {
    delete tablePellets;               tablePellets= nullptr;
    delete tableMenu;                  tableMenu = nullptr;
-   delete tableSensorAlert;           tableSensorAlert = nullptr;
    delete tableErrors;                tableErrors = nullptr;
    delete tableTimeRanges;            tableTimeRanges = nullptr;
 
    delete selectAllMenuItems;         selectAllMenuItems = nullptr;
    delete selectMenuItemsByParent;    selectMenuItemsByParent = nullptr;
    delete selectMenuItemsByChild;     selectMenuItemsByChild = nullptr;
-   delete selectSensorAlerts;         selectSensorAlerts = nullptr;
-   delete selectAllSensorAlerts;      selectAllSensorAlerts = nullptr;
-   delete selectSampleInRange;        selectSampleInRange = nullptr;
    delete selectAllErrors;            selectAllErrors = nullptr;
    delete selectPendingErrors;        selectPendingErrors = nullptr;
 
@@ -859,7 +806,6 @@ void P4d::afterUpdate()
 
    updateErrors();
    calcStateDuration();
-   sensorAlertCheck(lastSampleTime);
 
    if (mail && errorsPending)
       sendErrorMail();
@@ -893,7 +839,7 @@ void P4d::logReport()
 // Initialize Menu Structure
 //***************************************************************************
 
-int P4d::initMenu(bool updateParameters)
+int P4d::initMenu(bool updateParameterValues)
 {
    int status;
    Fs::MenuItem m;
@@ -947,7 +893,7 @@ int P4d::initMenu(bool updateParameters)
 
    tell(eloAlways, "Read %d menu items", count);
 
-   if (updateParameters)
+   if (updateParameterValues)
    {
       count = 0;
       tell(eloAlways, "Update menu parameters");
@@ -1401,27 +1347,6 @@ int P4d::calcStateDuration()
 }
 
 //***************************************************************************
-// Sensor Alert Check
-//***************************************************************************
-
-void P4d::sensorAlertCheck(time_t now)
-{
-   tableSensorAlert->clear();
-   tableSensorAlert->setValue("KIND", "M");
-
-   // iterate over all alert roules ..
-
-   for (int f = selectSensorAlerts->find(); f; f = selectSensorAlerts->fetch())
-   {
-      alertMailBody = "";
-      alertMailSubject = "";
-      performAlertCheck(tableSensorAlert->getRow(), now, 0);
-   }
-
-   selectSensorAlerts->freeResult();
-}
-
-//***************************************************************************
 // Perform Login
 //***************************************************************************
 
@@ -1439,291 +1364,6 @@ int P4d::performLogin(json_t* oObject)
 }
 
 //***************************************************************************
-// Perform Alert Check
-//***************************************************************************
-
-int P4d::performAlertCheck(cDbRow* alertRow, time_t now, int recurse, int force)
-{
-   int alert = 0;
-
-   // data from alert row
-
-   int addr = alertRow->getIntValue("ADDRESS");
-   const char* type = alertRow->getStrValue("TYPE");
-
-   int id = alertRow->getIntValue("ID");
-   int lgop = alertRow->getIntValue("LGOP");
-   time_t lastAlert = alertRow->getIntValue("LASTALERT");
-   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
-
-   int minIsNull = alertRow->getValue("MIN")->isNull();
-   int maxIsNull = alertRow->getValue("MAX")->isNull();
-   int min = alertRow->getIntValue("MIN");
-   int max = alertRow->getIntValue("MAX");
-
-   int range = alertRow->getIntValue("RANGEM");
-   int delta = alertRow->getIntValue("DELTA");
-
-   // lookup value facts
-
-   tableValueFacts->clear();
-   tableValueFacts->setValue("ADDRESS", addr);
-   tableValueFacts->setValue("TYPE", type);
-
-   // lookup samples
-
-   tableSamples->clear();
-   tableSamples->setValue("ADDRESS", addr);
-   tableSamples->setValue("TYPE", type);
-   tableSamples->setValue("AGGREGATE", "S");
-   tableSamples->setValue("TIME", now);
-
-   if (!tableSamples->find() || !tableValueFacts->find())
-   {
-      tell(eloAlways, "Info: Can't perform sensor check for %s/%d '%s'", type, addr, l2pTime(now).c_str());
-      return 0;
-   }
-
-   // data from samples and value facts
-
-   double value = tableSamples->getFloatValue("VALUE");
-
-   const char* title = tableValueFacts->getStrValue("TITLE");
-   const char* unit = tableValueFacts->getStrValue("UNIT");
-
-   // -------------------------------
-   // check min / max threshold
-
-   if (!minIsNull || !maxIsNull)
-   {
-      if (force || (!minIsNull && value < min) || (!maxIsNull && value > max))
-      {
-         tell(eloAlways, "%d) Alert for sensor %s/0x%x, value %.2f not in range (%d - %d)",
-              id, type, addr, value, min, max);
-
-         // max one alert mail per maxRepeat [minutes]
-
-         if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
-         {
-            alert = 1;
-            add2AlertMail(alertRow, title, value, unit);
-         }
-      }
-   }
-
-   // -------------------------------
-   // check range delta
-
-   if (range && delta)
-   {
-      // select value of this sensor around 'time = (now - range)'
-
-      time_t rangeStartAt = time(0) - range*tmeSecondsPerMinute;
-      time_t rangeEndAt = rangeStartAt + interval;
-
-      tableSamples->clear();
-      tableSamples->setValue("ADDRESS", addr);
-      tableSamples->setValue("TYPE", type);
-      tableSamples->setValue("AGGREGATE", "S");
-      tableSamples->setValue("TIME", rangeStartAt);
-      rangeEnd.setValue(rangeEndAt);
-
-      if (selectSampleInRange->find())
-      {
-         double oldValue = tableSamples->getFloatValue("VALUE");
-
-         if (force || labs(value - oldValue) > delta)
-         {
-            tell(eloAlways, "%d) Alert for sensor %s/0x%x , value %.2f changed more than %d in %d minutes",
-                 id, type, addr, value, delta, range);
-
-            // max one alert mail per maxRepeat [minutes]
-
-            if (force || !lastAlert || lastAlert < time(0)- maxRepeat * tmeSecondsPerMinute)
-            {
-               alert = 1;
-               add2AlertMail(alertRow, title, value, unit);
-            }
-         }
-      }
-
-      selectSampleInRange->freeResult();
-      tableSamples->reset();
-   }
-
-   // ---------------------------
-   // Check sub rules recursive
-
-   if (alertRow->getIntValue("SUBID") > 0)
-   {
-      if (recurse > 50)
-      {
-         tell(eloAlways, "Info: Aborting recursion after 50 steps, seems to be a config error!");
-      }
-      else
-      {
-         tableSensorAlert->clear();
-         tableSensorAlert->setValue("ID", alertRow->getIntValue("SUBID"));
-
-         if (tableSensorAlert->find())
-         {
-            int sAlert = performAlertCheck(tableSensorAlert->getRow(), now, recurse+1);
-
-            switch (lgop)
-            {
-               case loAnd:    alert = alert &&  sAlert; break;
-               case loOr:     alert = alert ||  sAlert; break;
-               case loAndNot: alert = alert && !sAlert; break;
-               case loOrNot:  alert = alert || !sAlert; break;
-            }
-         }
-      }
-   }
-
-   // ---------------------------------
-   // update master row and send mail
-
-   if (alert && !recurse)
-   {
-      tableSensorAlert->clear();
-      tableSensorAlert->setValue("ID", id);
-
-      if (tableSensorAlert->find())
-      {
-         if (!force)
-         {
-            tableSensorAlert->setValue("LASTALERT", time(0));
-            tableSensorAlert->update();
-         }
-
-         sendAlertMail(tableSensorAlert->getStrValue("MADDRESS"));
-      }
-   }
-
-   return alert;
-}
-
-//***************************************************************************
-// Send Mail
-//***************************************************************************
-
-int P4d::sendAlertMail(const char* to)
-{
-   // check
-
-   if (isEmpty(to) || isEmpty(mailScript))
-      return done;
-
-   if (alertMailBody.empty())
-      alertMailBody = "- undefined -";
-
-   char* html = 0;
-
-   alertMailBody = strReplace("\n", "<br/>\n", alertMailBody);
-
-   const char* htmlHead =
-      "<head>\n"
-      "  <style type=\"text/css\">\n"
-      "    caption { background: #095BA6; font-family: Arial Narrow; color: #fff; font-size: 18px; }\n"
-      "  </style>\n"
-      "</head>\n";
-
-   asprintf(&html,
-            "<html>\n"
-            " %s"
-            " <body>\n"
-            "  %s\n"
-            " </body>\n"
-            "</html>\n",
-            htmlHead, alertMailBody.c_str());
-
-   alertMailBody = html;
-   free(html);
-
-   // send mail
-
-   return sendMail(to, alertMailSubject.c_str(), alertMailBody.c_str(), "text/html");
-}
-
-//***************************************************************************
-// Send Mail
-//***************************************************************************
-
-int P4d::add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit)
-{
-   char* sensor = 0;
-
-   std::string subject = alertRow->getStrValue("MSUBJECT");
-   std::string body = alertRow->getStrValue("MBODY");
-   int addr = alertRow->getIntValue("ADDRESS");
-   const char* type = alertRow->getStrValue("TYPE");
-
-   int min = alertRow->getIntValue("MIN");
-   int max = alertRow->getIntValue("MAX");
-   int range = alertRow->getIntValue("RANGEM");
-   int delta = alertRow->getIntValue("DELTA");
-   int maxRepeat = alertRow->getIntValue("MAXREPEAT");
-   double minv {0};
-   double maxv {0};
-
-   tablePeaks->clear();
-   tablePeaks->setValue("ADDRESS", alertRow->getIntValue("ADDRESS"));
-   tablePeaks->setValue("TYPE", alertRow->getStrValue("TYPE"));
-
-   if (tablePeaks->find())
-   {
-      minv = tablePeaks->getFloatValue("MIN");
-      maxv = tablePeaks->getFloatValue("MAX");
-   }
-
-   tablePeaks->reset();
-
-   if (!body.length())
-      body = "- undefined -";
-
-   // prepare
-
-   asprintf(&sensor, "%s/0x%x", type, addr);
-
-   // templating
-
-   subject = strReplace("%sensorid%", sensor, subject);
-   subject = strReplace("%value%", value, subject);
-   subject = strReplace("%unit%", unit, subject);
-   subject = strReplace("%title%", title, subject);
-   subject = strReplace("%min%", (long)min, subject);
-   subject = strReplace("%max%", (long)max, subject);
-   subject = strReplace("%range%", (long)range, subject);
-   subject = strReplace("%delta%", (long)delta, subject);
-   subject = strReplace("%time%", l2pTime(time(0)).c_str(), subject);
-   subject = strReplace("%repeat%", (long)maxRepeat, subject);
-   subject = strReplace("%weburl%", webUrl, subject);
-   subject = strReplace("%minv%", minv, subject);
-   subject = strReplace("%maxv%", maxv, subject);
-
-   body = strReplace("%sensorid%", sensor, body);
-   body = strReplace("%value%", value, body);
-   body = strReplace("%unit%", unit, body);
-   body = strReplace("%title%", title, body);
-   body = strReplace("%min%", (long)min, body);
-   body = strReplace("%max%", (long)max, body);
-   body = strReplace("%range%", (long)range, body);
-   body = strReplace("%delta%", (long)delta, body);
-   body = strReplace("%time%", l2pTime(time(0)).c_str(), body);
-   body = strReplace("%repeat%", (long)maxRepeat, body);
-   body = strReplace("%weburl%", webUrl, body);
-   body = strReplace("%minv%", minv, body);
-   body = strReplace("%maxv%", maxv, body);
-
-   alertMailSubject += std::string(" ") + subject;
-   alertMailBody += std::string("\n") + body;
-
-   free(sensor);
-
-   return success;
-}
-
-//***************************************************************************
 // Dispatch Special Request
 //***************************************************************************
 
@@ -1733,15 +1373,13 @@ int P4d::dispatchSpecialRequest(Event event, json_t* oObject, long client)
 
    switch (event)
    {
-      case evInitTables:        status = performInitTables(oObject, client);       break;
-      case evUpdateTimeRanges:  status = performUpdateTimeRanges(oObject, client); break;
+      // case evInitTables:        status = performInitTables(oObject, client);       break;
+      // case evUpdateTimeRanges:  status = performUpdateTimeRanges(oObject, client); break;
       case evPellets:           status = performPellets(oObject, client);          break;
       case evPelletsAdd:        status = performPelletsAdd(oObject, client);       break;
-      case evStoreAlerts:       status = storeAlerts(oObject, client);             break;
       case evParEditRequest:    status = performParEditRequest(oObject, client);   break;
       case evParStore:          status = performParStore(oObject, client);         break;
       case evMenu:              status = performMenu(oObject, client);             break;
-      case evAlerts:            status = performAlerts(oObject, client);           break;
       case evErrors:            status = performErrors(client);                    break;
       default:                  return ignore;
    }
@@ -1760,8 +1398,8 @@ bool P4d::onCheckRights(long client, Event event, uint rights)
       case evMenu:                return rights & urView;
       case evParEditRequest:      return rights & urFullControl;
       case evParStore:            return rights & urFullControl;
-      case evInitTables:          return rights & urSettings;
-      case evUpdateTimeRanges:    return rights & urFullControl;
+         // case evInitTables:          return rights & urSettings;
+         // case evUpdateTimeRanges:    return rights & urFullControl;
       case evPellets:             return rights & urControl;
       case evPelletsAdd:          return rights & urFullControl;
       case evErrors:              return rights & urView;
@@ -1769,34 +1407,6 @@ bool P4d::onCheckRights(long client, Event event, uint rights)
    }
 
    return false;
-}
-
-//***************************************************************************
-// Perform Init Tables
-//***************************************************************************
-
-int P4d::performInitTables(json_t* oObject, long client)
-{
-   const char* action = getStringFromJson(oObject, "action");
-
-   if (isEmpty(action))
-      return replyResult(fail, "missing action", client);
-
-   if (strcmp(action, "valuefacts") == 0)
-   {
-      initValueFacts();
-      updateTimeRangeData();
-   }
-   else if (strcmp(action, "menu") == 0)
-   {
-      initMenu();
-   }
-   else if (strcmp(action, "menu-force") == 0)
-   {
-      initMenu(true);
-   }
-
-   return replyResult(success, "... init abgeschlossen!", client);
 }
 
 //***************************************************************************
@@ -1929,6 +1539,60 @@ int P4d::performPelletsAdd(json_t* oObject, long client)
 }
 
 //***************************************************************************
+// Commands 2 Json
+//***************************************************************************
+
+int P4d::commands2Json(json_t* obj)
+{
+   Daemon::commands2Json(obj);
+
+   json_t* jCommand = json_object();
+   json_array_append_new(obj, jCommand);
+   json_object_set_new(jCommand, "title", json_string("Init Sensoren"));
+   json_object_set_new(jCommand, "cmd", json_string("initsensors"));
+   json_object_set_new(jCommand, "description", json_string("Initialisieren der S-3200 Parameter"));
+
+   jCommand = json_object();
+   json_array_append_new(obj, jCommand);
+   json_object_set_new(jCommand, "title", json_string("Zeiten aktualisieren"));
+   json_object_set_new(jCommand, "cmd", json_string("inittimes"));
+   json_object_set_new(jCommand, "description", json_string("Übernehmen der Schaltzeiten (wenn sie an der Hizung angepasst wurden)"));
+
+   jCommand = json_object();
+   json_array_append_new(obj, jCommand);
+   json_object_set_new(jCommand, "title", json_string("Init Service Menü"));
+   json_object_set_new(jCommand, "cmd", json_string("initmenu"));
+   json_object_set_new(jCommand, "description", json_string("Initialisieren der S-3200 Menü-Struktur"));
+
+   return done;
+}
+
+//***************************************************************************
+// Perform Command
+//***************************************************************************
+
+int P4d::performCommand(json_t* obj, long client)
+{
+   int status = Daemon::performCommand(obj, client);
+
+   if (status == success)
+      return done;
+
+   std::string what = getStringFromJson(obj, "what");
+
+   if (what == "initsensors")
+      initValueFacts();
+   else if (what == "inittimes")
+      updateTimeRangeData();
+   else if (what == "initmenu")
+      initMenu();  // initMenu(true);
+   else
+      return replyResult(fail, "unexpected command", client);
+
+   return replyResult(success, "... init abgeschlossen!", client);
+}
+
+//***************************************************************************
 // Perform WS Error Data Request
 //***************************************************************************
 
@@ -1966,38 +1630,6 @@ int P4d::performErrors(long client)
    pushOutMessage(oJson, "errors", client);
 
    return done;
-}
-int P4d::performAlertTestMail(int id, long client)
-{
-   tell(eloDetail, "Test mail for alert (%d) requested", id);
-
-   if (isEmpty(mailScript))
-      return replyResult(fail, "missing mail script", client);
-
-   if (!fileExists(mailScript))
-      return replyResult(fail, "mail script not found", client);
-
-   if (!selectMaxTime->find())
-      tell(eloAlways, "Warning: Got no result by 'select max(time) from samples'");
-
-   time_t  last = tableSamples->getTimeValue("TIME");
-   selectMaxTime->freeResult();
-
-   tableSensorAlert->clear();
-   tableSensorAlert->setValue("ID", id);
-
-   if (!tableSensorAlert->find())
-      return replyResult(fail, "requested alert ID not found", client);
-
-   alertMailBody = "";
-   alertMailSubject = "";
-
-   if (!performAlertCheck(tableSensorAlert->getRow(), last, 0, yes/*force*/))
-      return replyResult(fail, "send failed", client);
-
-   tableSensorAlert->reset();
-
-   return replyResult(success, "mail sended", client);
 }
 
 //***************************************************************************
@@ -2447,127 +2079,6 @@ int P4d::performMenu(json_t* oObject, long client)
    pushOutMessage(oJson, "menu", client);
 
    return done;
-}
-
-//***************************************************************************
-// Perform WS Sensor Alert Request
-//***************************************************************************
-
-int P4d::performAlerts(json_t* oObject, long client)
-{
-   json_t* oArray = json_array();
-
-   tableSensorAlert->clear();
-
-   for (int f = selectAllSensorAlerts->find(); f; f = selectAllSensorAlerts->fetch())
-   {
-      json_t* oData = json_object();
-      json_array_append_new(oArray, oData);
-
-      json_object_set_new(oData, "id", json_integer(tableSensorAlert->getIntValue("ID")));
-      json_object_set_new(oData, "kind", json_string(tableSensorAlert->getStrValue("ID")));
-      json_object_set_new(oData, "subid", json_integer(tableSensorAlert->getIntValue("SUBID")));
-      json_object_set_new(oData, "lgop", json_integer(tableSensorAlert->getIntValue("LGOP")));
-      json_object_set_new(oData, "type", json_string(tableSensorAlert->getStrValue("TYPE")));
-      json_object_set_new(oData, "address", json_integer(tableSensorAlert->getIntValue("ADDRESS")));
-      json_object_set_new(oData, "state", json_string(tableSensorAlert->getStrValue("STATE")));
-      json_object_set_new(oData, "min", json_integer(tableSensorAlert->getIntValue("MIN")));
-      json_object_set_new(oData, "max", json_integer(tableSensorAlert->getIntValue("MAX")));
-      json_object_set_new(oData, "rangem", json_integer(tableSensorAlert->getIntValue("RANGEM")));
-      json_object_set_new(oData, "delta", json_integer(tableSensorAlert->getIntValue("DELTA")));
-      json_object_set_new(oData, "maddress", json_string(tableSensorAlert->getStrValue("MADDRESS")));
-      json_object_set_new(oData, "msubject", json_string(tableSensorAlert->getStrValue("MSUBJECT")));
-      json_object_set_new(oData, "mbody", json_string(tableSensorAlert->getStrValue("MBODY")));
-      json_object_set_new(oData, "maxrepeat", json_integer(tableSensorAlert->getIntValue("MAXREPEAT")));
-
-      //json_object_set_new(oData, "lastalert", json_integer(0));
-   }
-
-   selectAllSensorAlerts->freeResult();
-   pushOutMessage(oArray, "alerts", client);
-
-   return done;
-}
-
-//***************************************************************************
-// Store Sensor Alerts
-//***************************************************************************
-
-int P4d::storeAlerts(json_t* oObject, long client)
-{
-   const char* action = getStringFromJson(oObject, "action", "");
-
-   if (strcmp(action, "delete") == 0)
-   {
-      int alertid = getIntFromJson(oObject, "alertid", na);
-
-      tableSensorAlert->deleteWhere("id = %d", alertid);
-
-      performAlerts(0, client);
-      replyResult(success, "Sensor Alert gelöscht", client);
-   }
-
-   else if (strcmp(action, "store") == 0)
-   {
-      json_t* array = json_object_get(oObject, "alerts");
-      size_t index {0};
-      json_t* jObj {nullptr};
-
-      json_array_foreach(array, index, jObj)
-      {
-         int id = getIntFromJson(jObj, "id", na);
-
-         tableSensorAlert->clear();
-
-         if (id != na)
-         {
-            tableSensorAlert->setValue("ID", id);
-
-            if (!tableSensorAlert->find())
-               continue;
-         }
-
-         tableSensorAlert->clearChanged();
-         tableSensorAlert->setValue("STATE", getStringFromJson(jObj, "state"));
-         tableSensorAlert->setValue("MAXREPEAT", getIntFromJson(jObj, "maxrepeat"));
-
-         tableSensorAlert->setValue("ADDRESS", getIntFromJson(jObj, "address"));
-         tableSensorAlert->setValue("TYPE", getStringFromJson(jObj, "type"));
-         tableSensorAlert->setValue("MIN", getIntFromJson(jObj, "min"));
-         tableSensorAlert->setValue("MAX", getIntFromJson(jObj, "max"));
-         tableSensorAlert->setValue("DELTA", getIntFromJson(jObj, "delta"));
-         tableSensorAlert->setValue("RANGEM", getIntFromJson(jObj, "rangem"));
-         tableSensorAlert->setValue("MADDRESS", getStringFromJson(jObj, "maddress"));
-         tableSensorAlert->setValue("MSUBJECT", getStringFromJson(jObj, "msubject"));
-         tableSensorAlert->setValue("MBODY", getStringFromJson(jObj, "mbody"));
-
-         if (id == na)
-            tableSensorAlert->insert();
-         else if (tableSensorAlert->getChanges())
-            tableSensorAlert->update();
-      }
-
-      performAlerts(0, client);
-      replyResult(success, "Konfiguration gespeichert", client);
-   }
-
-   return success;
-}
-
-//***************************************************************************
-// Perform Update TimeRanges
-//***************************************************************************
-
-int P4d::performUpdateTimeRanges(json_t* oObject, long client)
-{
-   int parent = getIntFromJson(oObject, "parent");
-   updateTimeRangeData();
-   replyResult(success, "... done", client);
-
-   json_t* oJson = json_object();
-   json_object_set_new(oJson, "parent", json_integer(parent));
-
-   return performMenu(oJson, client);
 }
 
 //***************************************************************************

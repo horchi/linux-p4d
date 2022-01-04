@@ -89,6 +89,14 @@ class Daemon : public cWebInterface
          pinW1Power  = pinGpio10
       };
 
+      enum SensorOptions
+      {
+         soNone   = 0x00,
+         soSwitch = 0x01,
+         soDim    = 0x02,
+         soColor  = 0x04
+      };
+
       // object
 
       Daemon();
@@ -102,7 +110,7 @@ class Daemon : public cWebInterface
       static void downF(int aSignal) { shutdown = true; }
 
       int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit = "",
-                       const char* title = nullptr, int rights = 0, const char* choices = nullptr);
+                       const char* title = nullptr, int rights = 0, const char* choices = nullptr, SensorOptions options = soNone);
 
    protected:
 
@@ -192,6 +200,14 @@ class Daemon : public cWebInterface
          bool inRange(uint t) const { return (from <= t && to >= t); }
       };
 
+      enum LogicalOperator
+      {
+         loAnd,
+         loOr,
+         loAndNot,
+         loOrNot
+      };
+
       enum ConfigItemType
       {
          ctInteger = 0,
@@ -263,6 +279,12 @@ class Daemon : public cWebInterface
       void updateScriptSensors();
       virtual int doLoop()     { return done; }
       virtual void afterUpdate();
+
+      void sensorAlertCheck(time_t now);
+      int performAlertCheck(cDbRow* alertRow, time_t now, int recurse = 0, int force = no);
+      int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
+      int sendAlertMail(const char* to);
+
       virtual int process() { return done; }               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
       int performWebSocketPing();
@@ -343,7 +365,10 @@ class Daemon : public cWebInterface
       int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performGroups(long client);
-      int performSendMail(json_t* oObject, long client);
+      int performTestMail(json_t* oObject, long client);
+      int storeAlerts(json_t* oObject, long client);
+      int performAlerts(json_t* oObject, long client);
+      int performAlertTestMail(int id, long client);
 
       int performData(long client, const char* event = nullptr);
       int performChartData(json_t* oObject, long client);
@@ -360,8 +385,7 @@ class Daemon : public cWebInterface
       int performImageConfig(json_t* obj, long client);
       int performSchema(json_t* oObject, long client);
       int storeSchema(json_t* oObject, long client);
-      virtual int performReset(json_t* obj, long client);
-      virtual int performAlertTestMail(int id, long client) { return done; }
+      virtual int performCommand(json_t* obj, long client);
       virtual const char* getTextImage(const char* key, const char* text) { return nullptr; }
 
       int widgetTypes2Json(json_t* obj);
@@ -374,6 +398,7 @@ class Daemon : public cWebInterface
       int valueFacts2Json(json_t* obj, bool filterActive);
       int dashboards2Json(json_t* obj);
       int groups2Json(json_t* obj);
+      virtual int commands2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
       int sensor2Json(json_t* obj, const char* type, uint address);
       int images2Json(json_t* obj);
@@ -416,6 +441,7 @@ class Daemon : public cWebInterface
       cDbTable* tableValueTypes {nullptr};
       cDbTable* tableConfig {nullptr};
       cDbTable* tableScripts {nullptr};
+      cDbTable* tableSensorAlert {nullptr};
       cDbTable* tableUsers {nullptr};
       cDbTable* tableGroups {nullptr};
       cDbTable* tableDashboards {nullptr};
@@ -436,6 +462,10 @@ class Daemon : public cWebInterface
       cDbStatement* selectSamplesRange60 {nullptr};   // for chart
       cDbStatement* selectScriptByPath {nullptr};
       cDbStatement* selectScripts {nullptr};
+      cDbStatement* selectSensorAlerts {nullptr};
+      cDbStatement* selectAllSensorAlerts {nullptr};
+      cDbStatement* selectSampleInRange {nullptr};    // for alert check
+
       cDbStatement* selectDashboards {nullptr};
       cDbStatement* selectDashboardById {nullptr};
       cDbStatement* selectDashboardWidgetsFor {nullptr};
@@ -448,6 +478,7 @@ class Daemon : public cWebInterface
       cDbValue rangeTo;
       cDbValue avgValue;
       cDbValue maxValue;
+      cDbValue rangeEnd;
 
       time_t nextRefreshAt {0};
       time_t startedAt {0};

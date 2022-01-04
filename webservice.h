@@ -38,12 +38,11 @@ class cWebService
          evStoreUserConfig,
          evChangePasswd,
 
-         evReset,
+         evCommand,
          evGroups,
          evGroupConfig,
          evChartbookmarks,
          evStoreChartbookmarks,
-         evSendMail,
          evSyslog,
          evSystem,
          evForceRefresh,
@@ -58,8 +57,6 @@ class cWebService
          evMenu,
          evParEditRequest,
          evParStore,
-         evInitTables,
-         evUpdateTimeRanges,
          evPellets,
          evPelletsAdd,
 

@@ -50,6 +50,13 @@ function initPellets(pellets)
    }
 
    addRow(-1, new Date(), 0, 0, '', 0, 0, 0, false);
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 15);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 15);
+   };
 }
 
 function addRow(id, date, amount, price, comment, stokerHours, consumptionH, durationDays, sum, pData)

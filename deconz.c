@@ -225,7 +225,8 @@ int Deconz::processDevices(json_t* jData, std::string kind)
 
       tell(eloDebugDeconz, "Found '%s' %d with uuid '%s'", kind.c_str(), address, uuid);
 
-      const char* unit = "";
+      const char* unit{""};
+      int options {Daemon::soNone};
 
       if (kind == "sensor")
       {
@@ -240,8 +241,18 @@ int Deconz::processDevices(json_t* jData, std::string kind)
          else if (dzType == "ZHALightLevel")
             unit = "lx";
       }
+      else if (kind == "light")
+      {
+         options = Daemon::soSwitch;
 
-      daemon->addValueFact(address, type, 1, getStringFromJson(jItem, "name"), unit, ""/*title*/, cWebService::urControl);
+         if (strcasestr(dzType.c_str(), "color"))
+            options += Daemon::soColor + Daemon::soDim; // assume all color lights are dimmable
+         if (strcasestr(dzType.c_str(), "dim"))
+            options += Daemon::soDim;
+      }
+
+      daemon->addValueFact(address, type, 1, getStringFromJson(jItem, "name"), unit, ""/*title*/,
+                           cWebService::urControl, nullptr, (Daemon::SensorOptions)options);
 
       int battery = getIntByPath(jItem, "config/battery", -1);
 
@@ -258,9 +269,6 @@ int Deconz::processDevices(json_t* jData, std::string kind)
 
          if (kind == "sensor")
          {
-            if (getObjectByPath(jItem, "state/buttonevent"))
-               json_object_set_new(jsData, "state", json_integer(getIntByPath(jItem, "state/buttonevent")));
-
             if (getObjectByPath(jItem, "state/temperature"))
                json_object_set_new(jsData, "value", json_real(getIntByPath(jItem, "state/temperature")/100.0));
 
@@ -270,10 +278,13 @@ int Deconz::processDevices(json_t* jData, std::string kind)
             if (getObjectByPath(jItem, "state/humidity"))
                json_object_set_new(jsData, "value", json_real(getIntByPath(jItem, "state/humidity")/100.0));
 
-            if (getObjectByPath(jItem, "state/presence"))
-               json_object_set_new(jsData, "state", json_boolean(getBoolByPath(jItem, "state/presence")));
+            // if (getObjectByPath(jItem, "state/buttonevent"))
+            //    json_object_set_new(jsData, "btnevent", json_integer(getIntByPath(jItem, "state/buttonevent")));
+
+            // if (getObjectByPath(jItem, "state/presence"))
+            //    json_object_set_new(jsData, "presence", json_boolean(getBoolByPath(jItem, "state/presence")));
          }
-         else
+         else if (kind == "light")
          {
             json_object_set_new(jsData, "state", json_boolean(getBoolByPath(jItem, "state/on")));
 
@@ -281,15 +292,20 @@ int Deconz::processDevices(json_t* jData, std::string kind)
                json_object_set_new(jsData, "brightness", json_integer(getIntByPath(jItem, "state/bri", na)));
          }
 
-         char* p = json_dumps(jsData, JSON_REAL_PRECISION(4));
-
+         if (dzType != "ZHASwitch")  // don't trigger switches !!!
          {
-            cMyMutexLock lock(&messagesInMutex);
-            messagesIn.push(p);
+            char* p = json_dumps(jsData, JSON_REAL_PRECISION(4));
+
+            {
+               cMyMutexLock lock(&messagesInMutex);
+               messagesIn.push(p);
+            }
+
+            free(p);
          }
 
          json_decref(jsData);
-         free(p);
+
       }
 
       free(type);
@@ -332,7 +348,7 @@ int Deconz::toggle(const char* type, uint address, bool state, int brightness, i
 
    if (brightness != na && state)
    {
-      int dim = (int)((256 / 100.0) * brightness);
+      int dim = (int)((255 / 100.0) * brightness);
       json_object_set_new(jObj, "bri", json_integer(dim));
    }
 
@@ -397,7 +413,7 @@ int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
       return fail;
    }
 
-   tell(eloDeconz, "-> (DECONZ) '%s' '%s' [%s]", url, payload, data.c_str());
+   tell(eloDeconz, "-> (DECONZ) put '%s' '%s'; result [%s]", url, payload, data.c_str());
    free(url);
 
    json_error_t error;
@@ -680,7 +696,7 @@ int Deconz::atInMessage(const char* data)
    if (resource == "sensors")
    {
       if (getObjectByPath(obj, "state/buttonevent"))
-         json_object_set_new(jData, "state", json_integer(getIntByPath(obj, "state/buttonevent")));
+         json_object_set_new(jData, "btnevent", json_integer(getIntByPath(obj, "state/buttonevent")));
 
       if (getObjectByPath(obj, "state/temperature"))
          json_object_set_new(jData, "value", json_real(getIntByPath(obj, "state/temperature")/100.0));
@@ -692,7 +708,7 @@ int Deconz::atInMessage(const char* data)
          json_object_set_new(jData, "value", json_real(getIntByPath(obj, "state/humidity")/100.0));
 
       if (getObjectByPath(obj, "state/presence"))
-         json_object_set_new(jData, "state", json_boolean(getBoolByPath(obj, "state/presence")));
+         json_object_set_new(jData, "presence", json_boolean(getBoolByPath(obj, "state/presence")));
    }
    else
    {

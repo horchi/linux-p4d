@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.18"
-#define VERSION_DATE "31.12.2021"
+#define _VERSION     "0.9.20"
+#define VERSION_DATE "04.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2022-01-02:  version 0.9.20
+  - bugfix: Fixed config of sensor alter check
+  - bugfix: Fixed chart view
+  - change: Exclude weather data from db store
+  - change: Moved init commands to separate setup page
 
 2021-12-31:  version 0.9.18
   - change: Exclude weather data from state mail
