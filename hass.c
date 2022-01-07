@@ -17,6 +17,12 @@
 
 int Daemon::mqttHaPublish(SensorData& sensor, bool forceConfig)
 {
+   if (isEmpty(mqttUrl))
+      return done;
+
+   if (mqttCheckConnection() != success)
+      return fail;
+
    if (mqttInterfaceStyle == misGroupedTopic)
    {
       if (!groups[sensor.group].oHaJson)
@@ -62,13 +68,6 @@ int Daemon::mqttHaPublish(SensorData& sensor, bool forceConfig)
 
 int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 {
-   // check/prepare reader/writer connection
-
-   if (isEmpty(mqttUrl))
-      return done;
-
-   mqttCheckConnection();
-
    // check if state topic already exists
 
    int status {success};
@@ -195,6 +194,30 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 }
 
 //***************************************************************************
+// MQTT Write (to Home Automation Systems)
+//***************************************************************************
+
+int Daemon::mqttHaWrite(json_t* obj, uint groupid)
+{
+   std::string sDataTopic = mqttDataTopic;
+
+   // check/prepare connection
+
+   if (mqttCheckConnection() != success)
+      return fail;
+
+   char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
+
+   if (mqttInterfaceStyle == misGroupedTopic)
+      sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
+
+   int status = mqttWriter->write(sDataTopic.c_str(), message);
+   free(message);
+
+   return status;
+}
+
+//***************************************************************************
 // Perform MQTT Requests
 //   - check 'mqttHassCommandReader' for commands of a home automation
 //   - check 'mqttReader' for data from the W1 service and the arduino, etc ...
@@ -291,6 +314,8 @@ int Daemon::mqttDisconnect()
    delete mqttReader;            mqttReader = nullptr;
    delete mqttWriter;            mqttWriter = nullptr;
 
+   tell(eloMqtt, "Disconnected from MQTT");
+
    return done;
 }
 
@@ -300,7 +325,8 @@ int Daemon::mqttDisconnect()
 
 int Daemon::mqttCheckConnection()
 {
-   bool renonnectNeeded {false};
+   if (isEmpty(mqttUrl))
+      return done;
 
    if (!mqttReader)
       mqttReader = new Mqtt();
@@ -308,79 +334,50 @@ int Daemon::mqttCheckConnection()
    if (!mqttWriter)
       mqttWriter = new Mqtt();
 
-   if (!isEmpty(mqttUrl) && !mqttReader->isConnected())
-      renonnectNeeded = true;
-
-   if (!isEmpty(mqttUrl) && !mqttWriter->isConnected())
-      renonnectNeeded = true;
-
-   if (!renonnectNeeded)
+   if (mqttReader->isConnected() && mqttWriter->isConnected())
       return success;
 
    if (lastMqttConnectAt >= time(0) - 60)
       return fail;
 
+   if (lastMqttConnectAt)
+      tell(eloAlways, "Error: MQTT connection brocken, trying reconnect");
+
    lastMqttConnectAt = time(0);
 
-   if (!isEmpty(mqttUrl))
+   // connect reader
+
+   if (!mqttWriter->isConnected())
    {
-      if (!mqttWriter->isConnected())
+      if (mqttWriter->connect(mqttUrl, mqttUser, mqttPassword) != success)
       {
-         if (mqttWriter->connect(mqttUrl, mqttUser, mqttPassword) != success)
-            tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
-         else
-            tell(eloMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
+         tell(eloAlways, "Error: MQTT: Connecting publisher to '%s' failed", mqttUrl);
+         return fail;
       }
 
-      if (!mqttReader->isConnected())
-      {
-         if (mqttReader->connect(mqttUrl, mqttUser, mqttPassword) != success)
-         {
-            tell(eloAlways, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
-         }
-         else
-         {
-            mqttReader->subscribe(TARGET "2mqtt/light/+/set/#");
-            mqttReader->subscribe(TARGET "2mqtt/command/#");
-            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/command/#");
-            mqttReader->subscribe(TARGET "2mqtt/nodered/#");
-            tell(eloDetail, "MQTT: Connecting node-red subscriber to '%s' - '%s' succeeded", mqttUrl, TARGET "2mqtt/nodered/#");
+      tell(eloMqtt, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
+   }
 
-            for (const auto& t : mqttSensorTopics)
-            {
-               mqttReader->subscribe(t.c_str());
-               tell(eloDetail, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, t.c_str());
-            }
-         }
+   // connect writer
+
+   if (!mqttReader->isConnected())
+   {
+      if (mqttReader->connect(mqttUrl, mqttUser, mqttPassword) != success)
+      {
+         tell(eloAlways, "Error: MQTT: Connecting subscriber to '%s' failed", mqttUrl);
+         return fail;
+      }
+
+      tell(eloMqtt, "MQTT: Connecting subscriber to '%s' succeeded", mqttUrl);
+
+      for (const auto& t : mqttSensorTopics)
+      {
+         mqttReader->subscribe(t.c_str());
+         tell(eloMqtt, "MQTT: Connecting subscriber to '%s' - '%s' succeeded", mqttUrl, t.c_str());
       }
    }
 
    return success;
-}
-
-//***************************************************************************
-// MQTT Write (to Home Automation Systems)
-//***************************************************************************
-
-int Daemon::mqttHaWrite(json_t* obj, uint groupid)
-{
-   std::string sDataTopic = mqttDataTopic;
-
-   // check/prepare connection
-
-   if (mqttCheckConnection() != success)
-      return fail;
-
-   char* message = json_dumps(obj, JSON_REAL_PRECISION(4));
-   tell(eloMqtt, "Debug: JSON: [%s]", message);
-
-   if (mqttInterfaceStyle == misGroupedTopic)
-      sDataTopic = strReplace("<GROUP>", groups[groupid].name, sDataTopic);
-
-   int status = mqttWriter->write(sDataTopic.c_str(), message);
-   free(message);
-
-   return status;
 }
 
 //***************************************************************************

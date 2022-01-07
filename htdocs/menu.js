@@ -66,6 +66,11 @@ function initMenu(menu)
 
       menuButtons.appendChild(elem);
    }
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   };
 }
 
 function editMenuParameter(parameter)

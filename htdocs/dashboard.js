@@ -13,8 +13,8 @@ var widgetHeightBase = null;
 var weatherData = null;
 var wInterval = null;
 var actDashboard = -1;
-var gauge = null;
 var moseDownOn = { 'object' : null };
+var lightClickTimeout = null;
 
 const symbolColorDefault = '#ffffff';
 const symbolOnColorDefault = '#059eeb';
@@ -99,7 +99,7 @@ function initDashboard(update = false)
                                    );
    }
 
-   // additional setup elements
+   // additional elements in setup mode
 
    if (setupMode) {
       $('#dashboardMenu')
@@ -137,6 +137,8 @@ function initDashboard(update = false)
          updateWidget(allSensors[key], true, dashboards[actDashboard].widgets[key]);
       }
    }
+
+   initLightColorDialog();
 
    // calc container size
 
@@ -267,7 +269,7 @@ function initWidget(key, widget, fact)
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function() { titleClick(fact.type, fact.address, key); })
                     .css('user-select', 'none')
                     .html(title))
             .append($('<button></button>')
@@ -280,7 +282,29 @@ function initWidget(key, widget, fact)
                             .attr('id', 'widget' + fact.type + fact.address)
                             .attr('draggable', false)
                             .css('user-select', 'none'))
-                    .click(function() { toggleIo(fact.address, fact.type); }))
+                    .on('mousedown touchstart', {"fact" : fact}, function(e) {
+                       e.preventDefault();
+                       if ((e.which != 0 && e.which != 1) || $('#lightColorDiv').css('display') != 'none')
+                          return;
+                       if (fact.options & 0x04) {
+                          lightClickTimeout = setTimeout(function(e) {
+                             lightClickTimeout = null;
+                             showLightColorDialog(key);
+                          }, 400);
+                       } else
+                          toggleIo(fact.address, fact.type);
+                    })
+                    .on('mouseup mouseleave touchend', function(e) {
+                       e.stopPropagation();
+                       e.preventDefault();
+                       if ($('#lightColorDiv').css('display') != 'none')
+                          return;
+                       if (lightClickTimeout) {
+                          toggleIo(fact.address, fact.type);
+                          clearTimeout(lightClickTimeout);
+                          lightClickTimeout = null;
+                       }
+                    }))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
@@ -553,6 +577,8 @@ function initWidget(key, widget, fact)
             colorPlate: 'transparent'
          };
 
+         var gauge = null;
+
          if (radial)
             gauge = new RadialGauge(options);
          else
@@ -715,6 +741,72 @@ function initWidget(key, widget, fact)
    }
 }
 
+function initLightColorDialog()
+{
+   $("#container").append($('<div></div>)')
+                          .attr('id', 'lightColorDiv')
+                          .addClass('rounded-border lightColorDiv')
+                          .append($('<input></input>)')
+                                  .attr('id', 'lightColor')
+                                  .addClass('lightColor')
+                                  .attr('type', 'text'))
+                          .append($('<button></button>)')
+                                  .html('Ok')
+                                  .click(function() { $('#lightColorDiv').css('display', 'none'); }))
+                         );
+
+   var options = {
+      'cssClass' : 'lightColor',
+      'layout' :  'block',
+      'format' : 'hsv',
+      'sliders' : 'wsvp',
+      'autoResize' : false
+   }
+
+   $('#lightColor').wheelColorPicker(options);
+   $('#lightColorDiv').css('display', 'none');
+
+   $('#lightColor').on('sliderup', function(e) {
+      if (!$(this).data('key'))
+         return;
+
+      var fact = valueFacts[$(this).data('key')];
+      var hue = parseInt($(this).wheelColorPicker('getColor').h * 360);
+      var sat = parseInt($(this).wheelColorPicker('getColor').s * 100);
+      var bri = parseInt($(this).wheelColorPicker('getColor').v * 100);
+
+      console.log("color of " + fact.address + " changed to '" + hue + "' / " + bri + '% / ' + sat + '%');
+
+      socket.send({ "event": "toggleio", "object":
+                    {  'action': 'color',
+                       'type': fact.type,
+                       'address': fact.address,
+                       'hue': hue,
+                       'saturation' : sat,
+                       'bri': bri
+                    }});
+   });
+
+   $('#container').on('mouseup', function(e) {
+      e.preventDefault();
+      if ($(e.target).attr('id') != 'lightColorDiv' && !$('#lightColorDiv').has(e.target).length)
+         $('#lightColorDiv').css('display', 'none');
+   });
+}
+
+function showLightColorDialog(key)
+{
+   var posX = ($('#container').innerWidth() - $('#lightColorDiv').outerWidth()) / 2;
+   var posY = ($('#container').innerHeight() - $('#lightColorDiv').outerHeight()) / 2;
+   var sensor = allSensors[key];
+
+   $('#lightColor').data('key', key);
+   $('#lightColorDiv').css('left', posX + 'px');
+   $('#lightColorDiv').css('top', posY + 'px');
+   $('#lightColorDiv').css('display', 'block');
+   $('#lightColor').wheelColorPicker('setColor', { 'h': sensor.hue/360.0, 's': sensor.sat/100.0, 'v': sensor.score/100.0 });
+}
+
 function getTimeHtml()
 {
    var now = new Date();
@@ -775,10 +867,7 @@ function weatherForecast()
    $('#container').append(form);
 
    var showExtras = $(form).outerWidth() > 580;
-   // console.log("outerWidth(): " + $(form).outerWidth());
-
-   var html = '';
-   html += '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
+   var html = '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
 
    for (var i = 0; i < weatherData.forecasts.length; i++) {
       var weather = weatherData.forecasts[i];
@@ -791,11 +880,12 @@ function weatherForecast()
          html += '<div class="rounded-border" style="background-color:#2f2f2fd1;">' + day + '</div>';
       }
 
-      html += '<div class="rounded-border">';
+      var tempColor = weather.temp < 0 ? 'blue' : (weather.temp > 20 ? 'red' : 'white');
 
+      html += '<div class="rounded-border">';
       html += '<span>' + time + '</span>';
       html += '<span><img src="' + wIconRef + '"></img></span>';
-      html += '<span class="mdi mdi-thermometer"> ' + weather.temp + ' °C</span>';
+      html += '<span class="mdi mdi-thermometer" style="color:' + tempColor + ';"> ' + weather.temp + ' °C</span>';
       if (showExtras)
          html += '<span> (gefühlt ' + weather.tempfeels + ' °C)</span>';
       html += '<span class="mdi mdi-water-percent"> ' + weather.humidity + ' %</span>';
@@ -897,8 +987,13 @@ function updateWidget(sensor, refresh, widget)
       $('#div_'+key).css('background-color', sensor.options == 3 && sensor.mode == 'manual' ? '#a27373' : '');
 
       widget.colorOn = widget.colorOn == null ? symbolOnColorDefault : widget.colorOn;
+
+      if (sensor.hue)
+         widget.colorOn = tinycolor({ 'h': sensor.hue, 's': sensor.sat, 'v': sensor.score }).toHslString();
+
       widget.color = widget.color == null ? symbolColorDefault : widget.color;
 
+      // console.log("set color to: : ", widget.colorOn);
       $("#button" + fact.type + fact.address).css('color', state ? widget.colorOn : widget.color);
 
       if (widget.widgettype == 9) {
@@ -1159,8 +1254,8 @@ function toggleChartDialog(type, address)
 {
    var dialog = document.querySelector('dialog');
    dialog.style.position = 'fixed';
-
    console.log("chart for " + type + address);
+
    if (type != "" && !dialog.hasAttribute('open')) {
       var canvas = document.querySelector("#chartDialog");
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);

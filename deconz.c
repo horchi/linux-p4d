@@ -289,7 +289,22 @@ int Deconz::processDevices(json_t* jData, std::string kind)
             json_object_set_new(jsData, "state", json_boolean(getBoolByPath(jItem, "state/on")));
 
             if (getObjectByPath(jItem, "state/bri"))
-               json_object_set_new(jsData, "brightness", json_integer(getIntByPath(jItem, "state/bri", na)));
+            {
+               int bri = getIntByPath(jItem, "state/bri") / 255.0 * 100.0;
+               json_object_set_new(jsData, "bri", json_integer(bri));
+            }
+
+            if (getObjectByPath(jItem, "state/hue"))
+            {
+               int hue = getIntByPath(jItem, "state/hue") / 65535.0 * 360.0;
+               json_object_set_new(jsData, "hue", json_integer(hue));
+            }
+
+            if (getObjectByPath(jItem, "state/sat"))
+            {
+               int sat = getIntByPath(jItem, "state/sat") / 255.0 * 100.0;
+               json_object_set_new(jsData, "sat", json_integer(sat));
+            }
          }
 
          if (dzType != "ZHASwitch")  // don't trigger switches !!!
@@ -318,7 +333,7 @@ int Deconz::processDevices(json_t* jData, std::string kind)
 // Toggle
 //***************************************************************************
 
-int Deconz::toggle(const char* type, uint address, bool state, int brightness, int transitiontime)
+int Deconz::toggle(const char* type, uint address, bool state, int bri, int transitiontime)
 {
    json_t* jArray {nullptr};
    std::string result;
@@ -337,7 +352,7 @@ int Deconz::toggle(const char* type, uint address, bool state, int brightness, i
       }
    }
 
-   if (brightness != na && brightness < 5)
+   if (bri != na && bri < 5)
       state = false;
 
    json_t* jObj = json_object();
@@ -346,9 +361,9 @@ int Deconz::toggle(const char* type, uint address, bool state, int brightness, i
    if (transitiontime != na)
       json_object_set_new(jObj, "transitiontime", json_integer(transitiontime));
 
-   if (brightness != na && state)
+   if (bri != na && state)
    {
-      int dim = (int)((255 / 100.0) * brightness);
+      int dim = (int)((255 / 100.0) * bri);
       json_object_set_new(jObj, "bri", json_integer(dim));
    }
 
@@ -363,6 +378,52 @@ int Deconz::toggle(const char* type, uint address, bool state, int brightness, i
    json_decref(jArray);
 
    return status;
+}
+
+//***************************************************************************
+// Color
+//***************************************************************************
+
+int Deconz::color(const char* type, uint address, int hue, int sat, int bri)
+{
+   json_t* jArray {nullptr};
+   std::string result;
+   std::string uuid;
+
+   {
+      cMyMutexLock lock(&mapsMutex);
+
+      for (const auto& light : lights)
+      {
+         if (light.second == address)
+         {
+            uuid = light.first;
+            break;
+         }
+      }
+   }
+
+   bri = (int)((255 / 100.0) * bri);
+   sat = (int)((255 / 100.0) * sat);
+   hue = (65535 / 360) * hue;
+
+   json_t* jObj = json_object();
+   json_object_set_new(jObj, "on", json_boolean(true));
+   json_object_set_new(jObj, "hue", json_integer(hue));
+   json_object_set_new(jObj, "sat", json_integer(sat));
+   json_object_set_new(jObj, "bri", json_integer(bri));
+
+   int status {success};
+
+   if ((status = put(jArray, uuid.c_str(), jObj)) == success)
+      status = checkResult(jArray);
+
+   if (status == success)
+      tell(eloDeconz, "Changed color of %s to %d", uuid.c_str(), hue);
+
+   json_decref(jArray);
+
+   return success;
 }
 
 //***************************************************************************
@@ -632,6 +693,7 @@ void* Deconz::syncFct(void* user)
 int Deconz::atInMessage(const char* data)
 {
    // {"e":"changed","id":"3","r":"lights","state":{"alert":null,"bri":80,"on":true,"reachable":true},"t":"event","uniqueid":"00:0b:57:ff:fe:d5:39:21-01"}
+   // {"e":"changed","id":"26","r":"lights","state":{"alert":null,"bri":244,"colormode":"hs","ct":500,"effect":"none","hue":64581,"on":true,"reachable":true,"sat":18,"xy":[0.3274,0.3218]},"t":"event","uniqueid":"00:12:4b:00:1e:d0:03:dd-0b"}
    // {"e":"changed","id":"31","r":"sensors","state":{"buttonevent":1002,"lastupdated":"2021-12-15T18:30:58.779"},"t":"event","uniqueid":"00:15:8d:00:02:13:87:2c-01-0012"}
    // {"e":"changed","id":"33","r":"sensors","state":{"lastupdated":"2021-12-16T18:34:17.872","presence":true},"t":"event","uniqueid":"00:15:8d:00:02:57:b7:41-01-0406"}
 
@@ -715,7 +777,20 @@ int Deconz::atInMessage(const char* data)
       json_object_set_new(jData, "state", json_boolean(getBoolByPath(obj, "state/on")));
 
       if (getObjectByPath(obj, "state/bri"))
-         json_object_set_new(jData, "brightness", json_integer(getIntByPath(obj, "state/bri", na)));
+      {
+         int bri = getIntByPath(obj, "state/bri") / 255.0 * 100.0;
+         json_object_set_new(jData, "bri", json_integer(bri));
+      }
+      if (getObjectByPath(obj, "state/hue"))
+      {
+         int hue = getIntByPath(obj, "state/hue") / 65535.0 * 360.0;
+         json_object_set_new(jData, "hue", json_integer(hue));
+      }
+      if (getObjectByPath(obj, "state/sat"))
+      {
+         int sat = getIntByPath(obj, "state/sat") / 255.0 * 100.0;
+         json_object_set_new(jData, "sat", json_integer(sat));
+      }
    }
 
    free(type);

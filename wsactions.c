@@ -355,6 +355,8 @@ int Daemon::performData(long client, const char* event)
          {
             json_object_set_new(ojData, "value", json_integer(sensor->state));
             json_object_set_new(ojData, "score", json_integer(sensor->value));
+            json_object_set_new(ojData, "hue", json_integer(sensor->hue));
+            json_object_set_new(ojData, "sat", json_integer(sensor->sat));
          }
          else if (sensor->kind == "value")
             json_object_set_new(ojData, "value", json_real(sensor->value));
@@ -493,6 +495,15 @@ int Daemon::performToggleIo(json_t* oObject, long client)
    {
       int value = getIntFromJson(oObject, "value");
       return toggleIo(addr, type, true, value);
+   }
+
+   if (action == "color")
+   {
+      int hue = getIntFromJson(oObject, "hue");
+      int sat = getIntFromJson(oObject, "saturation");
+      int bri = getIntFromJson(oObject, "bri");
+      tell(eloAlways, "Changing color of %s:0x%02x to %d", type, addr, hue);
+      return toggleColor(addr, type, hue, sat, bri);
    }
 
    return done;

@@ -30,6 +30,7 @@ case "$1" in
         if [ "${c}" == "y" ]; then
             echo "drop database p4;" | mysql -u root -Dmysql
             echo "drop user p4@localhost;" | mysql -u root -Dmysql
+            echo "drop user p4;" | mysql -u root -Dmysql
             echo "database droped!"
         else
             echo "droping database aborted!"

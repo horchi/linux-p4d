@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <libxml/parser.h>
 #include <algorithm>
 #include <cmath>
 #include <libgen.h>
@@ -455,7 +454,7 @@ int Daemon::init()
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/rpcresult");
       mqttSensorTopics.push_back(TARGET "2mqtt/homematic/events");
 
-      if (mqttCheckConnection() == success && mqttWriter->isConnected())
+      if (mqttCheckConnection() == success && !isEmpty(mqttUrl))
       {
          const char* request = "{ \"method\" : \"listDevices\" }";
          mqttWriter->write(TARGET "2mqtt/homematic/rpccall", request);
@@ -1565,6 +1564,9 @@ int Daemon::readConfiguration(bool initial)
    getConfigItem("mqttSensorTopics", sensorTopics, "+/w1/#");
    mqttSensorTopics = split(sensorTopics, ',');
    free(sensorTopics);
+   mqttSensorTopics.push_back(TARGET "2mqtt/light/+/set/#");
+   mqttSensorTopics.push_back(TARGET "2mqtt/command/#");
+   mqttSensorTopics.push_back(TARGET "2mqtt/nodered/#");
 
    getConfigItem("homeMaticInterface", homeMaticInterface, false);
 
@@ -1652,6 +1654,8 @@ int Daemon::meanwhile()
 
 int Daemon::loop()
 {
+   tell(eloAlways, "%s started", TARGET);
+
    scheduleAggregate();
 
    while (!doShutDown())
@@ -2532,7 +2536,7 @@ int Daemon::dispatchNodeRedCommands(const char* topic, json_t* jObject)
 
 //***************************************************************************
 // Dispatch Node-Red Command Request
-//   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off", "brightness" : 255 }'
+//   Format:  '{ "command" : "set", "id" : 'SC:0x9', "value" : "on|off", "bri" : 100 }'
 //***************************************************************************
 
 int Daemon::dispatchNodeRedCommand(json_t* jObject)
@@ -2546,7 +2550,7 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
       return fail;
    }
 
-   int brightness = getIntFromJson(jObject, "brightness", na);
+   int bri = getIntFromJson(jObject, "bri", na);
    int transitiontime = getIntFromJson(jObject, "transitiontime", na);
    const char* sState = getStringFromJson(jObject, "state", "off");
    if (!sState) sState = "off";
@@ -2554,8 +2558,8 @@ int Daemon::dispatchNodeRedCommand(json_t* jObject)
 
    auto tuple = split(key, ':');
    uint address = strtol(tuple[1].c_str(), nullptr, 0);
-   tell(eloNodeRed, "Node-Red: switch %s to %d (%d/%d)", key, state, brightness, transitiontime);
-   toggleIo(address, tuple[0].c_str(), state, brightness, transitiontime);
+   tell(eloNodeRed, "Node-Red: switch %s to %d (%d/%d)", key, state, bri, transitiontime);
+   toggleIo(address, tuple[0].c_str(), state, bri, transitiontime);
 
    return success;
 }
@@ -2696,7 +2700,7 @@ int Daemon::weather2json(json_t* jWeather, json_t* owmWeather)
 
 //***************************************************************************
 // Dispatch Deconz
-//   Format: {"type": "DZL", "address": 29, "state": false, "brightness": 80}
+//   Format: {"type": "DZL", "address": 29, "state": false, "bri": 80}
 //           {"type": "DZS", "address": 25, "btnevent": 1002}
 //           {"type": "DZS", "address": 33, "presence": true}
 //***************************************************************************
@@ -2724,10 +2728,9 @@ int Daemon::dispatchDeconz()
 
       bool state = getBoolFromJson(oData, "state");
       double value = getDoubleFromJson(oData, "value");
-      int brightness = getIntFromJson(oData, "brightness", na);
-
-      if (brightness != na)
-         brightness = brightness / 255.0 * 100.0;
+      int bri = getIntFromJson(oData, "bri", na);
+      int hue = getIntFromJson(oData, "hue", 0);
+      int sat = getIntFromJson(oData, "sat", 0);
 
       if (getObjectFromJson(oData, "state"))
          sensor->state = state;
@@ -2738,8 +2741,14 @@ int Daemon::dispatchDeconz()
       else if (getObjectFromJson(oData, "presence"))
          sensor->state = getBoolFromJson(oData, "presence");
 
-      if (getObjectFromJson(oData, "brightness"))
-         sensor->value = brightness;
+      if (getObjectFromJson(oData, "bri"))
+         sensor->value = bri;
+
+      if (getObjectFromJson(oData, "hue"))
+         sensor->hue = hue;
+
+      if (getObjectFromJson(oData, "sat"))
+         sensor->sat = sat;
 
       sensor->last = time(0);
 
@@ -2755,8 +2764,12 @@ int Daemon::dispatchDeconz()
          if (getObjectFromJson(oData, "state"))
          {
             json_object_set_new(ojData, "value", json_integer(sensor->state));
-            if (getObjectFromJson(oData, "brightness"))
-               json_object_set_new(ojData, "score", json_integer(brightness));
+            if (getObjectFromJson(oData, "bri"))
+               json_object_set_new(ojData, "score", json_integer(bri));
+            if (getObjectFromJson(oData, "hue"))
+               json_object_set_new(ojData, "hue", json_integer(hue));
+            if (getObjectFromJson(oData, "sat"))
+               json_object_set_new(ojData, "sat", json_integer(sat));
          }
          else if (getObjectFromJson(oData, "value"))
             json_object_set_new(ojData, "value", json_real(sensor->value));
@@ -3182,10 +3195,27 @@ int Daemon::getConfigTimeRangeItem(const char* name, std::vector<Range>& ranges)
 }
 
 //***************************************************************************
+// Toggle Color
+//***************************************************************************
+
+int Daemon::toggleColor(uint addr, const char* type, int hue, int sat, int bri)
+{
+   cDbRow* fact = valueFactOf(type, addr);
+
+   if (!fact)
+      return fail;
+
+   if (strcmp(type, "DZL") == 0)
+      deconz.color(type, addr, hue, sat, bri);
+
+   return success;
+}
+
+//***************************************************************************
 // Digital IO Stuff
 //***************************************************************************
 
-int Daemon::toggleIo(uint addr, const char* type, int state, int brightness, int transitiontime)
+int Daemon::toggleIo(uint addr, const char* type, int state, int bri, int transitiontime)
 {
    cDbRow* fact = valueFactOf(type, addr);
 
@@ -3205,19 +3235,19 @@ int Daemon::toggleIo(uint addr, const char* type, int state, int brightness, int
    else if (strcmp(type, "SC") == 0)
       callScript(addr, "toggle", name, title);
    else if (strcmp(type, "DZL") == 0)
-      deconz.toggle(type, addr, newState, brightness, transitiontime);
+      deconz.toggle(type, addr, newState, bri, transitiontime);
 
    else if (strcmp(type, "HMB") == 0)
    {
       double value = sensors[type][addr].value;
       tell(eloDebug, "Debug: toggleIo - last direction = '%s', level was %d", sensors[type][addr].lastDir == dirOpen ? "open" : "close", (int)sensors[type][addr].value);
 
-      if (brightness == na && (sensors[type][addr].lastDir == dirOpen || sensors[type][addr].value == 100))
+      if (bri == na && (sensors[type][addr].lastDir == dirOpen || sensors[type][addr].value == 100))
          value = 0;
-      else if (brightness == na && (sensors[type][addr].lastDir == dirClose || sensors[type][addr].value == 0))
+      else if (bri == na && (sensors[type][addr].lastDir == dirClose || sensors[type][addr].value == 0))
          value = 100;
       else
-         value = brightness;
+         value = bri;
 
       tell(eloDebug, "Debug: toggleIo - sending level %d", (int)sensors[type][addr].value);
 

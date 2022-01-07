@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.20"
-#define VERSION_DATE "04.01.2022"
+#define _VERSION     "0.9.21"
+#define VERSION_DATE "05.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2022-01-05:  version 0.9.21
+  - bugfix: Fixed db create on initial package install
+  - change: Removed libxml2 dependencies
+  - change: Replaced package dependency mariadbclient-dev with mariadb-dev
+  - change: Improved log messages on MQTT connect/reconnect/trouble
 
 2022-01-02:  version 0.9.20
   - bugfix: Fixed config of sensor alter check

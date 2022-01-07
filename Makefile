@@ -33,10 +33,6 @@ CFLAGS    	+= $(shell $(SQLCFG) --include)
 OBJS        += specific.o
 W1OBJS       = w1.o lib/common.o lib/thread.o $(MQTTOBJS)
 
-ifdef WIRINGPI
-  LIBS += -lwiringPi
-endif
-
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
 endif
@@ -74,7 +70,7 @@ install-daemon: install-config install-scripts
 	mkdir -p $(DESTDIR)$(PREFIX)/share/$(TARGET)/
 #	install --mode=644 -D arduino/build-nano-atmega328/ioctrl.hex $(DESTDIR)$(PREFIX)/share/$(TARGET)/nano-atmega328-ioctrl.hex
 
-restart: $(TARGET) $(CMDTARGET) install
+restart: $(TARGET) install
 	systemctl restart $(TARGET)
 
 install-systemd:

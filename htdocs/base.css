@@ -34,6 +34,25 @@ button:focus {
     background-color: #272727d9;
 }
 
+.lightColor
+{
+    max-width: 340px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.lightColorDiv
+{
+    position: fixed;
+    z-index: 1;
+    left: 45%;
+    top: 40%;
+    width: fit-content;
+    text-align: center;
+    background-color: #bbbbbb;
+    padding-bottom: 8px;
+}
+
 .menu
 {
     display: grid;

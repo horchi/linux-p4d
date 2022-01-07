@@ -191,7 +191,7 @@ int Mqtt::disconnect()
       return success;
 
    connected = false;
-   tell(eloAlways, "Info: Disconnecting '%s'", theTopic.c_str());
+   tell(eloDebug, "Debug: Disconnecting from MQTT");
    mqttClient->close_now = 1;
 
    time_t endWait = time(0) + 10;
@@ -336,7 +336,10 @@ int Mqtt::write(const char* topic, const char* message, int len)
 int Mqtt::writeRetained(const char* topic, const char* message)
 {
    if (isEmpty(topic))
+   {
+      tell(eloAlways, "Error: Aborting write, missing topic");
       return wrnEmptyMessage;
+   }
 
    // we can also write NULL messages !!
 

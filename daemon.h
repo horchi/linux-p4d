@@ -175,6 +175,8 @@ class Daemon : public cWebInterface
          bool valid {false};               // set if the value, text or state is valid
          time_t next {0};                  // calculated next switch time
          int battery {na};
+         int hue;                         // 0-360° hue
+         int sat;                         // 0-100% saturation
 
          // fact
 
@@ -407,7 +409,8 @@ class Daemon : public cWebInterface
       bool webFileExists(const char* file, const char* base = nullptr);
 
       const char* getImageFor(const char* type, const char* title, const char* unit, int value);
-      int toggleIo(uint addr, const char* type, int state = na, int brightness = na, int transitiontime = na);
+      int toggleIo(uint addr, const char* type, int state = na, int bri = na, int transitiontime = na);
+      int toggleColor(uint addr, const char* type, int color, int sat, int bri);
       int toggleIoNext(uint pin);
       int toggleOutputMode(uint pin);
 

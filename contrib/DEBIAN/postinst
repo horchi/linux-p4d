@@ -25,15 +25,17 @@ COMMAND="CREATE DATABASE IF NOT EXISTS p4 charset utf8;
 case "$1" in
     configure)
         echo "postinst called for configure" >&2
-        if pgrep mysqld; then
+        if pgrep mariadbd; then
            echo "Enter your database root password:" >&2
            echo ${COMMAND} | mysql -u root -Dmysql -p
         else
            echo "No local databse found, skipping db setup" >&2
         fi
-        systemctl daemon-reload && systemctl enable p4d
-        systemctl daemon-reload && systemctl enable w1mqtt
+        systemctl daemon-reload && systemctl enable p4d.service
+        systemctl daemon-reload && systemctl enable w1mqtt.service
         systemctl daemon-reload && systemctl enable mosquitto-log.service
+        systemctl restart rsyslogd.service
+        systemctl restart logrotate.service
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

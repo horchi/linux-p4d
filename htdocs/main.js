@@ -301,7 +301,7 @@ function dispatchMessage(message)
    }
    else if (event == "commands") {
       commands = jMessage.object;
-      console.log("commands " + JSON.stringify(commands, undefined, 4));
+      // console.log("commands " + JSON.stringify(commands, undefined, 4));
    }
    else if (event == "config") {
       config = jMessage.object;
@@ -724,7 +724,7 @@ window.toggleMode = function(address, type)
                });
 }
 
-window.toggleIo = function(address, type, scale = -1)
+function toggleIo(address, type, scale = -1)
 {
    socket.send({ "event": "toggleio", "object":
                  {

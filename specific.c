@@ -28,8 +28,8 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 {
    // p4d
 
-   { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
    { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Breitengrad", "" },
+   { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
 
    { "interval",                  ctInteger, "60",   false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
    { "webPort",                   ctInteger, "1111", false, "Daemon", "Port des Web Interfaces", "" },
@@ -1556,7 +1556,7 @@ int P4d::commands2Json(json_t* obj)
    json_array_append_new(obj, jCommand);
    json_object_set_new(jCommand, "title", json_string("Zeiten aktualisieren"));
    json_object_set_new(jCommand, "cmd", json_string("inittimes"));
-   json_object_set_new(jCommand, "description", json_string("Übernehmen der Schaltzeiten (wenn sie an der Hizung angepasst wurden)"));
+   json_object_set_new(jCommand, "description", json_string("Übernehmen der Schaltzeiten (wenn sie an der Heizung angepasst wurden)"));
 
    jCommand = json_object();
    json_array_append_new(obj, jCommand);
