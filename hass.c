@@ -337,7 +337,9 @@ int Daemon::mqttCheckConnection()
    if (mqttReader->isConnected() && mqttWriter->isConnected())
       return success;
 
-   if (lastMqttConnectAt >= time(0) - 60)
+   // retry connect all 20 seconds
+
+   if (lastMqttConnectAt >= time(0) - 20)
       return fail;
 
    if (lastMqttConnectAt)
