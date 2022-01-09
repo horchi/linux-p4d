@@ -281,30 +281,7 @@ function initWidget(key, widget, fact)
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
                             .attr('draggable', false)
-                            .css('user-select', 'none'))
-                    .on('mousedown touchstart', {"fact" : fact}, function(e) {
-                       e.preventDefault();
-                       if ((e.which != 0 && e.which != 1) || $('#lightColorDiv').css('display') != 'none')
-                          return;
-                       if (fact.options & 0x04) {
-                          lightClickTimeout = setTimeout(function(e) {
-                             lightClickTimeout = null;
-                             showLightColorDialog(key);
-                          }, 400);
-                       } else
-                          toggleIo(fact.address, fact.type);
-                    })
-                    .on('mouseup mouseleave touchend', function(e) {
-                       e.stopPropagation();
-                       e.preventDefault();
-                       if ($('#lightColorDiv').css('display') != 'none')
-                          return;
-                       if (lightClickTimeout) {
-                          toggleIo(fact.address, fact.type);
-                          clearTimeout(lightClickTimeout);
-                          lightClickTimeout = null;
-                       }
-                    }))
+                            .css('user-select', 'none')))
             .append($('<div></div>')
                     .attr('id', 'progress' + fact.type + fact.address)
                     .addClass('widget-progress')
@@ -320,6 +297,34 @@ function initWidget(key, widget, fact)
                             .attr('id', 'progressBar' + fact.type + fact.address)
                             .css('user-select', 'none')
                             .addClass('progress-bar')));
+
+         if (!setupMode) {
+            $('#button' + fact.type + fact.address)
+               .on('mousedown touchstart', {"fact" : fact}, function(e) {
+                  e.preventDefault();
+                  if ((e.which != 0 && e.which != 1) || $('#lightColorDiv').css('display') != 'none')
+                     return;
+                  if (fact.options & 0x04) {
+                     lightClickTimeout = setTimeout(function(e) {
+                        lightClickTimeout = null;
+                        showLightColorDialog(key);
+                     }, 400);
+                  } else
+                     toggleIo(fact.address, fact.type);
+               })
+               .on('mouseup mouseleave touchend', function(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if ($('#lightColorDiv').css('display') != 'none')
+                     return;
+                  if (lightClickTimeout) {
+                     toggleIo(fact.address, fact.type);
+                     clearTimeout(lightClickTimeout);
+                     lightClickTimeout = null;
+                  }
+               });
+         }
+
          // needed for shower progress bar ?!?
          //            .append($('<div></div>')
          //                    .attr('id', 'progress' + fact.type + fact.address)
@@ -838,14 +843,21 @@ function getWeatherHtml(symbolView, wfact, weather)
    var html = '';
 
    if (symbolView) {
-      var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '@4x.png';
-      html += '<div style="display:block;color:orange;font-weight:bold;height:75%"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
-      html += '<div style="padding-top:3px;"><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
-      html += '<span style="font-size:smaller;"> (' + weather.tempmin.toFixed(1) + ' / ' + weather.tempmax.toFixed(1) + ')' + '</span></div>';
+      var wIconRef = 'img/weather/' + weather.icon + '@4x.png';
+      if (!images.find(img => img == wIconRef))
+         wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '@4x.png';
+      html += '<div style="display:block;color:orange;font-weight:bold;height:75%;padding-left:5px;"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
+      html += '<div style="display:flex;justify-content:space-between;padding-top:3px;">';
+      html += ' <span style="color:#00c3ff;font-weight:bold;padding-left:5px;">' + weather.temp.toFixed(1) + '°C</span>';
+      html += ' <span class="mdi mdi-walk" style="color:#00c3ff;font-weight:bold;font-size:smaller;">' + weather.tempfeels.toFixed(1) + '</span>';
+      html += '</div>';
+
    }
    else {
-      var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
-      html += '<div style="display:inline-flex;color:orange;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
+      var wIconRef = 'img/weather/' + weather.icon + '.png';
+      if (!images.find(img => img == wIconRef))
+         wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
+      html += '<div style="display:inline-flex;color:orange;align-items:center;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
       html += '<div><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
       html += '<span style="font-size:smaller;"> (' + weather.tempmin.toFixed(1) + ' / ' + weather.tempmax.toFixed(1) + ')' + '</span></div>';
       html += '<div>Luftdruck: <span style="color:#00c3ff;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';
@@ -871,16 +883,19 @@ function weatherForecast()
 
    for (var i = 0; i < weatherData.forecasts.length; i++) {
       var weather = weatherData.forecasts[i];
-      var wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
       var day = moment(weather.time*1000).format('dddd Do MMMM');
       var time = moment(weather.time*1000).format('HH:00');
+      var wIconRef = 'img/weather/' + weather.icon + '.png';
+
+      if (!images.find(img => img == wIconRef))
+         wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
 
       if (day != lastDay) {
          lastDay = day;
          html += '<div class="rounded-border" style="background-color:#2f2f2fd1;">' + day + '</div>';
       }
 
-      var tempColor = weather.temp < 0 ? 'blue' : (weather.temp > 20 ? 'red' : 'white');
+      var tempColor = weather.temp < 0 ? '#2c99eb' : (weather.temp > 20 ? 'red' : 'white');
 
       html += '<div class="rounded-border">';
       html += '<span>' + time + '</span>';
@@ -891,9 +906,10 @@ function weatherForecast()
       html += '<span class="mdi mdi-water-percent"> ' + weather.humidity + ' %</span>';
       html += '<span>' + weather.pressure + ' hPa</span>';
       html += '<span class="mdi mdi-weather-windy"> ' + weather.windspeed + ' m/s</span>';
-      html += '</div>'
 
+      html += '</div>'
    }
+
    html += '</div>'
 
    $(form).html(html);
@@ -2006,8 +2022,11 @@ function widgetSetup(key)
 
          $('#color').spectrum({
             type: "color",
-            showPalette: false,
-            togglePaletteOnly: true,
+            showPalette: true,
+            showSelectionPalette: true,
+            palette: [ ],
+            localStorageKey: "homectrl",
+            togglePaletteOnly: false,
             showInitial: true,
             showAlpha: true,
             allowEmpty: false,
@@ -2016,8 +2035,11 @@ function widgetSetup(key)
 
          $('#colorOn').spectrum({
             type : "color",
-            showPalette: false,
-            togglePaletteOnly: true,
+            showPalette: true,
+            showSelectionPalette: true,
+            palette: [ ],
+            localStorageKey: "homectrl",
+            togglePaletteOnly: false,
             showInitial: true,
             showAlpha: true,
             allowEmpty: false,

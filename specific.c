@@ -2227,7 +2227,7 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
 
-   addValueFact(udMode, "UD", 1, "Betriebsmodus", "txt", "Betriebsmodus");
+   addValueFact(udMode, "UD", 1, "Betriebsart Kessel", "txt", "Betriebsart Kessel");
    tableValueFacts->clear();
    tableValueFacts->setValue("ADDRESS", udMode);       // 2  -> Kessel Mode
    tableValueFacts->setValue("TYPE", "UD");            // UD -> User Defined

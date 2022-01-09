@@ -247,7 +247,7 @@ int Mqtt::subscribe(const char* topic)
    }
 
    theTopic = topic;
-   tell(eloMqtt, "Debug: Subscribing to topic '%s' succeeded", topic);
+   tell(eloDebug, "Debug: Subscribing to topic '%s' succeeded", topic);
 
    return success;
 }
@@ -267,7 +267,7 @@ int Mqtt::unsubscribe(const char* topic)
       return fail;
    }
 
-   tell(eloMqtt, "Debug: Unsubscribing from topic '%s' succeeded", topic);
+   tell(eloDebug, "Debug: Unsubscribing from topic '%s' succeeded", topic);
 
    return success;
 }
@@ -313,7 +313,7 @@ int Mqtt::read(MemoryStruct* message, int timeoutMs)
    retained = msg->retained;
    delete msg;
 
-   tell(eloMqtt, "Debug: Got message from topic '%s'", lastReadTopic.c_str());
+   tell(eloDebug, "Debug: Got message from topic '%s'", lastReadTopic.c_str());
 
    return success;
 }

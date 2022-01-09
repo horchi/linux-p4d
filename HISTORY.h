@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.21"
-#define VERSION_DATE "05.01.2022"
+#define _VERSION     "0.9.22"
+#define VERSION_DATE "09.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2022-01-01:  version 0.9.22
+  - change: Renamed 'Betriebsmodus' to Betriebsart Kessel
+  - change: Allow more widgets for each sensor on one dashbord
 
 2022-01-05:  version 0.9.21
   - bugfix: Fixed db create on initial package install

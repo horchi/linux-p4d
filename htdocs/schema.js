@@ -352,19 +352,29 @@ function editSchemaValue(type, address, newUC)
       open: function() {
          $('#colorFg').spectrum({
             type : "color",
+            showPalette: true,
+            showSelectionPalette: true,
+            palette: [ ],
+            localStorageKey: "homectrl",
+            togglePaletteOnly: false,
             appendTo: '#settingsForm',
-            hideAfterPaletteSelect : "true",
-            showInput : "true",
-            showButtons : "false",
-            allowEmpty : "false"
+            hideAfterPaletteSelect : true,
+            showInput : true,
+            showButtons : false,
+            allowEmpty : false
          });
          $('#colorBg').spectrum({
             type : "color",
+            showPalette: true,
+            showSelectionPalette: true,
+            palette: [ ],
+            localStorageKey: "homectrl",
+            togglePaletteOnly: false,
             appendTo: '#settingsForm',
             hideAfterPaletteSelect : "true",
-            showInput : "true",
-            showButtons : "false",
-            allowEmpty : "false"
+            showInput : true,
+            showButtons : false,
+            allowEmpty : false
          });
 
          selectKind(schemaDef.kind);

@@ -1040,21 +1040,15 @@ Date.prototype.toDateLocal = function toDateLocal()
    return YYYY + '-' + MM + '-' + DD;
 };
 
-function getTotalHeightOf(id)
+function fileExist(url)
 {
-   return $('#' + id).height() + parseInt($('#' + id).css('padding')) + parseInt($('#' + id).css('margin'));
+   var xhr = new XMLHttpRequest();
+   xhr.open('HEAD', url, false);
+   xhr.send();
+   return xhr.status != "404";
 }
 
-// $.attrHooks['viewbox'] = {
-//    set: function(elem, value, name) {
-//       elem.setAttributeNS(null, 'viewBox', value + '');
-//       return value;
-//    }
-// };
-
-// $.attrHooks['preserveaspectratio'] = {
-//    set: function(elem, value, name) {
-//       elem.setAttributeNS(null, 'preserveAspectRatio', value + '');
-//       return value;
-//    }
-// };
+function getTotalHeightOf(id)
+{
+   return $('#' + id).outerHeight();
+}

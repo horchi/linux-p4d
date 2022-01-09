@@ -1585,7 +1585,7 @@ dialog::backdrop, #backdrop
     .widget-main               { font-size: 15vh;}
     .widget-main-value-lin     { font-size: 0.9em;  }
     .widget-main-peak-lin      { margin-right: 0px; }
-    .widget-weather            { font-size: 1.3em; margin-top: 0px;  }
+    .widget-weather            { font-size: 1.2em; margin-top: 0px;  }
     .widget-weather > br       { display: block; }
     .symbol-value              { font-size: large;}
     .weatherForecast           { left: 5%; width: 90%; }

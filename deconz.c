@@ -579,7 +579,7 @@ cMyMutex Deconz::messagesInMutex;
 std::queue<std::string> Deconz::messagesIn;
 
 //***************************************************************************
-// Init Ws Client
+// Init / Exit Ws Client
 //***************************************************************************
 
 int Deconz::initWsClient()

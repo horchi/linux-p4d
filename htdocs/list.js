@@ -45,7 +45,7 @@ function initList()
    html = '<div><span id="' + style + '">' + s3200State.stateinfo + '</span></div>\n';
    html += '<br/>\n';
    html += '<div style="display:flex;"><span style="width:30%;display:inline-block;">Uhrzeit:</span><span>' + d.toLocaleTimeString() + '</span></div>\n';
-   html += '<div style="display:flex;"><span style="width:30%;display:inline-block;">Betriebsmodus: </span><span>' + s3200State.modeinfo + '</span></div>\n';
+   html += '<div style="display:flex;"><span style="width:30%;display:inline-block;">Betriebsart Kessel: </span><span>' + s3200State.modeinfo + '</span></div>\n';
 
    rootStateS3200.innerHTML = html;
 
