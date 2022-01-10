@@ -7,6 +7,7 @@
 //***************************************************************************
 
 #include <jansson.h>
+#include <algorithm>
 
 #include "lib/json.h"
 #include "daemon.h"
@@ -68,9 +69,11 @@ int Daemon::mqttHaPublish(SensorData& sensor, bool forceConfig)
 
 int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 {
+   if (sensor.type == "")
+      return done;
+
    // check if state topic already exists
 
-   int status {success};
    MemoryStruct message;
    std::string tp;
    std::string sName = sensor.name;
@@ -89,30 +92,20 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
    sDataTopic = strReplace("<NAME>", sName, sDataTopic);
    sDataTopic = strReplace("<TYPE>", iot == iotLight ? "light" : "sensor", sDataTopic);
 
-   if (mqttHaveConfigTopic && !sensor.title.length())
+   if (mqttHaveConfigTopic && sensor.title.length())
    {
-      if (!mqttReader->isConnected())
+      if (!mqttWriter->isConnected())
          return fail;
 
       // Interface description:
       //   https://www.home-assistant.io/docs/mqtt/discovery/
 
-      mqttReader->subscribe(sDataTopic.c_str());
-      status = mqttReader->read(&message, 100);
-      tp = mqttReader->getLastReadTopic();
+      bool exists = std::find(configTopicsFor.begin(), configTopicsFor.end(), sDataTopic) != configTopicsFor.end();
 
-      tell(eloMqtt, "Config topic '%s', state %d", tp.c_str(), status);
-
-      if (status != success && status != Mqtt::wrnTimeout)
-         return fail;
-
-      if (forceConfig || status != success || !tp.length())
+      if (forceConfig || !exists)
       {
          char* configTopic {nullptr};
          char* configJson {nullptr};
-
-         if (!mqttWriter->isConnected())
-            return fail;
 
          // topic don't exists -> create sensor
 
@@ -123,11 +116,11 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                   sensor.unit == "txt")
             sensor.unit = "";
 
-         tell(eloMqtt, "Info: Sensor '%s' not found at home assistants MQTT, "
-              "sendig config message", sName.c_str());
-
          asprintf(&configTopic, "homeassistant/%s/%s/%s/config",
                   iot == iotLight ? "light" : "sensor", myTitle(), sName.c_str());
+
+         tell(eloMqtt, "Info: Sensor '%s' not found at home assistants MQTT, "
+              "sendig config message to '%s'", sName.c_str(), configTopic);
 
          if (iot == iotLight)
          {
@@ -135,14 +128,14 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
             asprintf(&cmdTopic, TARGET "2mqtt/light/%s/set", sName.c_str());
 
             asprintf(&configJson, "{"
-                     "\"state_topic\"         : \"" TARGET "2mqtt/light/%s/state\","
+                     "\"state_topic\"         : \"%s\","
                      "\"command_topic\"       : \"%s\","
                      "\"name\"                : \"%s %s\","
                      "\"unique_id\"           : \"%s_" TARGET "2mqtt\","
                      "\"schema\"              : \"json\","
                      "\"brightness\"          : \"false\""
                      "}",
-                     sName.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str());
+                     sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str());
 
             hassCmdTopicMap[cmdTopic] = sensor.name;
             free(cmdTopic);
@@ -150,22 +143,21 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
          else
          {
             asprintf(&configJson, "{"
+                     "\"state_topic\"         : \"%s\","
                      "\"unit_of_measurement\" : \"%s\","
                      "\"value_template\"      : \"{{ value_json.value }}\","
-                     "\"state_topic\"         : \"" TARGET "2mqtt/sensor/%s/state\","
                      "\"name\"                : \"%s %s\","
                      "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
                      "}",
-                     sensor.unit.c_str(), sName.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+                     sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
          }
 
          mqttWriter->writeRetained(configTopic, configJson);
+         configTopicsFor.push_back(sDataTopic);
 
          free(configTopic);
          free(configJson);
       }
-
-      mqttReader->unsubscribe(sDataTopic.c_str());
    }
 
    // publish actual value
@@ -343,7 +335,7 @@ int Daemon::mqttCheckConnection()
       return fail;
 
    if (lastMqttConnectAt)
-      tell(eloAlways, "Error: MQTT connection brocken, trying reconnect");
+      tell(eloAlways, "Error: MQTT connection broken, trying reconnect");
 
    lastMqttConnectAt = time(0);
 

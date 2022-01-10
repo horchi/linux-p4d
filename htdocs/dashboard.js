@@ -1140,6 +1140,7 @@ function addWidget()
                                   .html('Filter'))
                           .append($('<input></input>')
                                   .attr('id', 'incFilter')
+                                  .attr('type', 'search')
                                   .attr('placeholder', 'expression...')
                                   .addClass('rounded-border inputSetting')
                                   .on('input', function() {updateSelection();})
@@ -1232,8 +1233,8 @@ function addWidget()
       for (var key in valueFacts) {
          if (!valueFacts[key].state)   // use only active facts here
             continue;
-         if (dashboards[actDashboard].widgets[key] != null)
-            continue;
+//         if (dashboards[actDashboard].widgets[key] != null)
+//            continue;
          if (filterExpression && !filterExpression.test(valueFacts[key].title) &&
              !filterExpression.test(valueFacts[key].usrtitle) &&
              !filterExpression.test(valueFacts[key].type))

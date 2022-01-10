@@ -20,6 +20,12 @@ button:focus {
     z-index: -1;
 } */
 
+.ui-autocomplete
+{
+  height: 120px;
+  overflow-y: auto;
+}
+
 .slider
 {
     display: none;

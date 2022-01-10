@@ -75,7 +75,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
    { "mqttSendWithKeyPrefix",     ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Adresse übertragen", "Wenn hier ein Präfix konfiguriert ist wird die Adresse der Sensoren nebst Präfix übertragen" },
-   { "mqttHaveConfigTopic",       ctBool,    "1", false, "Home Automation Interface (like Home-Assistant, ...)", "Config Topic", "Speziell für HomeAssistant" },
+   { "mqttHaveConfigTopic",       ctBool,    "0", false, "Home Automation Interface (like Home-Assistant, ...)", "Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 

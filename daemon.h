@@ -532,12 +532,13 @@ class Daemon : public cWebInterface
 
       char* mqttDataTopic {nullptr};
       char* mqttSendWithKeyPrefix {nullptr};
-      bool mqttHaveConfigTopic {true};
+      bool mqttHaveConfigTopic {false};
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
 
-      Mqtt* mqttReader {nullptr};                // connection  to my own mqtt instance
-      Mqtt* mqttWriter {nullptr};                // connection to my own mqtt instance
+      Mqtt* mqttReader {nullptr};
+      Mqtt* mqttWriter {nullptr};
       std::vector<std::string> mqttSensorTopics;
+      std::vector<std::string> configTopicsFor;
 
       time_t lastMqttConnectAt {0};
       std::map<std::string,std::string> hassCmdTopicMap; // 'topic' to 'name' map

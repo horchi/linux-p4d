@@ -1574,7 +1574,7 @@ int Daemon::readConfiguration(bool initial)
 
    getConfigItem("mqttDataTopic", mqttDataTopic, TARGET "2mqtt/<TYPE>/<NAME>/state");
    getConfigItem("mqttSendWithKeyPrefix", mqttSendWithKeyPrefix, "");
-   getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, yes);
+   getConfigItem("mqttHaveConfigTopic", mqttHaveConfigTopic, false);
 
    if (mqttDataTopic[strlen(mqttDataTopic)-1] == '/')
       mqttDataTopic[strlen(mqttDataTopic)-1] = '\0';

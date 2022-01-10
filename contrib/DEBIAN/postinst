@@ -29,12 +29,12 @@ case "$1" in
            echo "Enter your database root password:" >&2
            echo ${COMMAND} | mysql -u root -Dmysql -p
         else
-           echo "No local databse found, skipping db setup" >&2
+           echo "No local database found, skipping db setup" >&2
         fi
         systemctl daemon-reload && systemctl enable p4d.service
         systemctl daemon-reload && systemctl enable w1mqtt.service
         systemctl daemon-reload && systemctl enable mosquitto-log.service
-        systemctl restart rsyslogd.service
+        systemctl restart rsyslog.service
         systemctl restart logrotate.service
         ;;
 

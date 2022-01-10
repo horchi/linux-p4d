@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.22"
-#define VERSION_DATE "09.01.2022"
+#define _VERSION     "0.9.24"
+#define VERSION_DATE "10.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2022-01-10:  version 0.9.24
+  - bugfix: Fixed home assistant interface
+
+2022-01-09:  version 0.9.23
+  - bugfix: Fixed rsyslogd restart in package
 
 2022-01-01:  version 0.9.22
   - change: Renamed 'Betriebsmodus' to Betriebsart Kessel
