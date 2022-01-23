@@ -23,11 +23,11 @@ cMyMutex Deconz::mapsMutex;
 //***************************************************************************
 // Problem, API-Key ist nach deCONZ Restart wieder weg
 //  -> deCONZ trägt ihn nicht in die Tabelle ein
-//  ?? Mache ich nich einen fehler bei der Anmeldung ??
+//  ?? Mache ich nich einen Fehler bei der Anmeldung ?
 // Workaround mauell eintragen:
-// sqlite3 zll.db
-// insert into auth (apikey,createdate,lastusedate,devicetype,useragent) values('372245F621','2021-12-25T07:23:29','2021-12-25T07:23:29','homectrld','homectrld');
-//  Dabei den Key (hier 372245F621) und ggf. das Datum anpassen!
+//   sqlite3 zll.db
+//     insert into auth (apikey,createdate,lastusedate,devicetype,useragent) values('372245FAAA','2021-12-25T07:23:29','2021-12-25T07:23:29','homectrld','homectrld');
+//   Dabei den Key (hier 372245FAAA) und ggf. das Datum anpassen!
 //***************************************************************************
 
 //***************************************************************************
@@ -180,6 +180,9 @@ int Deconz::processDevices(json_t* jData, std::string kind)
       // "12": { "config": { "battery": 100, "on": true, "reachable": true, "temperature": 2000 },
       //          "ep": 1, "lastseen": "2021-12-17T14:32Z", "manufacturername": "LUMI", "mode": 1, "modelid": "lumi.sensor_switch.aq2", "name": "swflur2",
       //          "state": { "buttonevent": 1002, "lastupdated": "2021-12-17T06:08:11.192" }, "type": "ZHASwitch", "uniqueid": "00:15:8d:00:01:e8:32:a1-01-0006" },
+      // "20": {"colorcapabilities":0,"ctmax":65535,"ctmin":0,"etag":"7429bb9cf02aa4da5588bc2c2e517c39","hascolor":true,"lastannounced":null,"lastseen":"2022-01-10T16:45Z",
+      //          "state":{"alert":"none","bri":254,"colormode":"ct","ct":250,"on":false,"reachable":true},
+      //          "swversion":"2.0.022","type":"Color temperature light","uniqueid":"14:b4:57:ff:fe:7e:7a:57-01"}
 
       char* type {nullptr};
       asprintf(&type, "DZ%s", kind == "sensor" ? "S" : "L");
@@ -207,6 +210,17 @@ int Deconz::processDevices(json_t* jData, std::string kind)
 
       uint address = table->getIntValue("ADDRESS");
 
+      if (getObjectFromJson(jItem, "ctmin"))
+      {
+         json_t* jOpt = json_object();
+         json_object_set_new(jOpt, "ctmin", json_integer(getIntFromJson(jItem, "ctmin")));
+         json_object_set_new(jOpt, "ctmax", json_integer(getIntFromJson(jItem, "ctmax")));
+         char* p = json_dumps(jOpt, JSON_REAL_PRECISION(4));
+         table->setValue("OPTIONS", p);
+         free(p);
+         json_decref(jOpt);
+      }
+
       table->setValue("KIND", kind.c_str());
       table->setValue("NAME", getStringFromJson(jItem, "name"));
       table->setValue("DZTYPE", dzType.c_str());
@@ -226,7 +240,7 @@ int Deconz::processDevices(json_t* jData, std::string kind)
       tell(eloDebugDeconz, "Found '%s' %d with uuid '%s'", kind.c_str(), address, uuid);
 
       const char* unit{""};
-      int options {Daemon::soNone};
+      int so {Daemon::soNone};
 
       if (kind == "sensor")
       {
@@ -243,16 +257,16 @@ int Deconz::processDevices(json_t* jData, std::string kind)
       }
       else if (kind == "light")
       {
-         options = Daemon::soSwitch;
+         so = Daemon::soSwitch;
 
          if (strcasestr(dzType.c_str(), "color"))
-            options += Daemon::soColor + Daemon::soDim; // assume all color lights are dimmable
+            so += Daemon::soColor + Daemon::soDim; // assume all color lights are dimmable
          if (strcasestr(dzType.c_str(), "dim"))
-            options += Daemon::soDim;
+            so += Daemon::soDim;
       }
 
       daemon->addValueFact(address, type, 1, getStringFromJson(jItem, "name"), unit, ""/*title*/,
-                           cWebService::urControl, nullptr, (Daemon::SensorOptions)options);
+                           cWebService::urControl, nullptr, (Daemon::SensorOptions)so);
 
       int battery = getIntByPath(jItem, "config/battery", -1);
 

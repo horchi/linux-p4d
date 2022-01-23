@@ -478,7 +478,7 @@ typedef cTimeMs cMyTimeMs;
 //   char_smart p("init");
 //
 //   printf("char: %s\n", p.c_str());
-//
+//   printf("char: %s\n", (const char*)p);
 //   asprintf(&p, "%s", "test");
 //   printf("char: %s\n", p.c_str());
 //***************************************************************************
@@ -521,7 +521,6 @@ class char_smart
 
       char* p {nullptr};
 };
-
 
 //***************************************************************************
 // Log Duration

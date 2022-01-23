@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.24"
-#define VERSION_DATE "10.01.2022"
+#define _VERSION     "0.9.25"
+#define VERSION_DATE "23.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-01-23:  version 0.9.25
+  - change: minor improvementd
 
 2022-01-10:  version 0.9.24
   - bugfix: Fixed home assistant interface

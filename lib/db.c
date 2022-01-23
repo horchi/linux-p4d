@@ -1012,11 +1012,12 @@ int cDbTable::alterModifyField(cDbFieldDef* def)
 
    // alter table events modify column guest varchar(50)
 
-   asprintf(&statement, "alter table %s modify column %s %s comment '%s' %s%s%s",
+   asprintf(&statement, "alter table %s modify column %s %s comment '%s' %s %s%s%s",
             TableName(),
             def->getDbName(),
             def->toColumnFormat(colType),
             def->getDbDescription(),
+            def->getType() & ftAutoinc ? " not null auto_increment " : "",
             !isEmpty(def->getDefault()) ? "default '" : "",
             !isEmpty(def->getDefault()) ? def->getDefault() : "",
             !isEmpty(def->getDefault()) ? "'" : ""
@@ -1067,8 +1068,7 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    tell(eloDetail, "Execute [%s]", statement.c_str());
 
    if (connection->query("%s", statement.c_str()))
-      return connection->errorSql(getConnection(), "alterAddField()",
-                                  0, statement.c_str());
+      return connection->errorSql(getConnection(), "alterAddField()", 0, statement.c_str());
 
    return done;
 }

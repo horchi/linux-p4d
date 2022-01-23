@@ -134,6 +134,8 @@
       this.incHours.addClass('picktim-btn picktim-symbol');
       this.incHours.addClass(this.settings.icons.up);
       this.incHours.on('mousedown touchstart', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.incrementHours();
          this.tHours.addClass('active');
          this.timeouts.iH = setInterval($.proxy(function () {
@@ -145,7 +147,9 @@
                this.incrementUpCount ++;
             }
          },this), this.incrementInterval);
-      },this)).bind('mouseup mouseleave touchend', $.proxy(function () {
+      },this)).bind('mouseup mouseleave touchend', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.tHours.removeClass('active');
          clearInterval(this.timeouts.iH);
          this.incrementUpCount = 0;
@@ -156,6 +160,8 @@
       this.decHours.addClass('picktim-btn picktim-symbol');
       this.decHours.addClass(this.settings.icons.down);
       this.decHours.on('mousedown touchstart', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.decrementHours();
          this.tHours.addClass('active');
          this.timeouts.dH = setInterval($.proxy(function () {
@@ -168,7 +174,9 @@
                this.incrementUpCount ++;
             }
          },this), this.incrementInterval);
-      },this)).bind('mouseup mouseleave touchend', $.proxy(function () {
+      },this)).bind('mouseup mouseleave touchend', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.tHours.removeClass('active');
          clearInterval(this.timeouts.dH);
          this.incrementUpCount = 0;
@@ -179,12 +187,16 @@
       this.incMins.addClass('picktim-btn picktim-symbol');
       this.incMins.addClass(this.settings.icons.up);
       this.incMins.on('mousedown touchstart', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.incrementMinutes(this.incrementValueMin);
          this.tMins.addClass('active');
          this.timeouts.iM = setInterval($.proxy(function () {
             this.incrementMinutes(this.incrementValueMin);
          },this), this.incrementInterval);
-      },this)).bind('mouseup mouseleave touchend', $.proxy(function () {
+      },this)).bind('mouseup mouseleave touchend', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.tMins.removeClass('active');
          clearInterval(this.timeouts.iM);
       },this));
@@ -193,12 +205,16 @@
       this.decMins.addClass('picktim-btn picktim-symbol');
       this.decMins.addClass(this.settings.icons.down);
       this.decMins.on('mousedown touchstart', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.decrementMinutes(this.incrementValueMin);
          this.tMins.addClass('active');
          this.timeouts.dM = setInterval($.proxy(function () {
             this.decrementMinutes(this.incrementValueMin);
          },this), this.incrementInterval);
-      },this)).bind('mouseup mouseleave touchend', $.proxy(function () {
+      },this)).bind('mouseup mouseleave touchend', $.proxy(function (e) {
+         e.stopPropagation();
+         e.preventDefault();
          this.tMins.removeClass('active');
          clearInterval(this.timeouts.dM);
       },this));

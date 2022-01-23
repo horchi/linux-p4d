@@ -622,7 +622,7 @@ int Daemon::storeAlerts(json_t* oObject, long client)
 
             if (!tableSensorAlert->find())
             {
-               tell(eloAlways, "Warming: Alert id %d not found, aborting", id);
+               tell(eloAlways, "Warning: Alert id %d not found, aborting", id);
                continue;
             }
          }
