@@ -50,4 +50,5 @@ const char* getStringByPath(json_t* jData, const char* aPath, const char* def = 
 
 int addToJson(json_t* obj, const char* name, const char* value, const char* def = "");
 int addToJson(json_t* obj, const char* name, long value);
+int addToJson(json_t* obj, const char* name, double value);
 int addToJson(json_t* obj, const char* name, json_t* o);

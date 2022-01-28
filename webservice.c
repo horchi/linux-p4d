@@ -56,6 +56,7 @@ const char* cWebService::events[] =
    "pareditrequest",
    "parstore",
    "pellets",
+   "pelletsadd",
 
    0
 };

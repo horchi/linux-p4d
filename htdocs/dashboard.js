@@ -902,7 +902,7 @@ function weatherForecast()
       html += '<span><img src="' + wIconRef + '"></img></span>';
       html += '<span class="mdi mdi-thermometer" style="color:' + tempColor + ';"> ' + weather.temp + ' °C</span>';
       if (showExtras)
-         html += '<span> (gefühlt ' + weather.tempfeels + ' °C)</span>';
+         html += '<span class="mdi mdi-walk">' + weather.tempfeels + ' °C</span>';
       html += '<span class="mdi mdi-water-percent"> ' + weather.humidity + ' %</span>';
       html += '<span>' + weather.pressure + ' hPa</span>';
       html += '<span class="mdi mdi-weather-windy"> ' + weather.windspeed + ' m/s</span>';

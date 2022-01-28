@@ -357,6 +357,11 @@ int addToJson(json_t* obj, const char* name, int value)
    return json_object_set_new(obj, name, json_integer(value));
 }
 
+int addToJson(json_t* obj, const char* name, double value)
+{
+   return json_object_set_new(obj, name, json_real(value));
+}
+
 int addToJson(json_t* obj, const char* name, json_t* o)
 {
    return json_object_set_new(obj, name, o);

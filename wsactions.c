@@ -1181,7 +1181,9 @@ int Daemon::performSchema(json_t* oObject, long client)
       tableValueFacts->setValue("ADDRESS", tableSchemaConf->getIntValue("ADDRESS"));
       tableValueFacts->setValue("TYPE", tableSchemaConf->getStrValue("TYPE"));
 
-      if (!tableSchemaConf->hasValue("TYPE", "UC") && (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
+      if (!tableSchemaConf->hasValue("TYPE", "UC") &&
+          !tableSchemaConf->hasValue("TYPE", "CN") &&
+          (!tableValueFacts->find() || !tableValueFacts->hasValue("STATE", "A")))
          continue;
 
       json_t* oData = json_object();

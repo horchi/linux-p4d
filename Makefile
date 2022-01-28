@@ -239,3 +239,7 @@ showv:
 	@echo "  Version: $(VERSION)"
 	@echo "  Change:"
 	@echo -n "   $(LASTCOMMENT)"
+
+
+smi260top4d: smi260top4d.o lib/common.o lib/json.o lib/thread.o $(MQTTOBJS)
+	$(doLink) smi260top4d.o lib/common.o lib/json.o lib/thread.o $(MQTTOBJS) $(LIBS) -o $@
