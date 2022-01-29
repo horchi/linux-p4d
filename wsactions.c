@@ -640,6 +640,7 @@ int Daemon::storeAlerts(json_t* oObject, long client)
          tableSensorAlert->setValue("MADDRESS", getStringFromJson(jObj, "maddress"));
          tableSensorAlert->setValue("MSUBJECT", getStringFromJson(jObj, "msubject"));
          tableSensorAlert->setValue("MBODY", getStringFromJson(jObj, "mbody"));
+         tableSensorAlert->setValue("KIND", "M");
 
          if (id == na)
             tableSensorAlert->insert();

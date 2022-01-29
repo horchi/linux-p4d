@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.27"
-#define VERSION_DATE "28.01.2022"
+#define _VERSION     "0.9.28"
+#define VERSION_DATE "29.01.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,8 +17,11 @@
 /*
  * ------------------------------------
 
+2022-01-29:  version 0.9.28
+  - bugfix: Fixed stor of sensor alert cehcks
+
 2022-01-28:  version 0.9.27
-  - change: Fixed sensor alerts
+  - bugfix: Fixed sensor alerts
 
 2022-01-23:  version 0.9.26
   - change: Header title
