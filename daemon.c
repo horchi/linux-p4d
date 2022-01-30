@@ -711,8 +711,6 @@ int Daemon::initScripts()
       bool valid = getBoolFromJson(oData, "valid", false);
       const char* text = getStringFromJson(oData, "text");
 
-      json_decref(oData);
-
       tableScripts->clear();
       tableScripts->setValue("PATH", scriptPath);
 
@@ -752,6 +750,7 @@ int Daemon::initScripts()
 
       tell(eloAlways, "Found script '%s' addr (%d), unit '%s'; result was [%s]", scriptPath, addr, unit, result.c_str());
       free(scriptPath);
+      json_decref(oData);
    }
 
    free(path);

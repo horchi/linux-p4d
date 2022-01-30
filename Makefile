@@ -97,7 +97,6 @@ install-config:
 	install --mode=755 -D ./configs/sysctl $(CONFDEST)/scripts.d
 	install --mode=755 -D ./configs/example_switch.sh $(CONFDEST)/scripts.d
 	install --mode=755 -D ./configs/example_sensor.sh $(CONFDEST)/scripts.d
-	install --mode=755 -D ./configs/sensorExample.py $(CONFDEST)/scripts.d
 	if ! test -f $(DESTDIR)/etc/msmtprc; then \
 	   install --mode=644 -D ./configs/msmtprc $(DESTDIR)/etc/; \
 	fi
