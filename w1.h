@@ -34,7 +34,7 @@ class W1
 
       typedef std::map<std::string, SensorData> SensorList;
 
-      W1(const char* aUrl);
+      W1(const char* aUrl, const char* topic);
       ~W1();
 
       static void downF(int aSignal) { shutdown = true; }
@@ -56,8 +56,8 @@ class W1
       char* w1Path {nullptr};
       SensorList sensors;
       const char* mqttUrl {nullptr};
-      const char* mqttTopic {nullptr};
-      const char* mqttPingTopic {nullptr};
+      std::string mqttTopic;
+      std::string mqttPingTopic;
       Mqtt* mqttW1Writer {nullptr};
 
       static bool shutdown;

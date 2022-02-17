@@ -18,6 +18,7 @@ cMyMutex Deconz::mapsMutex;
 //***************************************************************************
 // API documentation:
 //    https://dresden-elektronik.github.io/deconz-rest-doc
+//    https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/lights/#example-request-data
 //***************************************************************************
 
 //***************************************************************************
@@ -91,10 +92,10 @@ int Deconz::exit()
    curl.exit();
    cCurl::destroy();
 
-   delete tableDeconzLights;   tableDeconzLights = nullptr;
-   delete tableDeconzSensors;  tableDeconzSensors = nullptr;
-   delete selectLightByUuid;   selectLightByUuid = nullptr;
-   delete selectSensorByUuid;  selectSensorByUuid = nullptr;
+   delete tableDeconzLights;  tableDeconzLights = nullptr;
+   delete tableDeconzSensors; tableDeconzSensors = nullptr;
+   delete selectLightByUuid;  selectLightByUuid = nullptr;
+   delete selectSensorByUuid; selectSensorByUuid = nullptr;
 
    return success;
 }
@@ -569,16 +570,10 @@ int Deconz::query(json_t*& jResult, const char* method, const char* key)
 
    free(url);
 
-   json_error_t error;
-   jResult = json_loads(data.memory, 0, &error);
+   jResult = jsonLoad(data.memory);
 
    if (!jResult)
-   {
-      tell(eloAlways, "Error: Ignoring invalid script result [%s]", data.memory);
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-           error.text, error.source, error.line, error.column, error.position);
       return fail;
-   }
 
    return done;
 }
@@ -596,13 +591,18 @@ std::queue<std::string> Deconz::messagesIn;
 // Init / Exit Ws Client
 //***************************************************************************
 
+static lws_retry_bo retry {};
+
 int Deconz::initWsClient()
 {
    Deconz::singleton = this;
 
    int logs {LLL_ERR | LLL_WARN | LLL_USER}; // {LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE};
+   lws_set_log_level(logs, NULL);
 
-	lws_set_log_level(logs, NULL);
+   retry.secs_since_valid_ping = 3;
+   retry.secs_since_valid_hangup = 10;
+   retry.conceal_count = LWS_RETRY_CONCEAL_ALWAYS;
 
    protocols[0].name = "deConz";
    protocols[0].callback = callbackDeconzWs;
@@ -613,6 +613,7 @@ int Deconz::initWsClient()
 	info.port = CONTEXT_PORT_NO_LISTEN;  // client side - no listener
 	info.protocols = protocols;
 	info.timeout_secs = 10;
+        info.retry_and_idle_policy = &retry;
 	// info.connect_timeout_secs = 30;
 
 	/*

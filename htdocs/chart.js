@@ -122,7 +122,7 @@ function drawCharts(dataObject)
             id: unit,
             display: true,
             ticks: { padding: 10, maxTicksLimit: 20, fontColor: colors[i] },
-            gridLines: { color: colors[i], zeroLineColor: 'gray', borderDash: [5,5] },
+            gridLines: { lineWidth: 1, color: colors[i], zeroLineColor: 'gray', borderDash: [5,5] },
             scaleLabel: { display: true, fontColor: colors[i], labelString: '[' + unit + ']' }
          });
       }

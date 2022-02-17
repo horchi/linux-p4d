@@ -287,7 +287,7 @@ int Daemon::performMqttRequests()
    if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
    {
       lastMqttRecover = time(0);
-      tell(eloMqtt, "Info: No update from MQTT since '%s', disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
+      tell(eloAlways, "No update from MQTT since '%s', disconnect from MQTT to force recover", l2pTime(lastMqttRead).c_str());
       mqttDisconnect();
    }
 
@@ -300,11 +300,11 @@ int Daemon::performMqttRequests()
 
 int Daemon::mqttDisconnect()
 {
-   if (mqttReader)               mqttReader->disconnect();
-   if (mqttWriter)               mqttWriter->disconnect();
+   if (mqttReader) mqttReader->disconnect();
+   if (mqttWriter) mqttWriter->disconnect();
 
-   delete mqttReader;            mqttReader = nullptr;
-   delete mqttWriter;            mqttWriter = nullptr;
+   delete mqttReader; mqttReader = nullptr;
+   delete mqttWriter; mqttWriter = nullptr;
 
    tell(eloMqtt, "Disconnected from MQTT");
 
@@ -317,6 +317,9 @@ int Daemon::mqttDisconnect()
 
 int Daemon::mqttCheckConnection()
 {
+   const char* mqttPingTopic = TARGET "2mqtt/ping";
+   static time_t lastMqttPing {0};
+
    if (isEmpty(mqttUrl))
       return done;
 
@@ -327,7 +330,15 @@ int Daemon::mqttCheckConnection()
       mqttWriter = new Mqtt();
 
    if (mqttReader->isConnected() && mqttWriter->isConnected())
+   {
+      if (lastMqttPing < time(0)-30)
+      {
+         lastMqttPing = time(0);
+         mqttWriter->write(mqttPingTopic, "{\"ping\" : true, \"sender\" : \"" TARGET "\"}");
+      }
+
       return success;
+   }
 
    // retry connect all 20 seconds
 

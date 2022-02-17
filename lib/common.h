@@ -189,12 +189,24 @@ class MemoryStruct
          return success;
       }
 
-      int append(const char* buf, int len = 0)
+      int append(const char* buf)
       {
-         if (!len) len = strlen(buf);
+         size_t len = strlen(buf);
          memory = srealloc(memory, size+len);
          memcpy(memory+size, buf, len);
          size += len;
+
+         return success;
+      }
+
+      int append(const char* buf, int len)
+      {
+         if (len > 0)
+         {
+            memory = srealloc(memory, size+len);
+            memcpy(memory+size, buf, len);
+            size += len;
+         }
 
          return success;
       }
@@ -239,10 +251,10 @@ class MemoryStruct
       void clear()
       {
          free(memory);
-         memory = 0;
+         memory = nullptr;
          size = 0;
          free(zmemory);
-         zmemory = 0;
+         zmemory = nullptr;
          zsize = 0;
          *tag = 0;
          *name = 0;
@@ -375,7 +387,7 @@ std::string l2pTime(time_t t, const char* fmt = "%d.%m.%Y %T");
 char* eos(char* s);
 const char* toElapsed(int seconds, char* buf);
 // #to-be-implemented: splitToInts(const char* string, char c, int& i1, int& i2);
-std::vector<std::string> split(const std::string& str, char delim);
+std::vector<std::string> split(const std::string& str, char delim, std::vector<std::string>* strings = nullptr);
 std::string getStringBetween(std::string str, const char* begin, const char* end);
 std::string getStringBefore(std::string str, const char* begin);
 int fileExists(const char* path);
@@ -389,6 +401,7 @@ int removeFile(const char* filename);
 int chkDir(const char* path);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
+int loadTailLinesFromFile(char const* filename, int count, std::vector<std::string>& lines);
 int storeToFile(const char* filename, const char* data, int size = 0);
 
 struct FsStat

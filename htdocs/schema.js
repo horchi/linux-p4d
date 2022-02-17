@@ -212,6 +212,8 @@ function updateSchema()
       var title = "";
       if (schemaDef.type == "UC")
          title = "User Constant";
+      if (schemaDef.type == "CN")
+         title = "Leitung";
       else if (item != null)
          title = item.title;
 
@@ -224,15 +226,121 @@ function schemaEditModeToggle()
    modeEdit = !modeEdit;
    initSchema(lastSchemadata, schemaRoot);
    updateSchema();
+   
 
    document.getElementById("buttonSchemaStore").style.visibility = modeEdit ? 'visible' : 'hidden';
    document.getElementById("buttonSchemaAddItem").style.visibility = modeEdit ? 'visible' : 'hidden';
+   document.getElementById("makeResizableDiv").style.visibility = modeEdit ? 'visible' : 'hidden';
+   
+  if (modeEdit == false) {
+     document.getElementById('resizers').display == "none"; //hide Resizer
+  } 
+   activateResizer();
 }
 
 function schemaStore()
 {
    socket.send({ "event" : "storeschema", "object" : lastSchemadata });
 }
+
+function activateResizer()
+{
+
+    $(schemaRoot).append($('<div></div>')
+                        .addClass('resizable')
+                        .attr('id', 'newLine')
+                        .append($('<div></div>')
+                                .addClass('resizers')
+                                .append($('<div></div>')
+                                        .addClass('resizer top-left'))
+                                .append($('<div></div>')
+                                        .addClass('resizer top-right'))
+                                .append($('<div></div>')
+                                        .addClass('resizer bottom-left'))
+                                .append($('<div></div>')
+                                        .addClass('resizer bottom-right'))
+                               ));
+
+  const element = document.querySelector('#newLine');
+  const resizers = element.querySelectorAll('.resizer')
+  const minimum_size = 10;
+  let original_width = 0;
+  let original_height = 0;
+  let original_x = 0;
+  let original_y = 0;
+  let original_mouse_x = 0;
+  let original_mouse_y = 0;
+  for (let i = 0;i < resizers.length; i++) {
+    const currentResizer = resizers[i];
+    currentResizer.addEventListener('mousedown', function(e) {
+      e.preventDefault()
+      original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
+      original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
+      original_x = element.getBoundingClientRect().left;
+      original_y = element.getBoundingClientRect().top;
+      original_mouse_x = e.pageX;
+      original_mouse_y = e.pageY;
+      window.addEventListener('mousemove', resize)
+      window.addEventListener('mouseup', stopResize)
+    })
+
+    function resize(e) {
+      if (currentResizer.classList.contains('bottom-right')) {
+        const width = original_width + (e.pageX - original_mouse_x);
+        const height = original_height + (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+        }
+      }
+      else if (currentResizer.classList.contains('bottom-left')) {
+        const height = original_height + (e.pageY - original_mouse_y)
+        const width = original_width - (e.pageX - original_mouse_x)
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+        }
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+          element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
+        }
+      }
+      else if (currentResizer.classList.contains('top-right')) {
+        const width = original_width + (e.pageX - original_mouse_x)
+        const height = original_height - (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+          element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
+        }
+      }
+      else if (currentResizer.classList.contains('top-left')){
+        const width = original_width - (e.pageX - original_mouse_x)
+        const height = original_height - (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+          element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+          element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
+        }
+      }
+    }
+
+    function stopResize() {
+      window.removeEventListener('mousemove', resize)
+    }
+    
+    
+    
+  }
+}
+
+makeResizableDiv('.resizable')
 
 function schemaAddItem()
 {
@@ -255,6 +363,37 @@ function schemaAddItem()
    initSchemaElement(schemaDef, lastSchemadata.length);
    editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
+function makeResizableDiv(div) 
+{
+   var addr = 0;
+   for (var i = 0; i < lastSchemadata.length; i++) {
+      if (lastSchemadata[i].type == "CN" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
+         addr++;
+   }
+
+   schemaDef = { type: "CN",      //Connection
+                 address: addr,
+                 state: "A",
+                 properties: {},
+                 kind: 3,
+                 showtitle: 1,
+                 showunit: 0 };
+                 
+   const props = document.getElementById('newLine');
+   
+   schemaDef.properties['top'] =  props.style.top;
+   schemaDef.properties['left'] =  props.style.left;
+   schemaDef.properties['width'] =  (parseInt(props.style.width.replace(/px/,""))-10)+"px";
+   schemaDef.properties['height'] =  (parseInt(props.style.height.replace(/px/,""))-10)+"px";
+   
+    
+   
+   lastSchemadata[lastSchemadata.length] = schemaDef;
+   initSchemaElement(schemaDef, lastSchemadata.length);
+   //editSchemaValue(schemaDef.type, schemaDef.address, true);
+   
+
+}
 
 function setAttributeStyleFrom(element, json)
 {
@@ -276,27 +415,42 @@ function editSchemaValue(type, address, newUC)
 
    var schemaDef = getSchemDef(id);
    var isUC = schemaDef.type == "UC";
+   var isCN = schemaDef.type == "CN";
    var item = allSensors[key];
 
    var form =
        '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
-       '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
+	   '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
        ' </div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
        '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/><label for="showBorder"></label></span></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Radius: </span><span><input id="borderRadius" style="width:60px;" type="text" value="' + (schemaDef.properties["border-radius"] || "3px") + '"/></span>' +
-       ' </div>' +
-       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Schriftgröße:</span><span><input id="fontSize" style="width:inherit;" type="text" value="' + (schemaDef.properties["font-size"] || "16px") + '"/></span></div>' +
+       ' </div>';
+   if (!isCN){
+      form +=
+       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Schriftgröße:</span><span><input id="fontSize" style="width:inherit;" type="text" value="' + (schemaDef.properties["font-size"] || "16px") + '"/></span></div>' ;
+   }
+      form +=
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Layer:</span><span><input id="zIndex" style="width:inherit;" type="number" step="1" value="' + (schemaDef.properties["z-index"] || "100") + '"/></span></div>';
-   if (!isUC) {
+   if (!isUC && !isCN) {
       form +=
          ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Bezeichnung:</span><span><input id="showTitle" style="width:auto;" type="checkbox"' + (schemaDef.showtitle ? "checked" : "") + '/></span><label for="showTitle"></label></span></div>' +
          ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einheit:</span><span><input id="showUnit" style="width:auto;" type="checkbox"' + (schemaDef.showunit ? "checked" : "") + '/><label for="showUnit"></label></span></span></div>';
    }
-
+   if (isCN){
+   form +=
+      ' <div style="display:flex;margin:4px;text-align:left;">' +
+      '  <span style="width:120px;">Type:</span>' +
+      '  <span style="">links->rechts</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(3)" value="3" type="radio" name="kind" ' + (schemaDef.kind == 3 ? "checked" : "") + '/></span>' +
+      '  <span style="">rechts->links</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(4)" value="4" type="radio" name="kind" ' + (schemaDef.kind == 4 ? "checked" : "") + '/></span>' +
+      '  <span style="">oben->unten</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(5)" value="5" type="radio" name="kind" ' + (schemaDef.kind == 5 ? "checked" : "") + '/></span>' +
+      '  <span style="">unten->oben</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(6)" value="6" type="radio" name="kind" ' + (schemaDef.kind == 6 ? "checked" : "") + '/></span>' +
+      ' </div>';
+ }
+   else{
    form +=
       ' <div style="display:flex;margin:4px;text-align:left;">' +
       '  <span style="width:120px;">Type:</span>' +
@@ -304,7 +458,8 @@ function editSchemaValue(type, address, newUC)
       '  <span style="">Text:</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(1)" value="1" type="radio" name="kind" ' + (schemaDef.kind == 1 ? "checked" : "") + '/></span>' +
       '  <span style="">Bild:</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(2)" value="2" type="radio" name="kind" ' + (schemaDef.kind == 2 ? "checked" : "") + '/></span>' +
       ' </div>';
-
+      }
+   if (!isCN){
    form +=
       ' <div id="imgSize" style="display:flex;margin:4px;text-align:left;">' +
       '  <span style="align-self:center;width:120px;">Bild Breite:</span><span><input id="imgWidth" style="width:60px;" type="number" value="' + schemaDef.width + '"/></span>' +
@@ -315,15 +470,18 @@ function editSchemaValue(type, address, newUC)
 
    form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelUsrText" style="width:120px;">xxx:</span><span style="width:-webkit-fill-available;"><textarea id="usrText" style="width:inherit;height:inherit;">' + (schemaDef.usrtext || "") + '</textarea></span></div>';
    form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelFunction" style="width:120px;">Funktion:</span><span style="width:-webkit-fill-available;height:95px;"><textarea id="function" style="width:inherit;height:inherit;font-family: monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea></span></div>';
-
+   }
+   if (!isCN)
+   {
    if (!isUC)
       form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Auf die Daten des Elements kann über item.value, item.unit und item.text zugegriffen werden. Anderer Elemente erhält man mit getItem(id)</span></div>';
    else
       form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Elemente erhält man mit getItem(id)</span></div>';
-
+   }
    form += '</div></form>';
 
    var title = isUC ? "User Constant" : ((item != null && item.title) || "");
+   var title = isCN ? "Connection" : ((item != null && item.title) || "");
 
    var buttons = {
       'Ok': function () {
@@ -337,7 +495,7 @@ function editSchemaValue(type, address, newUC)
       }
    };
 
-   if (isUC) {
+   if (isUC || isCN)  {
       buttons['Löschen'] = function () {
          if (deleteUC(id) == 0)
             $(this).dialog('close');
@@ -405,6 +563,19 @@ function editSchemaValue(type, address, newUC)
            $('#imgSize').css({'visibility' : "visible"});
            $('#imgInfo').css({'visibility' : "visible"});
            break;
+        case 3:
+          // $('#labelUsrText').html("Image URL:");
+          // $('#labelFunction').html("Funktion Image URL:");
+          // $('#imgSize').css({'visibility' : "visible"});
+          // $('#imgInfo').css({'visibility' : "visible"});
+           break;
+        case 4: 
+           break;
+        case 5: 
+           break;
+        case 6: 
+           break;
+              
       }
    }
 
@@ -469,6 +640,8 @@ function dropSValue(ev)
 
    schemaDef.properties["top"] = (ev.offsetY - oTop)  + 'px';
    schemaDef.properties["left"] = (ev.offsetX - oLeft)  + 'px';
+   //schemaDef.properties['width'] = element.style.width + 'px';
+   //schemaDef.properties['height'] = element.style.height + 'px';
    $(id).css({'top'  : (ev.offsetY - oTop)  + 'px'});
    $(id).css({'left' : (ev.offsetX - oLeft) + 'px'});
 }

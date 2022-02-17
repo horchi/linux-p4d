@@ -21,14 +21,14 @@
 #include <zlib.h>
 #include <dirent.h>
 #include <regex.h>
+#include <fcntl.h>
 
 #include <algorithm>
+#include <regex>
 
 #ifdef VDR_PLUGIN
 # include <vdr/thread.h>
 #endif
-
-#include <regex>
 
 #include "common.h"
 
@@ -705,9 +705,13 @@ double round2(double d)
 // Split String to Vector
 //***************************************************************************
 
-std::vector<std::string> split(const std::string& str, char delim)
+std::vector<std::string> split(const std::string& str, char delim, std::vector<std::string>* strings)
 {
-   std::vector<std::string> strings;
+   std::vector<std::string> _strings;
+
+   if (!strings)
+      strings = &_strings;
+
    size_t start;
    size_t end {0};
 
@@ -715,10 +719,10 @@ std::vector<std::string> split(const std::string& str, char delim)
    {
       end = str.find(delim, start);
       std::string s = std::regex_replace(str.substr(start, end - start), std::regex("^\\s+"), std::string(""));
-      strings.push_back(std::regex_replace(s, std::regex("\\s+$"), std::string("")));
+      strings->push_back(std::regex_replace(s, std::regex("\\s+$"), std::string("")));
    }
 
-   return strings;
+   return *strings;
 }
 
 //***************************************************************************
@@ -1039,6 +1043,10 @@ int isZero(const char* str)
    return yes;
 }
 
+//***************************************************************************
+// Load Lines
+//***************************************************************************
+
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF)
 {
    FILE* fp;
@@ -1072,6 +1080,151 @@ int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool 
 
    return success;
 }
+
+//*************************************************************************
+// Read Remaining from ds
+//*************************************************************************
+
+uintmax_t readRemaining(int fd, uintmax_t nBytes, std::vector<std::string>& lines)
+{
+   uintmax_t nDone {0};
+   uintmax_t nRemaining {nBytes};
+
+   while (nRemaining)
+   {
+      char buffer[BUFSIZ];
+      ssize_t nRead = read(fd, buffer, std::min((int)nRemaining, BUFSIZ));
+
+      if (!nRead || nRead == -1)
+         return nDone;
+
+      // printf("%.*s", (int)nRead, buffer);
+      split({buffer, (size_t)nRead-1}, '\n', &lines);
+      // lines.insert(lines.begin(), {buffer, (size_t)nRead-1});
+      nDone += nRead;
+      nRemaining -= nRead;
+   }
+
+   return nDone;
+}
+
+//*************************************************************************
+// get the last n lines from fd
+//*************************************************************************
+
+int nTailFileLines(int fd, char const* filename, uintmax_t nLines, std::vector<std::string>& lines)
+{
+   if (!nLines)
+      return success;
+
+   off_t startPos {0};
+   char buffer[BUFSIZ];
+   ssize_t nRead {0};
+   off_t endPos = lseek(fd, 0, SEEK_END);
+   off_t pos = endPos;
+
+   // Set 'nRead' to the size of the last, probably partial, buffer;
+   //   0 < 'nRead' <= 'BUFSIZ'
+
+   nRead = (pos - startPos) % BUFSIZ;
+
+   if (nRead == 0)
+      nRead = BUFSIZ;
+
+   // Make 'pos' a multiple of 'BUFSIZ' (0 if the file is short), so that all
+   //   reads will be on block boundaries, which might increase efficiency
+
+   pos -= nRead;
+   lseek(fd, pos, SEEK_SET);
+   nRead = read(fd, buffer, nRead);
+
+   if (nRead == -1)
+   {
+      printf("Error reading %s\n", filename);
+      return fail;
+   }
+
+   // Count the incomplete line on files that don't end with a newline
+
+   if (nRead && buffer[nRead-1] != '\n')
+      --nLines;
+
+   do
+   {
+      // Scan backward, counting the newlines in this bufferfull
+
+      ssize_t n {nRead};
+
+      while (n)
+      {
+         const char* nl = (const char*)memrchr(buffer, '\n', n);
+
+         if (!nl)
+            break;
+
+         n = nl - buffer;
+
+         if (nLines-- == 0)
+         {
+            // this newline isn't the last character in the buffer, output the part after
+
+            // printf("%.*s\n", (int)(nRead - (n+2)), nl + 1);
+            // lines.insert(lines.begin(), {nl + 1, (size_t)nRead - (n+2)});
+            split({nl + 1, (size_t)(nRead-(n+2))}, '\n', &lines);
+            return success;
+         }
+      }
+
+      // Not enough newlines in that buffer
+
+      if (pos == startPos)
+      {
+         // Not enough lines in the file, print everything from startPos to the end
+
+         lseek(fd, startPos, SEEK_SET);
+         readRemaining(fd, endPos, lines);
+         return success;
+      }
+
+      pos -= BUFSIZ;
+      lseek(fd, pos, SEEK_SET);
+      nRead = read(fd, buffer, BUFSIZ);
+
+      if (nRead == -1)
+      {
+         printf("Error reading %s\n", filename);
+         return fail;
+      }
+   }
+   while (nRead > 0);
+
+   return success;
+}
+
+//*************************************************************************
+// Load 'N' Tail Lines From File
+//*************************************************************************
+
+int loadTailLinesFromFile(char const* filename, int count, std::vector<std::string>& lines)
+{
+   int fd = open(filename, O_RDONLY);
+
+   if (!fd)
+   {
+      printf("Opening %s failed", filename);
+      return fail;
+   }
+
+   int res = nTailFileLines(fd, filename, count, lines);
+
+   close(fd);
+
+   return res;
+}
+
+//*************************************************************************
+// Load 'N' Tail Lines From File
+//*************************************************************************
 
 bool fctImageSort(FileInfo& v1, FileInfo& v2)
 {

@@ -17,11 +17,11 @@
 
 bool W1::shutdown {false};
 
-W1::W1(const char* aUrl)
+W1::W1(const char* aUrl, const char* topic)
 {
    w1Path = strdup("/sys/bus/w1/devices");
-   mqttTopic = TARGET "2mqtt/w1";
-   mqttPingTopic = TARGET "2mqtt/w1/ping";
+   mqttTopic = topic;
+   mqttPingTopic = std::string(topic) + "/ping";
    mqttUrl = aUrl;
 }
 
@@ -220,9 +220,9 @@ int W1::update()
    json_decref(oJson);
 
    if (count)
-      mqttW1Writer->writeRetained(mqttTopic, p);
+      mqttW1Writer->writeRetained(mqttTopic.c_str(), p);
    else
-      mqttW1Writer->write(mqttPingTopic, "{\"ping\" : true }");
+      mqttW1Writer->write(mqttPingTopic.c_str(), "{\"ping\" : true, \"sender\" : \"" TARGET "\"}");
 
    free(p);
 
@@ -249,6 +249,7 @@ int W1::mqttConnection()
       }
 
       tell(eloAlways, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
+      tell(eloAlways, "MQTT: Publishe W1 data to topic '%s'", mqttTopic.c_str());
    }
 
    return success;
@@ -264,6 +265,7 @@ int main(int argc, char** argv)
    int nofork = no;
    int pid;
    int _stdout = na;
+   const char* topic = TARGET "2mqtt/w1";
    Eloquence _eloquence {eloAlways};
    const char* url = "tcp://localhost:1883";
 
@@ -288,6 +290,7 @@ int main(int argc, char** argv)
       {
          case 'u': url = argv[i+1];                         break;
          case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
+         case 'T': if (argv[i+1]) topic = argv[i+1];        break;
          case 't': _stdout = yes;                           break;
          case 'n': nofork = yes;                            break;
       }
@@ -298,14 +301,9 @@ int main(int argc, char** argv)
    else
       logstdout = no;
 
-   // read configuration ..
-
-   // if (readConfig() != success)
-   //    return 1;
-
    eloquence = _eloquence;
 
-   job = new W1(url);
+   job = new W1(url, topic);
 
    if (job->init() != success)
    {

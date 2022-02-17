@@ -676,6 +676,13 @@ function showSyslog(log)
    var root = document.getElementById("syslogContainer");
    root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
    hideProgressDialog();
+
+   // calc container size
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   };
 }
 
 function showSystem(system)

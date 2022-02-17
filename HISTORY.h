@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.29"
-#define VERSION_DATE "30.01.2022"
+#define _VERSION     "0.9.31"
+#define VERSION_DATE "17.02.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,10 +17,17 @@
 /*
  * ------------------------------------
 
+2022-02-17:  version 0.9.31
+  - Change: Improved MQTT ping/reconnect handling
+
+2022-02-01:  version 0.9.30
+  - Added: Config for weather widget toggle
+  - Added: Improved loading of syslog / <daemon>.log
+
 2022-01-30:  version 0.9.29
   - bugfix: Fixed unit handling for sensor scripts
 
-2022-01-29:  version 0.9.28
+-01-29:  version 0.9.28
   - bugfix: Fixed store of sensor alert cehcks
 
 2022-01-28:  version 0.9.27
