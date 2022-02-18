@@ -1566,6 +1566,7 @@ int Daemon::readConfiguration(bool initial)
    getConfigItem("mqttSensorTopics", sensorTopics, "+/w1/#");
    mqttSensorTopics = split(sensorTopics, ',');
    free(sensorTopics);
+   mqttSensorTopics.push_back(TARGET "2mqtt/ping/#");
    mqttSensorTopics.push_back(TARGET "2mqtt/light/+/set/#");
    mqttSensorTopics.push_back(TARGET "2mqtt/command/#");
    mqttSensorTopics.push_back(TARGET "2mqtt/nodered/#");

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.31"
-#define VERSION_DATE "17.02.2022"
+#define _VERSION     "0.9.32"
+#define VERSION_DATE "18.02.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-02-18:  version 0.9.32
+  - Change: Improved MQTT ping/reconnect handling again ;)
 
 2022-02-17:  version 0.9.31
   - Change: Improved MQTT ping/reconnect handling
