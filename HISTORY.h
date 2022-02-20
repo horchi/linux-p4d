@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.33"
+#define _VERSION     "0.9.34"
 #define VERSION_DATE "20.02.2022"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-02-20:  version 0.9.34
+  - Change: Using auto dependencies
 
 2022-02-20:  version 0.9.33
   - Change: Fixed address handling for time and spacer widgets

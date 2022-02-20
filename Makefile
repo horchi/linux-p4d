@@ -33,13 +33,27 @@ CFLAGS    	+= $(shell $(SQLCFG) --include)
 OBJS        += specific.o
 W1OBJS       = w1.o lib/common.o lib/thread.o $(MQTTOBJS)
 
+# main taget
+
+all: $(TARGET) $(W1TARGET) $(CMDTARGET) $(CHARTTARGET)
+
+# auto dependencies
+
+MAKEDEP = $(CXX) -MM -MG
+DEPFILE = .dependencies
+
+$(DEPFILE): Makefile
+	@$(MAKEDEP) $(CFLAGS) $(OBJS:%.o=%.c) > $@
+
+-include $(DEPFILE)
+
+# git revision
+
 ifdef GIT_REV
    DEFINES += -DGIT_REV='"$(GIT_REV)"'
 endif
 
-# rules:
-
-all: $(TARGET) $(W1TARGET) $(CMDTARGET) $(CHARTTARGET)
+# build rules
 
 $(TARGET) : $(OBJS)
 	$(doLink) $(OBJS) $(LIBS) -o $@
