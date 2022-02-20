@@ -1243,10 +1243,10 @@ function addWidget()
             addrTime = n;
       }
       $('#widgetKey').append($('<option></option>')
-                             .val('SPACER:0x' + addrSpacer.toString(16)+1)
+                             .val('SPACER:0x' + (addrSpacer + 1).toString(16))
                              .html('Spacer'));
       $('#widgetKey').append($('<option></option>')
-                             .val('TIME:0x' + addrSpacer.toString(16)+1)
+                             .val('TIME:0x' + (addrTime + 1).toString(16))
                              .html('Time'));
 
       var jArray = [];
