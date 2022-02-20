@@ -152,8 +152,8 @@ dist: clean
 	@echo Distribution package created as $(ARCHIVE).tgz
 
 clean:
-	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg
-	rm -f $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
+	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg $(DEPFILE)
+	rm -f $(DEPFILE) $(TARGET) $(CHARTTARGET) $(CMDTARGET) $(ARCHIVE).tgz
 	rm -f com2
 
 build: clean all
