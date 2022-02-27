@@ -1147,6 +1147,9 @@ function updateWidget(sensor, refresh, widget)
    }
 }
 
+var filterExpression = null;
+var addFilterString = '';
+
 function addWidget()
 {
    // console.log("add widget ..");
@@ -1167,6 +1170,7 @@ function addWidget()
                                   .attr('type', 'search')
                                   .attr('placeholder', 'expression...')
                                   .addClass('rounded-border inputSetting')
+                                  .val(addFilterString)
                                   .on('input', function() {updateSelection();})
                                  ))
                   .append($('<br></br>'))
@@ -1209,7 +1213,11 @@ function addWidget()
 
             if ($("#widgetKey").val() == 'ALL') {
                for (var key in valueFacts) {
-                  if (!valueFacts[key].state)   // use only active facts here
+                  if (!valueFacts[key].state)   // use only active facts
+                     continue;
+                  if (filterExpression && !filterExpression.test(valueFacts[key].title) &&
+                      !filterExpression.test(valueFacts[key].usrtitle) &&
+                      !filterExpression.test(valueFacts[key].type))
                      continue;
                   if (dashboards[actDashboard].widgets[key] != null)
                      continue;
@@ -1250,9 +1258,11 @@ function addWidget()
                              .html('Time'));
 
       var jArray = [];
-      var filterExpression = null;
+      filterExpression = null;
+      addFilterString = $('#incFilter').val();
+
       if ($('#incFilter').val() != '')
-         filterExpression = new RegExp($('#incFilter').val());
+         filterExpression = new RegExp(addFilterString);
 
       for (var key in valueFacts) {
          if (!valueFacts[key].state)   // use only active facts here

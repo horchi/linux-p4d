@@ -222,67 +222,70 @@ int Daemon::performMqttRequests()
    static time_t lastMqttRead {0};
    static time_t lastMqttRecover {0};
 
+   if (isEmpty(mqttUrl))
+      return done;
+
    if (!lastMqttRead)
       lastMqttRead = time(0);
 
    mqttCheckConnection();
 
+   if (!mqttReader->isConnected())
+      return done;
+
    MemoryStruct message;
 
-   if (!isEmpty(mqttUrl) && mqttReader->isConnected())
+   // tell(eloMqtt, "Try reading topic '%s'", mqttReader->getTopic());
+
+   while (mqttReader->read(&message, 10) == success)
    {
-      // tell(eloMqtt, "Try reading topic '%s'", mqttReader->getTopic());
+      if (isEmpty(message.memory))
+         continue;
 
-      while (mqttReader->read(&message, 10) == success)
+      lastMqttRead = time(0);
+
+      std::string tp = mqttReader->getLastReadTopic();
+      tell(eloMqtt, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
+
+      if (strstr(tp.c_str(), "2mqtt/ping"))
+         ;
+      else if (strstr(tp.c_str(), "2mqtt/w1"))
+         dispatchW1Msg(message.memory);
+      else if (strstr(tp.c_str(), "2mqtt/arduino/out"))
+         dispatchArduinoMsg(message.memory);
+      else if (strstr(tp.c_str(), "2mqtt/homematic/rpcresult"))
+         dispatchHomematicRpcResult(message.memory);
+      else if (strstr(tp.c_str(), "2mqtt/homematic/events"))
+         dispatchHomematicEvents(message.memory);
+
+      else if (strstr(tp.c_str(), "2mqtt/light/"))
       {
-         if (isEmpty(message.memory))
-            continue;
+         json_t* jData = jsonLoad(message.memory);
 
-         lastMqttRead = time(0);
-
-         std::string tp = mqttReader->getLastReadTopic();
-         tell(eloMqtt, "<- (%s) [%s] retained %d", tp.c_str(), message.memory, mqttReader->isRetained());
-
-         if (strstr(tp.c_str(), "2mqtt/ping"))
-            ;
-         else if (strstr(tp.c_str(), "2mqtt/w1"))
-            dispatchW1Msg(message.memory);
-         else if (strstr(tp.c_str(), "2mqtt/arduino/out"))
-            dispatchArduinoMsg(message.memory);
-         else if (strstr(tp.c_str(), "2mqtt/homematic/rpcresult"))
-            dispatchHomematicRpcResult(message.memory);
-         else if (strstr(tp.c_str(), "2mqtt/homematic/events"))
-            dispatchHomematicEvents(message.memory);
-
-         else if (strstr(tp.c_str(), "2mqtt/light/"))
+         if (jData)
          {
-            json_t* jData = jsonLoad(message.memory);
-
-            if (jData)
-            {
-               dispatchMqttHaCommandRequest(jData, tp.c_str());
-               json_decref(jData);
-            }
+            dispatchMqttHaCommandRequest(jData, tp.c_str());
+            json_decref(jData);
          }
+      }
 
-         else if (strstr(tp.c_str(), "2mqtt/command") || strstr(tp.c_str(), "2mqtt/nodered"))
+      else if (strstr(tp.c_str(), "2mqtt/command") || strstr(tp.c_str(), "2mqtt/nodered"))
+      {
+         json_t* jData = jsonLoad(message.memory);
+
+         if (jData)
          {
-            json_t* jData = jsonLoad(message.memory);
-
-            if (jData)
-            {
-               dispatchNodeRedCommands(tp.c_str(), jData);
-               json_decref(jData);
-            }
+            dispatchNodeRedCommands(tp.c_str(), jData);
+            json_decref(jData);
          }
-         else
-         {
-            dispatchOther(tp.c_str(), message.memory);
-         }
+      }
+      else
+      {
+         dispatchOther(tp.c_str(), message.memory);
       }
    }
 
-   // last successful W1 read at least in last 5 minutes?
+   // last successful MQTT read at least in last 5 minutes?
 
    if (lastMqttRead < time(0)-300 && lastMqttRecover < time(0)-60)
    {

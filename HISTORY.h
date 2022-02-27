@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.34"
-#define VERSION_DATE "20.02.2022"
+#define _VERSION     "0.9.35"
+#define VERSION_DATE "25.02.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-02-25:  version 0.9.35
+  - Change: Fixed MQTT keep alive check
 
 2022-02-20:  version 0.9.34
   - Change: Using auto dependencies
