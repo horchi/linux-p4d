@@ -355,6 +355,8 @@ std::string executeCommand(const char* cmd);
   const char* getUniqueId();
 #endif
 
+const char* bin2string(word n);
+const char* bin2string(byte n);
 const char* bytesPretty(double bytes, int precision = 0);
 double usNow();
 int l2hhmm(time_t t);

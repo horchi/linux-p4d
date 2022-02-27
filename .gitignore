@@ -8,6 +8,8 @@ vg.log
 lib/tst
 core
 
+Make.user
+
 mqt
 w1mqtt
 womod

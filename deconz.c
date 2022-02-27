@@ -497,7 +497,7 @@ int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
 
    if (!jResult)
    {
-      tell(eloAlways, "Error: Ignoring invalid script result [%s]", data.c_str());
+      tell(eloAlways, "Error: Ignoring invalid result [%s]", data.c_str());
       tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
            error.text, error.source, error.line, error.column, error.position);
       return fail;

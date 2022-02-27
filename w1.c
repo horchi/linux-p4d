@@ -207,8 +207,8 @@ int W1::update()
       fclose(in);
       free(path);
 
-      // take a breath .. due to a forum post we wait 1 second:
-      //   -> "jede Lesung am Bus zieht die Leitungen runter und da alle Sensoren am selben Bus hängen, deswegen min. 1s zwischen den Lesungen"
+      // take a breath ..
+      //   -> "jedes lesen des Bus zieht die Leitungen runter und da alle Sensoren am selben Bus hängen -> min. 1 Sekunde Pause zwischen den Zugriffen"
 
       sleep(1);
    }
@@ -261,10 +261,9 @@ int W1::mqttConnection()
 
 int main(int argc, char** argv)
 {
+   bool nofork {false};
+   int _stdout {na};
    W1* job;
-   int nofork = no;
-   int pid;
-   int _stdout = na;
    const char* topic = TARGET "2mqtt/w1";
    Eloquence _eloquence {eloAlways};
    const char* url = "tcp://localhost:1883";
@@ -292,7 +291,7 @@ int main(int argc, char** argv)
          case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
          case 'T': if (argv[i+1]) topic = argv[i+1];        break;
          case 't': _stdout = yes;                           break;
-         case 'n': nofork = yes;                            break;
+         case 'n': nofork = true;                           break;
       }
    }
 
@@ -316,6 +315,8 @@ int main(int argc, char** argv)
 
    if (!nofork)
    {
+      int pid;
+
       if ((pid = fork()) < 0)
       {
          printf("Can't fork daemon, %s\n", strerror(errno));

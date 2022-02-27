@@ -8,10 +8,6 @@
 
 #pragma once
 
-//***************************************************************************
-// Include
-//***************************************************************************
-
 #include <termios.h>
 
 #include "common.h"
@@ -33,37 +29,39 @@ class Serial
          wrnTimeout
       };
 
-      // object
-
-      Serial();
+      Serial(int aBaud = B57600);
       virtual ~Serial();
 
       // interface
 
-      virtual int open(const char* dev = 0);
+      virtual int open(const char* dev = nullptr);
       virtual int close();
-      virtual int reopen(const char* dev = 0);
+      virtual int reopen(const char* dev = nullptr);
       virtual int isOpen()              { return fdDevice != 0 && opened; }
       virtual int flush();
 
       virtual int look(byte& b, int timeoutMs = 0);
       virtual int read(void* buf, size_t count, uint timeoutMs = 0);
+      virtual int readByte(byte& v, int timeoutMs = 100);
+      virtual int readWord(word& v, int timeoutMs = 100);
       virtual int write(void* line, int size = 0);
 
       // settings
 
-      virtual int setTimeout(int timeout);
-      virtual int setWriteTimeout(int timeout);
+      virtual void setBaud(int b)               { baud = b; }
+      virtual void setTimeout(int timeout)      { readTimeout = timeout; }
+      virtual void setWriteTimeout(int timeout) { writeTimeout = timeout; }
 
    protected:
 
       // data
 
-      int opened;
-      int readTimeout;
-      int writeTimeout;
-      char deviceName[100];
+      bool opened {false};
+      int readTimeout {10};
+      int writeTimeout {10};
+      int baud {B57600};
+      char deviceName[100] {'\0'};
 
-      int fdDevice;
+      int fdDevice {0};
       struct termios oldtio;
 };

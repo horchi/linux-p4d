@@ -6,10 +6,6 @@
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
 //***************************************************************************
 
-//***************************************************************************
-// Include
-//***************************************************************************
-
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -24,35 +20,15 @@
 // Object
 //***************************************************************************
 
-Serial::Serial()
+Serial::Serial(int aBaud)
+   : baud(aBaud)
 {
-   fdDevice = 0;
-   opened = no;
-   readTimeout = 10;
-   writeTimeout = 10;
-
    bzero(&oldtio, sizeof(oldtio));
 }
 
 Serial::~Serial()
 {
    close();
-}
-
-//***************************************************************************
-// Settings
-//***************************************************************************
-
-int Serial::setTimeout(int timeout)
-{
-   readTimeout = timeout;
-   return success;
-}
-
-int Serial::setWriteTimeout(int timeout)
-{
-   writeTimeout = timeout;
-   return success;
 }
 
 //***************************************************************************
@@ -103,7 +79,7 @@ int Serial::open(const char* dev)
       CLOCAL  : local connection, no modem control
       CREAD   : enable receiving characters  */
 
-   newtio.c_cflag = B57600 | CS8 | CLOCAL | CREAD;
+   newtio.c_cflag = baud | CS8 | CLOCAL | CREAD;
    newtio.c_iflag = IGNPAR;  // don't set ICRNL !!
    newtio.c_oflag = 0;
    newtio.c_lflag = 0;       // ICANON - 'disable echo functionality  and don't
@@ -271,3 +247,29 @@ int Serial::read(void* buf, size_t count, uint timeoutMs)
    return nRead;
 }
 
+int Serial::readByte(byte& v, int timeoutMs)
+{
+   int status {success};
+
+   if ((status = look(v, timeoutMs)) != success)
+      return status;
+
+   return success;
+}
+
+int Serial::readWord(word& v, int timeoutMs)
+{
+   int status {success};
+   byte b1 {0};
+   byte b2 {0};
+
+   if ((status = readByte(b1, timeoutMs)) != success)
+      return status;
+
+   if ((status = readByte(b2, timeoutMs)) != success)
+      return status;
+
+   v = (b1 << 8) | b2;
+
+   return success;
+}

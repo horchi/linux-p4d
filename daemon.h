@@ -271,6 +271,7 @@ class Daemon : public cWebInterface
       int initInput(uint pin, const char* name);
       int initScripts();
 
+      void doSleep(int t);
       int standby(int t);
       virtual int standbyUntil();
       int meanwhile();

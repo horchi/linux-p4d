@@ -389,10 +389,11 @@ int Daemon::init()
    tell(eloAlways, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
-   if ((status = initDb()) != success)
+   while ((status = initDb()) != success && !doShutDown())
    {
       exitDb();
-      return status;
+      tell(eloAlways, "Retrying in %d seconds", 10);
+      doSleep(10);
    }
 
    deconz.init(this, connection);
@@ -692,16 +693,10 @@ int Daemon::initScripts()
       tell(eloDebug, "Calling '%s'", cmd);
       free(cmd);
 
-      json_error_t error;
-      json_t* oData = json_loads(result.c_str(), 0, &error);
+      json_t* oData = jsonLoad(result.c_str());
 
       if (!oData)
-      {
-         tell(eloAlways, "Error: Ignoring invalid script result [%s]", result.c_str());
-         tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-              error.text, error.source, error.line, error.column, error.position);
          continue;
-      }
 
       std::string kind = getStringFromJson(oData, "kind", "status");
       const char* title = getStringFromJson(oData, "title");
@@ -786,16 +781,10 @@ int Daemon::callScript(int addr, const char* command, const char* name, const ch
    tell(eloDebug, "Debug: Result of script '%s' was [%s]", cmd, result.c_str());
    free(cmd);
 
-   json_error_t error;
-   json_t* oData = json_loads(result.c_str(), 0, &error);
+   json_t* oData = jsonLoad(result.c_str());
 
    if (!oData)
-   {
-      tell(eloAlways, "Error: Ignoring invalid script result [%s]", result.c_str());
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-           error.text, error.source, error.line, error.column, error.position);
       return fail;
-   }
 
    std::string kind = getStringFromJson(oData, "kind", "status");
    const char* unit = getStringFromJson(oData, "unit");
@@ -1597,6 +1586,18 @@ int Daemon::readConfiguration(bool initial)
    selectAllGroups->freeResult();
 
    return done;
+}
+
+//***************************************************************************
+// Do Sleep
+//***************************************************************************
+
+void Daemon::doSleep(int t)
+{
+   time_t end = time(0) + t;
+
+   while (time(0) < end && !doShutDown())
+      usleep(5000);
 }
 
 //***************************************************************************
@@ -2715,8 +2716,8 @@ int Daemon::dispatchDeconz()
    while (!Deconz::messagesIn.empty())
    {
       tell(eloDeconz, "<- (DECONZ) '%s'", Deconz::messagesIn.front().c_str());
-      json_error_t error;
-      json_t* oData = json_loads(Deconz::messagesIn.front().c_str(), 0, &error);
+
+      json_t* oData = jsonLoad(Deconz::messagesIn.front().c_str());
 
       const char* type = getStringFromJson(oData, "type");
       uint address = getIntFromJson(oData, "address");
@@ -2969,7 +2970,7 @@ int Daemon::dispatchHomematicEvents(const char* message)
 
 int Daemon::dispatchOther(const char* topic, const char* message)
 {
-   tell(eloMqtt, "<- (%s) '%s'", topic, message);
+   // tell(eloMqtt, "<- (%s) '%s'", topic, message);
 
    json_t* jData = json_loads(message, 0, nullptr);
 
@@ -2995,7 +2996,7 @@ int Daemon::dispatchOther(const char* topic, const char* message)
    addValueFact(address, type, 1, title, unit, title);
 
    sensors[type][address].last = time(0);
-   sensors[type][address].kind = getStringFromJson(jData, "kind");
+   sensors[type][address].kind = getStringFromJson(jData, "kind", "value");
    sensors[type][address].state = getBoolFromJson(jData, "state");
    sensors[type][address].value = getDoubleFromJson(jData, "value");
    sensors[type][address].text = getStringFromJson(jData, "text", "");
