@@ -48,7 +48,14 @@ int Daemon::dispatchClientRequest()
 
          switch (event)
          {
-            case evLogin:           status = performLogin(oObject);                  break;
+            case evLogin:
+            {
+               status = performLogin(oObject);
+               long client = getLongFromJson(oObject, "client");
+               json_t* oJson = json_object();
+               pushOutMessage(oJson, "ready", client);
+               break;
+            }
             case evLogout:          status = performLogout(oObject);                 break;
             case evInit:
             case evPageChange:      status = performPageChange(oObject, client);     break;

@@ -367,7 +367,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
          memset(sessionData, 0, sizeof(SessionData));
 
-         tell(eloWebSock, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
+         tell(eloAlways, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
 
          // data or file request ...
 
@@ -385,7 +385,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          {
             // file request
 
-            if (strcmp(url, "/") == 0)
+            if (strcmp(url, "/") == 0 || strcmp(url, "/undefined") == 0)
                url = "index.html";
 
             // security, force httpPath path to inhibit access to the whole filesystem

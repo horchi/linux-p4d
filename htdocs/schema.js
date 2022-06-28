@@ -226,15 +226,15 @@ function schemaEditModeToggle()
    modeEdit = !modeEdit;
    initSchema(lastSchemadata, schemaRoot);
    updateSchema();
-   
+
 
    document.getElementById("buttonSchemaStore").style.visibility = modeEdit ? 'visible' : 'hidden';
    document.getElementById("buttonSchemaAddItem").style.visibility = modeEdit ? 'visible' : 'hidden';
    document.getElementById("makeResizableDiv").style.visibility = modeEdit ? 'visible' : 'hidden';
-   
-  if (modeEdit == false) {
-     document.getElementById('resizers').display == "none"; //hide Resizer
-  } 
+
+   if (modeEdit == false)
+      document.getElementById('resizers').display == "none"; //hide Resizer
+
    activateResizer();
 }
 
@@ -245,7 +245,6 @@ function schemaStore()
 
 function activateResizer()
 {
-
     $(schemaRoot).append($('<div></div>')
                         .addClass('resizable')
                         .attr('id', 'newLine')
@@ -334,13 +333,10 @@ function activateResizer()
     function stopResize() {
       window.removeEventListener('mousemove', resize)
     }
-    
-    
-    
   }
 }
 
-makeResizableDiv('.resizable')
+// makeResizableDiv('.resizable')
 
 function schemaAddItem()
 {
@@ -363,12 +359,16 @@ function schemaAddItem()
    initSchemaElement(schemaDef, lastSchemadata.length);
    editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
-function makeResizableDiv(div) 
+
+function makeResizableDiv(div)
 {
    var addr = 0;
-   for (var i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type == "CN" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
-         addr++;
+
+   if (lastSchemadata) {
+      for (var i = 0; i < lastSchemadata.length; i++) {
+         if (lastSchemadata[i].type == "CN" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
+            addr++;
+      }
    }
 
    schemaDef = { type: "CN",      //Connection
@@ -378,21 +378,17 @@ function makeResizableDiv(div)
                  kind: 3,
                  showtitle: 1,
                  showunit: 0 };
-                 
+
    const props = document.getElementById('newLine');
-   
+
    schemaDef.properties['top'] =  props.style.top;
    schemaDef.properties['left'] =  props.style.left;
    schemaDef.properties['width'] =  (parseInt(props.style.width.replace(/px/,""))-10)+"px";
    schemaDef.properties['height'] =  (parseInt(props.style.height.replace(/px/,""))-10)+"px";
-   
-    
-   
+
    lastSchemadata[lastSchemadata.length] = schemaDef;
    initSchemaElement(schemaDef, lastSchemadata.length);
    //editSchemaValue(schemaDef.type, schemaDef.address, true);
-   
-
 }
 
 function setAttributeStyleFrom(element, json)
@@ -569,13 +565,13 @@ function editSchemaValue(type, address, newUC)
           // $('#imgSize').css({'visibility' : "visible"});
           // $('#imgInfo').css({'visibility' : "visible"});
            break;
-        case 4: 
+        case 4:
            break;
-        case 5: 
+        case 5:
            break;
-        case 6: 
+        case 6:
            break;
-              
+
       }
    }
 

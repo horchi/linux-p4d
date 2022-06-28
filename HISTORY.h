@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.36"
-#define VERSION_DATE "27.02.2022"
+#define _VERSION     "0.9.37"
+#define VERSION_DATE "28.06.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,9 +17,12 @@
 /*
  * ------------------------------------
 
+2022-06-28:  version 0.9.37
+  - Added: URL parameter for direct page access
+
 2022-02-27:  version 0.9.36
   - Bugfix: Fixed start recover handling on missing database
-  - Address: Make.user for user build settings
+  - Change: Make.user for user build settings
 
 2022-02-25:  version 0.9.35
   - Change: Fixed MQTT keep alive check

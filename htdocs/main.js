@@ -28,6 +28,7 @@ var allSensors = [];
 
 var images = [];
 var currentPage = "dashboard";
+var startPage = null;
 var s3200State = {};
 var widgetCharts = {};
 var theChart = null;
@@ -46,23 +47,31 @@ $('document').ready(function() {
    daemonState.state = -1;
    s3200State.state = -1;
 
-   const urlParams = new URLSearchParams(window.location.href);
+   console.log("URL:", window.location.href);
+   let url = new URL(window.location.href);
+   let urlParams = new URLSearchParams(url.search.slice(1));
+
+   for (let p of urlParams)
+      console.log(p);
+
    kioskMode = urlParams.get('kiosk') == 1;
    kioskBackTime = urlParams.get('backTime');
    console.log("kioskMode" + " : " + kioskMode);
+   startPage = urlParams.get('page') != null ? urlParams.get('page') : null;
    console.log("currentPage: " + currentPage);
+   console.log("startPage: " + startPage);
 
-   var url = "";
+   var connectUrl = "";
 
    if (window.location.href.startsWith("https"))
-      url = "wss://" + location.hostname + ":" + location.port;
+      connectUrl = "wss://" + location.hostname + ":" + location.port;
    else
-      url = "ws://" + location.hostname + ":" + location.port;
+      connectUrl = "ws://" + location.hostname + ":" + location.port;
 
    var protocol = myProtocol;
 
    moment.locale('de');
-   connectWebSocket(url, protocol);
+   connectWebSocket(connectUrl, protocol);
    colorStyle = getComputedStyle(document.body);
 });
 
@@ -257,8 +266,8 @@ function dispatchMessage(message)
    var jMessage = JSON.parse(message);
    var event = jMessage.event;
 
-   // if (event != "chartdata")
-   //    console.log("got event: " + event);
+   if (event != "chartdata")
+      console.log("got event: " + event);
 
    if (event == "result") {
       hideProgressDialog();
@@ -401,6 +410,12 @@ function dispatchMessage(message)
    else if (event == "pellets") {
       hideProgressDialog();
       initPellets(jMessage.object);
+   }
+   else if (event == "ready") {
+      if (startPage) {
+         mainMenuSel(startPage);
+         startPage = null;
+      }
    }
 
    // console.log("event: " + event + " dispatched");
