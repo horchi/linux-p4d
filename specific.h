@@ -79,13 +79,13 @@ class P4d : public Daemon, public FroelingService
 
       int dispatchSpecialRequest(Event event, json_t* oObject, long client) override;
       int performLogin(json_t* oObject) override;
-   // int performInitTables(json_t* oObject, long client);
-   // int performUpdateTimeRanges(json_t* array, long client);
       int performPellets(json_t* array, long client);
       int performPelletsAdd(json_t* array, long client);
       int performCommand(json_t* obj, long client) override;
       int performErrors(long client);
       int performMenu(json_t* oObject, long client);
+      int performMenuByParent(json_t* oObject, long client, int parent);
+      int performMenuBySearch(json_t* oObject, long client, const char* search);
       int performParEditRequest(json_t* oObject, long client);
       int performTimeParEditRequest(json_t* oObject, long client);
       int performParStore(json_t* oObject, long client);

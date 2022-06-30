@@ -187,25 +187,26 @@ function editMenuParameter(parameter)
    }
 }
 
-//function updateTimeRanges()
-//{
-//   showProgressDialog();
-//   socket.send({ "event" : "updatetimeranges", "object" : { "parent" : actualParent } });
-//}
-
-window.menuSelected = function(child)
+function menuSelected(child)
 {
    showProgressDialog();
-   socket.send({ "event" : "menu", "object" : { "parent"  : child }});
+
+   console.log("Requesting menu for parent: ", child);
+
+   socket.send({ "event" : "menu", "object" :
+                 {
+                    "parent"  : child
+                 }});
 }
 
-window.menuEditRequest = function(id, address, range, parent)
+function menuEditRequest(id, address, range, parent)
 {
    console.log("menuEdit " + id);
    socket.send({ "event" : "pareditrequest", "object" :
-                 { "id"  : id,
-                   "address" : address,
-                   "range" : range,
-                   "parent" : parent
+                 {
+                    "id"  : id,
+                    "address" : address,
+                    "range" : range,
+                    "parent" : parent
                  }});
 }

@@ -129,6 +129,7 @@ class Daemon : public cWebInterface
          wtSymbolValue,  // == 9
          wtSpace,        // == 10
          wtTime,         // == 11  // dummy to display current time at WEBIF
+         wtSymbolText,   // == 12
          wtCount
       };
 

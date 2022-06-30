@@ -1374,8 +1374,6 @@ int P4d::dispatchSpecialRequest(Event event, json_t* oObject, long client)
 
    switch (event)
    {
-      // case evInitTables:        status = performInitTables(oObject, client);       break;
-      // case evUpdateTimeRanges:  status = performUpdateTimeRanges(oObject, client); break;
       case evPellets:           status = performPellets(oObject, client);          break;
       case evPelletsAdd:        status = performPelletsAdd(oObject, client);       break;
       case evParEditRequest:    status = performParEditRequest(oObject, client);   break;
@@ -1907,12 +1905,24 @@ int P4d::performMenu(json_t* oObject, long client)
    if (client == 0)
       return done;
 
-   int parent {1};
+   int parent = getIntFromJson(oObject, "parent", 1);
+   const char* search = getStringFromJson(oObject, "search");
+
+   if (isEmpty(search))
+      return performMenuByParent(oObject, client, parent);
+
+   return performMenuBySearch(oObject, client, search);
+}
+
+int P4d::performMenuBySearch(json_t* oObject, long client, const char* search)
+{
+   return done;
+}
+
+int P4d::performMenuByParent(json_t* oObject, long client, int parent)
+{
    int last {0};
    char* title {nullptr};
-
-   if (oObject)
-      parent = getIntFromJson(oObject, "parent", 1);
 
    json_t* oJson = json_object();
    json_t* oArray = json_array();
@@ -1953,7 +1963,7 @@ int P4d::performMenu(json_t* oObject, long client)
       if (type == mstBusValues || type == mstReset)
          continue;
 
-      // this 3 'special' addresses takes a long while and don't deliver any usefull data
+      // request for this three 'special' addresses takes a long and don't deliver any usefull data
 
       if (address == 9997 || address == 9998 || address == 9999)
          continue;

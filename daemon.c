@@ -43,6 +43,7 @@ const char* Daemon::widgetTypes[] =
    "SymbolValue",
    "Spacer",
    "Time",
+   "SymbolText",
    0
 };
 
@@ -129,7 +130,7 @@ Daemon::DefaultWidgetProperty Daemon::defaultWidgetProperties[] =
    { "SP",       na, "txt",  wtPlainText,        0,         0,       0, true },
    { "SP",       na,   "*",      wtMeter,        0,       100,      10, true },
    { "UD",       na, "txt",       wtText,        0,         0,       0, false },
-   { "UD",       na, "zst",     wtSymbol,        0,         0,       0, false },
+   { "UD",       na, "zst", wtSymbolText,        0,         0,       0, false },
    { "UD",       na,   "*",       wtText,        0,         0,       0, false },
    { "W1",       na,   "*", wtMeterLevel,        0,        40,      10, true },
    { "VA",       na,   "%", wtMeterLevel,        0,       100,      20, true },

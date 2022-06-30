@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.37"
-#define VERSION_DATE "28.06.2022"
+#define _VERSION     "0.9.38"
+#define VERSION_DATE "30.06.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2022-06-30:  version 0.9.38
+  - Added: Widget type 'SymbolText'
+  - Change: Removed enable of w1mqtt from 'make install'
 
 2022-06-28:  version 0.9.37
   - Added: URL parameter for direct page access

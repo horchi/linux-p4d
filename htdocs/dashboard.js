@@ -660,7 +660,8 @@ function initWidget(key, widget, fact)
          break;
       }
 
-      case 9: {          // Symbol-Value
+      case 9:          // Symbol-Value
+      case 12: {       // Symbol-Text
          $(elem)
             .addClass("widgetSymbolValue rounded-border widgetDropZone")
             .append($('<div></div>')
@@ -990,7 +991,7 @@ function updateWidget(sensor, refresh, widget)
       return;
    }
 
-   if (widget.widgettype == 0 || widget.widgettype == 9)         // Symbol, Symbol-Value
+   if (widget.widgettype == 0 || widget.widgettype == 9 || widget.widgettype == 12)         // Symbol, Symbol-Value, Symbol-Text
    {
       // console.log("sensor: ", JSON.stringify(sensor));
       var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
@@ -1036,9 +1037,10 @@ function updateWidget(sensor, refresh, widget)
       // console.log("set color to: : ", widget.colorOn);
       $("#button" + fact.type + fact.address).css('color', state ? widget.colorOn : widget.color);
 
-      if (widget.widgettype == 9) {
+      if (widget.widgettype == 9)
          $("#value" + fact.type + fact.address).text(sensor.value.toFixed(widget.unit=="%" ? 0 : 2) + (widget.unit!="" ? " " : "") + widget.unit);
-      }
+      else if (widget.widgettype == 12 && sensor.text != null)
+         $("#value" + fact.type + fact.address).text(sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>'));
 
       var prs = $('#progressBar' + fact.type + fact.address);
 
