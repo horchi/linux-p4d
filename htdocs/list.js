@@ -107,8 +107,9 @@ function initList()
          html += '<div class="listFirstCol" id="widget' + elemId + '"></div>';
       }
       else {
-         html += '<span class="listFirstCol" id=widget' + elemId + '">' + (sensor.value ? sensor.value.toFixed(2) : '-') + '&nbsp;' + fact.widget.unit;
-         html += '&nbsp; <p style="display:inline;font-size:12px;font-style:italic;">(' + (sensor.peak != null ? sensor.peak.toFixed(2) : '  ') + ')</p>';
+         // html += '<span class="listFirstCol" id=widget' + elemId + '">' + (sensor.value ? sensor.value.toFixed(2) : '-') + '&nbsp;' + fact.widget.unit;
+         html += '<span class="listFirstCol" id="widget' + elemId + '">' ;
+         // html += '&nbsp; <p style="display:inline;font-size:12px;font-style:italic;">(' + (sensor.peak != null ? sensor.peak.toFixed(2) : '  ') + ')</p>';
          html += '</span>';
       }
 
@@ -143,7 +144,7 @@ function updateList()
 
       var elemId = "#widget" + key.replace(':', '_');
 
-      if (fact.widget.widgettype == 1 || fact.widget.widgettype == 3) {
+      if (fact.widget.widgettype == 1 || fact.widget.widgettype == 3 || fact.widget.widgettype == 5) {
          var peak = sensor.peak != null ? sensor.peak.toFixed(2) : "  ";
          $(elemId).html(sensor.value.toFixed(2) + "&nbsp;" + fact.widget.unit +
                         "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + peak + ")</p>");
@@ -153,14 +154,15 @@ function updateList()
          $(elemId).attr("src", image);
          $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('stateContainer') - 10);
       }
-      else if (fact.widget.widgettype == 2 || fact.widget.widgettype == 7) {   // Text, PlainText
+      else if (fact.widget.widgettype == 2 || fact.widget.widgettype == 7 || fact.widget.widgettype == 12) {   // Text, PlainText
          $(elemId).html(sensor.text);
       }
       else {
          if (sensor.value == null)
             console.log("Missing value for " + key);
-         else
-            $(elemId).html(sensor.value.toFixed(0));
+         else {
+            $(elemId).html(sensor.value.toFixed(2));
+         }
       }
 
       // console.log(i + ") " + fact.widget.widgettype + " : " + title + " / " + sensor.value + "(" + id + ")");

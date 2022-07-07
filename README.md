@@ -69,8 +69,10 @@ and, if you like, update your installation:
    or use different tools for the package management, other package names, ....
 - de_DE.UTF-8 is required as language package (Raspberry command: `dpkg-reconfigure locales`)
 
-## Install libwebsockets (https://libwebsockets.org/repo/libwebsockets)
+## Install libwebsockets (https://github.com/warmcat/libwebsockets)
   at least version 4.1 or above
+  you can clone it from git at https://libwebsockets.org/repo/libwebsockets
+
 
 Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 

@@ -563,12 +563,13 @@ class Daemon : public cWebInterface
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
-      int mail {no};
+      bool sendMails {false};
       char* mailScript {nullptr};
       char* stateMailTo {nullptr};
       char* errorMailTo {nullptr};
       std::string htmlHeader;
-      int invertDO {no};
+
+      bool invertDO {false};
 
       Deconz deconz;
       bool homeMaticInterface {false};

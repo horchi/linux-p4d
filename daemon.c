@@ -1500,7 +1500,7 @@ int Daemon::readConfiguration(bool initial)
    addrsDashboard = split(addrs, ',');
    free(addrs);
 
-   getConfigItem("mail", mail, no);
+   getConfigItem("mail", sendMails, no);
    getConfigItem("mailScript", mailScript);
    getConfigItem("stateMailTo", stateMailTo);
    getConfigItem("errorMailTo", errorMailTo);
@@ -3074,7 +3074,23 @@ int Daemon::setConfigItem(const char* name, const char* value)
 
 int Daemon::getConfigItem(const char* name, int& value, int def)
 {
-   return getConfigItem(name, (long&)value, (long)def);
+   char* txt {nullptr};
+
+   getConfigItem(name, txt);
+
+   if (!isEmpty(txt))
+      value = atoi(txt);
+   else if (isEmpty(txt) && def != na)
+   {
+      value = def;
+      setConfigItem(name, (long)value);
+   }
+   else
+      value = 0;
+
+   free(txt);
+
+   return success;
 }
 
 int Daemon::getConfigItem(const char* name, long& value, long def)
@@ -3084,7 +3100,7 @@ int Daemon::getConfigItem(const char* name, long& value, long def)
    getConfigItem(name, txt);
 
    if (!isEmpty(txt))
-      value = atoi(txt);
+      value = atol(txt);
    else if (isEmpty(txt) && def != na)
    {
       value = def;
@@ -3100,7 +3116,7 @@ int Daemon::getConfigItem(const char* name, long& value, long def)
 
 int Daemon::setConfigItem(const char* name, long value)
 {
-   char txt[16];
+   char txt[16+TB] {'\0'};
 
    snprintf(txt, sizeof(txt), "%ld", value);
 
@@ -3131,7 +3147,7 @@ int Daemon::getConfigItem(const char* name, double& value, double def)
 
 int Daemon::setConfigItem(const char* name, double value)
 {
-   char txt[16+TB];
+   char txt[16+TB] {'\0'};
    snprintf(txt, sizeof(txt), "%.2f", value);
    return setConfigItem(name, txt);
 }
@@ -3157,9 +3173,9 @@ int Daemon::getConfigItem(const char* name, bool& value, bool def)
 
 int Daemon::setConfigItem(const char* name, bool value)
 {
-   char txt[16];
+   char txt[16+TB] {'\0'};
 
-   snprintf(txt, sizeof(txt), "%d", value);
+   snprintf(txt, sizeof(txt), "%d", value ? 1 : 0);
 
    return setConfigItem(name, txt);
 }

@@ -722,6 +722,8 @@ int P4d::sendStateMail()
 
    // check
 
+   tell(eloDebug, "Debug: Status mail: %d/'%s'/%d/'%s'", isMailState(), mailScript, mailBodyHtml.length(), stateMailTo);
+
    if (!isMailState() || isEmpty(mailScript) || !mailBodyHtml.length() || isEmpty(stateMailTo))
       return done;
 
@@ -808,10 +810,12 @@ void P4d::afterUpdate()
    updateErrors();
    calcStateDuration();
 
-   if (mail && errorsPending)
+   if (sendMails && errorsPending)
       sendErrorMail();
 
-   if (mail && stateChanged)
+   tell(eloDebug, "Debug Mail: %d/%d", sendMails, stateChanged);
+
+   if (sendMails && stateChanged)
       sendStateMail();
 
    json_t* oJson = json_object();

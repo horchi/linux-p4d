@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.38"
-#define VERSION_DATE "30.06.2022"
+#define _VERSION     "0.9.39"
+#define VERSION_DATE "07.07.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-07-07:  version 0.9.39
+  - Bugfix: Minor fix of config handling for boolean and integer options
 
 2022-06-30:  version 0.9.38
   - Added: Widget type 'SymbolText'

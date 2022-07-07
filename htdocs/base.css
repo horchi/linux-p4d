@@ -889,13 +889,14 @@ table.tableMultiCol tr:nth-child(odd)
 
 .chartCanvas
 {
-    background-color: var(--background);
+    background-color: var(--chartBackground);
 }
 
 .chartDialogCanvas
 {
     background-color: black;
 }
+
 .chartTitle
 {
     text-align: center;
