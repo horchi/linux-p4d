@@ -722,7 +722,7 @@ int P4d::sendStateMail()
 
    // check
 
-   tell(eloDebug, "Debug: Status mail: %d/'%s'/%d/'%s'", isMailState(), mailScript, mailBodyHtml.length(), stateMailTo);
+   tell(eloDebug, "Debug: Status mail: %d/'%s'/%zu/'%s'", isMailState(), mailScript, mailBodyHtml.length(), stateMailTo);
 
    if (!isMailState() || isEmpty(mailScript) || !mailBodyHtml.length() || isEmpty(stateMailTo))
       return done;

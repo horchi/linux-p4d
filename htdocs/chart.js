@@ -28,6 +28,8 @@ function drawCharts(dataObject)
       document.getElementById("container").innerHTML =
          '<canvas id="chartContainer" class="chartCanvas" width="1600" height="600"></canvas>' +
          '<div class="rounded-border chartButtons">' +
+         '  <input id="startDate" class="rounded-border chartButton" type="date" onchange="chartSelect(\'start\')"></input>' +
+         '  <div style="width:25px;"></div>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevmonth\')">&lt; Monat</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prev\')">&lt; Tag</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'now\')">Jetzt</button>' +
@@ -143,19 +145,22 @@ function drawCharts(dataObject)
    var end = new Date();
    end.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+theChartRange);
 
+   $('#startDate').val(theChartStart.toISOString().substring(0,10));
    $("#chartTitle").html(theChartStart.toLocaleString('de-DE') + "  -  " + end.toLocaleString('de-DE'));
    $("#chartSelector").html("");
 
    updateChartBookmarks();
 
-   for (var i = 0; i < dataObject.sensors.length; i++) {
-      console.log("sensor " + dataObject.sensors[i].id);
-      var fact = valueFacts[dataObject.sensors[i].id];
+   if (dataObject.sensors) {
+      for (var i = 0; i < dataObject.sensors.length; i++) {
+         // console.log("sensor " + dataObject.sensors[i].id);
+         var fact = valueFacts[dataObject.sensors[i].id];
 
-      var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id +
-          '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') +
-          '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + ' [' + fact.unit + ']</label></div>';
-      $("#chartSelector").append(html);
+         var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id +
+             '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') +
+             '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + ' [' + fact.unit + ']</label></div>';
+         $("#chartSelector").append(html);
+      }
    }
 
    theChart = new Chart(root.getContext("2d"), data);
@@ -288,6 +293,10 @@ function chartSelect(action)
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "now")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
+   else if (action == "start")
+      theChartStart = new Date($('#startDate').val());
+   else if (action == "choice")
+      ;
    else
       theChartStart = new Date().subHours(theChartRange * 24);
 

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.39"
-#define VERSION_DATE "07.07.2022"
+#define _VERSION     "0.9.40"
+#define VERSION_DATE "12.07.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2022-07-12:  version 0.9.40
+  - Added: Date input for chart page
+  - Change: Fixed compiler warning
 
 2022-07-07:  version 0.9.39
   - Bugfix: Minor fix of config handling for boolean and integer options
