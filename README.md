@@ -74,10 +74,9 @@ and, if you like, update your installation:
   you can clone it from git at https://libwebsockets.org/repo/libwebsockets
 
 
-Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
-
 ## Installation of the MariaDb Database:
 It's not required to host the database on the Raspberry. A remote database is supported as well!
+Perform all the following steps as root user! Either by getting root or by prefix each command with sodo.
 
 `apt install mariadb-server`
 

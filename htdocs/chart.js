@@ -1,7 +1,7 @@
 /*
  *  chart.js
  *
- *  (c) 2020 Jörg Wendel
+ *  (c) 2020-2022 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -31,9 +31,11 @@ function drawCharts(dataObject)
          '  <input id="startDate" class="rounded-border chartButton" type="date" onchange="chartSelect(\'start\')"></input>' +
          '  <div style="width:25px;"></div>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevmonth\')">&lt; Monat</button>' +
+         '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevweek\')">&lt; Woche</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prev\')">&lt; Tag</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'now\')">Jetzt</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'next\')">Tag &gt;</button>' +
+         '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextweek\')">&lt; Woche</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextmonth\')">Monat &gt;</button>' +
          '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
          '</div>' +
@@ -285,12 +287,16 @@ function chartSelect(action)
 
    if (action == "next")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+1);
-   else if (action == "nextmonth")
-      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+30);
    else if (action == "prev")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-1);
+   else if (action == "nextmonth")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+30);
    else if (action == "prevmonth")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
+   else if (action == "nextweek")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+7);
+   else if (action == "prevweek")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-7);
    else if (action == "now")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
    else if (action == "start")

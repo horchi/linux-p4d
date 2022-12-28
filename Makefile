@@ -154,7 +154,7 @@ dist: clean
 clean:
 	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg $(DEPFILE)
 	rm -f $(TARGET) $(ARCHIVE).tgz $(CHARTTARGET) $(CMDTARGET)
-	rm -f com2
+	rm -f $(W1TARGET) com2
 
 build: clean all
 

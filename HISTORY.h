@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.40"
-#define VERSION_DATE "12.07.2022"
+#define _VERSION     "0.9.41"
+#define VERSION_DATE "14.07.2022"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2022-07-14:  version 0.9.41
+  - Added: Prev/next week buttons for chart view
 
 2022-07-12:  version 0.9.40
   - Added: Date input for chart page
