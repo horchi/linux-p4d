@@ -31,8 +31,7 @@ int Daemon::mqttHaPublish(SensorData& sensor, bool forceConfig)
    }
 
    if (mqttInterfaceStyle == misSingleTopic || mqttInterfaceStyle == misGroupedTopic)
-      jsonAddValue(mqttInterfaceStyle == misSingleTopic ? oHaJson : groups[sensor.group].oHaJson,
-                   sensor, forceConfig);
+      jsonAddValue(mqttInterfaceStyle == misSingleTopic ? oHaJson : groups[sensor.group].oHaJson, sensor, forceConfig);
    else if (mqttInterfaceStyle == misMultiTopic)
       mqttHaPublishSensor(sensor, forceConfig);
 
@@ -163,14 +162,17 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
    // publish actual value
 
    if (!mqttWriter->isConnected())
+   {
+      tell(eloAlways, "Aborting MQTT publish, not connected!");
       return fail;
+   }
 
    json_t* oValue = json_object();
 
    if (sensor.kind == "status")
    {
-      json_object_set_new(oValue, "state", json_string(sensor.value ? "ON" :"OFF"));
-      json_object_set_new(oValue, "brightness", json_integer(255));
+      json_object_set_new(oValue, "state", json_string(sensor.state ? "ON" :"OFF"));
+      // json_object_set_new(oValue, "brightness", json_integer(255));
    }
    else if (sensor.text.length())
       json_object_set_new(oValue, "value", json_string(sensor.text.c_str()));
@@ -479,7 +481,7 @@ int Daemon::jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig)
       if (sensor.kind == "status")
       {
          json_object_set_new(obj, "state", json_boolean(sensor.state));
-         json_object_set_new(obj, "brightness", json_integer(sensor.value));
+         // json_object_set_new(obj, "brightness", json_integer(sensor.value));
       }
       else if (sensor.text.length())
          json_object_set_new(obj, "text", json_string(sensor.text.c_str()));
@@ -504,7 +506,7 @@ int Daemon::jsonAddValue(json_t* obj, SensorData& sensor, bool forceConfig)
    if (sensor.kind == "status")
    {
       json_object_set_new(oSensor, "state", json_string(sensor.state ? "ON" :"OFF"));
-      json_object_set_new(oSensor, "brightness", json_integer(255));
+      // json_object_set_new(oSensor, "brightness", json_integer(255));
    }
    else if (sensor.text.length())
       json_object_set_new(oSensor, "value", json_string(sensor.text.c_str()));

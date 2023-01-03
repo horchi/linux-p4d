@@ -1581,6 +1581,17 @@ int Daemon::readConfiguration(bool initial)
    else
       mqttInterfaceStyle = misSingleTopic;
 
+   std::string styleName = "None";
+
+   if (mqttInterfaceStyle == misMultiTopic)
+      styleName = "MultiTopic";
+   else if (mqttInterfaceStyle == misGroupedTopic)
+      styleName = "GroupedTopic";
+   else if (mqttInterfaceStyle == misSingleTopic)
+      styleName = "SingleTopic";
+
+   tell(eloAlways, "MQTT interface style set to '%s' for [%s]", styleName.c_str(), mqttDataTopic);
+
    for (int f = selectAllGroups->find(); f; f = selectAllGroups->fetch())
       groups[tableGroups->getIntValue("ID")].name = tableGroups->getStrValue("NAME");
 

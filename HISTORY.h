@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.41"
-#define VERSION_DATE "14.07.2022"
+#define _VERSION     "0.9.42"
+#define VERSION_DATE "03.01.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-01-03:  version 0.9.42
+  - Bugfix: Fixed state data for MQTT publish
 
 2022-07-14:  version 0.9.41
   - Added: Prev/next week buttons for chart view
