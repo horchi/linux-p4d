@@ -176,11 +176,11 @@ Pass: *p4*
 ### Fist steps to enable data logging:
 
 1. Log in to the web interface
-2. Goto Setup
+2. Goto Setup -> Commands
   - click 'Init Sensors'
 3. Goto Setup -> IO Setup
   - Select the values you like to record and store your selection (click 'Speichern')
-4. Goto Setup
+4. Goto Setup -> Commands
   - click 'Init Service Menü'
 
 After this you can set up the schema configuration. The schema configuration is done by drag&drop and isn't working on mobile devices!
