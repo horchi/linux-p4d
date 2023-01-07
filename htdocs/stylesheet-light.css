@@ -8,46 +8,46 @@
 {
     /* colors */
 
-    --menu: #001129;
+    --menu: #eeeeee;
 
-    --light1: #0d2546;
-    --light2: white;
-    --light3: #396992;
-    --light4: white;
-    --listFontColor: white;
+    --light1: #dddddd;
+    --light2: #d3d3d3;
+    --light3: #cccccc;
+    --light4: #818382;
+    --listFontColor: black;
     --blue: #2177AD;
     --blueshade: #495b67;
     --info: #f9f9ef;
 
-    --widgetBackground: #272727b8;
+    --widgetBackground: #27272780;
     --widgetTitleColor: black;
     --dashboardMenuBackground: #7080907a;
-    --caption1: #0d2546;
-    --caption2: #113a77;
+    --caption1: #7080907a;
+    --caption2: #2177AD;
     --edit: #f9f9ef;
     --editadd: #fffcab;
 
-    --background: #001129d1;
-    --chartBackground: #001129d1;
-    --chartLabelText: white;
+    --background: #f8f8ff;
+    --chartBackground: #f8f8ff;
+    --chartLabelText: blue;
     --shadow: black;
 
-    --borderColor: #001129;
+    --borderColor: #000000d1;
     --borderRadius: 3px;
 
-    --borderColorSchemaValue: blue;
+    --borderColorSchemaValue: black;
     --borderRadiusSchemaValue: 3px;
     --borderStyleSchemaValue: solid;
 
-    --colorTableButton: #c8e7fe;
+    --colorTableButton: beige;
     --borderColorTableButton: blue;
     --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
-    --buttonFont: white;
+    --buttonFont: black;
 
     --dialogColor: black;
-    --dialogBackground: lightgray;
+    --dialogBackground: #818382;
 
     --scaleText: white;
     --scale: #ccc;
@@ -57,8 +57,8 @@ Body
 {
     font-family: Helvetica,Arial,sans-serif;
     font-size: 1.0em;
-    color: white;
-    background-color: black;
+    color: black;
+    background-color: #f8f8ff;
 }
 
 .content

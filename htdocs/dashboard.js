@@ -542,8 +542,8 @@ function initWidget(key, widget, fact)
 
          highlights = [
             { from: widget.scalemin, to: critmin,  color: minColor },
-            { from: critmin,              to: critmax,  color: 'rgba(0,255,0,.6)' },
-            { from: critmax,              to: scalemax, color: 'rgba(255,0,0,.6)' }
+            { from: critmin,         to: critmax,  color: 'rgba(0,255,0,.6)' },
+            { from: critmax,         to: scalemax, color: 'rgba(255,0,0,.6)' }
          ];
 
          // console.log("widget: " + JSON.stringify(widget, undefined, 4));
@@ -1999,7 +1999,7 @@ function widgetSetup(key)
       $("#divImgon").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
       $("#divImgoff").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
       $("#divPeak").css("display", [1,3,6,9].includes(wType) ? 'flex' : 'none');
-      $("#divColor").css("display", [0,1,3,4,6,7,9,10,11].includes(wType) ? 'flex' : 'none');
+      $("#divColor").css("display", [0,1,2,3,4,6,7,9,10,11].includes(wType) ? 'flex' : 'none');
       $("#divLinefeed").css("display", [10].includes(wType) ? 'flex' : 'none');
 
       if ([0].includes(wType) && $('#symbol').val() == '' &&  $('#symbolOn').val() == '')

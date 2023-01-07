@@ -49,6 +49,8 @@ function drawCharts(dataObject)
       theChart = null;
    }
 
+   let labelColor = getComputedStyle(document.documentElement).getPropertyValue('--chartLabelText');
+
    var data = {
       type: "line",
       data: {
@@ -68,7 +70,7 @@ function drawCharts(dataObject)
          legend: {
             display: true,
             labels: {
-               fontColor: "white"
+               fontColor: labelColor
             }
          },
          scales: {
@@ -92,7 +94,7 @@ function drawCharts(dataObject)
                ticks: {
                   maxTicksLimit: 24,
                   padding: 10,
-                  fontColor: "white"
+                  fontColor: labelColor
                },
                gridLines: {
                   color: "gray",
@@ -100,7 +102,7 @@ function drawCharts(dataObject)
                },
                scaleLabel: {
                   display: true,
-                  fontColor: "white",
+                  fontColor: labelColor,
                   labelString: "Zeit"
                }
             }],

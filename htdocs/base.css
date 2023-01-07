@@ -537,7 +537,6 @@ span > input
 .inputTableConfig
 {
     background-color: var(--light1);
-    background: linear-gradient(to bottom right, #00000096, black); /* Standard syntax (must be last) */
     padding: 5px;
 }
 
@@ -1262,7 +1261,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: transparent;
     cursor: pointer;
     border: none;
-    color: var(--listFontColor);
+    color: var(--widgetTitleColor);
     justify-self: center;
     text-align: center;
     align-self: center;

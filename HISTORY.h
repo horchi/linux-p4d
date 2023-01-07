@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.42"
-#define VERSION_DATE "03.01.2023"
+#define _VERSION     "0.9.43"
+#define VERSION_DATE "07.01.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-01-07:  version 0.9.43
+  - Change: Improved stylesheets (thx to meute)
 
 2023-01-03:  version 0.9.42
   - Bugfix: Fixed state data for MQTT publish

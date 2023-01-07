@@ -20,6 +20,7 @@
     --info: #f9f9ef;
 
     --widgetBackground: #272727b8;
+    --widgetTitleColor: white;
     --dashboardMenuBackground: #7080907a;
     --caption1: #292929;
     --caption2: #565353;
@@ -28,6 +29,7 @@
 
     --background: #000000d1;
     --chartBackground: #000000d1;
+    --chartLabelText: white;
     --shadow: black;
 
     --borderColor: black;
