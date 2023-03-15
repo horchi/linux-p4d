@@ -29,6 +29,7 @@ FroelingService::StateInfo FroelingService::stateInfos[] =
    {  6,        "Tür offen"      },
    {  7,        "Vorbereitung"   },
    {  8,        "Vorwärmphase"   },
+   {  8,        "Vorwärmen" },
    {  9,        "Zünden"         },
    { 10,        "Abstellen Warten" },
    { 11,        "Abstellen Warten 1"  },
