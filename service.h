@@ -6,8 +6,7 @@
 // Date 04.11.10 - 27.02.15  Jörg Wendel
 //***************************************************************************
 
-#ifndef _FSERVICE_H_
-#define _FSERVICE_H_
+#pragma once
 
 #include <stdio.h>
 
@@ -26,7 +25,7 @@ class FroelingService
       struct StateInfo
       {
          int code;
-         const char* title;
+         std::vector<const char*> titles;
       };
 
       // statics
@@ -636,7 +635,3 @@ class FroelingService
 };
 
 typedef FroelingService Fs;
-
-//***************************************************************************
-
-#endif //  _FSERVICE_H_

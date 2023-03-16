@@ -2413,7 +2413,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
    {
       FileList options;
       int count {0};
-      char* path {nullptr};
+      char* path {};
 
       asprintf(&path, "%s/img/type", httpPath);
 
@@ -2445,7 +2445,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
       {
          json_t* oOpt = json_object();
          json_object_set_new(oOpt, "value", json_string(std::to_string(stateInfos[i].code).c_str()));
-         json_object_set_new(oOpt, "label", json_string(stateInfos[i].title));
+         json_object_set_new(oOpt, "label", json_string(stateInfos[i].titles[0]));
          json_array_append_new(oArray, oOpt);
       }
 
@@ -2480,7 +2480,7 @@ const char* P4d::getTextImage(const char* key, const char* text)
    else if (state == 3)
       image = "state-fire.gif";
    else if (state == 4)
-      image = "/state/state-firehold.gif";
+      image = "state-firehold.gif";
    else if (state == 5)
       image = "state-fireoff.gif";
    else if (state == 6)

@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.45"
+#define _VERSION     "0.9.46"
 #define VERSION_DATE "16.03.2023"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-03-16:  version 0.9.46
+  - Bugfix: Fixed hadling of diffrent states names
 
 2023-03-16:  version 0.9.45
   - Change: Added some more diffrent states (presumably due to different firmware versions)
