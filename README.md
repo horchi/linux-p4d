@@ -252,7 +252,7 @@ The default web folder is /var/lib/p4/.
 Backup the data of the p4 database including all recorded values:
 
 ```
-p4d-backup
+p4d-backup.sh
 ```
 
 This will create a dump file for each table like:
