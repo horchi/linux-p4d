@@ -39,7 +39,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "eloquence",                 ctBitSelect, "1",          false, "Daemon", "Log Eloquence", "" },
 
    { "tsync",                     ctBool,    "0",    false, "Daemon", "Zeitsynchronisation", "täglich 3:00" },
-   { "maxTimeLeak",               ctInteger, "5",    false, "Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
+   { "maxTimeLeak",               ctInteger, "10",   false, "Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
 
    { "aggregateHistory",          ctInteger, "1",    false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
    { "aggregateInterval",         ctInteger, "15",   false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },

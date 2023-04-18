@@ -318,9 +318,9 @@ Table information_schema.TABLES
    NAME         ""  table_name                   Ascii 64 Data,
    SCHEMA       ""  table_schema                 Ascii 64 Data,
 
-   DATASZ       ""  data_length                  Int   10 Data,
-   INDEXSZ      ""  index_length                 Int   10 Data,
-   ROWS         ""  table_rows                   Int   10 Data,
+   DATASZ       ""  data_length                  UBigInt  10 Data,
+   INDEXSZ      ""  index_length                 UBigInt  10 Data,
+   ROWS         ""  table_rows                   UBigInt  10 Data,
 }
 
 // ----------------------------------------------------------------
