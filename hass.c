@@ -127,7 +127,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 
          tell(eloMqtt, "Info: Sensor '%s' not found at home assistants MQTT, "
               "sendig config message to '%s'", sName.c_str(), configTopic);
-         #define _VERSION     "0.9.46-p1"
+
          if (iot == iotLight)
          {
             char* cmdTopic {nullptr};
