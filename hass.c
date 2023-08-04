@@ -141,14 +141,14 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                         "\"brightness\"          : \"false\","
                         "\"device\": {"
                            "\"identifiers\": ["
-                              "\"heater\""
+                              "\"%s\""
                            "],"
-                           "\"name\"             : \"heater\","
+                           "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
                            "\"manufacturer\"     : \"@horchi\""
                         "}"
                      "}",
-                     sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str());
+                     sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
 
             hassCmdTopicMap[cmdTopic] = sensor.name;
             free(cmdTopic);
@@ -161,18 +161,18 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                      "{"
                         "\"state_topic\"         : \"%s\","
                         "\"value_template\"      : \"{{ value_json.value }}\","
-                        "\"name\"                : \"%s %s\","
+                        "\"name\"                : \"%s\","
                         "\"unique_id\"           : \"%s_" TARGET "2mqtt\","
                         "\"device\": {"
                            "\"identifiers\": ["
-                              "\"heater\""
+                              "\"%s\""
                            "],"
-                           "\"name\"             : \"heater\","
+                           "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
                            "\"manufacturer\"     : \"@horchi\""
                         "}"
                      "}",
-                     sDataTopic.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+                     sDataTopic.c_str(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
             }
             else
             {
