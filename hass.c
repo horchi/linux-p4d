@@ -148,7 +148,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
                            "\"manufacturer\"     : \"@horchi\","
-                           "\"sw_version\"       : \""_VERSION"\""
+                           "\"sw_version\"       : \"" _VERSION "\""
                         "}"
                      "}",
                      sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
@@ -173,7 +173,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
                            "\"manufacturer\"     : \"@horchi\","
-                           "\"sw_version\"       : \""_VERSION"\""
+                           "\"sw_version\"       : \"" _VERSION "\""
                         "}"
                      "}",
                      sDataTopic.c_str(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
@@ -194,7 +194,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
                            "\"manufacturer\"     : \"@horchi\","
-                           "\"sw_version\"       : \""_VERSION"\""
+                           "\"sw_version\"       : \"" _VERSION "\""
                         "}"
                      "}",
                      sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
