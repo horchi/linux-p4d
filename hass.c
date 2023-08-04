@@ -12,8 +12,6 @@
 #include "lib/json.h"
 #include "daemon.h"
 
-#include "HISTORY.h"
-
 //***************************************************************************
 // Push Value to MQTT for Home Automation Systems
 //***************************************************************************
