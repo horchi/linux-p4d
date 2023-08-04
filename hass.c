@@ -12,6 +12,8 @@
 #include "lib/json.h"
 #include "daemon.h"
 
+#include "HISTORY.h"
+
 //***************************************************************************
 // Push Value to MQTT for Home Automation Systems
 //***************************************************************************
@@ -145,7 +147,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "],"
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
-                           "\"manufacturer\"     : \"@horchi\""
+                           "\"manufacturer\"     : \"@horchi\","
+                           "\"sw_version\"       : \""_VERSION"\""
                         "}"
                      "}",
                      sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
@@ -169,7 +172,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "],"
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
-                           "\"manufacturer\"     : \"@horchi\""
+                           "\"manufacturer\"     : \"@horchi\","
+                           "\"sw_version\"       : \""_VERSION"\""
                         "}"
                      "}",
                      sDataTopic.c_str(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
@@ -189,7 +193,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                            "],"
                            "\"name\"             : \"%s\","
                            "\"model\"            : \"p4-daemon\","
-                           "\"manufacturer\"     : \"@horchi\""
+                           "\"manufacturer\"     : \"@horchi\","
+                           "\"sw_version\"       : \""_VERSION"\""
                         "}"
                      "}",
                      sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), sName.c_str(), myTitle(), myTitle());
