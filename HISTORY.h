@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.46-p1"
+#define _VERSION     "0.9.47"
 #define VERSION_DATE "29.06.2023"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2023-08-04:  version 0.9.47
+  - Bugfix: Applied fix from @helmut8960 where "unit_of_measurement" is wrongly applied
+  - Change: Added major improvement for Home Assistant MQTT Discovery, entities are now grouped into devices according to their group name set in p4d
 
 2023-03-16:  version 0.9.46
   - Bugfix: Fixed hadling of diffrent states names
