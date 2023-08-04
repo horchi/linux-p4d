@@ -131,13 +131,22 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
             char* cmdTopic {nullptr};
             asprintf(&cmdTopic, TARGET "2mqtt/light/%s/set", sName.c_str());
 
-            asprintf(&configJson, "{"
-                     "\"state_topic\"         : \"%s\","
-                     "\"command_topic\"       : \"%s\","
-                     "\"name\"                : \"%s %s\","
-                     "\"unique_id\"           : \"%s_" TARGET "2mqtt\","
-                     "\"schema\"              : \"json\","
-                     "\"brightness\"          : \"false\""
+            asprintf(&configJson,
+                     "{"
+                        "\"state_topic\"         : \"%s\","
+                        "\"command_topic\"       : \"%s\","
+                        "\"name\"                : \"%s %s\","
+                        "\"unique_id\"           : \"%s_" TARGET "2mqtt\","
+                        "\"schema\"              : \"json\","
+                        "\"brightness\"          : \"false\""
+                        "\"device\": {"
+                           "\"identifiers\": ["
+                              "\"heater\""
+                           "],"
+                           "\"name\"             : \"heater\","
+                           "\"model\"            : \"p4-daemon\","
+                           "\"manufacturer\"     : \"@horchi\","
+                        "}"
                      "}",
                      sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str());
 
@@ -146,14 +155,45 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
          }
          else
          {
-            asprintf(&configJson, "{"
-                     "\"state_topic\"         : \"%s\","
-                     "\"unit_of_measurement\" : \"%s\","
-                     "\"value_template\"      : \"{{ value_json.value }}\","
-                     "\"name\"                : \"%s %s\","
-                     "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+            if (strlen(sensor.unit.c_str()) == 0)
+            {
+                asprintf(&configJson,
+                     "{"
+                        "\"state_topic\"         : \"%s\","
+                        "\"value_template\"      : \"{{ value_json.value }}\","
+                        "\"name\"                : \"%s %s\","
+                        "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+                        "\"device\": {"
+                           "\"identifiers\": ["
+                              "\"heater\""
+                           "],"
+                           "\"name\"             : \"heater\","
+                           "\"model\"            : \"p4-daemon\","
+                           "\"manufacturer\"     : \"@horchi\","
+                        "}"
+                     "}",
+                     sDataTopic.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+            }
+            else
+            {
+                asprintf(&configJson,
+                     "{"
+                        "\"state_topic\"         : \"%s\","
+                        "\"unit_of_measurement\" : \"%s\","
+                        "\"value_template\"      : \"{{ value_json.value }}\","
+                        "\"name\"                : \"%s %s\","
+                        "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+                        "\"device\": {"
+                           "\"identifiers\": ["
+                              "\"heater\""
+                           "],"
+                           "\"name\"             : \"heater\","
+                           "\"model\"            : \"p4-daemon\","
+                           "\"manufacturer\"     : \"@horchi\","
+                        "}"
                      "}",
                      sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+            }
          }
 
          mqttWriter->writeRetained(configTopic, configJson);

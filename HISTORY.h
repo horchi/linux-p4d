@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.46"
-#define VERSION_DATE "16.03.2023"
+#define _VERSION     "0.9.46-p1"
+#define VERSION_DATE "29.06.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
