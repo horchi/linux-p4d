@@ -144,7 +144,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                      "],"
                      "\"name\"                : \"heater\","
                      "\"model\"               : \"p4daemon\","
-                     "\"manufacturer\"        : \"horchi\","
+                     "\"manufacturer\"        : \"horchi\""
+                     "}"
                      "}",
                      sDataTopic.c_str(), cmdTopic, myTitle(), sensor.title.c_str(), sName.c_str());
 
@@ -166,8 +167,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                      "],"
                      "\"name\"                : \"heater\","
                      "\"model\"               : \"p4daemon\","
-                     "\"manufacturer\"        : \"horchi\","
-                     "}",
+                     "\"manufacturer\"        : \"horchi\""
+                     "}"
                      "}",
                      sDataTopic.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
             }
@@ -185,8 +186,8 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
                      "],"
                      "\"name\"                : \"heater\","
                      "\"model\"               : \"p4daemon\","
-                     "\"manufacturer\"        : \"horchi\","
-                     "}",
+                     "\"manufacturer\"        : \"horchi\""
+                     "}"
                      "}",
                      sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
             }
