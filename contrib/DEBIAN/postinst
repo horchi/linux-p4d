@@ -23,28 +23,28 @@ COMMAND="CREATE DATABASE IF NOT EXISTS p4 charset utf8;
      FLUSH PRIVILEGES;"
 
 case "$1" in
-    configure)
-        echo "postinst called for configure" >&2
-        if pgrep mariadbd; then
-           echo "Enter your database root password:" >&2
-           echo ${COMMAND} | mysql -u root -Dmysql -p
-        else
-           echo "No local database found, skipping db setup" >&2
-        fi
-        systemctl daemon-reload && systemctl enable p4d.service
-        systemctl daemon-reload && systemctl enable w1mqtt.service
-        systemctl daemon-reload && systemctl enable mosquitto-log.service
-        systemctl restart rsyslog.service
-        systemctl restart logrotate.service
-        ;;
+   configure)
+      echo "postinst called for configure" >&2
+      if pgrep mariadbd || pgrep mysqld; then
+         echo "Enter your database root password:" >&2
+         echo ${COMMAND} | mysql -u root -Dmysql -p
+      else
+         echo "No local database found, skipping db setup" >&2
+      fi
+      systemctl daemon-reload && systemctl enable p4d.service
+      systemctl daemon-reload && systemctl enable w1mqtt.service
+      systemctl daemon-reload && systemctl enable mosquitto-log.service
+      systemctl restart rsyslog.service
+      systemctl restart logrotate.service
+      ;;
 
-    abort-upgrade|abort-remove|abort-deconfigure)
-        ;;
+   abort-upgrade|abort-remove|abort-deconfigure)
+      ;;
 
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-        ;;
+   *)
+      echo "postinst called with unknown argument \`$1'" >&2
+      exit 1
+      ;;
 esac
 
 # dh_installdeb will replace this with shell code automatically

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.46"
-#define VERSION_DATE "16.03.2023"
+#define _VERSION     "0.9.47"
+#define VERSION_DATE "24.05.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-05-24:  version 0.9.47
+  - Bugfix: Fixed debian installer
 
 2023-03-16:  version 0.9.46
   - Bugfix: Fixed hadling of diffrent states names
