@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.47"
-#define VERSION_DATE "24.05.2023"
+#define _VERSION     "0.9.48"
+#define VERSION_DATE "23.12.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-12-23:  version 0.9.48
+  - Added: Heeting status 71 für 'heating up' (thx to Cobraball)
 
 2023-05-24:  version 0.9.47
   - Bugfix: Fixed debian installer
