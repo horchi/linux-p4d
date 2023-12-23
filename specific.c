@@ -2475,7 +2475,7 @@ const char* P4d::getTextImage(const char* key, const char* text)
       image = "state-error.gif";
    else if (state == 1)
       image = "state-fireoff.gif";
-   else if (state == 2)
+   else if (state == 2 || state == 71)
       image = "state-heatup.gif";
    else if (state == 3)
       image = "state-fire.gif";
@@ -2489,7 +2489,7 @@ const char* P4d::getTextImage(const char* key, const char* text)
       image = "state-preparation.gif";
    else if (state == 8)
       image = "state-warmup.gif";
-   else if (state == 9 || state == 71)
+   else if (state == 9)
       image = "state-heatup.gif";
    else if (state == 15 || state == 70 || state == 69)
       image = "state-clean.gif";

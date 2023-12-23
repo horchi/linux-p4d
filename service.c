@@ -109,7 +109,7 @@ int FroelingService::toState(const char* title)
       for (const auto& t : stateInfos[i].titles)
       {
          if (strcmp(t, title) == 0)
-            return i;
+            return stateInfos[i].code;
       }
    }
 
