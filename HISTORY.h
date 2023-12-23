@@ -18,7 +18,8 @@
  * ------------------------------------
 
 2023-12-23:  version 0.9.48
-  - Added: Heeting status 71 für 'Anheizen' (thx to Cobraball)
+  - Added:  Heeting status 71 für 'Anheizen' (thx to Cobraball)
+  - Bugfix: Fixed text - status converstion (thx to Cobraball)
 
 2023-05-24:  version 0.9.47
   - Bugfix: Fixed debian installer
