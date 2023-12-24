@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.48"
-#define VERSION_DATE "23.12.2023"
+#define _VERSION     "0.9.49"
+#define VERSION_DATE "24.12.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-12-24:  version 0.9.49
+  - Added:  Adjusted some header includes to compile at bookworm
 
 2023-12-23:  version 0.9.48
   - Added:  Heeting status 71 für 'Anheizen' (thx to Cobraball)
