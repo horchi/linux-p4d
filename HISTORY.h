@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.49"
+#define _VERSION     "0.9.50"
 #define VERSION_DATE "24.12.2023"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-12-24:  version 0.9.50
+  - Changed: Adjusted gauge widget for 'width = 2'
 
 2023-12-24:  version 0.9.49
   - Added:  Adjusted some header includes to compile at bookworm

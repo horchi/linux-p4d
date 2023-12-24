@@ -1328,8 +1328,10 @@ table.tableMultiCol tr:nth-child(odd)
 
 .widget-main-gauge
 {
+    display: grid;
     grid-area: main;
-    width: inherit;
+    width: 100%;
+/*    height: 100%;*/
     align-self: center;
 }
 
