@@ -134,8 +134,8 @@ make install INIT_SYSTEM=sysV
 #### If you like a other destination than '/usr/local' append PREFIX=your-destination (e.g. PREFIX=/usr) to all make calls above
 
 - Now P4 daemon is installed in folder `/usr/local/bin` and its config in /etc/p4d/
-- Check `/etc/p4d.conf` file for setting db connection papameters, ttyDeviceSvc device (change device if required),
-  check which `/dev/ttyUSB?` devices is used for USB-Serial converter (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`)
+- Check `/etc/p4d/daemon.conf` file for setting db connection papameters,
+- after starting and connecting the web interface set the proper tty device in the setup menu
 
 ## Time to first start of p4d
 ```
@@ -153,19 +153,11 @@ grep "p4d:" /var/log/syslog
 ```
 
 ## Aggregation / Cleanup
-The samples will recorded in the configured interval (parameter interval in p4d.conf), the default is 60 Seconds.
-After a while the database will grow and the selects become slower. Therefore you can setup a automatic aggregation in the `p4d.conf` with this two parameters:
-The `aggregateHistory` is the history for aggregation in days, the default is 0 days -> aggegation turned OFF
-The `aggregateInterval` is the aggregation interval in minutes - 'one sample per interval will be build' (default 15 minutes)
+The samples will recorded in the configured interval (at the setup page), the default is 60 Seconds.
+After a while the database will grow and the selects become slower. Therefore you can setup a automatic aggregation by adjusting 'Historie' and 'Danach aggregieren über'
 
-For example:
-```
-aggregateHistory = 365
-aggregateInterval = 15
-```
-
-Means that all samples older than 365 days will be aggregated to one sample per 15 Minutes.
-If you like to delete 'old' samples you have to do the cleanup job by hand, actually i don't see the need to delete anything, I like to hold my data (forever :) ?).
+A 'Historie' of 365 means that all samples older than 365 days will be aggregated to one sample per ''Danach aggregieren über' minutes (for example 15 minutes)
+If you like to completely delete 'old' samples you have to do the cleanup job by hand, actually I don't see the need to delete anything, I like to hold my data (forever :) ?).
 
 ## WEB interface:
 
