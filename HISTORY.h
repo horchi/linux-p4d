@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.52"
+#define _VERSION     "0.9.53"
 #define VERSION_DATE "29.12.2023"
 
 #ifdef GIT_REV
@@ -17,8 +17,11 @@
 /*
  * ------------------------------------
 
+2023-12-29:  version 0.9.53
+  - Changed: Aproved patch of Tropaion for homeassitant integration
+
 2023-12-29:  version 0.9.52
-  - Changed: Aproved patch for homeassitant uint
+  - Changed: Aproved patch for homeassitant unit
 
 2023-12-29:  version 0.9.51
   - Changed: Ignore letter case for state text

@@ -1140,7 +1140,7 @@ int P4d::updateErrors()
 
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
    {
-      int insert = yes;
+      int insert {yes};
 
       sprintf(timeField, "TIME%d", e.state);
 
