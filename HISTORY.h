@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.9.51"
+#define _VERSION     "0.9.52"
 #define VERSION_DATE "29.12.2023"
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-12-29:  version 0.9.52
+  - Changed: Aproved patch for homeassitant uint
 
 2023-12-29:  version 0.9.51
   - Changed: Ignore letter case for state text

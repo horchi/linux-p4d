@@ -146,14 +146,23 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
          }
          else
          {
-            asprintf(&configJson, "{"
-                     "\"state_topic\"         : \"%s\","
-                     "\"unit_of_measurement\" : \"%s\","
-                     "\"value_template\"      : \"{{ value_json.value }}\","
-                     "\"name\"                : \"%s %s\","
-                     "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
-                     "}",
-                     sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+            if (!sensor.unit.empty())
+               asprintf(&configJson, "{"
+                        "\"state_topic\"         : \"%s\","
+                        "\"unit_of_measurement\" : \"%s\","
+                        "\"value_template\"      : \"{{ value_json.value }}\","
+                        "\"name\"                : \"%s %s\","
+                        "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+                        "}",
+                        sDataTopic.c_str(), sensor.unit.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
+            else
+               asprintf(&configJson, "{"
+                        "\"state_topic\"         : \"%s\","
+                        "\"value_template\"      : \"{{ value_json.value }}\","
+                        "\"name\"                : \"%s %s\","
+                        "\"unique_id\"           : \"%s_" TARGET "2mqtt\""
+                        "}",
+                        sDataTopic.c_str(), sensor.title.c_str(), myTitle(), sName.c_str());
          }
 
          mqttWriter->writeRetained(configTopic, configJson);
