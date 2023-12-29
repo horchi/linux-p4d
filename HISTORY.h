@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.50"
-#define VERSION_DATE "24.12.2023"
+#define _VERSION     "0.9.51"
+#define VERSION_DATE "29.12.2023"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-12-29:  version 0.9.51
+  - Changed: Ignore letter case for state text
 
 2023-12-24:  version 0.9.50
   - Changed: Adjusted gauge widget for 'width = 2'

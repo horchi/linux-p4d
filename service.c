@@ -25,7 +25,7 @@ FroelingService::StateInfo FroelingService::stateInfos[] =
    {  2,  { "Anheizen"     } },
    {  3,  { "Heizen"       } },
    {  4,  { "Feuerhaltung", "Feuererhaltung" } },
-   {  5,  { "Feuer aus"    } },
+   {  5,  { "Feuer Aus"    } },
    {  6,  { "Tür offen"    } },
    {  7,  { "Vorbereitung" } },
    {  8,  { "Vorwärmphase", "Vorwärmen" } },
@@ -108,7 +108,7 @@ int FroelingService::toState(const char* title)
    {
       for (const auto& t : stateInfos[i].titles)
       {
-         if (strcmp(t, title) == 0)
+         if (strcasecmp(t, title) == 0)
             return stateInfos[i].code;
       }
    }
