@@ -63,8 +63,9 @@ class P4d : public Daemon, public FroelingService
       int performJobs() override;
       void logReport() override;
       bool onCheckRights(long client, Event event, uint rights) override;
-      int dispatchMqttHaCommandRequest(json_t* jData, const char* topic) override;
+      int dispatchOther(const char* topic, const char* message) override;
       int dispatchNodeRedCommand(json_t* jObject) override;
+      int dispatchMqttS3200CommandRequest(json_t* jData, const char* topic);
       std::list<ConfigItemDef>* getConfiguration() override { return &configuration; }
 
       int updateTimeRangeData();

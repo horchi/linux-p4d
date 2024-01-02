@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.53"
-#define VERSION_DATE "29.12.2023"
+#define _VERSION     "0.9.54"
+#define VERSION_DATE "02.01.2024"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2024-01-02:  version 0.9.54
+  - change:  renamed S3200 command interface topic to 'p4d2mqtt/s3200/request'
 
 2023-12-29:  version 0.9.53
   - Changed: Aproved patch of Tropaion for homeassitant integration

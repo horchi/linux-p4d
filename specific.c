@@ -2262,16 +2262,30 @@ int P4d::initValueFacts(bool truncate)
 }
 
 //***************************************************************************
+// Dispatch Other
+//***************************************************************************
+
+int P4d::dispatchOther(const char* topic, const char* message)
+{
+   if (strstr(topic, "2mqtt/s3200/request"))
+   {
+      json_t* jData = jsonLoad(message);
+      dispatchMqttS3200CommandRequest(jData, topic);
+      json_decref(jData);
+      return done;
+   }
+
+   return Daemon::dispatchOther(topic, message);
+}
+
+//***************************************************************************
 // Dispatch Mqtt Command Request
 //   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
-int P4d::dispatchMqttHaCommandRequest(json_t* jData, const char* topic)
+int P4d::dispatchMqttS3200CommandRequest(json_t* jData, const char* topic)
 {
    const char* command = getStringFromJson(jData, "command", "");
-
-   if (isEmpty(command))
-      return Daemon::dispatchMqttHaCommandRequest(jData, topic);
 
    if (strcmp(command, "parget") == 0)
    {
