@@ -106,9 +106,9 @@ int Deconz::exit()
 
 int Deconz::queryApiKey(std::string& result)
 {
-   json_t* jArray {nullptr};
+   json_t* jArray {};
 
-   char* data {nullptr};
+   char* data {};
    asprintf(&data, "{ \"devicetype\": \"%s\" }", TARGET);
 
    if (post(jArray, "api", data) != success)
@@ -119,8 +119,8 @@ int Deconz::queryApiKey(std::string& result)
 
    free(data);
    json_t* jData = json_array_get(jArray, 0);
-   const char* status {nullptr};
-   json_t* jItem {nullptr};
+   const char* status {};
+   json_t* jItem {};
 
    if (!jData)
       return fail;
@@ -147,7 +147,7 @@ int Deconz::queryApiKey(std::string& result)
 
 int Deconz::initDevices()
 {
-   json_t* jData {nullptr};
+   json_t* jData {};
 
    if (query(jData, "sensors", apiKey.c_str()) != success)
       return fail;
@@ -172,8 +172,8 @@ int Deconz::initDevices()
 
 int Deconz::processDevices(json_t* jData, std::string kind)
 {
-   const char* sid {nullptr};   // sensor id
-   json_t* jItem {nullptr};
+   const char* sid {};   // sensor id
+   json_t* jItem {};
 
    json_object_foreach(jData, sid, jItem)
    {
@@ -185,7 +185,7 @@ int Deconz::processDevices(json_t* jData, std::string kind)
       //          "state":{"alert":"none","bri":254,"colormode":"ct","ct":250,"on":false,"reachable":true},
       //          "swversion":"2.0.022","type":"Color temperature light","uniqueid":"14:b4:57:ff:fe:7e:7a:57-01"}
 
-      char* type {nullptr};
+      char* type {};
       asprintf(&type, "DZ%s", kind == "sensor" ? "S" : "L");
 
       std::string dzType = getStringFromJson(jItem, "type", "");
@@ -350,7 +350,7 @@ int Deconz::processDevices(json_t* jData, std::string kind)
 
 int Deconz::toggle(const char* type, uint address, bool state, int bri, int transitiontime)
 {
-   json_t* jArray {nullptr};
+   json_t* jArray {};
    std::string result;
    std::string uuid;
 
@@ -401,7 +401,7 @@ int Deconz::toggle(const char* type, uint address, bool state, int bri, int tran
 
 int Deconz::color(const char* type, uint address, int hue, int sat, int bri)
 {
-   json_t* jArray {nullptr};
+   json_t* jArray {};
    std::string result;
    std::string uuid;
 
@@ -448,8 +448,8 @@ int Deconz::color(const char* type, uint address, int hue, int sat, int bri)
 int Deconz::checkResult(json_t* jArray)
 {
    json_t* jData = json_array_get(jArray, 0);
-   const char* status {nullptr};
-   json_t* jItem {nullptr};
+   const char* status {};
+   json_t* jItem {};
 
    if (!jData)
       return fail;
@@ -475,7 +475,7 @@ int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
    // /api/<apikey>/lights/<id>/state
 
    std::string data;
-   char* url {nullptr};
+   char* url {};
    asprintf(&url, "http://%s/api/%s/lights/%s/state", httpUrl.c_str(), apiKey.c_str(), uuid);
    tell(eloDebugDeconz, "DECONZ: REST call '%s'", url);
 
@@ -516,7 +516,7 @@ int Deconz::post(json_t*& jResult, const char* method, const char* payload)
 
    // http://192.168.200.101:8081/api/<method>
 
-   char* url {nullptr};
+   char* url {};
    asprintf(&url, "http://%s/%s", httpUrl.c_str(), method);
    tell(eloDebugDeconz, "DECONZ: REST call '%s'", url);
 
@@ -555,7 +555,7 @@ int Deconz::query(json_t*& jResult, const char* method, const char* key)
 
    // http://192.168.200.101:8081/api/<key>/<method>
 
-   char* url {nullptr};
+   char* url {};
    asprintf(&url, "http://%s/api/%s/%s", httpUrl.c_str(), apiKey.c_str(), method);
    tell(eloDebugDeconz, "DECONZ: REST call '%s'", url);
 
@@ -580,9 +580,9 @@ int Deconz::query(json_t*& jResult, const char* method, const char* key)
 
 #include <libwebsockets.h>
 
-struct lws* Deconz::client_wsi {nullptr};
-lws_context* Deconz::context {nullptr};
-Deconz* Deconz::singleton {nullptr};
+struct lws* Deconz::client_wsi {};
+lws_context* Deconz::context {};
+Deconz* Deconz::singleton {};
 
 cMyMutex Deconz::messagesInMutex;
 std::queue<std::string> Deconz::messagesIn;
@@ -764,7 +764,7 @@ int Deconz::atInMessage(const char* data)
 
    json_t* jData = json_object();
 
-   char* type {nullptr};
+   char* type {};
    asprintf(&type, "DZ%s", resource == "sensors" ? "S" : "L");
 
    json_object_set_new(jData, "type", json_string(type));

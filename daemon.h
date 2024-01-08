@@ -227,11 +227,11 @@ class Daemon : public cWebInterface
       {
          std::string name;
          ConfigItemType type;
-         const char* def {nullptr};
+         const char* def {};
          bool internal {false};
-         const char* category {nullptr};
-         const char* title {nullptr};
-         const char* description {nullptr};
+         const char* category {};
+         const char* title {};
+         const char* description {};
       };
 
       struct DefaultWidgetProperty
@@ -437,46 +437,46 @@ class Daemon : public cWebInterface
       // data
 
       bool initialized {false};
-      cDbConnection* connection {nullptr};
+      cDbConnection* connection {};
 
-      cDbTable* tableTableStatistics {nullptr};
-      cDbTable* tableSamples {nullptr};
-      cDbTable* tablePeaks {nullptr};
-      cDbTable* tableValueFacts {nullptr};
-      cDbTable* tableValueTypes {nullptr};
-      cDbTable* tableConfig {nullptr};
-      cDbTable* tableScripts {nullptr};
-      cDbTable* tableSensorAlert {nullptr};
-      cDbTable* tableUsers {nullptr};
-      cDbTable* tableGroups {nullptr};
-      cDbTable* tableDashboards {nullptr};
-      cDbTable* tableDashboardWidgets {nullptr};
-      cDbTable* tableSchemaConf {nullptr};
-      cDbTable* tableHomeMatic {nullptr};
+      cDbTable* tableTableStatistics {};
+      cDbTable* tableSamples {};
+      cDbTable* tablePeaks {};
+      cDbTable* tableValueFacts {};
+      cDbTable* tableValueTypes {};
+      cDbTable* tableConfig {};
+      cDbTable* tableScripts {};
+      cDbTable* tableSensorAlert {};
+      cDbTable* tableUsers {};
+      cDbTable* tableGroups {};
+      cDbTable* tableDashboards {};
+      cDbTable* tableDashboardWidgets {};
+      cDbTable* tableSchemaConf {};
+      cDbTable* tableHomeMatic {};
 
-      cDbStatement* selectTableStatistic {nullptr};
-      cDbStatement* selectAllGroups {nullptr};
-      cDbStatement* selectAllValueTypes {nullptr};
-      cDbStatement* selectActiveValueFacts {nullptr};
-      cDbStatement* selectValueFactsByType {nullptr};
-      cDbStatement* selectAllValueFacts {nullptr};
-      cDbStatement* selectAllConfig {nullptr};
-      cDbStatement* selectAllUser {nullptr};
-      cDbStatement* selectMaxTime {nullptr};
-      cDbStatement* selectSamplesRange {nullptr};     // for chart
-      cDbStatement* selectSamplesRange60 {nullptr};   // for chart
-      cDbStatement* selectScriptByPath {nullptr};
-      cDbStatement* selectScripts {nullptr};
-      cDbStatement* selectSensorAlerts {nullptr};
-      cDbStatement* selectAllSensorAlerts {nullptr};
-      cDbStatement* selectSampleInRange {nullptr};    // for alert check
+      cDbStatement* selectTableStatistic {};
+      cDbStatement* selectAllGroups {};
+      cDbStatement* selectAllValueTypes {};
+      cDbStatement* selectActiveValueFacts {};
+      cDbStatement* selectValueFactsByType {};
+      cDbStatement* selectAllValueFacts {};
+      cDbStatement* selectAllConfig {};
+      cDbStatement* selectAllUser {};
+      cDbStatement* selectMaxTime {};
+      cDbStatement* selectSamplesRange {};     // for chart
+      cDbStatement* selectSamplesRange60 {};   // for chart
+      cDbStatement* selectScriptByPath {};
+      cDbStatement* selectScripts {};
+      cDbStatement* selectSensorAlerts {};
+      cDbStatement* selectAllSensorAlerts {};
+      cDbStatement* selectSampleInRange {};    // for alert check
 
-      cDbStatement* selectDashboards {nullptr};
-      cDbStatement* selectDashboardById {nullptr};
-      cDbStatement* selectDashboardWidgetsFor {nullptr};
-      cDbStatement* selectSchemaConfByState {nullptr};
-      cDbStatement* selectAllSchemaConf {nullptr};
-      cDbStatement* selectHomeMaticByUuid {nullptr};
+      cDbStatement* selectDashboards {};
+      cDbStatement* selectDashboardById {};
+      cDbStatement* selectDashboardWidgetsFor {};
+      cDbStatement* selectSchemaConfByState {};
+      cDbStatement* selectAllSchemaConf {};
+      cDbStatement* selectHomeMaticByUuid {};
 
       cDbValue xmlTime;
       cDbValue rangeFrom;
@@ -497,7 +497,7 @@ class Daemon : public cWebInterface
 
       // WS Interface stuff
 
-      cWebSock* webSock {nullptr};
+      cWebSock* webSock {};
       time_t nextWebSocketPing {0};
       int webSocketPingTime {60};
       const char* httpPath {"/var/lib/" TARGET};
@@ -525,48 +525,48 @@ class Daemon : public cWebInterface
       struct Group
       {
          std::string name;
-         json_t* oHaJson {nullptr};
+         json_t* oHaJson {};
       };
 
-      char* mqttUrl {nullptr};
-      char* mqttUser {nullptr};
-      char* mqttPassword {nullptr};
+      char* mqttUrl {};
+      char* mqttUser {};
+      char* mqttPassword {};
 
-      char* mqttDataTopic {nullptr};
-      char* mqttSendWithKeyPrefix {nullptr};
+      char* mqttDataTopic {};
+      char* mqttSendWithKeyPrefix {};
       bool mqttHaveConfigTopic {false};
       MqttInterfaceStyle mqttInterfaceStyle {misNone};
 
-      Mqtt* mqttReader {nullptr};
-      Mqtt* mqttWriter {nullptr};
+      Mqtt* mqttReader {};
+      Mqtt* mqttWriter {};
       std::vector<std::string> mqttSensorTopics;
       std::vector<std::string> configTopicsFor;
 
       time_t lastMqttConnectAt {0};
       std::map<std::string,std::string> hassCmdTopicMap; // 'topic' to 'name' map
 
-      json_t* oHaJson {nullptr};
+      json_t* oHaJson {};
       std::map<int,Group> groups;
 
       // config
 
       double latitude {50.30};
       double longitude {8.79};
-      char* openWeatherApiKey {nullptr};
+      char* openWeatherApiKey {};
       int interval {60};
       int arduinoInterval {10};
 
       int webPort {0};
-      char* webUrl {nullptr};
+      char* webUrl {};
       bool webSsl {false};
-      char* iconSet {nullptr};
+      char* iconSet {};
       int aggregateInterval {15};         // aggregate interval in minutes
       int aggregateHistory {0};           // history in days
 
       bool sendMails {false};
-      char* mailScript {nullptr};
-      char* stateMailTo {nullptr};
-      char* errorMailTo {nullptr};
+      char* mailScript {};
+      char* stateMailTo {};
+      char* errorMailTo {};
       std::string htmlHeader;
 
       bool invertDO {false};

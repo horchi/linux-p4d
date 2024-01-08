@@ -53,12 +53,12 @@ class W1
 
       int mqttConnection();
 
-      char* w1Path {nullptr};
+      char* w1Path {};
       SensorList sensors;
-      const char* mqttUrl {nullptr};
+      const char* mqttUrl {};
       std::string mqttTopic;
       std::string mqttPingTopic;
-      Mqtt* mqttW1Writer {nullptr};
+      Mqtt* mqttW1Writer {};
 
       static bool shutdown;
 };

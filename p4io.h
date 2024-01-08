@@ -204,7 +204,7 @@ class P4Request : public FroelingService
 
       Header header;
       cMyMutex mutex;
-      char* text {nullptr};
+      char* text {};
       word addresses[maxAddresses];
       int addressCount;
       byte bytes[maxBytes];
@@ -216,5 +216,5 @@ class P4Request : public FroelingService
       byte decoded[sizeMaxRequest*2+TB];  // for debug
       int sizeDecodedContent;
 
-      Serial* s {nullptr};
+      Serial* s {};
 };

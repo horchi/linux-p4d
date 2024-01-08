@@ -65,7 +65,10 @@ class P4d : public Daemon, public FroelingService
       bool onCheckRights(long client, Event event, uint rights) override;
       int dispatchOther(const char* topic, const char* message) override;
       int dispatchNodeRedCommand(json_t* jObject) override;
-      int dispatchMqttS3200CommandRequest(json_t* jData, const char* topic);
+      int dispatchMqttS3200CommandRequest(json_t* jData);
+
+      int parGet(cDbTable* tableMenu, std::string& error, int result = success);
+      int parSet(cDbTable* tableMenu, const char* value, std::string& error);
       std::list<ConfigItemDef>* getConfiguration() override { return &configuration; }
 
       int updateTimeRangeData();
@@ -99,38 +102,38 @@ class P4d : public Daemon, public FroelingService
       // config
 
       int stateCheckInterval {10};
-      char* ttyDevice {nullptr};
+      char* ttyDevice {};
 
       int tSync {no};
       int maxTimeLeak {10};
-      char* stateMailAtStates {nullptr};
+      char* stateMailAtStates {};
       double consumptionPerHour {0};
-      char* knownStates {nullptr};
-      char* heatingType {nullptr};
+      char* knownStates {};
+      char* heatingType {};
 
       // data
 
-      cDbTable* tablePellets {nullptr};
-      cDbTable* tableMenu {nullptr};
-      cDbTable* tableErrors {nullptr};
-      cDbTable* tableTimeRanges {nullptr};
+      cDbTable* tablePellets {};
+      cDbTable* tableMenu {};
+      cDbTable* tableErrors {};
+      cDbTable* tableTimeRanges {};
 
       cDbValue minValue;
       cDbValue endTime;
 
-      cDbStatement* selectAllMenuItems {nullptr};
-      cDbStatement* selectMenuItemsByParent {nullptr};
-      cDbStatement* selectMenuItemsByChild {nullptr};
-      cDbStatement* selectAllErrors {nullptr};
-      cDbStatement* selectPendingErrors {nullptr};
+      cDbStatement* selectAllMenuItems {};
+      cDbStatement* selectMenuItemsByParent {};
+      cDbStatement* selectMenuItemsByChild {};
+      cDbStatement* selectAllErrors {};
+      cDbStatement* selectPendingErrors {};
 
-      cDbStatement* selectAllPellets {nullptr};
-      cDbStatement* selectStokerHours {nullptr};
-      cDbStatement* selectStateDuration {nullptr};
+      cDbStatement* selectAllPellets {};
+      cDbStatement* selectStokerHours {};
+      cDbStatement* selectStateDuration {};
 
-      Sem* sem {nullptr};
-      P4Request* request {nullptr};
-      Serial* serial {nullptr};
+      Sem* sem {};
+      P4Request* request {};
+      Serial* serial {};
       Status currentState;
       bool stateChanged {false};
 

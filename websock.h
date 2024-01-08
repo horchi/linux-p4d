@@ -68,7 +68,7 @@ class cWebSock : public cWebService
 
          // buffer to send the payload in chunks
 
-         unsigned char* msgBuffer {nullptr};
+         unsigned char* msgBuffer {};
          int msgBufferSize {0};
          int msgBufferPayloadSize {0};
          int msgBufferSendOffset {0};
@@ -135,8 +135,8 @@ class cWebSock : public cWebService
       //
 
       int port {na};
-      char* certFile {nullptr};
-      char* certKeyFile {nullptr};
+      char* certFile {};
+      char* certKeyFile {};
       lws_protocols protocols[3];
       lws_http_mount mounts[1];
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR >= 4)
@@ -149,7 +149,7 @@ class cWebSock : public cWebService
       {
          bool active {false};
          bool close {false};
-         cWebSock* webSock {nullptr};
+         cWebSock* webSock {};
          int timeout {60};
       };
 

@@ -8,8 +8,8 @@
 
 int main(int argc, const char** argv)
 {
-   MqTTPublishClient* mqttWriter {nullptr};
-   MqTTSubscribeClient* mqttReader {nullptr};
+   MqTTPublishClient* mqttWriter {};
+   MqTTSubscribeClient* mqttReader {};
 
    logstdout = yes;
    loglevel = 5;

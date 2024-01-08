@@ -729,7 +729,7 @@ int P4d::sendStateMail()
 
    // HTML mail
 
-   char* html {nullptr};
+   char* html {};
 
    loadHtmlHeader();
 
@@ -1711,10 +1711,10 @@ int P4d::performTimeParEditRequest(json_t* oObject, long client)
       return fail;
    }
 
-   char* rTitle {nullptr};
-   char* value {nullptr};
-   char* from {nullptr};
-   char* to {nullptr};
+   char* rTitle {};
+   char* value {};
+   char* from {};
+   char* to {};
 
    asprintf(&rTitle, "Range %d", range);
    asprintf(&from, "from%d", range);
@@ -1926,7 +1926,7 @@ int P4d::performMenuBySearch(json_t* oObject, long client, const char* search)
 int P4d::performMenuByParent(json_t* oObject, long client, int parent)
 {
    int last {0};
-   char* title {nullptr};
+   char* title {};
 
    json_t* oJson = json_object();
    json_t* oArray = json_array();
@@ -2021,7 +2021,7 @@ int P4d::performMenuByParent(json_t* oObject, long client, int parent)
          for (int wday = 0; wday < 7; wday++)
          {
             int trAddr = baseAddr + wday;
-            char* dayTitle {nullptr};
+            char* dayTitle {};
             asprintf(&dayTitle, "Zeiten '%s'", toWeekdayName(wday));
 
             tableTimeRanges->clear();
@@ -2045,10 +2045,10 @@ int P4d::performMenuByParent(json_t* oObject, long client, int parent)
             {
                for (int n = 1; n < 5; n++)
                {
-                  char* rTitle {nullptr};
-                  char* value {nullptr};
-                  char* from {nullptr};
-                  char* to {nullptr};
+                  char* rTitle {};
+                  char* value {};
+                  char* from {};
+                  char* to {};
 
                   asprintf(&rTitle, "Range %d", n);
                   asprintf(&from, "from%d", n);
@@ -2193,8 +2193,8 @@ int P4d::initValueFacts(bool truncate)
 
    for (int f = selectAllMenuItems->find(); f; f = selectAllMenuItems->fetch())
    {
-      char* name {nullptr};
-      const char* type {nullptr};
+      char* name {};
+      const char* type {};
       int structType = tableMenu->getIntValue("TYPE");
       std::string sname = tableMenu->getStrValue("TITLE");
 
@@ -2262,122 +2262,178 @@ int P4d::initValueFacts(bool truncate)
 }
 
 //***************************************************************************
-// Dispatch Other
-//***************************************************************************
-
-int P4d::dispatchOther(const char* topic, const char* message)
-{
-   if (strstr(topic, "2mqtt/s3200/request"))
-   {
-      json_t* jData = jsonLoad(message);
-      dispatchMqttS3200CommandRequest(jData, topic);
-      json_decref(jData);
-      return done;
-   }
-
-   return Daemon::dispatchOther(topic, message);
-}
-
-//***************************************************************************
 // Dispatch Mqtt Command Request
 //   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
-int P4d::dispatchMqttS3200CommandRequest(json_t* jData, const char* topic)
+int P4d::dispatchOther(const char* topic, const char* message)
 {
-   const char* command = getStringFromJson(jData, "command", "");
+   if (!strstr(topic, "2mqtt/s3200/request"))
+      return Daemon::dispatchOther(topic, message);
 
-   if (strcmp(command, "parget") == 0)
+   json_t* jData = jsonLoad(message);
+   std::string command = getStringFromJson(jData, "command", "");
+   int address = getIntFromJson(jData, "address", -1);
+   json_t* jAddress = getObjectFromJson(jData, "address");
+   std::string value = getStringFromJson(jData, "value", "");
+
+   if (!json_is_integer(jAddress) || address == -1)
    {
-      int status {fail};
-      json_t* jAddress = getObjectFromJson(jData, "address");
-      int address = getIntFromJson(jData, "address", -1);
-
-      if (!json_is_integer(jAddress) || address == -1)
-      {
-         tell(eloAlways, "Error: Missing address or invalid object type for MQTT command 'parget', ignoring");
-         return fail;
-      }
-
-      tell(eloAlways, "Perform MQTT command '%s' for address %d", command, address);
-
-      ConfigParameter p(address);
-
-      sem->p();
-      status = request->getParameter(&p);
-      sem->v();
-
-      if (status != success)
-      {
-         tell(eloAlways, "Parameter request failed!");
-         return fail;
-      }
-
-      tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Value: %.*f", p.address, p.unit, p.digits, p.rValue);
+      tell(eloAlways, "Error: Missing address or invalid object type for MQTT command, ignoring");
+      json_decref(jData);
+      return fail;
    }
-   else if (strcmp(command, "parstore") == 0)
+
+   json_decref(jData);
+
+   cDbStatement* selectParameter = new cDbStatement(tableMenu);
+   selectParameter->build("select ");
+   selectParameter->bindAllOut();
+   selectParameter->build(" from %s where child = 0 ", tableMenu->TableName());
+   selectParameter->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectParameter->build(" and type in (%d,%d,%d,%d,%d)", mstParDig, mstPar, mstParSet, mstParSet1, mstParSet2);  // mstParZeit, mstParWeekday,
+
+   if (selectParameter->prepare() != success)
    {
-      int status {fail};
-      json_t* jAddress = getObjectFromJson(jData, "address");
-      int address = getIntFromJson(jData, "address", -1);
-      const char* value = getStringFromJson(jData, "value");
+      tell(eloAlways, "Error: Failed to prepare statement");
+      delete selectParameter;
+      return fail;
+   }
 
-      if (!json_is_integer(jAddress) || address == -1)
-      {
-         tell(eloAlways, "Error: Missing address or invalid object type for MQTT command 'parstore', ignoring");
-         return fail;
-      }
+   tableMenu->setValue("ADDRESS", address);
 
-      if (isEmpty(value))
-      {
-         tell(eloAlways, "Error: Missing value for MQTT command 'parstore', ignoring");
-         return fail;
-      }
+   if (!selectParameter->find())
+   {
+      tell(eloAlways, "Info: Parameter 0x%02x not found, abort command", address);
+      delete selectParameter;
+      return fail;
+   }
 
-      tell(eloAlways, "Perform MQTT command '%s' for address %d with value '%s'", command, address, value);
+   delete selectParameter;
+   tell(eloAlways, "Perform MQTT command '%s' for address 0x%02x", command.c_str(), address);
 
-      ConfigParameter p(address);
+   std::string error;
 
-      sem->p();
-      status = request->getParameter(&p);
-      sem->v();
+   if (command == "parget")
+   {
+      parGet(tableMenu, error);
+   }
+   else if (command == "parset")
+   {
+      int status = parSet(tableMenu, value.c_str(), error);
+      parGet(tableMenu, error, status);
+   }
+   else
+      tell(eloAlways, "Error: Got unexpected command '%s' in MQTT request, ignoring", command.c_str());
 
-      if (status != success)
-      {
-         tell(eloAlways, "Set of parameter failed, query of current setting failed!");
-         return fail;
-      }
+   return done;
+}
 
-      if (p.setValueDirect(value, p.digits, p.getFactor()) != success)
-      {
-         tell(eloAlways, "Set of parameter failed, wrong format");
-         return fail;
-      }
+//***************************************************************************
+// Parameter GET
+//***************************************************************************
 
-      tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", value, address);
-      sem->p();
-      status = request->setParameter(&p);
-      sem->v();
+int P4d::parGet(cDbTable* tableMenu, std::string& error, int result)
+{
+   json_t* jObj = json_object();
+   int paddr = tableMenu->getIntValue("ADDRESS");
+   ConfigParameter p(paddr);
 
+   sem->p();
+   int status = request->getParameter(&p);
+   sem->v();
+
+   if (status != success)
+   {
+      tell(eloAlways, "Parameter request failed!");
+      error += "Requesting parameter failed;";
+   }
+
+   if (mqttWriter->isConnected())
+   {
       if (status == success)
-      {
-         tell(eloAlways, "Stored parameter");
-      }
-      else
-      {
-         tell(eloAlways, "Set of parameter failed, error was (%d)", status);
+         p.toJson(jObj);
 
-         if (status == P4Request::wrnNonUpdate)
-            tell(eloAlways, "Value identical, ignoring request");
-         else if (status == P4Request::wrnOutOfRange)
-            tell(eloAlways, "Value out of range");
-         else
-            tell(eloAlways, "Serial communication error");
-      }
+      json_object_set_new(jObj, "address", json_integer(paddr));
+      json_object_set_new(jObj, "status", json_string(status == success ? "success" : "fail"));
+      json_object_set_new(jObj, "title", json_string(tableMenu->getStrValue("TITLE")));
+      json_object_set_new(jObj, "id", json_integer(tableMenu->getIntValue("ID")));
+
+      if (status+result != success)
+         json_object_set_new(jObj, "error", json_string(error.c_str()));
+
+      char* payload = json_dumps(jObj, JSON_REAL_PRECISION(4));
+      json_decref(jObj);
+
+      mqttWriter->write(TARGET "2mqtt/s3200/reply", payload);
+      tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Value: %.*f [%s]", p.address, p.unit, p.digits, p.rValue, payload);
+      free(payload);
+   }
+   else
+      tell(eloAlways, "Address: 0x%4.4x; Unit: %s; Value: %.*f", p.address, p.unit, p.digits, p.rValue);
+
+   return success;
+}
+
+//***************************************************************************
+// Parameter SET
+//***************************************************************************
+
+int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
+{
+   int status {fail};
+
+   if (isEmpty(value))
+   {
+      tell(eloAlways, "Error: Missing value for MQTT command 'parstore', ignoring");
+      return fail;
+   }
+
+   int paddr = tableMenu->getIntValue("ADDRESS");
+   ConfigParameter p(paddr);
+
+   sem->p();
+   status = request->getParameter(&p);
+   sem->v();
+
+   if (status != success)
+   {
+      error = "Set of parameter failed, requesting current value failed";
+      tell(eloAlways, error.c_str());
+      return fail;
+   }
+
+   if (p.setValueDirect(value, p.digits, p.getFactor()) != success)
+   {
+      error = "Set of parameter failed, wrong format";
+      tell(eloAlways, error.c_str());
+      return fail;
+   }
+
+   tell(eloAlways, "Storing value '%s' for parameter at address 0x%x", value, paddr);
+   sem->p();
+   status = request->setParameter(&p);
+   sem->v();
+
+   if (status == success)
+   {
+      tell(eloAlways, "Stored parameter");
    }
    else
    {
-      tell(eloAlways, "Error: Got unexpected command '%s' in MQTT request, ignoring", command);
+      error = "Set of parameter failed, ";
+      tell(eloAlways, "Set of parameter failed, error was (%d)", status);
+
+      if (status == P4Request::wrnNonUpdate)
+         error += "value identical, ignoring request";
+      else if (status == P4Request::wrnOutOfRange)
+         error += "value out of range";
+      else
+         error += "serial communication error";
+
+      tell(eloAlways, error.c_str());
+
+      return fail;
    }
 
    return success;
@@ -2476,7 +2532,7 @@ int P4d::configChoice2json(json_t* obj, const char* name)
 const char* P4d::getTextImage(const char* key, const char* text)
 {
    static char result[100] = "";
-   const char* image {nullptr};
+   const char* image {};
 
    // it's only for UD / udState
 

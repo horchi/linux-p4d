@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "lib/common.h"
+#include "lib/json.h"
 
 //***************************************************************************
 // Class Froeling Service
@@ -274,7 +275,7 @@ class FroelingService
 
             cRetBuf toNice(byte type)
             {
-               char nice[100+TB];
+               char nice[100+TB] {};
 
                if (type == mstParDig)
                   sprintf(nice, "%s", value ? "ja" : "nein");
@@ -284,6 +285,25 @@ class FroelingService
                   sprintf(nice, "%.*f", digits, rValue);
 
                return cRetBuf(nice);
+            }
+
+            int toJson(json_t* jData)
+            {
+               json_object_set_new(jData, "address", json_integer(address));
+               json_object_set_new(jData, "unit", json_string(unit));
+               json_object_set_new(jData, "digits", json_integer(digits));
+               json_object_set_new(jData, "min", json_real(rMin));
+               json_object_set_new(jData, "max", json_real(rMax));
+               json_object_set_new(jData, "default", json_real(rDefault));
+
+               if (strcmp(unit, "%"))
+                  json_object_set_new(jData, "value", json_integer(rValue));
+               else if (strcmp(unit, "°C"))
+                  json_object_set_new(jData, "value", json_real(rValue));
+               else
+                  json_object_set_new(jData, "value", json_real(rValue));
+
+               return done;
             }
 
             int setValueDirect(const char* strValue, int dig, int factor)
@@ -324,8 +344,8 @@ class FroelingService
                }
                else if (type == mstParZeit)
                {
-                  char* h = strdup(strValue);
-                  char* m;
+                  char* h {strdup(strValue)};
+                  char* m {};
 
                   if ((m = strchr(h, ':')))
                   {
@@ -379,27 +399,27 @@ class FroelingService
                return success;
             }
 
-            word address;
-            char* unit;
-            byte digits;
+            word address {0};
+            char* unit {};
+            byte digits {0};
 
-            double rValue;  // werte mit factor applied
-            double rMin;
-            double rMax;
-            double rDefault;
+            double rValue {0};  // werte mit factor applied
+            double rMin {0};
+            double rMax {0};
+            double rDefault {0};
 
-            byte ub1;
-            byte ub2;
-            byte ub3;
-            sword uw1;
+            byte ub1 {0};
+            byte ub2 {0};
+            byte ub3 {0};
+            sword uw1 {0};
 
          private:
 
-            byte factor;
-            sword value;
-            sword min;
-            sword max;
-            sword def;
+            byte factor {1};
+            sword value {0};
+            sword min {0};
+            sword max {0};
+            sword def {0};
       };
 
       struct Status
@@ -420,8 +440,8 @@ class FroelingService
          time_t time {0};
          byte mode {0};                 // Betriebsart
          byte state;                    // Zustand
-         char* modeinfo {nullptr};      // Betriebsart Text
-         char* stateinfo {nullptr};     // Zustand Text
+         char* modeinfo {};             // Betriebsart Text
+         char* stateinfo {};            // Zustand Text
          char version[12+TB] {'\0'};
       };
 
@@ -450,10 +470,10 @@ class FroelingService
          ~ValueSpec() { free(unit); free(description); free(name); }
 
          word address;
-         char* unit {nullptr};
+         char* unit {};
          word factor;
-         char* name {nullptr};
-         char* description {nullptr};
+         char* name {};
+         char* description {};
          word type;  // this seems to be something like the type
       };
 

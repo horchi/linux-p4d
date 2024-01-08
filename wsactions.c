@@ -221,7 +221,7 @@ int Daemon::replyResult(int status, long client, const char* format, ...)
    if (!client)
       return done;
 
-   char* message {nullptr};
+   char* message {}";
    va_list ap;
 
    va_start(ap, format);
@@ -346,7 +346,7 @@ int Daemon::performData(long client, const char* event)
             continue;
 
          json_t* ojData = json_object();
-         char* key {nullptr};
+         char* key {};
          asprintf(&key, "%s:0x%02x", sensor->type.c_str(), sensor->address);
          jsonSensorList[key] = ojData;
 
@@ -615,7 +615,7 @@ int Daemon::storeAlerts(json_t* oObject, long client)
    {
       json_t* array = json_object_get(oObject, "alerts");
       size_t index {0};
-      json_t* jObj {nullptr};
+      json_t* jObj {};
 
       json_array_foreach(array, index, jObj)
       {
@@ -810,7 +810,7 @@ int Daemon::performTestMail(json_t* oObject, long client)
 
    if (!fileExists(mailScript))
    {
-      char* buf {nullptr};
+      char* buf {};
       asprintf(&buf, "Mail script '%s' not found", mailScript);
       replyResult(fail, buf, client);
       delete buf;
@@ -899,7 +899,7 @@ int Daemon::performChartData(json_t* oObject, long client)
 
    tableValueFacts->clear();
 
-   json_t* aAvailableSensors {nullptr};
+   json_t* aAvailableSensors {};
 
    if (!widget)
       aAvailableSensors = json_array();
@@ -909,7 +909,7 @@ int Daemon::performChartData(json_t* oObject, long client)
       if (!tableValueFacts->hasValue("RECORD", "A"))
          continue;
 
-      char* id {nullptr};
+      char* id {};
       asprintf(&id, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
 
       bool active = std::find(sList.begin(), sList.end(), id) != sList.end();  // #PORT
@@ -936,11 +936,11 @@ int Daemon::performChartData(json_t* oObject, long client)
       json_t* oSample = json_object();
       json_array_append_new(oJson, oSample);
 
-      char* sensor {nullptr};
+      char* sensor {};
       asprintf(&sensor, "%s%lu", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       json_object_set_new(oSample, "title", json_string(title));
 
-      char* key {nullptr};
+      char* key {};
       asprintf(&key, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       json_object_set_new(oSample, "key", json_string(key));
       free(key);
@@ -1015,7 +1015,7 @@ int Daemon::storeChartbookmarks(json_t* array, long client)
 
 int Daemon::performChartbookmarks(long client)
 {
-   char* bookmarks {nullptr};
+   char* bookmarks {};
    getConfigItem("chartBookmarks", bookmarks, "{[]}");
    json_error_t error;
    json_t* oJson = json_loads(bookmarks, 0, &error);
@@ -1051,7 +1051,7 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
          replyResult(fail, "User alredy exists, ignoring 'add' request", client);
       else
       {
-         char* token {nullptr};
+         char* token {};
          asprintf(&token, "%s_%s_%s", getUniqueId(), l2pTime(time(0)).c_str(), user);
          tell(eloWebSock, "Add user '%s' with token [%s]", user, token);
          tableUsers->setValue("PASSWD", passwd);
@@ -1104,7 +1104,7 @@ int Daemon::storeUserConfig(json_t* oObject, long client)
          replyResult(fail, "User not exists, ignoring 'resettoken' request", client);
       else
       {
-         char* token {nullptr};
+         char* token {};
          asprintf(&token, "%s_%s_%s", getUniqueId(), l2pTime(time(0)).c_str(), user);
          tell(eloWebSock, "Reset token of user '%s' to '%s'", user, token);
          tableUsers->setValue("TOKEN", token);
@@ -1225,7 +1225,7 @@ int Daemon::storeSchema(json_t* oObject, long client)
       return done;
 
    size_t index {0};
-   json_t* jObj {nullptr};
+   json_t* jObj {};
 
    json_array_foreach(oObject, index, jObj)
    {
@@ -1279,10 +1279,10 @@ int Daemon::storeSchema(json_t* oObject, long client)
 
 int Daemon::storeConfig(json_t* obj, long client)
 {
-   const char* key {nullptr};
-   json_t* jValue {nullptr};
+   const char* key {};
+   json_t* jValue {};
    int oldWebPort = webPort;
-   char* oldStyle {nullptr};
+   char* oldStyle {};
    int count {0};
 
    getConfigItem("style", oldStyle, "");
@@ -1301,8 +1301,8 @@ int Daemon::storeConfig(json_t* obj, long client)
    if (!isEmpty(name) && strcmp(name, oldStyle) != 0)
    {
       tell(eloWebSock, "Info: Creating link 'stylesheet.css' to '%s'", name);
-      char* link {nullptr};
-      char* target {nullptr};
+      char* link {};
+      char* target {};
       asprintf(&link, "%s/stylesheet.css", httpPath);
       asprintf(&target, "%s/stylesheet-%s.css", httpPath, name);
       createLink(link, target, true);
@@ -1343,7 +1343,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
       // {"action": "order", "order": ["16", "25", "14", "27"]},
 
       size_t index {0};
-      json_t* jId {nullptr};
+      json_t* jId {};
       json_t* array = getObjectFromJson(obj, "order");
 
       json_array_foreach(array, index, jId)
@@ -1393,8 +1393,8 @@ int Daemon::storeDashboards(json_t* obj, long client)
    }
    else
    {
-      const char* dashboardIdStr {nullptr};
-      json_t* jObj {nullptr};
+      const char* dashboardIdStr {};
+      json_t* jObj {};
 
       json_object_foreach(obj, dashboardIdStr, jObj)
       {
@@ -1452,8 +1452,8 @@ int Daemon::storeDashboards(json_t* obj, long client)
          // the widgets
 
          int ord {0};
-         const char* id {nullptr};
-         json_t* jData {nullptr};
+         const char* id {};
+         json_t* jData {};
          json_t* jWidgets = getObjectFromJson(jObj, "widgets");
 
          if (jWidgets)
@@ -1536,7 +1536,7 @@ int Daemon::performForceRefresh(json_t* obj, long client)
 int Daemon::storeIoSetup(json_t* array, long client)
 {
    size_t index {0};
-   json_t* jObj {nullptr};
+   json_t* jObj {};
 
    json_array_foreach(array, index, jObj)
    {
@@ -1592,7 +1592,7 @@ int Daemon::storeGroups(json_t* oObject, long client)
    if (strcmp(action, "store") == 0)
    {
       json_t* array = json_object_get(oObject, "groups");
-      json_t* jObj {nullptr};
+      json_t* jObj {};
       size_t index {0};
 
       if (!array)
@@ -1666,7 +1666,7 @@ int Daemon::performImageConfig(json_t* obj, long client)
    if (strcmp(action, "delete") == 0)
    {
       const char* path = getStringFromJson(obj, "path");
-      char* tmp {nullptr};
+      char* tmp {};
       asprintf(&tmp, "%s/%s", httpPath, path);
       tell(eloAlways, "Deleting image '%s'", tmp);
       removeFile(tmp);
@@ -1692,7 +1692,7 @@ int Daemon::performImageConfig(json_t* obj, long client)
          std::string out;
          macaron::Base64::Decode(p, out);
 
-         char* tmp {nullptr};
+         char* tmp {};
          asprintf(&tmp, "%s/img/user/%s.%s", httpPath, name, suffix);
 
          if (out.size())
@@ -1815,7 +1815,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
    {
       FileList options;
       int count {0};
-      char* path {nullptr};
+      char* path {};
 
       asprintf(&path, "%s/img/schema", httpPath);
 
@@ -1843,7 +1843,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
    {
       FileList options;
       int count {0};
-      char* path {nullptr};
+      char* path {};
 
       json_array_append_new(obj, json_string(""));
 
@@ -1859,7 +1859,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
 
          for (const auto& img : options)
          {
-            char* imgPath {nullptr};
+            char* imgPath {};
             asprintf(&imgPath, "%s/%s", img.path.c_str()+strlen(httpPath)+1, img.name.c_str());
             json_array_append_new(oArray, json_string(imgPath));
             free(imgPath);
@@ -1872,7 +1872,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
    {
       FileList options;
       int count {0};
-      char* path {nullptr};
+      char* path {};
 
       asprintf(&path, "%s/img/state", httpPath);
 
@@ -1947,7 +1947,7 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       if (filterActive && !tableValueFacts->hasValue("STATE", "A"))
          continue;
 
-      char* key {nullptr};
+      char* key {};
       std::string type = tableValueFacts->getStrValue("TYPE");
       asprintf(&key, "%s:0x%02lx", type.c_str(), tableValueFacts->getIntValue("ADDRESS"));
       json_t* oData = json_object();
@@ -2008,7 +2008,7 @@ int Daemon::dashboards2Json(json_t* obj)
    for (int f = selectDashboards->find(); f; f = selectDashboards->fetch())
    {
       json_t* oDashboard = json_object();
-      char* tmp {nullptr};
+      char* tmp {};
       asprintf(&tmp, "%ld", tableDashboards->getIntValue("ID"));
       json_object_set_new(obj, tmp, oDashboard);
       free(tmp);
@@ -2027,7 +2027,7 @@ int Daemon::dashboards2Json(json_t* obj)
 
       for (int w = selectDashboardWidgetsFor->find(); w; w = selectDashboardWidgetsFor->fetch())
       {
-         char* key {nullptr};
+         char* key {};
          asprintf(&key, "%s:0x%02lx", tableDashboardWidgets->getStrValue("TYPE"), tableDashboardWidgets->getIntValue("ADDRESS"));
          json_t* oWidgetOpts = json_loads(tableDashboardWidgets->getStrValue("WIDGETOPTS"), 0, nullptr);
          json_object_set_new(oWidgets, key, oWidgetOpts);
@@ -2182,7 +2182,7 @@ int Daemon::images2Json(json_t* obj)
 {
    FileList images;
    int count {0};
-   char* path {nullptr};
+   char* path {};
 
    json_array_append_new(obj, json_string(""));
    asprintf(&path, "%s/img", httpPath);
@@ -2193,7 +2193,7 @@ int Daemon::images2Json(json_t* obj)
 
       for (const auto& img : images)
       {
-         char* imgPath {nullptr};
+         char* imgPath {};
          asprintf(&imgPath, "%s/%s", img.path.c_str()+strlen(httpPath)+1, img.name.c_str());
          json_array_append_new(obj, json_string(imgPath));
          free(imgPath);
@@ -2211,7 +2211,7 @@ int Daemon::images2Json(json_t* obj)
 
 bool Daemon::webFileExists(const char* file, const char* base)
 {
-   char* path {nullptr};
+   char* path {};
    asprintf(&path, "%s/%s/%s", httpPath, base ? base : "", file);
    bool exist = fileExists(path);
    free(path);

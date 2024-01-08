@@ -488,8 +488,8 @@ int P4Request::getStatus(Status* s)
 
    if ((status += readHeader()) == success)
    {
-      char* text {nullptr};
-      char* p {nullptr};
+      char* text {};
+      char* p {};
       int size = getHeader()->size;
 
       status += readByte(s->mode);

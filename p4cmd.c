@@ -94,13 +94,13 @@ void showUsage(const char* bin)
 int main(int argc, char** argv)
 {
    Serial serial;
-   int status;
-   byte b;
-   word addr = Fs::addrUnknown;
-   int offset = 0;
-   const char* value {nullptr};
-   UserCommand cmd = ucUnknown;
-   const char* device = "/dev/ttyUSB0";
+   int status {success};
+   byte b {0};
+   word addr {Fs::addrUnknown};
+   int offset {0};
+   const char* value {};
+   UserCommand cmd {ucUnknown};
+   const char* device {"/dev/ttyUSB0"};
 
 //    {
 //       md5Buf defaultPwd;

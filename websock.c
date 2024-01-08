@@ -19,15 +19,15 @@
 // LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY | LLL_USER | LLL_THREAD
 
 int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN};
-lws_context* cWebSock::context {nullptr};
+lws_context* cWebSock::context {};
 int cWebSock::timeout {0};
 cWebSock::MsgType cWebSock::msgType {mtNone};
 std::map<void*,cWebSock::Client> cWebSock::clients;
 std::map<std::string, std::string> cWebSock::htmlTemplates;
 cMyMutex cWebSock::clientsMutex;
-char* cWebSock::httpPath {nullptr};
+char* cWebSock::httpPath {};
 
-cWebInterface* cWebSock::singleton {nullptr};
+cWebInterface* cWebSock::singleton {};
 
 //***************************************************************************
 // Web Socket
@@ -362,7 +362,7 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
       case LWS_CALLBACK_HTTP:
       {
          int res;
-         char* file {nullptr};
+         char* file {};
          const char* url = (char*)in;
 
          memset(sessionData, 0, sizeof(SessionData));
@@ -529,7 +529,7 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
                const char* msg = clients[wsi].messagesOut.front().c_str();
                int msgSize = clients[wsi].messagesOut.front().length();
                int neededSize = sizeLwsFrame + msgSize;
-               unsigned char* newBuffer {nullptr};
+               unsigned char* newBuffer {};
 
                if (neededSize > clients[wsi].msgBufferSize)
                {

@@ -48,8 +48,8 @@ int W1::show()
 
 int W1::scan()
 {
-   DIR* dir {nullptr};
-   dirent* dp {nullptr};
+   DIR* dir {};
+   dirent* dp {};
 
    if (!(dir = opendir(w1Path)))
    {
@@ -62,7 +62,7 @@ int W1::scan()
       if (strlen(dp->d_name) < 3 || strstr(dp->d_name, "bus_master"))
           continue;
 
-      char* path {nullptr};
+      char* path {};
       asprintf(&path, "%s/%s/w1_slave", w1Path, dp->d_name);
       bool exist = fileExists(path);
       free(path);
@@ -128,8 +128,8 @@ int W1::update()
    for (auto it = sensors.begin(); it != sensors.end(); it++)
    {
       char line[100+TB];
-      FILE* in {nullptr};
-      char* path {nullptr};
+      FILE* in {};
+      char* path {};
 
       if (!it->second.active)
          continue;

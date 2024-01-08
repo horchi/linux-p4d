@@ -60,16 +60,16 @@ class Deconz
 
       std::string httpUrl;
       std::string apiKey;
-      Daemon* daemon {nullptr};
+      Daemon* daemon {};
 
       std::map<std::string,uint> lights;
       std::map<std::string,uint> sensors;
       static cMyMutex mapsMutex;
 
-      cDbTable* tableDeconzLights {nullptr};
-      cDbTable* tableDeconzSensors {nullptr};
-      cDbStatement* selectLightByUuid {nullptr};
-      cDbStatement* selectSensorByUuid {nullptr};
+      cDbTable* tableDeconzLights {};
+      cDbTable* tableDeconzSensors {};
+      cDbStatement* selectLightByUuid {};
+      cDbStatement* selectSensorByUuid {};
 
       lws_protocols protocols[2];
 
@@ -79,7 +79,7 @@ class Deconz
       {
          bool active {false};
          bool close {false};
-         Deconz* deconz {nullptr};
+         Deconz* deconz {};
          int timeout {60};
       };
 
