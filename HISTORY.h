@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.9.55"
-#define VERSION_DATE "07.01.2024"
+#define _VERSION     "0.9.56"
+#define VERSION_DATE "10.01.2024"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2024-01-10:  version 0.9.56
+  - added:   Fixed parset/parget requests for time parameters
 
 2024-01-07:  version 0.9.55
   - added:   Added reply topic for parset/parget requests

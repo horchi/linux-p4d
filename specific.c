@@ -380,6 +380,8 @@ int P4d::applyConfigurationSpecials()
 
 int P4d::updateSensors()
 {
+   Daemon::updateSensors();
+
    time_t now = time(0);
    sem->p();
 
@@ -2263,7 +2265,7 @@ int P4d::initValueFacts(bool truncate)
 
 //***************************************************************************
 // Dispatch Mqtt Command Request
-//   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
+//   Format:  '{ "command" : "parset", "address" : 0, "value" : "9" }'
 //***************************************************************************
 
 int P4d::dispatchOther(const char* topic, const char* message)
@@ -2291,7 +2293,7 @@ int P4d::dispatchOther(const char* topic, const char* message)
    selectParameter->bindAllOut();
    selectParameter->build(" from %s where child = 0 ", tableMenu->TableName());
    selectParameter->bind("ADDRESS", cDBS::bndIn | cDBS::bndSet, " and ");
-   selectParameter->build(" and type in (%d,%d,%d,%d,%d)", mstParDig, mstPar, mstParSet, mstParSet1, mstParSet2);  // mstParZeit, mstParWeekday,
+   selectParameter->build(" and type in (%d,%d,%d,%d,%d,%d)", mstParDig, mstPar, mstParSet, mstParSet1, mstParSet2, mstParZeit); // , mstParWeekday,
 
    if (selectParameter->prepare() != success)
    {
@@ -2385,7 +2387,7 @@ int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
 
    if (isEmpty(value))
    {
-      tell(eloAlways, "Error: Missing value for MQTT command 'parstore', ignoring");
+      tell(eloAlways, "Error: Missing value for MQTT command 'parset', ignoring");
       return fail;
    }
 
@@ -2422,7 +2424,7 @@ int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
    else
    {
       error = "Set of parameter failed, ";
-      tell(eloAlways, "Set of parameter failed, error was (%d)", status);
+      // tell(eloAlways, "Set of parameter failed, error was (%d)", status);
 
       if (status == P4Request::wrnNonUpdate)
          error += "value identical, ignoring request";
@@ -2437,21 +2439,6 @@ int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
    }
 
    return success;
-}
-
-//***************************************************************************
-// Dispatch Node-Red Command Request
-//   Format:  '{ "command" : "parstore", "address" : 0, "value" : "9" }'
-//***************************************************************************
-
-int P4d::dispatchNodeRedCommand(json_t* jObject)
-{
-   const char* command = getStringFromJson(jObject, "command", "set");
-
-   if (strcmp(command, "parstore") == 0)
-      return dispatchMqttHaCommandRequest(jObject, "");
-
-   return Daemon::dispatchNodeRedCommand(jObject);
 }
 
 //***************************************************************************
