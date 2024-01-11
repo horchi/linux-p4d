@@ -296,10 +296,8 @@ class FroelingService
                json_object_set_new(jData, "max", json_real(rMax));
                json_object_set_new(jData, "default", json_real(rDefault));
 
-               if (strcmp(unit, "%"))
+               if (!digits)
                   json_object_set_new(jData, "value", json_integer(rValue));
-               else if (strcmp(unit, "°C"))
-                  json_object_set_new(jData, "value", json_real(rValue));
                else
                   json_object_set_new(jData, "value", json_real(rValue));
 
