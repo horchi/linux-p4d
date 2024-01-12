@@ -14,7 +14,6 @@
     --light2: lightgray;
     --light3: #403d3d;
     --light4: white;
-    --light3t: #403d3d5c;
     --neutral0: #333333;
     --neutral1: #454545;
     --neutral2: #545454;
@@ -30,7 +29,6 @@
 
     --containerPadding: 10px;
     --widgetBackground: #272727b8;
-    --widgetTitleColor: white;
     --dashboardMenuBackground: #7080907a;
     --caption1: #292929;
     --caption2: #565353;
@@ -38,8 +36,6 @@
     --editadd: #fffcab;
 
     --background: #000000d1;
-    --chartBackground: #000000d1;
-    --chartLabelText: white;
     --shadow: black;
 
     --borderColor: black;
@@ -48,10 +44,6 @@
     --borderColorSchemaValue: white;
     --borderRadiusSchemaValue: 3px;
     --borderStyleSchemaValue: solid;
-
-    --colorTableButton: none;
-    --borderColorTableButton: white;
-    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: white;

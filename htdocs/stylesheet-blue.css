@@ -14,13 +14,21 @@
     --light2: white;
     --light3: #396992;
     --light4: white;
+    --neutral0: #333333;
+    --neutral1: #454545;
+    --neutral2: #545454;
+    --neutral3: #696969;
+    --neutral4: #a3a3a3;
+
     --listFontColor: white;
     --blue: #2177AD;
     --blueshade: #495b67;
+    --yellow: #fad600;
+    --yellow2: #fffcab;
     --info: #f9f9ef;
 
+    --containerPadding: 10px;
     --widgetBackground: #272727b8;
-    --widgetTitleColor: black;
     --dashboardMenuBackground: #7080907a;
     --caption1: #0d2546;
     --caption2: #113a77;
@@ -28,8 +36,6 @@
     --editadd: #fffcab;
 
     --background: #001129d1;
-    --chartBackground: #001129d1;
-    --chartLabelText: white;
     --shadow: black;
 
     --borderColor: #001129;
@@ -38,11 +44,6 @@
     --borderColorSchemaValue: blue;
     --borderRadiusSchemaValue: 3px;
     --borderStyleSchemaValue: solid;
-
-    --borderColorTableButton: blue;
-    --colorTableButton: #c8e7fe;
-    --borderColorTableButton: blue;
-    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: white;

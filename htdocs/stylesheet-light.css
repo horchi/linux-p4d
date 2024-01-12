@@ -14,13 +14,21 @@
     --light2: #d3d3d3;
     --light3: #cccccc;
     --light4: #818382;
+    --neutral0: #333333;
+    --neutral1: #454545;
+    --neutral2: #545454;
+    --neutral3: #696969;
+    --neutral4: #a3a3a3;
+
     --listFontColor: black;
     --blue: #2177AD;
     --blueshade: #495b67;
+    --yellow: #fad600;
+    --yellow2: #fffcab;
     --info: #f9f9ef;
 
+    --containerPadding: 10px;
     --widgetBackground: #27272780;
-    --widgetTitleColor: black;
     --dashboardMenuBackground: #7080907a;
     --caption1: #7080907a;
     --caption2: #2177AD;
@@ -28,8 +36,6 @@
     --editadd: #fffcab;
 
     --background: #f8f8ff;
-    --chartBackground: #f8f8ff;
-    --chartLabelText: black;
     --shadow: black;
 
     --borderColor: #000000d1;
@@ -38,10 +44,6 @@
     --borderColorSchemaValue: black;
     --borderRadiusSchemaValue: 3px;
     --borderStyleSchemaValue: solid;
-
-    --colorTableButton: beige;
-    --borderColorTableButton: blue;
-    --borderRadiusTableButton: 2px;
 
     --buttonAction: #818382;
     --buttonFont: black;
