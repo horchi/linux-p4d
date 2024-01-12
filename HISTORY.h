@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.10.0"
+#define _VERSION     "0.10.1"
 #define VERSION_DATE "11.01.2024"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2024-01-11:  version 0.10.1
+  - change:  Updated configs/example_sensor.sh example
+  - added:   state-shfire.gif
 
 2024-01-11:  version 0.10.0
   - change:  Updated code base (merged with horchi:homectrld)

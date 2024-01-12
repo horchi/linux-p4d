@@ -2567,7 +2567,7 @@ const char* P4d::getTextImage(const char* key, const char* text)
    else if ((state >= 10 && state <= 14) || state == 35 || state == 16)
       image = "state-wait.gif";
    else if (state == 60 || state == 61 || state == 72)
-      image = "state-shfire.png";
+      image = "state-shfire.gif";
 
    if (image)
       sprintf(result, "img/state/%s/%s", iconSet, image);
