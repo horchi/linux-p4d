@@ -3,7 +3,7 @@
 // File w1.c
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 07.02.2014  Jörg Wendel
+// Date 2010-2022  Jörg Wendel
 //***************************************************************************
 
 #include <signal.h>
@@ -12,10 +12,19 @@
 #include <numeric>
 #include <cmath>
 
+#ifndef _NO_RASPBERRY_PI_
+#  include <wiringPi.h>
+#else
+#  include "gpio.h"
+#endif
+
+#include "HISTORY.h"
 #include "w1.h"
 #include "lib/json.h"
 
 bool W1::shutdown {false};
+int W1::w1PowerPin {na};
+int W1::w1Count {na};
 
 W1::W1(const char* aUrl, const char* topic)
 {
@@ -38,6 +47,30 @@ int W1::show()
 {
    for (auto it = sensors.begin(); it != sensors.end(); ++it)
       tell(eloAlways, "%s: %2.3f, %sactive", it->first.c_str(), it->second.value, it->second.active ? "" : "in-");
+
+   return done;
+}
+
+//***************************************************************************
+// Action
+//***************************************************************************
+
+int W1::loop()
+{
+   const int updateCycle {10};   // seconds
+
+   wiringPiSetupPhys();                // we use the 'physical' PIN numbers
+   pinMode(w1PowerPin, OUTPUT);
+   digitalWrite(w1PowerPin, false);    // false -> on
+
+   while (!doShutDown())
+   {
+      time_t nextAt = time(0) + updateCycle;
+      update();
+
+      while (!doShutDown() && time(0) < nextAt)
+         sleep(1);
+   }
 
    return done;
 }
@@ -93,20 +126,38 @@ int W1::scan()
 }
 
 //***************************************************************************
-// Action
+// Check
 //***************************************************************************
 
-int W1::loop()
+int W1::check()
 {
-   const int updateCycle {10};   // seconds
+   scan();
 
-   while (!doShutDown())
+   if (w1Count == na || w1PowerPin == na)
+      return done;
+
+   int count {0};
+
+   for (const auto& sensorIt : sensors)
    {
-      time_t nextAt = time(0) + updateCycle;
-      update();
+      if (sensorIt.second.active)
+         count++;
+   }
 
-      while (!doShutDown() && time(0) < nextAt)
-         sleep(1);
+   if (count < w1Count)
+   {
+      // missing at least one sensor
+
+      tell(eloAlways, "Warning: %d W1 sensors present, expecting %d, "
+           "reseting power line to force a re-initialization, standby for 10 seconds",
+           count, w1Count);
+      digitalWrite(w1PowerPin, true);     // true -> off
+      sleep(2);
+      digitalWrite(w1PowerPin, false);    // false -> on
+
+      tell(eloAlways, "Warning: W1 power line at pin (%d) reseted, standby for 20 seconds", w1PowerPin);
+      sleep(20);
+      scan();
    }
 
    return done;
@@ -118,16 +169,16 @@ int W1::loop()
 
 int W1::update()
 {
-   tell(eloDetail, "Updating ...");
+   tell(eloInfo, "Updating ...");
 
-   scan();
+   check();
 
    uint count {0};
    json_t* oJson = json_array();
 
    for (auto it = sensors.begin(); it != sensors.end(); it++)
    {
-      char line[100+TB];
+      char line[100+TB] {};
       FILE* in {};
       char* path {};
 
@@ -226,7 +277,7 @@ int W1::update()
 
    free(p);
 
-   tell(eloDetail, " ... done");
+   tell(eloInfo, " ... done");
 
    return done;
 }
@@ -249,10 +300,32 @@ int W1::mqttConnection()
       }
 
       tell(eloAlways, "MQTT: Connecting publisher to '%s' succeeded", mqttUrl);
-      tell(eloAlways, "MQTT: Publishe W1 data to topic '%s'", mqttTopic.c_str());
+      tell(eloAlways, "MQTT: Publish W1 data to topic '%s'", mqttTopic.c_str());
    }
 
    return success;
+}
+
+//***************************************************************************
+// Usage
+//***************************************************************************
+
+int showUsage(const char* bin)
+{
+   printf("Usage: %s <command> [-l <log-level>] [-d <device>]\n", bin);
+   printf("  options:\n");
+   printf("     -u <url>        MQTT url\n");
+   printf("     -T <topic>      MQTT topic\n");
+   printf("     -c <count>      <count> of expected W1 sensors (optional)\n");
+   printf("                      if not <count> sensors present and <power pin> is configured\n");
+   printf("                      power line will be reset once per interval (optional)\n");
+   printf("     -p <GPIO pin>   physical number of GPIO pin of W1 power supply (optional)\n");
+   printf("     -l <eloquence>  set eloquence\n");
+   printf("     -n              don't demonize (optional)\n");
+   printf("     -t              log to terminal (optional)\n");
+   printf("     -v              show version\n");
+
+   return 0;
 }
 
 //***************************************************************************
@@ -263,20 +336,17 @@ int main(int argc, char** argv)
 {
    bool nofork {false};
    int _stdout {na};
-   W1* job;
-   const char* topic = TARGET "2mqtt/w1";
+   W1* job {};
+   const char* topic {TARGET "2mqtt/w1"};
    Eloquence _eloquence {eloAlways};
-   const char* url = "tcp://localhost:1883";
+   const char* url {"tcp://localhost:1883"};
 
    logstdout = yes;
 
    // Usage ..
 
    if (argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
-   {
-      // showUsage(argv[0]);  // to be implemented!
-      return 0;
-   }
+      return showUsage(argv[0]);
 
    // Parse command line
 
@@ -287,11 +357,14 @@ int main(int argc, char** argv)
 
       switch (argv[i][1])
       {
-         case 'u': url = argv[i+1];                         break;
+         case 'u': url = argv[i+1];                                        break;
+         case 'T': if (argv[i+1]) topic = argv[i+1];                       break;
+         case 'c': if (argv[i+1]) W1::w1Count = atoi(argv[i+1]);           break;
+         case 'p': if (argv[i+1]) W1::w1PowerPin = atoi(argv[i+1]);        break;
          case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
-         case 'T': if (argv[i+1]) topic = argv[i+1];        break;
-         case 't': _stdout = yes;                           break;
-         case 'n': nofork = true;                           break;
+         case 't': _stdout = yes;                                          break;
+         case 'n': nofork = true;                                          break;
+         case 'v': printf("Version %s\n", VERSION);                        return 1;
       }
    }
 

@@ -16,8 +16,8 @@ input[type="checkbox"] + label:before {
     width: 38px;
     height: 20px;
     border-radius: 16px;
-    border: 0px solid var(--light4);
-    background-color: var(--light4);
+    border: 0px solid var(--neutral2);
+    background-color: var(--neutral2);
     content: "";
     margin-right: 5px;
     transition: background-color 0.5s linear;

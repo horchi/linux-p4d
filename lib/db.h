@@ -245,6 +245,22 @@ class cDbValue : public cDbService
          }
       }
 
+      void setValue(long long value)
+      {
+         if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
+         {
+            if (numValue != value || isNull())
+               changed++;
+
+            numValue = value;
+            nullValue = 0;
+         }
+         else
+         {
+            tell(eloAlways, "Setting invalid field format for '%s'", field->getName());
+         }
+      }
+
       void setValue(double value)
       {
          if (field->getFormat() == ffInt || field->getFormat() == ffUInt)
@@ -537,7 +553,7 @@ class cDbStatements
 
    private:
 
-      time_t statisticPeriod;
+      time_t statisticPeriod {0};
       std::list<cDbStatement*> statements;
 };
 
@@ -589,7 +605,7 @@ class cDbRow : public cDbService
          tableDef = t;
          dbValues = new cDbValue[tableDef->fieldCount()];
 
-         for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+         for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); ++f)
             dbValues[f->second->getIndex()].setField(f->second);
       }
 
@@ -655,6 +671,7 @@ class cDbRow : public cDbService
                     int size = 0)                           { GET_FIELD(n); dbValues[f->getIndex()].setValue(value, size); }
       void setValue(const char* n, int value)               { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
       void setValue(const char* n, long value)              { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
+      void setValue(const char* n, long long value)         { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
       void setValue(const char* n, double value)            { GET_FIELD(n); dbValues[f->getIndex()].setValue(value); }
       void setBigintValue(const char* n, int64_t value)     { GET_FIELD(n); dbValues[f->getIndex()].setBigintValue(value); }
       void setCharValue(const char* n, char value)          { GET_FIELD(n); dbValues[f->getIndex()].setCharValue(value); }
@@ -719,8 +736,6 @@ class cDbConnection
 
       int attachConnection()
       {
-         static int first = yes;
-
          if (!mysql)
          {
             connectDropped = yes;
@@ -744,6 +759,8 @@ class cDbConnection
 
             if (encoding && *encoding)
             {
+               static int first {yes};
+
                if (mysql_set_character_set(mysql, encoding))
                   errorSql(this, "init(character_set)");
 
@@ -1121,6 +1138,7 @@ class cDbTable : public cDbService
       void setValue(const char* n, const char* value, int size = 0)   { row->setValue(n, value, size); }
       void setValue(const char* n, int value)                         { row->setValue(n, value); }
       void setValue(const char* n, long value)                        { row->setValue(n, value); }
+      void setValue(const char* n, long long value)                   { row->setValue(n, value); }
       void setValue(const char* n, double value)                      { row->setValue(n, value); }
       void setBigintValue(const char* n, int64_t value)               { row->setBigintValue(n, value); }
       void setCharValue(const char* n, char value)                    { row->setCharValue(n, value); }

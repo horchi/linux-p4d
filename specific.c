@@ -26,34 +26,36 @@ volatile int showerSwitch {0};
 
 std::list<Daemon::ConfigItemDef> P4d::configuration
 {
-   // p4d
+   // daemon
 
+   { "instanceName",              ctString,  "Home Control", false, "Daemon", "Titel", "Page Titel / Instanz" },
+   { "instanceIcon",              ctChoice,  "home.png",     false, "Daemon", "Application Icon", "" },
    { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Breitengrad", "" },
    { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
 
-   { "interval",                  ctInteger, "60",   false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
-   { "webPort",                   ctInteger, "1111", false, "Daemon", "Port des Web Interfaces", "" },
-   { "stateCheckInterval",        ctInteger, "10",   false, "Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
-   { "arduinoInterval",           ctInteger, "10",   false, "Daemon", "Intervall der Arduino Messungen", "[s]" },
-   { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "Daemon", "TTY Device zur S-3200", "Beispiel: '/dev/ttyUsb0'" },
+   { "interval",                  ctInteger, "60",           false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
+   { "webPort",                   ctInteger, "1111",         false, "Daemon", "Port des Web Interfaces", "" },
    { "eloquence",                 ctBitSelect, "1",          false, "Daemon", "Log Eloquence", "" },
 
-   { "tsync",                     ctBool,    "0",    false, "Daemon", "Zeitsynchronisation", "täglich 3:00" },
-   { "maxTimeLeak",               ctInteger, "10",   false, "Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
+   { "aggregateHistory",          ctInteger, "365",          false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
+   { "aggregateInterval",         ctInteger, "15",           false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
+   { "peakResetAt",               ctString,  "",             true,  "Daemon", "", "" },
 
-   { "aggregateHistory",          ctInteger, "1",    false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -&gt; aggegation turned OFF)" },
-   { "aggregateInterval",         ctInteger, "15",   false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
-   { "peakResetAt",               ctString,  "",     true,  "Daemon", "", "" },
+   { "stateCheckInterval",        ctInteger, "10",           false, "Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
+   { "arduinoInterval",           ctInteger, "10",           false, "Daemon", "Intervall der Arduino Messungen", "[s]" },
+   { "ttyDevice",                 ctString,  "/dev/ttyUSB0", false, "Daemon", "TTY Device zur S-3200", "Beispiel: '/dev/ttyUsb0'" },
 
-   { "consumptionPerHour",        ctNum,     "4",    false, "Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
+   { "tsync",                     ctBool,    "0",            false, "Daemon", "Zeitsynchronisation", "täglich 3:00" },
+   { "maxTimeLeak",               ctInteger, "10",           false, "Daemon", " bei Abweichung über [s]", "Mindestabweichung für Synchronisation in Sekunden" },
+
+   { "consumptionPerHour",        ctNum,     "4",            false, "Daemon", "Pellet Verbrauch / Stoker Stunde", "" },
 
    { "openWeatherApiKey",         ctString,  "",             false, "Daemon", "Openweathermap API Key", "" },
    { "toggleWeatherView",         ctBool,    "1",            false, "Daemon", "Toggle Weather Widget", "" },
 
    // web
 
-   { "webUrl",                    ctString,  "",             false, "WEB Interface", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
-   { "webSSL",                    ctBool,    "",             false, "WEB Interface", "Use SSL for WebInterface" },
+   { "webSSL",                    ctBool,    "",             false, "WEB Interface", "Use SSL for WebInterface", "" },
    { "haUrl",                     ctString,  "",             false, "WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 
    { "heatingType",               ctChoice,  "",             false, "WEB Interface", "Typ der Heizung", "" },
@@ -61,16 +63,16 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "iconSet",                   ctChoice,  "light",        false, "WEB Interface", "Status Icon Set", "" },
    { "background",                ctChoice,  "",             false, "WEB Interface", "Background image", "" },
    { "schema",                    ctChoice,  "schema.jpg",   false, "WEB Interface", "Schematische Darstellung", "" },
-   { "vdr",                       ctBool,    "0",            false, "WEB Interface", "VDR (Video Disk Recorder) OSD verfügbar", "" },
    { "chartRange",                ctNum,     "1.5",          true,  "WEB Interface", "Chart Range", "" },
    { "chartSensors",              ctNum,     "VA:0x0",       true,  "WEB Interface", "Chart Sensors", "" },
+   { "showList",                  ctBool,    "0",            false, "WEB Interface", "Liste anzeigen", "" },
 
    // MQTT interface
 
    { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "MQTT Interface", "MQTT Broker Url", "URL der MQTT Instanz Beispiel: 'tcp://127.0.0.1:1883'" },
    { "mqttUser",                  ctString,  "",                     false, "MQTT Interface", "User", "" },
    { "mqttPassword",              ctString,  "",                     false, "MQTT Interface", "Password", "" },
-   { "mqttSensorTopics",          ctString,  TARGET "2mqtt/w1/#, " TARGET "2mqtt/arduino/out",  false, "MQTT Interface", "Zusätzliche sensor Topics", "Diese Topics werden gelesen und als Sensoren Daten verwendet" },
+   { "mqttSensorTopics",          ctText,  TARGET "2mqtt/w1/#,  " TARGET "2mqtt/arduino/out",  false, "MQTT Interface", "Zusätzliche sensor Topics", "Diese Topics werden gelesen und als Sensor Daten verwendet (Komma getrennte Liste)" },
 
    // Home Automation MQTT interface
 
@@ -80,16 +82,31 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // mail
 
-   { "mail",                      ctBool,    "0",                    false, "Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
+   { "mail",                      ctBool,    "0",                  false, "Mail", "Mail Benachrichtigung", "Mail Benachrichtigungen aktivieren/deaktivieren" },
    { "mailScript",                ctString,  "/usr/bin/p4d-mail.sh", false, "Mail", "p4d sendet Mails über das Skript", "" },
-   { "stateMailTo",               ctString,  "",                     false, "Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
-   { "stateMailStates",           ctMultiSelect, "",                 false, "Mail", "  für folgende Status", "" },
-   { "errorMailTo",               ctString,  "",                     false, "Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailTo",               ctString,  "",                   false, "Mail", "Status Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "stateMailStates",           ctMultiSelect, "",               false, "Mail", "  für folgende Status", "" },
+   { "errorMailTo",               ctString,  "",                   false, "Mail", "Fehler Mail Empfänger", "Komma getrennte Empfängerliste" },
+   { "webUrl",                    ctString,  "",                   false, "Mail", "URL der Visualisierung", "kann mit %weburl% in die Mails eingefügt werden" },
 
-   { "deconzHttpUrl",             ctString,  "",                     false, "DECONZ", "deCONZ HTTP URL", "" },
-   { "deconzApiKey",              ctString,  "",                     false, "DECONZ", "deCONZ API key", "" },
+   // deconz
 
-   { "homeMaticInterface",        ctBool,    "false",                false, "HomeMatic CCU", "HomeMatic Interface", "" },
+   { "deconzHttpUrl",             ctString,  "",                   false, "DECONZ", "deCONZ HTTP URL", "" },
+   { "deconzApiKey",              ctString,  "",                   false, "DECONZ", "deCONZ API key", "" },
+
+   // homematic
+
+   { "homeMaticInterface",        ctBool,    "false",              false, "HomeMatic CCU", "HomeMatic Interface", "NodeRed wird als Brücke zur HomeMatic CCU benötigt" },
+
+   // VDR
+
+   { "vdr",                       ctString,  "",                   false, "VDR", "URL des VDR WEB Interfaces (Video Disk Recorder)", "Beispiel: vdr:4444" },
+
+   // LMC (Logitec Media Server)
+
+   { "lmcHost",                   ctString,  "",                   false, "Logitech Media Server (squeezebox)", "LMC Host", "" },
+   { "lmcPort",                   ctInteger, "9090",               false, "Logitech Media Server (squeezebox)", "LMC Port", "" },
+   { "lmcPlayerMac",              ctString,  "",                   false, "Logitech Media Server (squeezebox)", "MAC of LMC Player ", "" },
 };
 
 //***************************************************************************
@@ -409,7 +426,7 @@ int P4d::updateSensors()
          int status {success};
          const SensorData* sensor = &sensorIt.second;
 
-         cDbRow* row = valueFactOf(sensor->type.c_str(), sensor->address);
+         cDbRow* row = valueFactRowOf(sensor->type.c_str(), sensor->address);
 
          if (sensor->type == "SD")   // state duration
          {
@@ -421,16 +438,17 @@ int P4d::updateSensors()
             double theValue = stateDurations[sensor->address] / 60;
 
             if (sensors[sensor->type][sensor->address].value != theValue)
-            {
                sensors[sensor->type][sensor->address].value = theValue;
-               sensors[sensor->type][sensor->address].valid = true;
-               sensors[sensor->type][sensor->address].last = now;
-            }
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
          }
          else if (sensor->type == "UD")
          {
             std::string oldText = sensors[sensor->type][sensor->address].text;
-            double oldValue = sensors[sensor->type][sensor->address].value;
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
 
             if (sensor->address == udState)
             {
@@ -449,10 +467,11 @@ int P4d::updateSensors()
                break;
             }
 
-            sensors[sensor->type][sensor->address].valid = true;
+            if (sensors[sensor->type][sensor->address].last == now)
+               mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
 
-            if (sensors[sensor->type][sensor->address].text != oldText || sensors[sensor->type][sensor->address].value != oldValue)
-               sensors[sensor->type][sensor->address].last = now;
+            // if (sensors[sensor->type][sensor->address].text != oldText || sensors[sensor->type][sensor->address].value != oldValue)
+            //    sensors[sensor->type][sensor->address].last = now;
          }
          else if (sensor->type == "DO")
          {
@@ -465,11 +484,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
-            {
                sensors[sensor->type][sensor->address].state = v.state;
-               sensors[sensor->type][sensor->address].valid = true;
-               sensors[sensor->type][sensor->address].last = now;
-            }
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
          }
          else if (sensor->type == "DI")
          {
@@ -482,11 +500,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
-            {
                sensors[sensor->type][sensor->address].state = v.state;
-               sensors[sensor->type][sensor->address].valid = true;
-               sensors[sensor->type][sensor->address].last = now;
-            }
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
          }
          else if (sensor->type == "AO")
          {
@@ -499,11 +516,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
-            {
                sensors[sensor->type][sensor->address].value = v.state;
-               sensors[sensor->type][sensor->address].valid = true;
-               sensors[sensor->type][sensor->address].last = now;
-            }
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
          }
          else if (sensor->type == "VA")
          {
@@ -523,17 +539,15 @@ int P4d::updateSensors()
             {
                sensors[sensor->type][sensor->address].kind = "value";
                sensors[sensor->type][sensor->address].value = theValue;
-               sensors[sensor->type][sensor->address].valid = true;
-               sensors[sensor->type][sensor->address].last = now;
             }
+
+            sensors[sensor->type][sensor->address].valid = true;
+            sensors[sensor->type][sensor->address].last = now;
          }
 
          // publish to HA always - we like to draw charts ...
 
          mqttHaPublish(sensors[sensor->type][sensor->address]);
-
-         if (sensors[sensor->type][sensor->address].last == now || sensor->type == "UD")
-            mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
       }
    }
 
@@ -1119,7 +1133,6 @@ int P4d::updateErrors()
 {
    int status;
    Fs::ErrorInfo e;
-   char timeField[5+TB] = "";
    time_t timeOne = 0;
    cTimeMs timeMs;
 
@@ -1143,6 +1156,7 @@ int P4d::updateErrors()
    for (status = request->getFirstError(&e); status == success; status = request->getNextError(&e))
    {
       int insert {yes};
+      char timeField[10+TB] {};
 
       sprintf(timeField, "TIME%d", e.state);
 
@@ -2401,14 +2415,14 @@ int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
    if (status != success)
    {
       error = "Set of parameter failed, requesting current value failed";
-      tell(eloAlways, error.c_str());
+      tell(eloAlways, "%s", error.c_str());
       return fail;
    }
 
    if (p.setValueDirect(value, p.digits, p.getFactor()) != success)
    {
       error = "Set of parameter failed, wrong format";
-      tell(eloAlways, error.c_str());
+      tell(eloAlways, "%s", error.c_str());
       return fail;
    }
 
@@ -2433,7 +2447,7 @@ int P4d::parSet(cDbTable* tableMenu, const char* value, std::string& error)
       else
          error += "serial communication error";
 
-      tell(eloAlways, error.c_str());
+      tell(eloAlways, "%s", error.c_str());
 
       return fail;
    }

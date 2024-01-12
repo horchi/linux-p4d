@@ -1,42 +1,83 @@
 #! /bin/bash
 
-SERVICE="$2"
+# Parameters:
+#   1 - command {init|start|stop|status|toggle}
+#   2 - address
+#   3 - answer topic
+#   4 - service
 
-case "$1" in
+# Responce:
+#   Responce in JSON Format, expected elements are_
+#     type      - always SC                       (madatory / element type string)
+#     address   - mainly taken from parameter 2   (madatory / element type integer)
+#     kind      - kind sensor {status|value|text} (madatory / element type string)
+#     value     -                                 (optional one of state, value or text must set / element type real)
+#     state     -                                 (optional one of state, value or text must set / element type boolean)
+#     text      -                                 (optional one of state, value or text must set / element type string)
+#     unit      -                                 (optional / element type string)
+
+SYSTEMCTL=systemctl
+
+# special for chroot setup on odroid
+
+if [[ -f /storage/bin/systemctl.sh ]]; then
+   SYSTEMCTL=/storage/bin/systemctl.sh
+fi
+
+COMMAND="$1"
+ADDRESS="$2"
+MQTTURL="$3"
+SERVICE="$4"
+
+export HOME=/var/lib/homectld
+
+case "$COMMAND" in
     start)
-        systemctl start --quiet ${SERVICE}
+        ${SYSTEMCTL} start --quiet ${SERVICE}
         ;;
 
     stop)
-        systemctl stop --quiet ${SERVICE}
+        ${SYSTEMCTL} stop --quiet ${SERVICE}
+        ;;
+
+    restart)
+        ${SYSTEMCTL} restart --quiet ${SERVICE}
         ;;
 
     toggle)
-        systemctl is-active --quiet ${SERVICE}
+        ${SYSTEMCTL} is-active --quiet ${SERVICE}
         if [ $? == 0 ]; then
-            systemctl stop --quiet ${SERVICE}
+            ${SYSTEMCTL} stop --quiet ${SERVICE}
         else
-            systemctl start --quiet ${SERVICE}
+            ${SYSTEMCTL} start --quiet ${SERVICE}
         fi
         ;;
 
     status)
         ;;
 
+    init)
+        ;;
+
     *)
-       echo "Usage: {start|stop|status|toggle}"
+       echo "Usage: {start|stop|status|toggle|init}"
        ;;
 
 esac
 
-systemctl is-active --quiet ${SERVICE}
+${SYSTEMCTL} is-active --quiet ${SERVICE}
 RETVAL="$?"
 
-if [ $RETVAL != 0 ]; then
-   echo -n "{ \"kind\":\"status\",\"value\":0 }"
-   exit 1
+if [ ${RETVAL} == 0 ]; then
+   STATE="true"
+else
+   STATE="false"
 fi
 
-echo -n "{ \"kind\":\"status\",\"value\":1 }"
+if [ "${COMMAND}" != "init" ]; then
+   mosquitto_pub --quiet -L ${MQTTURL} -m "{ \"type\":\"SC\",\"address\":${ADDRESS},\"kind\":\"status\",\"state\":${STATE} }"
+fi
 
-exit 0
+echo -n "{ \"type\":\"SC\",\"address\":${ADDRESS},\"kind\":\"status\",\"value\":${STATE} }"
+
+exit ${RETVAL}

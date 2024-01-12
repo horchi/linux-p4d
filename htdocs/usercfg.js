@@ -56,10 +56,10 @@ function initUserConfig(users)
       }
       html += "</td>";
       html += "<td>";
-      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
-      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
-      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
-      html += "<button class=\"rounded-border button2\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
+      html += "<button class=\"rounded-border buttonOptions\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'store')\">Speichern</button>";
+      html += "<button class=\"rounded-border buttonOptions\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resettoken')\">Reset Token</button>";
+      html += "<button class=\"rounded-border buttonOptions\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'resetpwd')\">Reset Passwort</button>";
+      html += "<button class=\"rounded-border buttonOptions\" style=\"margin:5px;\" onclick=\"userConfig('" + item.user + "', 'delete')\">Löschen</button>";
       html += "</td>";
 
       var elem = document.createElement("tr");
@@ -69,7 +69,7 @@ function initUserConfig(users)
 
    html =  "  <span>User: </span><input id=\"input_user\" class=\"rounded-border input\"/>";
    html += "  <span>Passwort: </span><input id=\"input_passwd\" class=\"rounded-border input\"/>";
-   html += "  <button class=\"rounded-border button2\" onclick=\"addUser()\">+</button>";
+   html += "  <button class=\"rounded-border buttonOptions\" onclick=\"addUser()\">+</button>";
 
    document.getElementById("addUserDiv").innerHTML = html;
 
@@ -87,11 +87,11 @@ function initUser()
 
    document.getElementById("container").innerHTML =
       '<div id="userContainer" class="rounded-border inputTableConfig">' +
-      '  <button class="rounded-border button2" onclick="doLogout()">Logout</button>' +
+      '  <button class="rounded-border buttonOptions" onclick="doLogout()">Logout</button>' +
       '  <br/><br/>' +
       '  <span>Passwort: </span><input id="input_passwd" type="password" class="rounded-border input"/>' +
       '  <span>wiederholen: </span><input id="input_passwd2" type="password" class="rounded-border input"/>' +
-      '  <button class="rounded-border button2" onclick="chpwd()">Speichern</button>' +
+      '  <button class="rounded-border buttonOptions" onclick="chpwd()">Speichern</button>' +
       '</div>';
 }
 

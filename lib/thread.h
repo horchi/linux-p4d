@@ -5,8 +5,9 @@
  *
  */
 
-#ifndef __LIB_THREAD_H
-#define __LIB_THREAD_H
+#pragma once
+
+#include <pthread.h>
 
 #include "common.h"
 
@@ -89,7 +90,3 @@ class cThread
       bool active;
       bool running;
 };
-
-//***************************************************************************
-
-#endif // __LIB_THREAD_H

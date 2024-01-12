@@ -15,8 +15,6 @@
 #include "lib/common.h"
 #include "lib/mqtt.h"
 
-// #define W1_UDEF std::numeric_limits<double>::max()
-
 //***************************************************************************
 // Class W1
 //***************************************************************************
@@ -32,7 +30,7 @@ class W1
          bool active {false};
       };
 
-      typedef std::map<std::string, SensorData> SensorList;
+      typedef std::map<std::string,SensorData> SensorList;
 
       W1(const char* aUrl, const char* topic);
       ~W1();
@@ -43,11 +41,15 @@ class W1
       int loop();
       int show();
       int scan();
+      int check();
       int update();
       bool doShutDown() { return shutdown; }
 
       const SensorList* getList()    { return &sensors; }
       size_t getCount()              { return sensors.size(); }
+
+      static int w1PowerPin;
+      static int w1Count;
 
    protected:
 

@@ -240,8 +240,7 @@ int printActual(FILE* fp, cDbStatement* s, long lastTime)
 
 int actualAscii(const char* file)
 {
-   FILE* fp;
-   long lastTime;
+   FILE* fp {};
 
    // select max(time) from samples;
 
@@ -297,7 +296,7 @@ int actualAscii(const char* file)
       if (!selMaxTime->find())
          break;
 
-      lastTime = sDb->getRow()->getValue("TIME")->getTimeValue();
+      long lastTime = sDb->getRow()->getValue("TIME")->getTimeValue();
       selMaxTime->freeResult();
 
       // get values

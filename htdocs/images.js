@@ -15,7 +15,7 @@ function initImages()
    $('#container').removeClass('hidden');
    document.getElementById("container").innerHTML =
       '<div class="rounded-border seperatorFold">Images</div>' +
-      '  <table class="tableMultiCol">' +
+      '  <table class="setupContainer tableMultiCol">' +
       '    <thead>' +
       '      <tr>' +
       '        <td style="width:90px;">Image</td>' +
@@ -28,12 +28,12 @@ function initImages()
       '  </table>' +
       '</div><br/>' +
       '<div id="addImageDiv" class="rounded-border inputTableConfig">' +
-      '  <button class="rounded-border button2" onclick="selectImage()">Bild auwählen</button>' +
+      '  <button class="buttonOptions rounded-border" onclick="selectImage()">Bild auwählen</button>' +
       '<br/><br/>' +
       '  <img id="previewImg" style="height:100px;width:100px;margin-right:30px;"\>' +
       '  <br/><br/><span">Upload Name:   (ohne Endung!)</span>' +
       '  <br/><input id="uploadName" class="rounded-border input" title="Namen ohne Endung!"\>' +
-      '  <button class="rounded-border button2" onclick="uploadImage()">-&gt; hochladen</button>' +
+      '  <button class="buttonOptions rounded-border" onclick="uploadImage()">-&gt; hochladen</button>' +
       '</div>';
 
    tableRoot = document.getElementById("images");

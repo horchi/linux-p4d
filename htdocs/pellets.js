@@ -61,7 +61,7 @@ function initPellets(pellets)
 
 function addRow(id, date, amount, price, comment, stokerHours, consumptionH, durationDays, sum, pData)
 {
-   var bgColor = sum ? 'var(--blue)' : id == -1 ? 'var(--editadd)' : 'var(--edit)';
+   var bgColor = sum ? 'var(--blue)' : id == -1 ? 'var(--editadd)' : '';
 
    if (id == -1)
       $('#container').append($('<br/>'));

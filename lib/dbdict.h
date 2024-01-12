@@ -231,16 +231,16 @@ class cDbFieldDef : public cDbService
 
    protected:
 
-      char* name;
-      char* dbname;
-      char* description;
-      char* dbdescription;
+      char* name {};
+      char* dbname {};
+      char* description {};
+      char* dbdescription {};
       FieldFormat format;
-      int size;
-      int index;
-      int type;
-      int filter;     // bitmask (defaults to 0xFFFF)
-      char* def;
+      int size {0};
+      int index {0};
+      int type {0};
+      int filter {0};     // bitmask (defaults to 0xFFFF)
+      char* def {};
 };
 
 //***************************************************************************
@@ -331,7 +331,7 @@ class cDbTableDef : public cDbService
       {
          std::map<std::string, cDbFieldDef*, _casecmp_>::iterator it;
 
-         for (it = dfields.begin(); it != dfields.end(); it++)
+         for (it = dfields.begin(); it != dfields.end(); ++it)
          {
             if (it->second->hasDbName(dbname))
                return it->second;

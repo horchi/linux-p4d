@@ -69,9 +69,9 @@ int readConfig()
    {
       char* p = strchr(line, '#');
 
-      if (p && (!*(p-1) || *(p-1) != '\\'))
+      if (p && (p-1 == line || *(p-1) != '\\'))
          *p = 0;
-      else if (p && *(p-1) && *(p-1) == '\\')
+      else if (p && p-1 != line && *(p-1) == '\\')
       {
          std::string s = strReplace("\\#", "#", line);
          free(line);
@@ -116,12 +116,12 @@ int readConfig()
 void showUsage(const char* bin)
 {
    printf("Usage: %s [-n][-c <config-dir>][-l <eloquence>][-t]\n", bin);
-   printf("    -n              don't daemonize\n");
+   printf("    -c <config-dir> use config in <config-dir>\n");
+   printf("    -l <eloquence>  set eloquence\n");
+   printf("    -n              don't demonize\n");
    printf("    -t              log to stdout\n");
    printf("    -T              log to stdout during init\n");
    printf("    -v              show version\n");
-   printf("    -c <config-dir> use config in <config-dir>\n");
-   printf("    -l <eloquence>  set eloquence\n");
 }
 
 //***************************************************************************

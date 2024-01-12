@@ -107,7 +107,6 @@ int Deconz::exit()
 int Deconz::queryApiKey(std::string& result)
 {
    json_t* jArray {};
-
    char* data {};
    asprintf(&data, "{ \"devicetype\": \"%s\" }", TARGET);
 
@@ -491,17 +490,12 @@ int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
 
    tell(eloDeconz, "-> (DECONZ) put '%s' '%s'; result [%s]", url, payload, data.c_str());
    free(url);
+   free(payload);
 
-   json_error_t error;
-   jResult = json_loads(data.c_str(), 0, &error);
+   jResult = jsonLoad(data.c_str());
 
    if (!jResult)
-   {
-      tell(eloAlways, "Error: Ignoring invalid result [%s]", data.c_str());
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-           error.text, error.source, error.line, error.column, error.position);
       return fail;
-   }
 
    return success;
 }
@@ -530,16 +524,10 @@ int Deconz::post(json_t*& jResult, const char* method, const char* payload)
    tell(eloDeconz, "-> (DECONZ) '%s' '%s' [%s]", url, payload, data.c_str());
    free(url);
 
-   json_error_t error;
-   jResult = json_loads(data.c_str(), 0, &error);
+   jResult = jsonLoad(data.c_str());
 
    if (!jResult)
-   {
-      tell(eloAlways, "Error: Ignoring invalid DECONZ result [%s]", data.c_str());
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-           error.text, error.source, error.line, error.column, error.position);
       return fail;
-   }
 
    return done;
 }
@@ -712,16 +700,10 @@ int Deconz::atInMessage(const char* data)
    // {"e":"changed","id":"31","r":"sensors","state":{"buttonevent":1002,"lastupdated":"2021-12-15T18:30:58.779"},"t":"event","uniqueid":"00:15:8d:00:02:13:87:2c-01-0012"}
    // {"e":"changed","id":"33","r":"sensors","state":{"lastupdated":"2021-12-16T18:34:17.872","presence":true},"t":"event","uniqueid":"00:15:8d:00:02:57:b7:41-01-0406"}
 
-   json_error_t error;
-   json_t* obj = json_loads(data, 0, &error);
+   json_t* obj = jsonLoad(data);
 
    if (!obj)
-   {
-      tell(eloAlways, "Error: Ignoring invalid jason request [%s]", data);
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
-           error.text, error.source, error.line, error.column, error.position);
       return fail;
-   }
 
    // process message, build message
 
@@ -763,7 +745,6 @@ int Deconz::atInMessage(const char* data)
    }
 
    json_t* jData = json_object();
-
    char* type {};
    asprintf(&type, "DZ%s", resource == "sensors" ? "S" : "L");
 

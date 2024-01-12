@@ -273,3 +273,20 @@ int Serial::readWord(word& v, int timeoutMs)
 
    return success;
 }
+
+int Serial::readSWord(sword& v, int timeoutMs)
+{
+   int status {success};
+   byte b1 {0};
+   byte b2 {0};
+
+   if ((status = readByte(b1, timeoutMs)) != success)
+      return status;
+
+   if ((status = readByte(b2, timeoutMs)) != success)
+      return status;
+
+   v = (b1 << 8) | b2;
+
+   return success;
+}

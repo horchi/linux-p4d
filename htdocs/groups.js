@@ -15,7 +15,7 @@ function initGroupSetup(groups)
    $('#container').removeClass('hidden');
    document.getElementById("container").innerHTML =
       '<div class="rounded-border seperatorFold">Baugruppen</div>' +
-      '  <table class="tableMultiCol">' +
+      '  <table class="setupContainer tableMultiCol">' +
       '    <thead>' +
       '      <tr>' +
       '        <td style="width:50%;">Baugruppe</td>' +
@@ -37,7 +37,7 @@ function initGroupSetup(groups)
       var html = '<td id="row_' + item.id + '" data-id="' + item.id + '" class="tableMultiColCell">';
       html += "  <input id=\"name_" + item.id + "\" class=\"rounded-border inputSetting\" type=\"text\" value=\"" + item.name + "\"/>";
       html += "</td>";
-      html += "<td><button class=\"rounded-border\" style=\"margin-right:10px;\" onclick=\"groupConfig(" + item.id + ", 'delete')\">Löschen</button></td>";
+      html += "<td><button class=\"buttonOptions rounded-border\" style=\"margin-right:10px;\" onclick=\"groupConfig(" + item.id + ", 'delete')\">Löschen</button></td>";
 
       if (tableRoot != null) {
          var elem = document.createElement("tr");
@@ -47,7 +47,7 @@ function initGroupSetup(groups)
    }
 
    html =  "  <span>Gruppe: </span><input id=\"input_group\" class=\"rounded-border input\"/>";
-   html += "  <button class=\"rounded-border button2\" onclick=\"groupConfig(0, 'add')\">+</button>";
+   html += "  <button class=\"buttonOptions rounded-border\" onclick=\"groupConfig(0, 'add')\">+</button>";
 
    document.getElementById("addGroupDiv").innerHTML = html;
 

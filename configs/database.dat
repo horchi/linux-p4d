@@ -30,6 +30,7 @@ Table valuefacts
    RECORD               ""          record               Ascii        1 Data,
    UNIT                 ""          unit                 Ascii        5 Data,
    OPTIONS              ""          options              Int         10 Data,
+   INVERT               ""          invert               Ascii        1 Data,
    FACTOR               ""          factor               Int          4 Data,
    NAME                 ""          name                 Ascii      100 Data,
    TITLE                ""          title                Ascii      100 Data,
@@ -37,6 +38,7 @@ Table valuefacts
    SUBTYPE              "data type" res1                 Int          4 Data,
    CHOICES              ""          choices              Ascii      250 Data,
    RIGHTS   "needed control rights" rights               Int          0 Data,
+   CALIBRATION          ""          calibration          Text      1000 Data,
 }
 
 // ----------------------------------------------------------------
@@ -121,6 +123,7 @@ Table dashboards
    UPDSP                ""  updsp                Int          0 Meta,
 
    TITLE                ""  title                Ascii      100 Data,
+   GROUP                ""  grp                  Int         10 Data,
    SYMBOL               ""  symbol               Ascii      100 Data,
    ORDER                ""  ord                  Int         10 Data,
    OPTS                 ""  opts                 Ascii      200 Data,
@@ -149,12 +152,12 @@ Table dashboardwidgets
 
 Table users
 {
-   USER                 ""               user        Ascii      40 Primary,
-   INSSP                ""               inssp       Int         0 Meta,
-   UPDSP                ""               updsp       Int         0 Meta,
-   PASSWD               "md5 sum"        passwd      Ascii      40 Data,
-   TOKEN                ""               token       Ascii     200 Data,
-   RIGHTS               "Rights Bitmask" rights      INT       200 Data,
+   USER                 ""               user      Ascii      40 Primary,
+   INSSP                ""               inssp     Int         0 Meta,
+   UPDSP                ""               updsp     Int         0 Meta,
+   PASSWD               "md5 sum"        passwd    Ascii      40 Data,
+   TOKEN                ""               token     Ascii     200 Data,
+   RIGHTS               "Rights Bitmask" rights    INT       200 Data,
 }
 
 // ----------------------------------------------------------------

@@ -14,14 +14,21 @@
     --light2: lightgray;
     --light3: #403d3d;
     --light4: white;
-
     --light3t: #403d3d5c;
+    --neutral0: #333333;
+    --neutral1: #454545;
+    --neutral2: #545454;
+    --neutral3: #696969;
+    --neutral4: #a3a3a3;
 
     --listFontColor: white;
     --blue: #2177AD;
     --blueshade: #495b67;
+    --yellow: #fad600;
+    --yellow2: #fffcab;
     --info: #f9f9ef;
 
+    --containerPadding: 10px;
     --widgetBackground: #272727b8;
     --widgetTitleColor: white;
     --dashboardMenuBackground: #7080907a;

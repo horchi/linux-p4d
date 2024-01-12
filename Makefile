@@ -7,7 +7,7 @@ include Make.config
 
 HISTFILE = "HISTORY.h"
 
-LIBS += $(shell $(SQLCFG) --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid
+LIBS += $(shell $(SQLCFG) --libs_r) -lrt -lcrypto -lcurl -lpthread -luuid -llua5.3
 
 VERSION      = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
 ARCHIVE      = $(TARGET)-$(VERSION)
@@ -22,16 +22,17 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o
+LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o lib/lua.o lib/tcpchannel.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
-OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o gpio.o hass.o websock.o webservice.o deconz.o
+OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o hass.o websock.o webservice.o deconz.o lmc.o lmccom.o lmctag.o
+OBJS        += growatt.o
+
+CFLAGS      += $(shell $(SQLCFG) --include)
+OBJS        += specific.o gpio.o
+W1OBJS       = w1.o gpio.o lib/common.o lib/thread.o $(MQTTOBJS)
 OBJS        += p4io.o service.o
 CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
-
-CFLAGS    	+= $(shell $(SQLCFG) --include)
-OBJS        += specific.o
-W1OBJS       = w1.o lib/common.o lib/thread.o $(MQTTOBJS)
 
 # main taget
 
@@ -175,7 +176,7 @@ activate: install
 #	tail -f /var/log/$(TARGET).log
 
 cppchk:
-	cppcheck --enable=all $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --quiet --force --std=c++20 *.c; \
+	cppcheck --enable=all $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --language=c++ --quiet --force *.c; \
 
 upload:
 	avrdude -q -V -p atmega328p -D -c arduino -b 57600 -P $(AVR_DEVICE) -U flash:w:arduino/build-nano-atmega328/ioctrl.hex:i

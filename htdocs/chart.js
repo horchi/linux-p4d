@@ -1,7 +1,7 @@
 /*
  *  chart.js
  *
- *  (c) 2020-2022 Jörg Wendel
+ *  (c) 2020 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -26,30 +26,31 @@ function drawCharts(dataObject)
       //
 
       document.getElementById("container").innerHTML =
-         '<canvas id="chartContainer" class="chartCanvas" width="1600" height="600"></canvas>' +
+         '<div id="chartContainer" class="chartContainer">' +
+         '  <canvas id="chartCanvas" class="chartCanvas"></canvas>' +
+         '</div>' +
          '<div class="rounded-border chartButtons">' +
-         '  <input id="startDate" class="rounded-border chartButton" type="date" onchange="chartSelect(\'start\')"></input>' +
-         '  <div style="width:25px;"></div>' +
+         '  <input  class="rounded-border chartButton" style="height: 21px;width: 125px;" type="date" onchange="chartSelect(\'setstart\')" id="chartStart" min="2020-01-01"></input>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevmonth\')">&lt; Monat</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prevweek\')">&lt; Woche</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'prev\')">&lt; Tag</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'now\')">Jetzt</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'next\')">Tag &gt;</button>' +
-         '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextweek\')">&lt; Woche</button>' +
+         '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextweek\')">Woche &gt;</button>' +
          '  <button class="rounded-border chartButton" onclick="chartSelect(\'nextmonth\')">Monat &gt;</button>' +
-         '  <div>Tage </div><input class="rounded-border chartButton" style="width:90px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
+         '  <span>Tage</span><input class="rounded-border chartButton" style="max-width:70px;" onchange="chartSelect(\'range\')" id="chartRange" type="number" step="0.25" min="0.25" value="' + theChartRange + '"></input>' +
          '</div>' +
          '<div id="chartSelector" class="rounded-border chartSelectors"></div>';
 
-      root = document.getElementById("chartContainer");
+      document.getElementById("chartStart").valueAsDate = theChartStart;
    }
+
+   root = document.getElementById("chartCanvas");
 
    if (theChart != null) {
       theChart.destroy();
       theChart = null;
    }
-
-   let labelColor = getComputedStyle(document.documentElement).getPropertyValue('--chartLabelText');
 
    var data = {
       type: "line",
@@ -58,7 +59,8 @@ function drawCharts(dataObject)
          datasets: []
       },
       options: {
-         responsive: false,
+         responsive: true,
+         maintainAspectRatio: false,
          tooltips: {
             mode: "index",
             intersect: false,
@@ -70,31 +72,32 @@ function drawCharts(dataObject)
          legend: {
             display: true,
             labels: {
-               fontColor: labelColor
+               fontColor: "white"
             }
          },
          scales: {
             xAxes: [{
                type: "time",
+               distribution: "linear",
+               display: true,
                time: {
                   unit: 'hour',
                   unitStepSize: 1,
                   displayFormats: {
-                  millisecond: 'MMM DD - HH:mm',
-                  second: 'MMM DD - HH:mm',
-                  minute: 'HH:mm',
-                  hour: 'MMM DD - HH:mm',
-                  day: 'HH:mm',
-                  week: 'MMM DD - HH:mm',
-                  month: 'MMM DD - HH:mm',
-                  quarter: 'MMM DD - HH:mm',
-                  year: 'MMM DD - HH:mm' } },
-               distribution: "linear",
-               display: true,
+                     millisecond: 'MMM DD - HH:mm',
+                     second: 'MMM DD - HH:mm',
+                     minute: 'HH:mm',
+                     hour: 'MMM DD - HH:mm',
+                     day: 'HH:mm',
+                     week: 'MMM DD - HH:mm',
+                     month: 'MMM DD - HH:mm',
+                     quarter: 'MMM DD - HH:mm',
+                     year: 'MMM DD - HH:mm' }
+               },
                ticks: {
                   maxTicksLimit: 24,
                   padding: 10,
-                  fontColor: labelColor
+                  fontColor: "white"
                },
                gridLines: {
                   color: "gray",
@@ -102,7 +105,7 @@ function drawCharts(dataObject)
                },
                scaleLabel: {
                   display: true,
-                  fontColor: labelColor,
+                  fontColor: "white",
                   labelString: "Zeit"
                }
             }],
@@ -113,7 +116,6 @@ function drawCharts(dataObject)
    // console.log("dataObject: " + JSON.stringify(dataObject, undefined, 4));
 
    var colors = ['gray','yellow','white','red','lightblue','lightgreen','purple','blue','green','pink','#E69138'];
-
    var yAxes = [];
    var knownUnits = {};
 
@@ -149,22 +151,19 @@ function drawCharts(dataObject)
    var end = new Date();
    end.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+theChartRange);
 
-   $('#startDate').val(theChartStart.toISOString().substring(0,10));
    $("#chartTitle").html(theChartStart.toLocaleString('de-DE') + "  -  " + end.toLocaleString('de-DE'));
    $("#chartSelector").html("");
 
    updateChartBookmarks();
 
-   if (dataObject.sensors) {
-      for (var i = 0; i < dataObject.sensors.length; i++) {
-         // console.log("sensor " + dataObject.sensors[i].id);
-         var fact = valueFacts[dataObject.sensors[i].id];
+   for (var i = 0; i < dataObject.sensors.length; i++) {
+      // console.log("sensor " + dataObject.sensors[i].id);
+      var fact = valueFacts[dataObject.sensors[i].id];
 
-         var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id +
-             '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') +
-             '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + ' [' + fact.unit + ']</label></div>';
-         $("#chartSelector").append(html);
-      }
+      var html = '<div class="chartSel"><input id="checkChartSel_' + dataObject.sensors[i].id +
+          '" type="checkbox" onclick="chartSelect(\'choice\')" ' + (dataObject.sensors[i].active ? 'checked' : '') +
+          '/><label for="checkChartSel_' + dataObject.sensors[i].id + '">' + dataObject.sensors[i].title + ' [' + fact.unit + ']</label></div>';
+      $("#chartSelector").append(html);
    }
 
    theChart = new Chart(root.getContext("2d"), data);
@@ -289,24 +288,26 @@ function chartSelect(action)
 
    if (action == "next")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+1);
-   else if (action == "prev")
-      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-1);
    else if (action == "nextmonth")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+30);
-   else if (action == "prevmonth")
-      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "nextweek")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()+7);
+   else if (action == "prev")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-1);
+   else if (action == "prevmonth")
+      theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-30);
    else if (action == "prevweek")
       theChartStart.setFullYear(theChartStart.getFullYear(), theChartStart.getMonth(), theChartStart.getDate()-7);
    else if (action == "now")
       theChartStart.setFullYear(now.getFullYear(), now.getMonth(), now.getDate()-theChartRange);
-   else if (action == "start")
-      theChartStart = new Date($('#startDate').val());
+   else if (action == "range")
+      ;
    else if (action == "choice")
       ;
+   else if (action == "setstart")
+      theChartStart = new Date(document.getElementById("chartStart").value);
    else
-      theChartStart = new Date().subHours(theChartRange * 24);
+      console.log("chartSelect(" + action + ")");
 
    // console.log("sensors:  '" + sensors + "'" + ' Range:' + theChartRange);
 

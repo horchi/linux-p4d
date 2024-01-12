@@ -20,8 +20,7 @@
 int Daemon::dispatchClientRequest()
 {
    int status {fail};
-   json_error_t error;
-   json_t *oData, *oObject;
+   json_t *oData {}, *oObject {};
 
    cMyMutexLock lock(&messagesInMutex);
 
@@ -31,7 +30,7 @@ int Daemon::dispatchClientRequest()
       //   => { "event" : "toggleio", "object" : { "address" : "122", "type" : "DO" } }
 
       tell(eloWebSock, "<= '%s'", messagesIn.front().c_str());
-      oData = json_loads(messagesIn.front().c_str(), 0, &error);
+      oData = jsonLoad(messagesIn.front().c_str());
 
       // get the request
 
@@ -87,7 +86,8 @@ int Daemon::dispatchClientRequest()
             case evSchema:          status = performSchema(oObject, client);         break;
             case evStoreSchema:     status = storeSchema(oObject, client);           break;
             case evStoreChartbookmarks: status = storeChartbookmarks(oObject, client); break;
-
+            case evStoreCalibration:    status = storeCalibration(oObject, client);    break;
+            case evLmcAction:           status = performLmcAction(oObject, client);    break;
             default:
             {
                if (dispatchSpecialRequest(event,oObject, client) == ignore)
@@ -101,8 +101,7 @@ int Daemon::dispatchClientRequest()
          if (client == na)
             tell(eloAlways, "Insufficient rights to '%s', missing login", getStringFromJson(oData, "event", "<null>"));
          else
-            tell(eloAlways, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"),
-                 wsClients[(void*)client].user.c_str());
+            tell(eloAlways, "Insufficient rights to '%s' for user '%s'", getStringFromJson(oData, "event", "<null>"), wsClients[(void*)client].user.c_str());
          // replyResult(fail, "Insufficient rights", client);
       }
 
@@ -115,7 +114,7 @@ int Daemon::dispatchClientRequest()
 
 bool Daemon::checkRights(long client, Event event, json_t* oObject)
 {
-   uint rights = urView;
+   uint rights = urNone;
    auto it = wsClients.find((void*)client);
 
    if (it != wsClients.end())
@@ -126,9 +125,9 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evLogin:               return true;
       case evLogout:              return true;
       case evGetToken:            return true;
-      case evData:                return true;
-      case evInit:                return true;
-      case evPageChange:          return true;
+      case evData:                return rights & urView;
+      case evInit:                return rights & urView;
+      case evPageChange:          return rights & urView;
       case evToggleIoNext:        return rights & urControl;
       case evToggleMode:          return rights & urFullControl;
       case evStoreConfig:         return rights & urSettings;
@@ -142,7 +141,7 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evCommand:             return rights & urFullControl;
       case evSyslog:              return rights & urAdmin;
       case evSystem:              return rights & urAdmin;
-      case evForceRefresh:        return true;
+      case evForceRefresh:        return rights & urView;
 
       case evChartbookmarks:      return rights & urView;
       case evStoreChartbookmarks: return rights & urSettings;
@@ -153,7 +152,9 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
       case evImageConfig:         return rights & urSettings;
 
       case evSchema:              return rights & urView;
+      case evStoreCalibration:    return rights & urSettings;
       case evStoreSchema:         return rights & urSettings;
+      case evLmcAction:           return rights & urControl;
 
       default: break;
    }
@@ -184,16 +185,16 @@ bool Daemon::checkRights(long client, Event event, json_t* oObject)
 // WS Ping
 //***************************************************************************
 
-int Daemon::performWebSocketPing()
-{
-   if (nextWebSocketPing < time(0))
-   {
-      webSock->performData(cWebSock::mtPing);
-      nextWebSocketPing = time(0) + webSocketPingTime-5;
-   }
+// int Daemon::performWebSocketPing()
+// {
+//    if (nextWebSocketPing < time(0))
+//    {
+//       webSock->performData(cWebSock::mtPing);
+//       nextWebSocketPing = time(0) + webSocketPingTime-5;
+//    }
 
-   return done;
-}
+//    return done;
+// }
 
 //***************************************************************************
 // Reply Result
@@ -221,7 +222,7 @@ int Daemon::replyResult(int status, long client, const char* format, ...)
    if (!client)
       return done;
 
-   char* message {}";
+   char* message {};
    va_list ap;
 
    va_start(ap, format);
@@ -268,14 +269,14 @@ int Daemon::performLogin(json_t* oObject)
    else
    {
       wsClients[(void*)client].type = ctActive;
-      wsClients[(void*)client].rights = urView;  // allow view without login
+      wsClients[(void*)client].rights = 0;  // allow view without login
       tell(eloAlways, "Warning: Unknown user '%s' or token mismatch connected!", user);
 
       json_t* oJson = json_object();
       json_object_set_new(oJson, "user", json_string(user));
       json_object_set_new(oJson, "state", json_string("reject"));
       json_object_set_new(oJson, "value", json_string(""));
-      pushOutMessage(oJson, "token", client);
+      return pushOutMessage(oJson, "token", client);
    }
 
    tell(eloWebSock, "Login of client 0x%x; user '%s'; type is %d; page %s", (unsigned int)client, user,
@@ -320,6 +321,8 @@ int Daemon::performLogin(json_t* oObject)
    commands2Json(oJson);
    pushOutMessage(oJson, "commands", client);
 
+   lmcUpdates(client);
+
    performData(client, "init");
 
    return done;
@@ -351,12 +354,6 @@ int Daemon::performData(long client, const char* event)
          jsonSensorList[key] = ojData;
 
          sensor2Json(ojData, sensor->type.c_str(), sensor->address);
-
-         // #TODO - check validity like != nan and not older than 2 minutes
-         // if (isNan(aiSensors[addr].value) || aiSensors[addr].last < time(0)-120)
-         //   continue ...
-
-         json_object_set_new(ojData, "last", json_integer(sensor->last));
 
          if (sensor->kind == "status")
          {
@@ -394,7 +391,7 @@ int Daemon::performData(long client, const char* event)
          {
             json_object_set_new(ojData, "mode", json_string(sensor->mode == omManual ? "manual" : "auto"));
             json_object_set_new(ojData, "options", json_integer(sensor->opt));
-            json_object_set_new(ojData, "next", json_integer(sensor->next));
+            // json_object_set_new(ojData, "next", json_integer(sensor->next));
          }
 
          free(key);
@@ -493,7 +490,7 @@ int Daemon::performToggleIo(json_t* oObject, long client)
 {
    int addr = getIntFromJson(oObject, "address");
    const char* type = getStringFromJson(oObject, "type");
-   std::string action = getStringFromJson(oObject, "action");
+   std::string action = getStringFromJson(oObject, "action", "");
 
    if (action == "toggle")
       return toggleIo(addr, type);
@@ -857,15 +854,17 @@ int Daemon::performChartData(json_t* oObject, long client)
    if (!client)
       return done;
 
-   double range = getDoubleFromJson(oObject, "range", 1);          // Anzahl der Tage
-   time_t rangeStart = getLongFromJson(oObject, "start", 0);       // Start Datum (unix timestamp)
-   const char* sensors = getStringFromJson(oObject, "sensors");    // Kommata getrennte Liste der Sensoren
+   double range = getDoubleFromJson(oObject, "range", 1);        // Anzahl der Tage
+   time_t rangeStart = getLongFromJson(oObject, "start", 0);     // Start Datum (unix timestamp)
+   const char* sensors = getStringFromJson(oObject, "sensors");  // Kommata getrennte Liste der Sensoren
    const char* id = getStringFromJson(oObject, "id", "");
 
    // the id is one of {"chart" "chartwidget" "chartdialog"}
 
    bool widget = strcmp(id, "chart") != 0;
-   cDbStatement* select = widget ? selectSamplesRange60 : selectSamplesRange;
+
+   // if (range > 50)
+   //    range = 50;
 
    if (!widget)
       performChartbookmarks(client);
@@ -881,8 +880,6 @@ int Daemon::performChartData(json_t* oObject, long client)
       }
    }
 
-   tell(eloWebSock, "Selecting chart data for sensors '%s' with range %.1f ..", sensors, range);
-
    std::vector<std::string> sList;
 
    if (sensors)
@@ -897,6 +894,9 @@ int Daemon::performChartData(json_t* oObject, long client)
    rangeFrom.setValue(rangeStart);
    rangeTo.setValue(rangeStart + (int)(range*tmeSecondsPerDay));
 
+   tell(eloAlways, "Selecting chart '%s' data for sensors '%s' from (%ld) to (%ld) with range %.1f",
+        id, sensors, rangeFrom.getTimeValue(), rangeTo.getTimeValue(), range);
+
    tableValueFacts->clear();
 
    json_t* aAvailableSensors {};
@@ -909,10 +909,10 @@ int Daemon::performChartData(json_t* oObject, long client)
       if (!tableValueFacts->hasValue("RECORD", "A"))
          continue;
 
-      char* id {};
-      asprintf(&id, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
+      char* sid {};
+      asprintf(&sid, "%s:0x%02lx", tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
 
-      bool active = std::find(sList.begin(), sList.end(), id) != sList.end();  // #PORT
+      bool active = std::find(sList.begin(), sList.end(), sid) != sList.end();  // #PORT
       const char* usrtitle = tableValueFacts->getStrValue("USRTITLE");
       const char* title = tableValueFacts->getStrValue("TITLE");
 
@@ -922,13 +922,13 @@ int Daemon::performChartData(json_t* oObject, long client)
       if (!widget)
       {
          json_t* oSensor = json_object();
-         json_object_set_new(oSensor, "id", json_string(id));
+         json_object_set_new(oSensor, "id", json_string(sid));
          json_object_set_new(oSensor, "title", json_string(title));
          json_object_set_new(oSensor, "active", json_integer(active));
          json_array_append_new(aAvailableSensors, oSensor);
       }
 
-      free(id);
+      free(sid);
 
       if (!active)
          continue;
@@ -959,6 +959,24 @@ int Daemon::performChartData(json_t* oObject, long client)
            l2pTime(rangeTo.getTimeValue()).c_str(),
            tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
 
+      // which select to be used ..
+
+      cDbStatement* select = selectSamplesRange;
+      bool selectSumOfDayMax = strcmp(id, "chartwidgetbar") == 0 && tableValueFacts->hasValue("TYPE", "GROWATT") && tableValueFacts->hasValue("ADDRESS", 53L);
+
+      if (selectSumOfDayMax)
+         select = selectSamplesRangeMonthOfDayMax;
+      else if (strcmp(id, "chartwidget") == 0)
+         select = selectSamplesRange60;
+      else if (strcmp(id, "chartwidgetbar") == 0)
+         select = selectSamplesRangeMonth;
+      else if (range > 20)
+         select = selectSamplesRange360;
+      else if (range > 3)
+         select = selectSamplesRange60;
+
+      tell(eloAlways, "Using for '%s' select [%s]", id, select->asText());
+
       uint count {0};
 
       for (int f = select->find(); f; f = select->fetch())
@@ -972,7 +990,9 @@ int Daemon::performChartData(json_t* oObject, long client)
          json_object_set_new(oRow, "x", json_string(xmlTime.getStrValue()));
 
          if (tableValueFacts->hasValue("TYPE", "DO"))
-            json_object_set_new(oRow, "y", json_integer(maxValue.getIntValue()*10));
+            json_object_set_new(oRow, "y", json_integer(maxValue.getIntValue()*10));  // *10 for DO to better scale (bad workaround)
+         else if (selectSumOfDayMax)
+            json_object_set_new(oRow, "y", json_real(maxValue.getFloatValue()));
          else
          {
             // double avg = avgValue.getFloatValue();
@@ -982,7 +1002,7 @@ int Daemon::performChartData(json_t* oObject, long client)
          count++;
       }
 
-      tell(eloDebugWebSock, " collected %d samples'", count);
+      tell(eloDetail, " collected %d samples for sensor '%s:0x%lx'", count, tableValueFacts->getStrValue("TYPE"), tableValueFacts->getIntValue("ADDRESS"));
       select->freeResult();
    }
 
@@ -1017,8 +1037,7 @@ int Daemon::performChartbookmarks(long client)
 {
    char* bookmarks {};
    getConfigItem("chartBookmarks", bookmarks, "{[]}");
-   json_error_t error;
-   json_t* oJson = json_loads(bookmarks, 0, &error);
+   json_t* oJson = jsonLoad(bookmarks);
    pushOutMessage(oJson, "chartbookmarks", client);
    free(bookmarks);
 
@@ -1202,8 +1221,7 @@ int Daemon::performSchema(json_t* oObject, long client)
       const char* properties = tableSchemaConf->getStrValue("PROPERTIES");
       if (isEmpty(properties))
          properties = "{}";
-      json_error_t error;
-      json_t* o = json_loads(properties, 0, &error);
+      json_t* o = jsonLoad(properties);
       json_object_set_new(oData, "properties", o);
    }
 
@@ -1331,6 +1349,179 @@ int Daemon::storeConfig(json_t* obj, long client)
 }
 
 //***************************************************************************
+// Store Calibration
+//***************************************************************************
+
+int Daemon::storeCalibration(json_t* obj, long client)
+{
+   int status {success};
+   std::string type = getStringFromJson(obj, "type", "");
+   std::string action = getStringFromJson(obj, "action", "");
+   long address = getLongFromJson(obj, "address", na);
+
+   if (type == "AI")
+      status = storeAiCalibration(obj, client);
+   else if (type == "CV")
+      status = storeCvCalibration(obj, client);
+   else if (type == "DO")
+      status = storeDoCalibration(obj, client);
+   else if (action == "delete")
+      status = deleteValueFact(type.c_str(), address);
+   else
+   {
+      tell(eloAlways, "Ignoring config request for '%s:%ld, only supported for 'AI', 'DO', 'W1' and 'CV' sensors", type.c_str(), address);
+      return replyResult(fail, "Ignoring config request, only supported for 'AI', 'DO', 'W1' and 'CV' sensors", client);
+   }
+
+   if (status == success)
+   {
+      // update web clients
+
+      json_t* oJson = json_object();
+      valueFacts2Json(oJson, false);
+      pushOutMessage(oJson, "valuefacts");
+
+      return replyResult(success, "success", client);
+   }
+
+   return done;
+}
+
+//***************************************************************************
+// Delete ValueFact
+//***************************************************************************
+
+int Daemon::deleteValueFact(const char* type, long address)
+{
+   tell(eloAlways, "DELETE: type = '%s' and address = %ld", type, address);
+   tableValueFacts->deleteWhere("type = '%s' and address = %ld", type, address);
+   return success;
+}
+
+//***************************************************************************
+//
+//***************************************************************************
+
+int Daemon::storeCvCalibration(json_t* obj, long client)
+{
+   std::string action = getStringFromJson(obj, "action", "");
+   const char* type = getStringFromJson(obj, "type");
+   long address = getIntFromJson(obj, "address", na);
+   std::string luaScript = getStringFromJson(obj, "luaScript", "");
+
+   if (action == "add")
+   {
+      uint address {1};
+
+      for (const auto& sensor : sensors["CV"])
+         if (sensor.second.address >= address)
+            address = sensor.second.address+1;
+
+      tell(eloAlways, "Add CV sensor %d", address);
+      std::string name = "Calc Sensor " + std::to_string(address);
+      addValueFact(address, "CV", 1, name.c_str(), "", "");
+   }
+   else
+   {
+      // store to valuefacts
+
+      tableValueFacts->clear();
+      tableValueFacts->setValue("TYPE", type);
+      tableValueFacts->setValue("ADDRESS", address);
+
+      if (tableValueFacts->find())
+      {
+         tableValueFacts->setValue("CALIBRATION", luaScript.c_str());
+         tableValueFacts->store();
+      }
+   }
+
+   return success;
+}
+
+int Daemon::storeDoCalibration(json_t* obj, long client)
+{
+   const char* type = getStringFromJson(obj, "type");
+   long address = getIntFromJson(obj, "address", na);
+   bool invertDo = getBoolFromJson(obj, "invertDo");
+
+   // store to valuefacts
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("TYPE", type);
+   tableValueFacts->setValue("ADDRESS", address);
+
+   if (tableValueFacts->find())
+   {
+      tableValueFacts->setValue("INVERT", invertDo ? "Y" : "N");
+      tableValueFacts->store();
+   }
+
+   return success;
+}
+
+int Daemon::storeAiCalibration(json_t* obj, long client)
+{
+   std::string type = getStringFromJson(obj, "type", "");
+   long address = getIntFromJson(obj, "address", na);
+   std::string calPointSelect = getStringFromJson(obj, "calPointSelect", "");
+   double calPoint = getDoubleFromJson(obj, "calPoint");
+   double calPointValue = getDoubleFromJson(obj, "calPointValue");
+   double calRound = getDoubleFromJson(obj, "calRound");
+   double calCutBelow = getDoubleFromJson(obj, "calCutBelow");
+
+   if (calPointSelect == "" || address == na)
+      return replyResult(fail, "Ignoring invalid calibration request", client);
+
+   tell(eloAlways, "Storing calibration values of AI:0x%lx for '%s' (%f/%f)", address, calPointSelect.c_str(),
+        calPoint, calPointValue);
+
+   aiSensors[address].round = calRound;
+   aiSensors[address].calCutBelow = calCutBelow;
+
+   if (calPointSelect == "pointA")
+   {
+      aiSensors[address].calPointA = calPoint;
+      aiSensors[address].calPointValueA = calPointValue;
+   }
+   else
+   {
+      aiSensors[address].calPointB = calPoint;
+      aiSensors[address].calPointValueB = calPointValue;
+   }
+
+   // store to valuefacts
+
+   tableValueFacts->clear();
+   tableValueFacts->setValue("TYPE", type.c_str());
+   tableValueFacts->setValue("ADDRESS", address);
+
+   if (tableValueFacts->find())
+   {
+      json_t* jCal = json_object();
+
+      json_object_set_new(jCal, "pointA", json_real(aiSensors[address].calPointA));
+      json_object_set_new(jCal, "pointB", json_real(aiSensors[address].calPointB));
+      json_object_set_new(jCal, "valueA", json_real(aiSensors[address].calPointValueA));
+      json_object_set_new(jCal, "valueB", json_real(aiSensors[address].calPointValueB));
+      json_object_set_new(jCal, "round", json_real(aiSensors[address].round));
+      json_object_set_new(jCal, "calCutBelow", json_real(aiSensors[address].calCutBelow));
+
+      char* p = json_dumps(jCal, JSON_REAL_PRECISION(4));
+      json_decref(jCal);
+
+      if (p)
+      {
+         tableValueFacts->setValue("CALIBRATION", p);
+         tableValueFacts->store();
+         free(p);
+      }
+   }
+
+   return success;
+}
+
+//***************************************************************************
 // Store Dashboards
 //***************************************************************************
 
@@ -1371,19 +1562,19 @@ int Daemon::storeDashboards(json_t* obj, long client)
       tableDashboardWidgets->clear();
       tableDashboardWidgets->setValue("DASHBOARDID", fromId);
       tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
-      tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+      tableDashboardWidgets->setValue("ADDRESS", strtoll(tuple[1].c_str(), nullptr, 0));
 
       if (!tableDashboardWidgets->find())
          return done;
 
       std::string options = tableDashboardWidgets->getStrValue("WIDGETOPTS");
 
-      tableDashboardWidgets->deleteWhere("dashboardid = %d and type = '%s' and address = %ld", fromId, tuple[0].c_str(), strtol(tuple[1].c_str(), nullptr, 0));
+      tableDashboardWidgets->deleteWhere("dashboardid = %d and type = '%s' and address = %lld", fromId, tuple[0].c_str(), strtoll(tuple[1].c_str(), nullptr, 0));
 
       tableDashboardWidgets->clear();
       tableDashboardWidgets->setValue("DASHBOARDID", toId);
       tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
-      tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+      tableDashboardWidgets->setValue("ADDRESS", strtoll(tuple[1].c_str(), nullptr, 0));
       tableDashboardWidgets->setValue("WIDGETOPTS", options.c_str());
       tableDashboardWidgets->insert();
 
@@ -1401,6 +1592,7 @@ int Daemon::storeDashboards(json_t* obj, long client)
          long dashboardId = atol(dashboardIdStr);
          const char* dashboardTitle = getStringFromJson(jObj, "title", "<new>");
          const char* dashboardSymbol = getStringFromJson(jObj, "symbol");
+         int group = getIntFromJson(jObj, "group", 0);
          const char* action = getStringFromJson(jObj, "action", "store");
 
          if (strcmp(action, "delete") == 0)
@@ -1414,6 +1606,8 @@ int Daemon::storeDashboards(json_t* obj, long client)
 
          if (dashboardId == -1)
          {
+            // new dashboard
+
             tableDashboards->clear();
             tableDashboards->setValue("TITLE", dashboardTitle);
             if (dashboardSymbol)
@@ -1438,12 +1632,14 @@ int Daemon::storeDashboards(json_t* obj, long client)
          char* options = json_dumps(jOptions, JSON_REAL_PRECISION(4));
 
          tableDashboards->setValue("TITLE", dashboardTitle);
+         tableDashboards->setValue("GROUP", group);
 
          if (!isEmpty(options) || tableDashboards->getValue("OPTS")->isEmpty())
             tableDashboards->setValue("OPTS", !isEmpty(options) ? options : "{}");
 
          if (dashboardSymbol)
             tableDashboards->setValue("SYMBOL", dashboardSymbol);
+
          tableDashboards->store();
          tableDashboards->reset();
          free(options);
@@ -1470,13 +1666,14 @@ int Daemon::storeDashboards(json_t* obj, long client)
                tableDashboardWidgets->setValue("DASHBOARDID", dashboardId);
                tableDashboardWidgets->setValue("ORDER", ord++);
                tableDashboardWidgets->setValue("TYPE", tuple[0].c_str());
-               tableDashboardWidgets->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+               tell(eloDebug, "Debug: Storing widget '%s' -> '%s' -> (0x%llx)", id, tuple[1].c_str(), strtoll(tuple[1].c_str(), nullptr, 0));
+               tableDashboardWidgets->setValue("ADDRESS", strtoll(tuple[1].c_str(), nullptr, 0));
 
                if (isEmpty(opts))
                {
                   tableValueFacts->clear();
                   tableValueFacts->setValue("TYPE", tuple[0].c_str());
-                  tableValueFacts->setValue("ADDRESS", strtol(tuple[1].c_str(), nullptr, 0));
+                  tableValueFacts->setValue("ADDRESS", strtoll(tuple[1].c_str(), nullptr, 0));
 
                   if (tableValueFacts->find())
                   {
@@ -1815,7 +2012,7 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
    {
       FileList options;
       int count {0};
-      char* path {};
+      char* path ;
 
       asprintf(&path, "%s/img/schema", httpPath);
 
@@ -1833,6 +2030,27 @@ int Daemon::configChoice2json(json_t* obj, const char* name)
             json_array_append_new(oArray, json_string(p+1));
             free(p);
          }
+
+         json_array_append_new(oArray, json_string(""));
+         json_object_set_new(obj, "options", oArray);
+      }
+
+      free(path);
+   }
+   else if (strcmp(name, "instanceIcon") == 0)
+   {
+      FileList options;
+      int count {0};
+      char* path ;
+
+      asprintf(&path, "%s/img", httpPath);
+
+      if (getFileList(path, DT_REG, "png", false, &options, count) == success)
+      {
+         json_t* oArray = json_array();
+
+         for (const auto& opt : options)
+            json_array_append_new(oArray, json_string(opt.name.c_str()));
 
          json_object_set_new(obj, "options", oArray);
       }
@@ -1949,12 +2167,13 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
 
       char* key {};
       std::string type = tableValueFacts->getStrValue("TYPE");
+      ulong address = tableValueFacts->getIntValue("ADDRESS");
       asprintf(&key, "%s:0x%02lx", type.c_str(), tableValueFacts->getIntValue("ADDRESS"));
       json_t* oData = json_object();
       json_object_set_new(obj, key, oData);
       free(key);
 
-      json_object_set_new(oData, "address", json_integer((ulong)tableValueFacts->getIntValue("ADDRESS")));
+      json_object_set_new(oData, "address", json_integer(address));
       json_object_set_new(oData, "type", json_string(type.c_str()));
       json_object_set_new(oData, "state", json_boolean(tableValueFacts->hasValue("STATE", "A")));
       json_object_set_new(oData, "record", json_boolean(tableValueFacts->hasValue("RECORD", "A")));
@@ -1964,8 +2183,26 @@ int Daemon::valueFacts2Json(json_t* obj, bool filterActive)
       json_object_set_new(oData, "unit", json_string(tableValueFacts->getStrValue("UNIT")));
       json_object_set_new(oData, "rights", json_integer(tableValueFacts->getIntValue("RIGHTS")));
       json_object_set_new(oData, "options", json_integer(tableValueFacts->getIntValue("OPTIONS")));
+      if (!tableValueFacts->getValue("INVERT")->isNull())
+         json_object_set_new(oData, "invertDo", json_boolean(tableValueFacts->hasValue("INVERT", "Y")));
+      else
+         json_object_set_new(oData, "invertDo", json_boolean(true));
       // #TODO check actor properties if dimmable ...
       json_object_set_new(oData, "dim", json_boolean(type == "DZL" || type == "HMB"));
+
+      if (type == "AI")
+      {
+         json_object_set_new(oData, "calPointA", json_real(aiSensors[address].calPointA));
+         json_object_set_new(oData, "calPointB", json_real(aiSensors[address].calPointB));
+         json_object_set_new(oData, "calPointValueA", json_real(aiSensors[address].calPointValueA));
+         json_object_set_new(oData, "calPointValueB", json_real(aiSensors[address].calPointValueB));
+         json_object_set_new(oData, "calRound", json_real(aiSensors[address].round));
+         json_object_set_new(oData, "calCutBelow", json_real(aiSensors[address].calCutBelow));
+      }
+      else if (type == "CV")
+      {
+         json_object_set_new(oData, "luaScript", json_string(tableValueFacts->getStrValue("CALIBRATION")));
+      }
 
       if (!tableValueFacts->getValue("CHOICES")->isNull())
          json_object_set_new(oData, "choices", json_string(tableValueFacts->getStrValue("CHOICES")));
@@ -2015,8 +2252,9 @@ int Daemon::dashboards2Json(json_t* obj)
       json_object_set_new(oDashboard, "title", json_string(tableDashboards->getStrValue("TITLE")));
       json_object_set_new(oDashboard, "symbol", json_string(tableDashboards->getStrValue("SYMBOL")));
       json_object_set_new(oDashboard, "order", json_integer(tableDashboards->getIntValue("ORDER")));
+      json_object_set_new(oDashboard, "group", json_integer(tableDashboards->getIntValue("GROUP")));
 
-      json_t* oOpts = json_loads(tableDashboards->getStrValue("OPTS"), 0, nullptr);
+      json_t* oOpts = jsonLoad(tableDashboards->getStrValue("OPTS"));
       json_object_set_new(oDashboard, "options", oOpts);
 
       json_t* oWidgets = json_object();
@@ -2029,7 +2267,7 @@ int Daemon::dashboards2Json(json_t* obj)
       {
          char* key {};
          asprintf(&key, "%s:0x%02lx", tableDashboardWidgets->getStrValue("TYPE"), tableDashboardWidgets->getIntValue("ADDRESS"));
-         json_t* oWidgetOpts = json_loads(tableDashboardWidgets->getStrValue("WIDGETOPTS"), 0, nullptr);
+         json_t* oWidgetOpts = jsonLoad(tableDashboardWidgets->getStrValue("WIDGETOPTS"));
          json_object_set_new(oWidgets, key, oWidgetOpts);
          free(key);
       }
@@ -2092,7 +2330,14 @@ int Daemon::performCommand(json_t* obj, long client)
 {
    std::string what = getStringFromJson(obj, "what");
 
-   if (what == "peaks")
+   if (what == "peak")
+   {
+      const char* type = getStringFromJson(obj, "type");
+      uint address = getIntFromJson(obj, "address");
+      tell(eloAlways, "Reset peak of '%s:0x%02x", type, address);
+      tablePeaks->deleteWhere("type = '%s' and address = 0x%02x", type, address);
+   }
+   else if (what == "peaks")
    {
       tablePeaks->truncate();
       setConfigItem("peakResetAt", l2pTime(time(0)).c_str());
@@ -2102,9 +2347,7 @@ int Daemon::performCommand(json_t* obj, long client)
       pushOutMessage(oJson, "config", client);
    }
    else if (what == "testmail")
-   {
       performTestMail(obj, client);
-   }
    else
       return fail;
 
@@ -2154,9 +2397,32 @@ int Daemon::sensor2Json(json_t* obj, const char* type, uint address)
    double peakMax {0.0};
    double peakMin {0.0};
 
+   json_object_set_new(obj, "address", json_integer(address));
+   json_object_set_new(obj, "type", json_string(type));
+   json_object_set_new(obj, "working", json_boolean(sensors[type][address].working));
+   json_object_set_new(obj, "last", json_integer(sensors[type][address].last));
+   // tell(eloAlways, "Distributing time for sensor '%s:%d' to %ld", type, address, sensors[type][address].last);
+
    tablePeaks->clear();
    tablePeaks->setValue("TYPE", type); // table->getStrValue("TYPE"));
    tablePeaks->setValue("ADDRESS", (long)address); // table->getIntValue("ADDRESS"));
+
+   // at least one update / 2 minutes ?? -> move to configuration ??
+
+   if (strcmp(type, "DO") == 0)
+      ;
+   else if (strcmp(type, "WEA") == 0)
+      sensors[type][address].valid = sensors[type][address].last >= time(0) - 60*tmeSecondsPerMinute;
+   else if (strcmp(type, "HMB") == 0)
+      ;
+   else if (strcmp(type, "DZS") == 0 || strcmp(type, "DZL") == 0)
+      ;
+   else if (strncmp(type, "P4", 2) == 0)
+      sensors[type][address].valid = sensors[type][address].last >= time(0) - 10*tmeSecondsPerMinute;
+   else if (sensors[type][address].last < time(0)-2*tmeSecondsPerMinute)
+      sensors[type][address].valid = false;
+
+   json_object_set_new(obj, "valid", json_boolean(sensors[type][address].valid));
 
    if (tablePeaks->find())
    {
@@ -2166,8 +2432,6 @@ int Daemon::sensor2Json(json_t* obj, const char* type, uint address)
 
    tablePeaks->reset();
 
-   json_object_set_new(obj, "address", json_integer(address)); // (ulong)table->getIntValue("ADDRESS")));
-   json_object_set_new(obj, "type", json_string(type)); //table->getStrValue("TYPE")));
    json_object_set_new(obj, "peak", json_real(peakMax));
    json_object_set_new(obj, "peakmin", json_real(peakMin));
 

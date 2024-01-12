@@ -313,7 +313,7 @@ int Mqtt::read(MemoryStruct* message, int timeoutMs)
    retained = msg->retained;
    delete msg;
 
-   tell(eloDebug, "Debug: Got message from topic '%s'", lastReadTopic.c_str());
+   tell(eloDebug2, "Debug2: Got message from topic '%s'", lastReadTopic.c_str());
 
    return success;
 }

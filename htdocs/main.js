@@ -16,6 +16,7 @@ var daytimeCalcAt = null;
 var onSmalDevice = false;
 var isActive = null;
 var socket = null;
+var lastPingAt = 0;
 var config = {};
 var commands = {};
 var daemonState = {};
@@ -29,6 +30,7 @@ var allSensors = [];
 var images = [];
 var currentPage = "dashboard";
 var startPage = null;
+var actDashboard = -1;
 var s3200State = {};
 var widgetCharts = {};
 var theChart = null;
@@ -39,25 +41,31 @@ var chartBookmarks = {};
 var infoDialogTimer = null;
 var grouplist = {};
 
+var lmcData = {};
+
 var setupMode = false;
-var kioskMode = false;
+var dashboardGroup = 0;
 var kioskBackTime = 0;
+
+var kioskMode = null;
+
+//  0 - with menu,    normal dash symbold, normal-widget-height
+//  1 - without menu, big dash symbold,    kiosk-widget-height
+//  2 - with menu,    big dash symbold,    kiosk-widget-height
+//  3 - with menu,    big dash symbold,    normal-widget-height
 
 $('document').ready(function() {
    daemonState.state = -1;
    s3200State.state = -1;
 
-   console.log("URL:", window.location.href);
-   let url = new URL(window.location.href);
-   let urlParams = new URLSearchParams(url.search.slice(1));
-
-   for (let p of urlParams)
-      console.log(p);
-
-   kioskMode = urlParams.get('kiosk') == 1;
+   const urlParams = new URLSearchParams(window.location.href);
+   kioskMode = urlParams.get('kiosk');
+   dashboardGroup = urlParams.get('group') != null ? urlParams.get('group') : 0;
    kioskBackTime = urlParams.get('backTime');
    console.log("kioskMode" + " : " + kioskMode);
+   console.log("dashboardGroup" + " : " + dashboardGroup);
    startPage = urlParams.get('page') != null ? urlParams.get('page') : null;
+   actDashboard = urlParams.get('dash') != null ? urlParams.get('dash') : -1;
    console.log("currentPage: " + currentPage);
    console.log("startPage: " + startPage);
 
@@ -75,6 +83,8 @@ $('document').ready(function() {
    colorStyle = getComputedStyle(document.body);
 });
 
+var socketStateInterval = null;
+
 function onSocketConnect(protocol)
 {
    var token = localStorage.getItem(storagePrefix + 'Token');
@@ -87,10 +97,17 @@ function onSocketConnect(protocol)
                  { "type" : "active",
                    "user" : user,
                    "page" : currentPage,
-                   "token" : token }
+                   "token" : token,
+                   "url" : window.location.href }
                });
 
-   document.title = "Home Control";
+   if (socketStateInterval)
+      clearInterval(socketStateInterval);
+
+   socketStateInterval = setInterval(function() {
+      updateSocketState();
+   }, 1*1000);
+
    onSmalDevice = window.matchMedia("(max-width: 740px)").matches;
    console.log("onSmalDevice : " + onSmalDevice);
 }
@@ -108,7 +125,7 @@ function connectWebSocket(useUrl, protocol)
          if (isActive === null)     // wurde beim Schliessen auf null gesetzt
             onSocketConnect(protocol);
       }, onclose: function () {
-         isActive = null;           // auf null setzen, dass ein neues login aufgerufen wird
+         isActive = null;           // auf null setzen, damit ein neues login aufgerufen wird
       }, onmessage: function (msg) {
          dispatchMessage(msg.data)
       }.bind(this)
@@ -116,6 +133,38 @@ function connectWebSocket(useUrl, protocol)
 
    if (!socket)
       return !($el.innerHTML = "Your Browser will not support Websockets!");
+}
+
+var socketStateCount = 0;
+
+function updateSocketState()
+{
+   if (!$('#socketState').length)
+      return ;
+
+   // VDR did not support ping
+
+   if (currentPage != "vdr") {
+      if (lastPingAt + 4000 <= new Date().getTime()) {
+         console.log("Warning: Reconnecting web socket");
+         socket.reopen();
+         lastPingAt = new Date().getTime();
+      }
+   }
+
+   let circle = 'yellowCircle';
+
+   if (socketStateCount++ % 2)
+      circle = 'grayCircle';
+   else if (!socket || socket.ws.readyState != WebSocket.OPEN)
+      circle = 'redCircle';
+   else
+      circle = 'greenCircle';
+
+   $('#socketState').attr('class', '');
+   $('#socketState').addClass('socketState ' + circle);
+
+   // console.log("updated socket state to", $('#socketState').attr('class'));
 }
 
 function sleep(ms) {
@@ -266,12 +315,16 @@ function dispatchMessage(message)
    var jMessage = JSON.parse(message);
    var event = jMessage.event;
 
-   if (event != "chartdata")
-      console.log("got event: " + event);
+//   if (event != "chartdata")
+//      console.log("got event: " + event);
 
    if (event == "result") {
       hideProgressDialog();
       showInfoDialog(jMessage.object);
+   }
+   else if (event == "ping") {
+      // console.log("Got ping");
+      lastPingAt = new Date().getTime();
    }
    else if (event == "init") {
       // console.log("init " + JSON.stringify(jMessage.object, undefined, 4));
@@ -298,6 +351,8 @@ function dispatchMessage(message)
          updateSchema();
       else if (currentPage == 'list')
          updateList();
+      else if (currentPage == 'iosetup')
+         updateIoSetupValue();
    }
    else if (event == "schema") {
       initSchema(jMessage.object);
@@ -319,6 +374,7 @@ function dispatchMessage(message)
          $(document.body).css('background', 'transparent url(' + config.background + ') no-repeat 50% 0 fixed');
          $(document.body).css('background-size', 'cover');
       }
+      changeFavicon(config.instanceIcon);
       prepareMenu();
    }
    else if (event == "configdetails" && currentPage == 'setup') {
@@ -346,7 +402,10 @@ function dispatchMessage(message)
 
       if (jMessage.object.state == "confirm") {
          window.location.replace("index.html");
-      } else {
+      }
+      else {
+         currentPage = 'login';
+         initLogin();
          if (document.getElementById("confirm"))
             document.getElementById("confirm").innerHTML = "<div class=\"infoError\"><b><center>Login fehlgeschlagen</center></b></div>";
       }
@@ -364,6 +423,9 @@ function dispatchMessage(message)
    else if (event == "valuefacts") {
       valueFacts = jMessage.object;
       // console.log("valueFacts " + JSON.stringify(valueFacts, undefined, 4));
+
+      if (currentPage == "iosetup")
+         initIoSetup(valueFacts);
    }
    else if (event == "images") {
       images = jMessage.object;
@@ -381,6 +443,9 @@ function dispatchMessage(message)
       else if (currentPage == 'dashboard' && id == "chartwidget") { // the dashboard widget
          drawChartWidget(jMessage.object);
       }
+      else if (currentPage == 'dashboard' && id == "chartwidgetbar") { // the dashboard bar chart widget
+         drawBarChartWidget(jMessage.object);
+      }
       else if (currentPage == 'dashboard' && id == "chartdialog") { // the dashboard chart dialog
          drawChartDialog(jMessage.object);
       }
@@ -393,6 +458,14 @@ function dispatchMessage(message)
    }
    else if (event == "alerts") {
       initAlerts(jMessage.object);
+   }
+   else if (event == "lmcdata") {
+      lmcData = jMessage.object;
+      if (currentPage == 'lmc')
+         updateLmc();
+   }
+   else if (event == "lmcmenu") {
+      lmcMenu(jMessage.object);
    }
    else if (event == "s3200-state") {
       s3200State = jMessage.object;
@@ -426,19 +499,21 @@ function prepareMenu()
    var html = "";
    // var haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
 
-   if (kioskMode)
+   if (kioskMode == 1)
       return ;
 
-   document.title = config.heatingType + ' Control';
-
+   document.title = config.instanceName;
    console.log("prepareMenu: " + currentPage);
 
-   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dashboards</button>';
-   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
+   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dash</button>';
+   if (config.showList == '1')
+      html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'chart\')">Charts</button>';
-   html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Schema</button>';
-
-   if (config.vdr === '1')
+   if (config.schema)
+      html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Schema</button>';
+   if (config.lmcHost != '')
+      html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'lmc\')">Squeezebox</button>';
+   if (config.vdr != '')
       html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'vdr\')">VDR</button>';
 
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'menu\')">Service Menü</button>';
@@ -451,11 +526,14 @@ function prepareMenu()
       html += '<button class="rounded-border button1" onclick="mainMenuSel(\'setup\')">Setup</button>';
 
    html +=
-      '<button id="burgerMenu" class="rounded-border button1 menuLogin" onclick="menuBurger()">' +
-      ' <div></div>' +
-      ' <div></div>' +
-      ' <div></div>' +
-      '</button>';
+      '<div style="display:flex;float:right;">' +
+      ' <span id="socketState" class="socketState ' + 'grayCircle' + '" style="min-width:max-content;"></span>' +
+      ' <button id="burgerMenu" class="rounded-border button1 burgerMenu" onclick="menuBurger()">' +
+      '  <div></div>' +
+      '  <div></div>' +
+      '  <div></div>' +
+      ' </button>' +
+      '</div>';
 
    // buttons below menu
 
@@ -479,13 +557,6 @@ function prepareMenu()
    if (currentPage == "setup") {
       html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "</div>";
-   }
-   else if (currentPage == "iosetup") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeIoSetup()\">Speichern</button>";
-      html += "  <button class=\"rounded-border buttonOptions\" title=\"filter alle/aktive\" id=\"filterIoSetup\" onclick=\"filterIoSetup()\">[alle]</button>";
-      html += '  <input id="incSearchName" class="input rounded-border clearableOD" placeholder="filter..." type="search" oninput="doIncrementalFilterIoSetup()"</input>';
       html += "</div>";
    }
    else if (currentPage == "groups") {
@@ -576,7 +647,9 @@ function mainMenuSel(what)
 
       if (currentPage == "vdr") {
          protocol = "osd2vdr";
-         url = "ws://" + location.hostname + ":4444";
+         // url = "ws://" + location.hostname + ":4444";
+         url = "ws://" + config.vdr;
+         console.log("connecting ", url);
       }
 
       connectWebSocket(url, protocol);
@@ -614,6 +687,8 @@ function mainMenuSel(what)
       initDashboard();
    else if (currentPage == "vdr")
       initVdr();
+   else if (currentPage == "lmc")
+      initLmc();
    else if (currentPage == "chart") {
       event = "chartdata";
       // console.log("config.chartSensors: " + config.chartSensors);
@@ -685,7 +760,7 @@ function initLogin()
 function showSyslog(log)
 {
    $('#container').removeClass('hidden');
-   document.getElementById("container").innerHTML = '<div id="syslogContainer" class="log"></div>';
+   document.getElementById("container").innerHTML = '<div id="syslogContainer" class="setupContainer log"></div>';
 
    var root = document.getElementById("syslogContainer");
    root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
@@ -736,8 +811,8 @@ function showSystem(system)
 
    html += '</div>';
 
-   $('#systemContainer').html(html);
-
+   $('#systemContainer').html(html)
+      .addClass('setupContainer');
 }
 
 window.toggleMode = function(address, type)
@@ -788,7 +863,7 @@ function doLogout()
 function hideAllContainer()
 {
    $('#dashboardMenu').addClass('hidden');
-   $('#stateContainer').addClass('hidden');
+   $('#controlContainer').addClass('hidden');
    $('#container').addClass('hidden');
 }
 
@@ -812,19 +887,23 @@ function prepareChartRequest(jRequest, sensors, start, range, id)
    jRequest["id"] = id;
    jRequest["name"] = "chartdata";
 
-   // console.log("requesting chart for '" + start + "' range " + range);
-
    if (gaugeSelected) {
-      jRequest["sensors"] = sensors;
+      // console.log("requesting gauge chart for '" + start + "' range " + range);
       jRequest["start"] = 0;   // default (use today-range)
       jRequest["range"] = 1;
+      jRequest["sensors"] = sensors;
    }
    else {
+      console.log("requesting chart for '" + start + "' range " + range);
       jRequest["start"] = start == 0 ? 0 : Math.floor(start.getTime()/1000);  // calc unix timestamp
       jRequest["range"] = range;
       jRequest["sensors"] = sensors;
    }
 }
+
+//***************************************************************************
+// Chart Widget
+//***************************************************************************
 
 function drawChartWidget(dataObject)
 {
@@ -836,7 +915,7 @@ function drawChartWidget(dataObject)
       widgetCharts[id] = null;
    }
 
-   var data = {
+   const config = {
       type: "line",
       data: {
          datasets: []
@@ -890,18 +969,131 @@ function drawChartWidget(dataObject)
    for (var i = 0; i < dataObject.rows.length; i++) {
       var dataset = {};
 
+      console.log("draw chart row with", dataObject.rows[i].data.length, "points");
+
       dataset["data"] = dataObject.rows[i].data;
       dataset["backgroundColor"] = kioskMode ? "#3498db33" : "#3498db1A";  // fill color
-      dataset["borderColor"] = "#3498db";      // line color
+      dataset["borderColor"] = "#3498db";        // line color
       dataset["borderWidth"] = 1;
       dataset["fill"] = true;
       dataset["pointRadius"] = 1.5;
-      data.data.datasets.push(dataset);
+      config.data.datasets.push(dataset);
    }
 
    var canvas = document.getElementById(id);
-   widgetCharts[id] = new Chart(canvas, data);
+   widgetCharts[id] = new Chart(canvas, config);
 }
+
+//***************************************************************************
+// Bar Chart Widget
+//***************************************************************************
+
+function drawBarChartWidget(dataObject)
+{
+   // #TODO
+   // Bar chart nur für monatlich implementiert,
+   // hier fehlt noch die Konfiguration (widget.interval) für die Zusammenfassung auf z.B.:
+   // ..., jährlich, monatlich, wöchentlich, täglich, stündlich, ...
+   // nebst passendem 'group by' select seitens des daemon mit Auswahl ob avg oder max verwendet werden soll
+   //  letzteres ist derzeit krude hardcoded
+   // soiwie die Anpassung der Axis im chart hier
+
+   var root = document.getElementById("container");
+   var id = "widget" + dataObject.rows[0].sensor;
+
+   if (widgetCharts[id] != null) {
+      widgetCharts[id].destroy();
+      widgetCharts[id] = null;
+   }
+
+   const _config = {
+      type: 'bar',
+      data: {
+         datasets: []
+      },
+      options: {
+         responsive: true,
+         maintainAspectRatio: false,
+         plugins: {
+            legend: {
+               position: 'top',
+            },
+            title: {
+               display: true,
+               text: 'Chart.js Bar Chart'
+            }
+         }
+      },
+   };
+
+   const config = {
+      type: "bar",
+      data: {
+         datasets: []
+      },
+      options: {
+         legend: {
+            display: false
+         },
+         responsive: true,
+         maintainAspectRatio: false,
+         aspectRatio: false,
+         scales: {
+            xAxes: [{
+               type: "time",
+               time: {
+                  unit: 'month',
+                  unitStepSize: 1,
+                  displayFormats: {
+                     month: 'MMMM',
+                     day: 'HH'
+                  }},
+               gridLines: {
+                  display: false,
+                  color: "gray"
+               },
+               ticks: {
+                  padding: 0,
+                  fontColor: "darkgray"
+               }
+            }],
+            yAxes: [{
+               display: true,
+               gridLines: {
+                  color: "darkgray",
+                  zeroLineColor: 'darkgray'
+               },
+               ticks: {
+                  padding: 5,
+                  maxTicksLimit: 5,
+                  fontColor: "darkgray"
+               }
+            }]
+         }
+      }
+   };
+
+   for (var i = 0; i < dataObject.rows.length; i++) {
+      var dataset = {};
+
+      console.log("draw bar chart row with", dataObject.rows[i].data.length, "points");
+      console.log(dataObject.rows[i].data);
+      dataset["data"] = dataObject.rows[i].data;
+      dataset["backgroundColor"] = kioskMode ? "#3498db33" : "#3498db1A";  // fill color
+      dataset["borderColor"] = "#3498db";        // line color
+      dataset["borderWidth"] = 1;
+      dataset["fill"] = true;
+      dataset["pointRadius"] = 1.5;
+      config.data.datasets.push(dataset);
+   }
+
+   var canvas = document.getElementById(id);
+   widgetCharts[id] = new Chart(canvas, config);
+}
+
+//***************************************************************************
+// Chart Dialog
+//***************************************************************************
 
 function drawChartDialog(dataObject)
 {
@@ -1075,4 +1267,18 @@ function fileExist(url)
 function getTotalHeightOf(id)
 {
    return $('#' + id).outerHeight();
+}
+
+function lNow()
+{
+   var currentDateTime = new Date();
+   return currentDateTime.getTime() / 1000;
+}
+
+function changeFavicon(src)
+{
+   src = 'img/' + src;
+   $('link[rel="shortcut icon"]').attr('href', src)
+   $('link[rel="icon"]').attr('href', src)
+   $('link[rel="apple-touch-icon-precomposed"]').attr('href', src)
 }

@@ -1,5 +1,5 @@
 /*
- * common.h: EPG2VDR plugin for the Video Disk Recorder
+ * common.h
  *
  * See the README file for copyright information and how to reach the author.
  *
@@ -17,7 +17,6 @@
 #include <string.h>
 #include <zlib.h>
 #include <time.h>
-#include <pthread.h>
 
 #include <string>
 #include <map>
@@ -95,24 +94,30 @@ enum Misc
 
 enum Eloquence
 {
-   eloInfo           = 0x0001,
-   eloDetail         = 0x0002,
-   eloDebug          = 0x0004,
-   eloDebug2         = 0x0008,
-   eloWebSock        = 0x0010,
-   eloDebugWebSock   = 0x0020,
-   eloMqtt           = 0x0040,
-   eloDb             = 0x0080,
-   eloDebugDb        = 0x0100,
+   eloInfo           = 0x00001,
+   eloDetail         = 0x00002,
+   eloDebug          = 0x00004,
+   eloDebug2         = 0x00008,
+   eloWebSock        = 0x00010,
+   eloDebugWebSock   = 0x00020,
+   eloMqtt           = 0x00040,
+   eloDb             = 0x00080,
+   eloDebugDb        = 0x00100,
 
-   eloNodeRed        = 0x0200,   // node-red MQTT topics
-   eloDeconz         = 0x0400,
-   eloDebugDeconz    = 0x0800,
-   eloWeather        = 0x1000,
-   eloHomeMatic      = 0x4000,
-   eloDebugHomeMatic = 0x8000,
+   eloNodeRed        = 0x00200,   // node-red MQTT topics
+   eloDeconz         = 0x00400,
+   eloDebugDeconz    = 0x00800,
+   eloWeather        = 0x01000,
 
-   eloAlways         = 0x0000,
+   eloHomeMatic      = 0x02000,
+   eloDebugHomeMatic = 0x04000,
+   eloLua            = 0x08000,
+   eloGroWatt        = 0x10000,
+
+   eloLmc            = 0x20000,
+   eloDebugLmc       = 0x40000,
+
+   eloAlways         = 0x00000
 };
 
 class Elo
@@ -163,7 +168,7 @@ class MemoryStruct
    public:
 
       MemoryStruct()   { expireAt = 0; memory = 0; zmemory = 0; clear(); }
-      MemoryStruct(const MemoryStruct* o)
+      explicit MemoryStruct(const MemoryStruct* o)
       {
          size = o->size;
          memory = (char*)malloc(size);
@@ -272,23 +277,23 @@ class MemoryStruct
 
       // data
 
-      char* memory;
-      long unsigned int size;
+      char* memory {};
+      long unsigned int size {0};
 
-      char* zmemory;
-      long unsigned int zsize;
+      char* zmemory {};
+      long unsigned int zsize {0};
 
       // tag attribute
 
-      char tag[100+TB];              // the tag to be compared
-      char name[100+TB];             // content name (filename)
-      char contentType[100+TB];      // e.g. text/html
-      char mimeType[100+TB];         //
-      char contentEncoding[100+TB];  //
-      int headerOnly;
-      long statusCode;
-      time_t modTime;
-      time_t expireAt;
+      char tag[100+TB] {};              // the tag to be compared
+      char name[100+TB] {};             // content name (filename)
+      char contentType[100+TB] {};      // e.g. text/html
+      char mimeType[100+TB] {};         //
+      char contentEncoding[100+TB] {};  //
+      int headerOnly {0};
+      long statusCode {0};
+      time_t modTime {0};
+      time_t expireAt {0};
       std::map<std::string, std::string> headers;
 };
 
@@ -337,7 +342,7 @@ class cMyMutexLock
 {
    public:
 
-      cMyMutexLock(cMyMutex* Mutex = NULL);
+      explicit cMyMutexLock(cMyMutex* Mutex = NULL);
       ~cMyMutexLock();
       bool Lock(cMyMutex* Mutex);
 
@@ -357,6 +362,7 @@ std::string executeCommand(const char* cmd);
   const char* getUniqueId();
 #endif
 
+const char* bin2string(unsigned long n);
 const char* bin2string(word n);
 const char* bin2string(byte n);
 const char* bytesPretty(double bytes, int precision = 0);
@@ -374,7 +380,7 @@ void removeWord(std::string& pattern, std::string word);
 void prepareCompressed(std::string& pattern);
 std::string strReplace(const std::string& what, const std::string& with, const std::string& subject);
 std::string strReplace(const std::string& what, long with, const std::string& subject);
-std::string strReplace(const std::string& what, double with, const std::string& subject);
+std::string strReplace(const std::string& what, double with, const std::string& subject, const char* decPoint = nullptr);
 
 bool isNan(double value);
 const char* plural(int n, const char* s = "s");
@@ -406,6 +412,7 @@ int chkDir(const char* path);
 int loadFromFile(const char* infile, MemoryStruct* data);
 int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
 int loadTailLinesFromFile(char const* filename, int count, std::vector<std::string>& lines);
+int downloadFile(const char* url, MemoryStruct* data, int timeout = 30, const char* httpproxy = 0);
 int storeToFile(const char* filename, const char* data, int size = 0);
 
 struct FsStat

@@ -19,11 +19,12 @@
     <link rel="stylesheet" type="text/css" href="jquery/spectrum.css">
     <link rel="stylesheet" type="text/css" href="jquery/wheelcolorpicker.css">
     <link rel="stylesheet" type="text/css" href="jquery/picktim.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="css/all.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
     <link rel="stylesheet" type="text/css" href="scrollbar.css">
 
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
+<!-- <link rel="stylesheet" href="css/materialdesignicons.min.css">  -->
 
     <script src="jquery/jquery-3.5.1.min.js"></script>
     <script src="jquery/jquery-migrate-3.0.0.min.js"></script>
@@ -48,18 +49,19 @@
     <script type="text/javascript" src="list.js"></script>
     <script type="text/javascript" src="chart.js"></script>
     <script type="text/javascript" src="setup.js"></script>
+    <script type="text/javascript" src="iosetup.js"></script>
     <script type="text/javascript" src="usercfg.js"></script>
     <script type="text/javascript" src="alerts.js"></script>
     <script type="text/javascript" src="schema.js"></script>
     <script type="text/javascript" src="groups.js"></script>
     <script type="text/javascript" src="images.js"></script>
     <script type="text/javascript" src="commands.js"></script>
-
+    <script type="text/javascript" src="lmc.js"></script>
+    <script type="text/javascript" src="vdr.js"></script>
     <script type="text/javascript" src="menu.js"></script>
     <script type="text/javascript" src="pellets.js"></script>
     <script type="text/javascript" src="errors.js"></script>
 <!--    <script type="text/javascript" src="ph.js"></script> -->
-    <script type="text/javascript" src="vdr.js"></script>
   </head>
   <body>
 
@@ -68,10 +70,11 @@
       <div id="infoBox" class="rounded-border infoBox"></div>
       <header id="header" class="rounded-border header"></header>
     </div>
+    <div id="dashboardMenu" class="rounded-border menuDashboard"></div>
 
     <div id="content" class="content">
-      <div id="stateContainer" class="stateInfo"></div>
-      <div id="dashboardMenu" class="rounded-border menuDashboard"></div>
+
+      <div id="controlContainer" class="controlContainer hidden"></div>
       <div id="container" class="container"></div>
     </div>
 

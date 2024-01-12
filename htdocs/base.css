@@ -91,14 +91,14 @@ button:focus {
     left: 0.5rem;
 }
 
-.menuLogin
+.burgerMenu
 {
     float: right;
     width: 42px;
     padding: 4px 4px !important;
 }
 
-.menuLogin > div {
+.burgerMenu > div {
     height: 2px;
     margin: 4px;
     background-color: white;
@@ -134,6 +134,8 @@ button:focus {
     visibility: hidden !important;
     display: none !important;
 }
+
+/* for progress dialog */
 
 .progress {
   border: 5px solid white;
@@ -175,6 +177,11 @@ button:focus {
   animation: spin 2s linear infinite;
 }
 
+.button-group-spacing
+{
+    height: 16px;
+}
+
 .button1
 {
     background-color: var(--caption1);
@@ -198,7 +205,7 @@ button:focus {
     color: var(--buttonFont);
     padding: 3px 10px;
     text-decoration: none;
-    box-shadow: 1px 1px 5px 1px var(--shadow);
+    height: 24px;
 }
 
 .button2:hover
@@ -216,12 +223,26 @@ button:focus {
     height: 28px;
     background-color: slategray;
     text-decoration: none;
-    box-shadow: 1px 1px 5px 1px var(--shadow);
 }
 
 .buttonOptions:hover
 {
-    background-color: darkslategray;
+    background-color: #335656a1;
+}
+
+.tool-button
+{
+    height: 32px;
+    color: white;
+    font-size: 14px !important;
+    background-color: var(--neutral3);
+    cursor: pointer;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    white-space: nowrap;
+    vertical-align: middle;
+    transition: 0.3s;
+    margin-bottom: 4px;
 }
 
 .menuDashboard
@@ -235,7 +256,7 @@ button:focus {
 .buttonDashboard
 {
     display: inline;
-    margin: 5px 0px 5px 4px;
+    margin: 5px 3px 5px 3px;
     color: white;
     background-color: transparent;
     text-decoration: none;
@@ -245,7 +266,7 @@ button:focus {
 
 .buttonDashboard:hover
 {
-/*    border-bottom-color: lightgray;
+/*  border-bottom-color: lightgray;
     border-bottom-style: solid;
     border-bottom-width: 2px; */
 }
@@ -286,7 +307,7 @@ button:focus {
 
 .seperatorFold
 {
-    background-color: darkslategray;
+    background-color: slategray;
     color: var(--light2);
     padding: 5px 15px;
     font-weight: bold;
@@ -295,10 +316,28 @@ button:focus {
     cursor: pointer;
 }
 
+.seperator
+{
+    background-color: slategray;
+    color: var(--light2);
+    padding: 5px 15px;
+    font-weight: bold;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
 .tableImage
 {
     width: 80%;
     margin: 10%;
+}
+
+.labelB1
+{
+    font-size: 12px;
+    color: var(--neutral4);
+    margin-left: 6px;
+    font-weight: normal;
 }
 
 /* ----------------------- */
@@ -306,57 +345,85 @@ button:focus {
 
 .input
 {
-    background-color: var(--edit);
-    color: black;
-/*    background-color: transparent;
-    color: white; */
-
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
+    margin-bottom: 2px;
     padding: 3px;
+    height: 32px;
+    box-sizing: border-box;
+    font-size: 14px;
 }
 
 .inputTime
 {
-    background-color: var(--edit);
-    color: black;
-
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
+    height: 32px;
+    box-sizing: border-box;
     padding: 3px;
-    width: 45px;
+    width: 65px;
 }
 
 .inputNum
 {
-    background-color: var(--edit);
-    color: black;
-
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
+    margin-bottom: 2px;
     padding: 3px;
     width: 75px;
-    height: 21px;
+    height: 32px;
+    box-sizing: border-box;
 }
 
 .inputFloat
 {
-    background-color: var(--edit);
-    color: black;
-
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
+    margin-bottom: 2px;
     padding: 3px;
     width: 75px;
-    height: 21px;
+    height: 32px;
+    box-sizing: border-box;
 }
 
 .inputSetting
 {
-    background-color: var(--edit);
-    color: black;
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
+    margin-bottom: 2px;
     padding: 3px;
     margin: 1px;
+    height: 32px;
+    box-sizing: border-box;
     width: 100%;
 }
 
+.inputSettingScript
+{
+    font-family: monospace !important;
+    white-space: pre !important;
+}
+}
 span > input
 {
     display: inline-block;
@@ -370,16 +437,14 @@ span > input
 
 .time-input
 {
-    background-color: var(--edit);
+    background-color: var(--light3);
+    border-width: 1px;
+    border-color: var(--neutral2);
+    border-style: solid;
+    color: white;
     margin-top: 2px;
     padding: 3px;
     width: 45px;
-    color: black;
-
-    border-radius: var(--borderRadius);
-    border-color: var(--borderColor);
-    border-style: none;
-    border-width: 1px;
 }
 
 .timepicker
@@ -440,11 +505,10 @@ span > input
 
 .log
 {
-    background-color: var(--light1);
-    text-decoration: none;
+    /* text-decoration: none;
     font-size: 16px;
     width: 100%;
-    padding: 5px;
+    padding: 5px; */
     border-radius: 5px;
     white-space: pre;
 }
@@ -471,15 +535,6 @@ span > input
     border-color: var(--borderColorSchemaValue);
     border-style: var(--borderStyleSchemaValue);
     border-width: 1px;
-}
-
-.inputTableAlert
-{
-    background-color: var(--light1);
-    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
-    margin-top: 2px;
-    color: black;
-    padding: 5px;
 }
 
 .inputTableAlert > div > span
@@ -536,7 +591,8 @@ span > input
 
 .inputTableConfig
 {
-    background-color: var(--light1);
+    /* background-color: var(--light1); */
+    background: linear-gradient(to bottom right, #00000096, black); /* Standard syntax (must be last) */
     padding: 5px;
 }
 
@@ -552,6 +608,7 @@ span > input
 
 .inputTableConfig > div > span:nth-child(3n)
 {
+    margin-left: 10px;
     width: 45%;
     min-width: 100px;
     display: inline-table;
@@ -560,14 +617,49 @@ span > input
     color: var(--listFontColor);
 }
 
+.inputTableConfig > div > span > input[type="search"]
+{
+    width: 100%;
+}
+
+.inputTableConfig > div > span > textarea
+{
+    width: 100%;
+    resize: vertical;
+    padding: 0px;
+}
+
+.inputTableConfig > div > span > select
+{
+    width: 100%;
+}
+
+.content
+{
+    display: flex;
+}
+
+.controlContainer
+{
+    padding: var(--containerPadding);
+    font-size: 10px;
+    color: var(--light2);
+    margin: 0px 4px 0px 0px;
+    min-width: 180px;
+    overflow-y: auto;
+}
+
 .container
 {
     overflow-y: auto;
+    width: -webkit-fill-available;
+    width: -moz-available;
 }
 
 .listContainer
 {
     font-size: 18px;
+    padding: var(--containerPadding);
 }
 
 .listContainer > div > div > img
@@ -598,7 +690,6 @@ span > input
 }
 
 .listRow {
-/*    background: linear-gradient(to bottom right, var(--light3), var(--light1)); */
     background-color: var(--widgetBackground);
     border-radius: var(--borderRadius);
     border-color: var(--borderColor);
@@ -624,7 +715,7 @@ span > input
 {
     margin-left: 15px;
     align-self: center;
-    height: 18px;
+    /* height: 18px; */
 }
 
 .tableRow > button
@@ -636,7 +727,7 @@ span > input
 
 .tableRow > input[type='search']
 {
-    height: 24px;
+    /* height: 24px;*/
 }
 
 .tableRow > div
@@ -663,49 +754,88 @@ div.greenCircle
     background-color: green;
 }
 
+.socketState
+{
+    min-width: 15px !important;
+    height: 15px !important;
+    align-self: center;
+}
+
+.greenCircle
+{
+    width: 12px;
+    height: 12px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: #4D9143;
+}
+
+.redCircle
+{
+    width: 12px;
+    height: 12px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: #c11010;
+}
+
+.grayCircle
+{
+    width: 12px;
+    height: 12px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: var(--neutral2);
+}
+
+.yellowCircle
+{
+    width: 12px;
+    height: 12px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background-color: yellow;
+}
+
+.setupContainer
+{
+    background: linear-gradient(to bottom right, #00000096, black);
+    width: fit-content;
+    padding: var(--containerPadding);
+    width: -webkit-fill-available;
+    width: -moz-available;
+}
+
 .tableMultiCol
 {
     width: 100%;
-    background-color: var(--light1);
+    border-collapse: collapse;
     color: var(--buttonFont);
     margin-top: 5px;
-    padding: 0;
-    font-size: 17px;
 }
 
-.tableMultiCol > div
+table.tableMultiCol thead
 {
-    background-color: var(--light3);
-    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    font-weight: bold;
 }
 
 .tableMultiColCell
 {
     padding-right: 12px;
-    height: 30px;
 }
 
-table.tableMultiCol tr:nth-child(even)
+table.tableMultiCol tr
 {
-    background-color: var(--light3);
-    background: linear-gradient(to bottom, var(--light1), var(--light3)); /* Standard syntax (must be last) */
-}
-
-table.tableMultiCol tr:nth-child(odd)
-{
-    background-color: var(--light1);
-    background: linear-gradient(to bottom right, var(--light1), var(--light3)); /* Standard syntax (must be last) */
-}
-
-.tableMultiCol > div > span
-{
-    padding: 5px 10px 5px 10px;
-    display: inline-block;
-    text-align: left;
+    height: 48px;
+    border-width: 1px;
+    border-color: white;
+    border-bottom-style: solid;
 }
 
 .stateInfo
 {
+    padding: var(--containerPadding);
+    padding-bottom: 0px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -792,22 +922,48 @@ table.tableMultiCol tr:nth-child(odd)
     flex-wrap: wrap;
     justify-content: center;
     margin: 5px;
-    width: 90%;
-    max-width: 450px;
+/*    width: 90%;
+    max-width: 450px;*/
 }
 
 .vdrFbContainer > div
 {
+    display: block;
     overflow: hidden;
     width: 31%;
+    height: 90vh;
     margin: 2px;
 }
 
-.vdrButtonColorDiv
+@media only screen and (orientation:portrait)
 {
-    width: 23% !important;
-    height: 60px;
+    .vdrFbContainer > div { width: 99%; height: 33vh; }
+}
+
+.vdrFbContainer > div > div
+{
+    display: flex;
+    height: 32%;
+}
+
+.vdrFbContainer > div > div > div
+{
+    display: block;
     margin: 2px;
+    width: 32% !important;
+/*    aspect-ratio : 1 / 1;*/
+}
+
+@media only screen and (orientation:landscape)
+{
+    .vdrFbContainer > div > div > div { width: 32%; }
+    .vdrButtonColorDiv { width: 23% !important; }
+}
+
+@media only screen and (orientation:portrait)
+{
+/*    .vdrFbContainer > div > div > div { height: 32% !important; }*/
+    .vdrButtonColorDiv { width: 10% !important; }
 }
 
 .vdrButton
@@ -888,7 +1044,14 @@ table.tableMultiCol tr:nth-child(odd)
 
 .chartCanvas
 {
-    background-color: var(--chartBackground);
+    background-color: var(--background);
+}
+
+.chartContainer
+{
+    margin: 8px;
+    height: 75%;
+    min-height: 400px;
 }
 
 .chartDialogCanvas
@@ -907,21 +1070,23 @@ table.tableMultiCol tr:nth-child(odd)
 
 .chartButtons
 {
-    display: flex;
+    display: flow;
     justify-content: center;
     align-items: center;
     padding: 5px;
     background-color: var(--background);
+    margin: 0px 8px 0px 8px;
+    text-align: center;
 }
 
 .chartButton
 {
     display: inline;
-    width: 200px;
-    padding: 4px;
-    margin: 5px;
+    width: 80px;
+    padding: 2px;
+    margin: 2px;
     color: white;
-    font-size: x-large;
+    font-size: large;
     background-color: slategray;
 }
 
@@ -940,8 +1105,8 @@ table.tableMultiCol tr:nth-child(odd)
 {
     display: inline;
     min-width: 76px;
-    padding: 4px;
-    margin: 5px;
+    padding: 2px;
+    margin: 2px;
     color: white;
     height: 28px;
     background-color: slategray;
@@ -956,8 +1121,9 @@ table.tableMultiCol tr:nth-child(odd)
 {
     display: flex;
     flex-wrap: wrap;
-    padding: 15px 15px 15px 15px;
+    padding: 6px;
     background-color: var(--background);
+    margin: 8px;
 }
 
 .chartSel
@@ -1104,9 +1270,8 @@ table.tableMultiCol tr:nth-child(odd)
     display: grid;
     grid-template-areas:
       'title'
-      'main'
-      'progress';
-    grid-template-rows: 12% 75% 13%;
+      'main';
+    grid-template-rows: 12% 88%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1261,7 +1426,7 @@ table.tableMultiCol tr:nth-child(odd)
     background-color: transparent;
     cursor: pointer;
     border: none;
-    color: var(--widgetTitleColor);
+    color: var(--listFontColor);
     justify-self: center;
     text-align: center;
     align-self: center;
@@ -1271,6 +1436,7 @@ table.tableMultiCol tr:nth-child(odd)
     white-space: nowrap;
     padding: 0px;
     margin: 0px;
+    user-select: none;
 }
 
 
@@ -1285,7 +1451,7 @@ table.tableMultiCol tr:nth-child(odd)
     font-weight: bold;
 }
 
-.widget-progress {
+/*.widget-progress {
     grid-area: progress;
     background-color: gray;
     width: 80%;
@@ -1300,7 +1466,7 @@ table.tableMultiCol tr:nth-child(odd)
     height: 100%;
     background-color: #3498db;
     border-radius: 8px;
-}
+}*/
 
 .widget-mode
 {
@@ -1328,10 +1494,8 @@ table.tableMultiCol tr:nth-child(odd)
 
 .widget-main-gauge
 {
-    display: grid;
     grid-area: main;
-    width: 100%;
-/*    height: 100%;*/
+    width: inherit;
     align-self: center;
 }
 
@@ -1394,7 +1558,7 @@ table.tableMultiCol tr:nth-child(odd)
     overflow: hidden;
     background-color: transparent;
     margin-top: 5px;
-    color: red;
+    color: #ff5757;
     text-align: right;
     margin-right: 5px;
 }
@@ -1452,7 +1616,7 @@ table.tableMultiCol tr:nth-child(odd)
 .widget > button > img
 {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 90%;
     justify-self: center;
     vertical-align: middle;
 }
@@ -1493,6 +1657,196 @@ table.tableMultiCol tr:nth-child(odd)
 .widgetGauge.participation path.data-arc
 {
     stroke: #3498db;
+}
+
+/* -------------- */
+/* LMC */
+
+.lmcButton
+{
+    margin: 1px;
+    color: white;
+    padding: 0px;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 3em;
+}
+
+.lmcButton:hover
+{
+    opacity: 0.6;
+}
+
+.lmcWidget
+{
+    /* overflow: hidden; */
+    margin: 2px;
+    background-color: var(--widgetBackground);
+    padding: 4px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.lmcContainer
+{
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.lmcLeftColumn
+{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+}
+
+.lmcRightColumn
+{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+}
+
+.lmcControl
+{
+    display: flex;
+    flex-wrap: wrap;
+    margin: 2px;
+    background-color: var(--widgetBackground);
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.lmcCurrentTrack
+{
+    font-size: x-large;
+    margin: 2px;
+    background-color: var(--widgetBackground);
+    padding: 4px;
+    box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.lmcCurrentTrack > div
+{
+}
+
+.lmcCurrentTrack > div:nth-child(n+2)
+{
+    white-space: nowrap;
+}
+
+.lmcCurrentTitle
+{
+    font-size: xxx-large;
+    font-weight: bold;
+    color: var(--yellow2);
+    line-height: 1em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+.lmcCurrentArtist
+{
+    font-size: xx-large;
+    color: var(--yellow2);
+}
+
+.lmcPlaylist
+{
+    white-space: nowrap;
+    overflow: auto;
+    flex-grow: 1;
+    margin: 2px;
+}
+
+.lmcPlaylist > div
+{
+    display: flex;
+    background-color: var(--widgetBackground);
+    margin: 2px;
+    padding: 2px;
+    height: 60px;
+    align-items: center;
+}
+
+.lmcPlaylist > div > span:nth-child(1)
+{
+    width: 55px;
+    text-align: center;
+}
+
+.lmcPlaylist > div > span:nth-child(2)
+{
+    width: 100%;
+    margin-left: 10px;
+    overflow: hidden;
+}
+
+.lmcPlaylist > div > span:nth-child(3)
+{
+    font-size: xxx-large;
+    color: var(--yellow2);
+}
+
+.lmcPlaylist > div > span > img
+{
+    height: 55px;
+    width: auto;
+}
+
+.lmcPlaylist > div > span > div:nth-child(1)
+{
+    font-size: large;
+}
+
+.lmcMenu
+{
+    white-space: nowrap;
+    overflow: auto;
+    flex-grow: 1;
+    margin: 2px;
+}
+
+.lmcMenu > div
+{
+    /* line-height: 30px;
+    vertical-align: middle; */
+    padding: 12px;
+    background-color: var(--widgetBackground);
+}
+
+.lmcCover
+{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.lmcCover > img
+{
+    width: 95%;
+    height: 95%;
+    object-fit: contain;
+}
+
+.lmcTrackProgress
+{
+  background-color: var(--light3);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.lmcTrackProgressBar
+{
+  width: 0%;
+  height: 10px;
+  background-color: var(--yellow2);
+  border-radius: 10px;
 }
 
 /* -------------- */
@@ -1545,7 +1899,7 @@ dialog::backdrop, #backdrop
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 15% 70% 15%; }
+    .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
@@ -1567,7 +1921,7 @@ dialog::backdrop, #backdrop
     .menuDashboard             { margin: 2px; }
     .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; }
     .widgetGauge               { grid-template-rows: 30% 70%; }
-    .widget                    { grid-template-rows: 15% 70% 15%; }
+    .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widgetMeterLinear         { grid-template-rows: 15% 25% 60%; }
     .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
@@ -1583,7 +1937,7 @@ dialog::backdrop, #backdrop
 {
     .content                   { margin: 0px; }
     .widgetContainer > div     { width: 120px; height: 95px; margin: 1px; }
-    .widget                    { grid-template-rows: 15% 73% 12%; }
+    .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 14% 71%; }
     .buttonDashboard           { padding: 4px; margin: 0px 0px 0px 0px; }
     .chart-peak                { font-size: 0.7em; margin-top: 4px; }
@@ -1617,10 +1971,8 @@ dialog::backdrop, #backdrop
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
-body,
-html {
-  background: black;
-}
+/* schema line draw stuff  */
+
 .resizable {
   background: transparent;
   width: 50px;

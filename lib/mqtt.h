@@ -38,7 +38,7 @@ class Mqtt
 
       // connect / disconnect
 
-      virtual int connect(const char* aUrl, const char* user = 0, const char* password = 0);
+      virtual int connect(const char* aUrl, const char* user = nullptr, const char* password = nullptr);
       virtual int disconnect();
       virtual int isConnected() { return connected; }
 

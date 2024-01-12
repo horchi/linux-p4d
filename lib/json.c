@@ -187,7 +187,12 @@ const char* getStringFromJson(json_t* obj, const char* name, const char* def)
    if (!o)
       return def;
 
-   return json_string_value(o);
+   const char* s = json_string_value(o);
+
+   if (!s)
+      return def;
+
+   return s;
 }
 
 int getBoolFromJson(json_t* obj, const char* name, bool def)

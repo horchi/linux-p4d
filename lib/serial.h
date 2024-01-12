@@ -44,6 +44,7 @@ class Serial
       virtual int read(void* buf, size_t count, uint timeoutMs = 0);
       virtual int readByte(byte& v, int timeoutMs = 100);
       virtual int readWord(word& v, int timeoutMs = 100);
+      virtual int readSWord(sword& v, int timeoutMs = 100);
       virtual int write(void* line, int size = 0);
 
       // settings

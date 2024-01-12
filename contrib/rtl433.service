@@ -1,0 +1,18 @@
+[Unit]
+
+# git clone https://github.com/merbanan/rtl_433.git
+
+Description = RTL 433 to MQTT service
+After = network.target
+StartLimitInterval = 200
+StartLimitBurst = 5
+
+[Service]
+Type = simple
+ExecStart = /usr/local/bin/rtl_433 -F "mqtt://localhost:1883,events=rtl_433" -C si -R 19
+Restart = always
+RestartSec = 30
+
+[Install]
+
+WantedBy = multi-user.target

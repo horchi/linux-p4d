@@ -1,0 +1,2 @@
+
+W1MQTT_OPTS="-u tcp://gate:1883"

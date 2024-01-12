@@ -19,6 +19,7 @@
 
 #include "websock.h"
 #include "deconz.h"
+#include "lmccom.h"
 
 #define confDirDefault "/etc/" TARGET
 
@@ -130,6 +131,7 @@ class Daemon : public cWebInterface
          wtSpace,        // == 10
          wtTime,         // == 11  // dummy to display current time at WEBIF
          wtSymbolText,   // == 12
+         wtChartBar,     // == 13
          wtCount
       };
 
@@ -167,17 +169,17 @@ class Daemon : public cWebInterface
          std::string kind {"value"};       // { value | status | text | trigger }
          time_t last {0};
          double value {0.0};
-         bool working {false};             // actually working/moving (eg for blinds)
+         bool working {false};             // actually working/moving (eg for blinds or script running)
          Direction lastDir {dirOpen};
          bool state {false};
          std::string text;
          std::string image;
          bool disabled {false};
          bool valid {false};               // set if the value, text or state is valid
-         time_t next {0};                  // calculated next switch time
+         // time_t next {0};                  // calculated next switch time
          int battery {na};
-         int hue;                         // 0-360° hue
-         int sat;                         // 0-100% saturation
+         int hue;                          // 0-360° hue
+         int sat;                          // 0-100% saturation
 
          // fact
 
@@ -192,6 +194,7 @@ class Daemon : public cWebInterface
 
          // 'DO' specials
 
+         bool invertDO {true};
          OutputMode mode {omAuto};
          uint opt {ooUser};
       };
@@ -200,7 +203,13 @@ class Daemon : public cWebInterface
       {
          uint from;
          uint to;
-         bool inRange(uint t) const { return (from <= t && to >= t); }
+         bool inRange(uint t) const {
+            if (from < to)
+               return t >= from && t <= to;
+            if (from > to)
+               return t >= from || t <= to;
+            return false;
+         }
       };
 
       enum LogicalOperator
@@ -221,6 +230,7 @@ class Daemon : public cWebInterface
          ctChoice,
          ctMultiSelect,
          ctBitSelect,
+         ctText
       };
 
       struct ConfigItemDef
@@ -289,9 +299,9 @@ class Daemon : public cWebInterface
       int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
 
-      virtual int process() { return done; }               // called each 'interval'
+      virtual int process();                               // called each 'interval'
       virtual int performJobs() { return done; }           // called every loop (1 second)
-      int performWebSocketPing();
+      // int performWebSocketPing();
       int dispatchClientRequest();
       virtual int dispatchSpecialRequest(Event event, json_t* oObject, long client) { return ignore; }
       virtual int dispatchMqttHaCommandRequest(json_t* jData, const char* topic);
@@ -300,10 +310,12 @@ class Daemon : public cWebInterface
       virtual int dispatchDeconz();
       virtual int dispatchHomematicRpcResult(const char* message);
       virtual int dispatchHomematicEvents(const char* message);
+      virtual int dispatchGrowattEvents(const char* message);
+      virtual int dispatchRtl433(const char* message);
       virtual int dispatchOther(const char* topic, const char* message);
       bool checkRights(long client, Event event, json_t* oObject);
       virtual bool onCheckRights(long client, Event event, uint rights) { return false; }
-      int callScript(int addr, const char* command, const char* name, const char* title);
+      int callScript(int addr, const char* command);
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
 
       int updateWeather();
@@ -311,7 +323,7 @@ class Daemon : public cWebInterface
 
       int store(time_t now, const SensorData* sensor);
 
-      cDbRow* valueFactOf(const char* type, uint addr);
+      cDbRow* valueFactRowOf(const char* type, uint addr);
       SensorData* getSensor(const char* type, int addr);
       void setSpecialValue(uint addr, double value, const std::string& text = "");
 
@@ -389,6 +401,12 @@ class Daemon : public cWebInterface
       int performImageConfig(json_t* obj, long client);
       int performSchema(json_t* oObject, long client);
       int storeSchema(json_t* oObject, long client);
+      int deleteValueFact(const char* type, long address);
+      int storeCalibration(json_t* oObject, long client);
+      int storeCvCalibration(json_t* oObject, long client);
+      int storeAiCalibration(json_t* oObject, long client);
+      int storeDoCalibration(json_t* oObject, long client);
+      int performLmcAction(json_t* oObject, long client);
       virtual int performCommand(json_t* obj, long client);
       virtual const char* getTextImage(const char* key, const char* text) { return nullptr; }
 
@@ -410,6 +428,11 @@ class Daemon : public cWebInterface
       void publishSpecialValue(int addr);
       bool webFileExists(const char* file, const char* base = nullptr);
 
+      int lmcTrack2Json(json_t* obj, TrackInfo* track);
+      int lmcPlayerState2Json(json_t* obj);
+      int lmcPlaylist2Json(json_t* obj);
+      int lmcMainMenu2Json(json_t* obj);
+
       const char* getImageFor(const char* type, const char* title, const char* unit, int value);
       int toggleIo(uint addr, const char* type, int state = na, int bri = na, int transitiontime = na);
       int toggleColor(uint addr, const char* type, int color, int sat, int bri);
@@ -419,11 +442,18 @@ class Daemon : public cWebInterface
       virtual int storeStates();
       virtual int loadStates();
 
+      // LMC
+
+      int lmcInit();
+      int lmcExit();
+      int lmcUpdates(long client = 0);
+      int performLmcUpdates();
+
       // arduino
 
       int dispatchArduinoMsg(const char* message);
       int initArduino();
-      void updateAnalogInput(const char* id, double value, time_t stamp);
+      void updateAnalogInput(const char* id, double value, time_t stamp, const char* unit);
 
       // W1
 
@@ -463,13 +493,16 @@ class Daemon : public cWebInterface
       cDbStatement* selectAllConfig {};
       cDbStatement* selectAllUser {};
       cDbStatement* selectMaxTime {};
-      cDbStatement* selectSamplesRange {};     // for chart
-      cDbStatement* selectSamplesRange60 {};   // for chart
+      cDbStatement* selectSamplesRange {};              // for chart
+      cDbStatement* selectSamplesRange60 {};            // for chart
+      cDbStatement* selectSamplesRange360 {};           // for chart
+      cDbStatement* selectSamplesRangeMonth {};         // for chart
+      cDbStatement* selectSamplesRangeMonthOfDayMax {}; // for chart
       cDbStatement* selectScriptByPath {};
       cDbStatement* selectScripts {};
       cDbStatement* selectSensorAlerts {};
       cDbStatement* selectAllSensorAlerts {};
-      cDbStatement* selectSampleInRange {};    // for alert check
+      cDbStatement* selectSampleInRange {};        // for alert check
 
       cDbStatement* selectDashboards {};
       cDbStatement* selectDashboardById {};
@@ -532,10 +565,10 @@ class Daemon : public cWebInterface
       char* mqttUser {};
       char* mqttPassword {};
 
-      char* mqttDataTopic {};
-      char* mqttSendWithKeyPrefix {};
-      bool mqttHaveConfigTopic {false};
-      MqttInterfaceStyle mqttInterfaceStyle {misNone};
+      char* mqttHaDataTopic {};                          // for home automation interface
+      char* mqttHaSendWithKeyPrefix {};                  // for home automation interface
+      bool mqttHaHaveConfigTopic {false};                // for home automation interface
+      MqttInterfaceStyle mqttHaInterfaceStyle {misNone}; // for home automation interface
 
       Mqtt* mqttReader {};
       Mqtt* mqttWriter {};
@@ -548,15 +581,20 @@ class Daemon : public cWebInterface
       json_t* oHaJson {};
       std::map<int,Group> groups;
 
+      bool ioStatesLoaded {false};
+
       // config
 
+      char* instanceName {};
       double latitude {50.30};
       double longitude {8.79};
       char* openWeatherApiKey {};
       int interval {60};
+      time_t lastStore {0};
       int arduinoInterval {10};
+      char* arduinoTopic {};
 
-      int webPort {0};
+      int webPort {61109};
       char* webUrl {};
       bool webSsl {false};
       char* iconSet {};
@@ -569,28 +607,27 @@ class Daemon : public cWebInterface
       char* errorMailTo {};
       std::string htmlHeader;
 
-      bool invertDO {false};
+      LmcCom* lmc {};
 
       Deconz deconz;
       bool homeMaticInterface {false};
       std::map<uint,std::string> homeMaticUuids;
 
-      // live data
+      char* lmcHost {};
+      int lmcPort {9090};
+      char* lmcPlayerMac {};
 
-      struct AiSensorData
+      struct AiSensorConfig
       {
-         time_t last {0};
-         double value {0.0};
          double calPointA {0.0};
          double calPointB {10.0};
-         double calPointValueA {0};
-         double calPointValueB {10};
-         double round {0.0};                // e.g. 50.0 -> 0.02; 20.0 -> 0.05;
-         bool disabled {false};
-         bool valid {false};                // set if the value is valid
+         double calPointValueA {0.0};
+         double calPointValueB {10.0};
+         double calCutBelow {-10000.0};
+         double round {20.0};                // e.g. 50.0 -> 0.02; 20.0 -> 0.05; 10.0 -> 0.1;
       };
 
-      std::map<int,AiSensorData> aiSensors;   // #TODO #FIXME -> to be ported to sensors!!
+      std::map<int,AiSensorConfig> aiSensors;
       std::map<std::string,std::map<int,SensorData>> sensors;
 
       virtual std::list<ConfigItemDef>* getConfiguration() = 0;
@@ -599,6 +636,22 @@ class Daemon : public cWebInterface
       std::string alertMailSubject;
 
       std::map<std::string,json_t*> jsonSensorList;
+
+      // scripts command thread handling
+
+      struct ThreadControl
+      {
+         pthread_t pThread {0};
+         int timeout {60};
+         bool active {false};
+         bool cancel {false};
+         std::string command;
+         std::string result;
+      };
+
+      int executeCommandAsync(uint address, const char* cmd);
+      static void* cmdThread(void* user);
+      std::map<uint,ThreadControl> commandThreads;
 
       // statics
 

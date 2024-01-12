@@ -1,5 +1,5 @@
 /*
- * common.c: EPG2VDR plugin for the Video Disk Recorder
+ * common.c
  *
  * See the README file for copyright information and how to reach the author.
  *
@@ -56,6 +56,7 @@ const char* Elo::eloquences[] =
    "Mqtt",
    "Db",
    "DebugDb",
+
    "NodeRed",
    "Deconz",
    "DebugDeconz",
@@ -63,6 +64,11 @@ const char* Elo::eloquences[] =
 
    "HomeMatic",
    "DebugHomeMatic",
+   "Lua",
+   "GroWatt",
+
+   "Lmc",
+   "DebugLmc",
 
    nullptr
 };
@@ -135,8 +141,17 @@ void tell(Eloquence elo, const char* format, ...)
    }
    else
    {
-      int prio = elo == eloAlways ? LOG_ERR : LOG_NOTICE;
-      syslog(prio, "%s", t);
+      bool error = strncmp(t, "Err", 3) != 0;
+      bool warning = strncmp(t, "Warn", 4) != 0;
+
+      if (error)                  syslog(LOG_ERR, "%s", t);
+      else if (warning)           syslog(LOG_WARNING, "%s", t);
+      else if (elo & eloInfo)     syslog(LOG_NOTICE, "%s", t);
+      else if (elo & eloDetail)   syslog(LOG_INFO, "%s", t);
+      else                        syslog(LOG_DEBUG, "%s", t);
+
+      // int prio = elo == eloAlways ? LOG_ERR : LOG_NOTICE;
+      // syslog(prio, "%s", t);
    }
 
    va_end(ap);
@@ -198,32 +213,48 @@ double usNow()
 
 const char* bin2string(word n)
 {
-    static char bin[17];
+   static char bin[17];
 
-    for (int x = 0; x < 16; x++)
-    {
-        bin[x] = n & 0x8000 ? '1' : '0';
-        n <<= 1;
-    }
+   for (int x = 0; x < 16; x++)
+   {
+      bin[x] = n & 0x8000 ? '1' : '0';
+      n <<= 1;
+   }
 
-    bin[16] = '\0';
+   bin[16] = '\0';
 
-    return bin;
+   return bin;
 }
 
 const char* bin2string(byte n)
 {
-    static char bin[9];
+   static char bin[9];
 
-    for (int x = 0; x < 8; x++)
-    {
-        bin[x] = n & 0x80 ? '1' : '0';
-        n <<= 1;
-    }
+   for (int x = 0; x < 8; x++)
+   {
+      bin[x] = n & 0x80 ? '1' : '0';
+      n <<= 1;
+   }
 
-    bin[8] = '\0';
+   bin[8] = '\0';
 
-    return bin;
+   return bin;
+}
+
+const char* bin2string(unsigned long n)
+{
+   const int len {4*8};
+   static char bin[len+1];
+
+   for (int x = 0; x < len; x++)
+   {
+      bin[x] = n & 0x80000000 ? '1' : '0';
+      n <<= 1;
+   }
+
+   bin[len] = '\0';
+
+   return bin;
 }
 
 //***************************************************************************
@@ -327,6 +358,78 @@ unsigned int getHostId()
 
 #ifdef USEMD5
 
+#include <openssl/evp.h>
+
+#if OPENSSL_VERSION_MAJOR >= 3
+
+int createMd5(const char* buf, md5* md5)
+{
+   EVP_MD_CTX* mdctx;
+   unsigned char* md5_digest {};
+   unsigned int md5_digest_len = EVP_MD_size(EVP_md5());
+
+   mdctx = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+
+   EVP_DigestUpdate(mdctx, buf, strlen(buf));
+
+   md5_digest = (unsigned char*)OPENSSL_malloc(md5_digest_len);
+   EVP_DigestFinal_ex(mdctx, md5_digest, &md5_digest_len);
+   EVP_MD_CTX_free(mdctx);
+
+   for (uint n = 0; n < md5_digest_len; n++)
+      sprintf(md5+2*n, "%02x", md5_digest[n]);
+
+   md5[sizeMd5] = 0;
+
+   return done;
+}
+
+int createMd5OfFile(const char* path, const char* name, md5* md5)
+{
+   EVP_MD_CTX* mdctx;
+   unsigned char* md5_digest;
+   unsigned int md5_digest_len = EVP_MD_size(EVP_md5());
+
+   char* file {};
+   asprintf(&file, "%s/%s", path, name);
+
+   FILE* f {};
+
+   if (!(f = fopen(file, "r")))
+   {
+      tell(eloAlways, "Fatal: Cannot build MD5 of '%s'; Error was '%s'", file, strerror(errno));
+      free(file);
+      return fail;
+   }
+
+   free(file);
+
+   char buffer[1000];
+   int nread = 0;
+
+   mdctx = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+
+   while ((nread = fread(buffer, 1, 1000, f)) > 0)
+      EVP_DigestUpdate(mdctx, buffer, nread);
+
+   fclose(f);
+
+   md5_digest = (unsigned char*)OPENSSL_malloc(md5_digest_len);
+   EVP_DigestFinal_ex(mdctx, md5_digest, &md5_digest_len);
+   EVP_MD_CTX_free(mdctx);
+
+   for (uint n = 0; n < md5_digest_len; n++)
+      sprintf(md5+2*n, "%02x", md5_digest[n]);
+
+   md5[sizeMd5] = 0;
+
+   return success;
+}
+
+#else
+
 int createMd5(const char* buf, md5* md5)
 {
    MD5_CTX c;
@@ -357,7 +460,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    if (!(f = fopen(file, "r")))
    {
-      tell(eloAlways, "Fatal: Can't access '%s'; %s", file, strerror(errno));
+      tell(eloAlways, "Fatal: Cannot build MD5 of '%s'; Error was '%s'", file, strerror(errno));
       free(file);
       return fail;
    }
@@ -380,6 +483,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    return success;
 }
+#endif // OPENSSL_NO_DEPRECATED_3_0
 
 #endif // USEMD5
 
@@ -545,7 +649,7 @@ void removeCharsExcept(std::string& str, const char* except)
 
 void removeWord(std::string& pattern, std::string word)
 {
-   size_t  pos;
+   size_t pos;
 
    if ((pos = pattern.find(word)) != std::string::npos)
       pattern.swap(pattern.erase(pos, word.length()));
@@ -554,7 +658,7 @@ void removeWord(std::string& pattern, std::string word)
 std::string strReplace(const std::string& what, const std::string& with, const std::string& subject)
 {
    std::string str = subject;
-   size_t pos = 0;
+   size_t pos {0};
 
    while ((pos = str.find(what, pos)) != std::string::npos)
    {
@@ -574,11 +678,17 @@ std::string strReplace(const std::string& what, long with, const std::string& su
    return strReplace(what, swith, subject);
 }
 
-std::string strReplace(const std::string& what, double with, const std::string& subject)
+std::string strReplace(const std::string& what, double with, const std::string& subject, const char* decPoint)
 {
    char swith[100];
 
-   sprintf(swith, "%.2f", with);
+   sprintf(swith, "%f", with);
+
+   if (decPoint)
+   {
+      std::string sWith = strReplace(",", decPoint, swith);
+      return strReplace(what, sWith.c_str(), subject);
+   }
 
    return strReplace(what, swith, subject);
 }
@@ -814,7 +924,7 @@ std::string l2pTime(time_t t, const char* fmt)
 const char* toElapsed(int seconds, char* buf)
 {
    char* p = buf;
-   int parts = 0;
+   int parts {0};
 
    int days = seconds / tmeSecondsPerDay;
    seconds %= tmeSecondsPerDay;
@@ -825,7 +935,7 @@ const char* toElapsed(int seconds, char* buf)
 
    if (days)
    {
-      p += sprintf(p, " %d Tag%s", days, plural(days, "en"));
+      p += sprintf(p, " %d Tag%s", days, plural(days, "e"));
       parts++;
    }
 

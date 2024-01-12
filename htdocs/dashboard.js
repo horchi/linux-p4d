@@ -11,8 +11,7 @@
 var widgetWidthBase = null;
 var widgetHeightBase = null;
 var weatherData = null;
-var wInterval = null;
-var actDashboard = -1;
+var weatherInterval = null;
 var moseDownOn = { 'object' : null };
 var lightClickTimeout = null;
 var lightClickPosX = null;
@@ -33,7 +32,7 @@ function initDashboard(update = false)
    if (!update) {
       $('#container').removeClass('hidden');
       $('#dashboardMenu').removeClass('hidden');
-      $('#dashboardMenu').html('');
+      $('#dashboardMenu').empty();
    }
 
    if (!Object.keys(dashboards).length)
@@ -51,8 +50,10 @@ function initDashboard(update = false)
    }
 
    var jDashboards = [];
-   for (var did in dashboards)
-      jDashboards.push([dashboards[did].order, did]);
+   for (var did in dashboards) {
+      if (!dashboardGroup || dashboards[did].group == dashboardGroup)
+         jDashboards.push([dashboards[did].order, did]);
+   }
    jDashboards.sort();
 
    for (var i = 0; i < jDashboards.length; i++) {
@@ -169,7 +170,7 @@ var keyTimeout = null;
 
 function initWidget(key, widget, fact)
 {
-   // console.log("Widget " + JSON.stringify(widget));
+   // console.log("Widget " + key + ': '+ JSON.stringify(widget));
 
    if (key == null || key == '')
       return ;
@@ -191,6 +192,10 @@ function initWidget(key, widget, fact)
    // console.log("fact: " + JSON.stringify(fact, undefined, 4));
    // console.log("widget: " + JSON.stringify(widget, undefined, 4));
 
+   if (fact && widget.unit == '')
+      widget.unit = fact.unit;
+
+   const marginPadding = 8;
    var root = document.getElementById("widgetContainer");
    var id = 'div_' + key;
    var elem = document.getElementById(id);
@@ -201,10 +206,19 @@ function initWidget(key, widget, fact)
       elem.setAttribute('id', id);
       if (!widgetHeightBase)
          widgetHeightBase = elem.clientHeight;
-      if (!kioskMode && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactor)
-         elem.style.height = widgetHeightBase * dashboards[actDashboard].options.heightfactor + 'px';
-      if (kioskMode && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactorKiosk)
-         elem.style.height = widgetHeightBase * dashboards[actDashboard].options.heightfactorKiosk + 'px';
+      var eHeight = parseInt(elem.style.height);
+      var useKioskHeight = kioskMode == 1 || kioskMode == 2;
+      if (!useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactor)
+         eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactor;
+      if (useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactorKiosk)
+         eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactorKiosk;
+
+      // widget.heightfactor -> to be implementen (nur vorbereitet)
+
+      if (widget.heightfactor != null && widget.heightfactor != 1)
+         eHeight = eHeight * widget.heightfactor + ((widget.heightfactor-1) * marginPadding-1);
+
+      elem.style.height = eHeight + 'px';
    }
 
    elem.innerHTML = "";
@@ -213,7 +227,7 @@ function initWidget(key, widget, fact)
       widgetWidthBase = elem.clientWidth;
 
    // console.log("clientWidth: " + elem.clientWidth + ' : ' + widgetWidthBase);
-   const marginPadding = 8;
+
    elem.style.width = widgetWidthBase * widget.widthfactor + ((widget.widthfactor-1) * marginPadding-1) + 'px';
 
    if (setupMode && (widget.widgettype < 900 || widget.widgettype == null)) {
@@ -233,10 +247,15 @@ function initWidget(key, widget, fact)
 
    if (!setupMode && widget.unit == '°C')
       titleClass = 'mdi mdi-thermometer';
-   else if (!setupMode && widget.unit == 'hPa')
+   else if (!setupMode && (widget.unit == 'hPa' || widget.unit == 'A' || widget.unit == 'mA' ||
+                           widget.unit == 'W' || widget.unit == 'V' || widget.unit == 'Ah'))
       titleClass = 'mdi mdi-gauge';
+   else if (!setupMode && widget.unit == '%')
+      titleClass = 'mdi mdi-label-percent-outline';
    else if (!setupMode && widget.unit == 'xxxx')  // can't detect if '%' is humidity
       titleClass = 'mdi mdi-water-percent';
+   if (!setupMode && widget.unit == 'l')
+      titleClass = 'mdi mdi-water';
 
    if (!widget.color)
       widget.color = 'white';
@@ -267,11 +286,11 @@ function initWidget(key, widget, fact)
    {
       case 0: {          // Symbol
          $(elem)
-            .addClass("widget rounded-border widgetDropZone")
+            .addClass("widget widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
-                    .click(function() { titleClick(fact.type, fact.address, key); })
+                    .click(function(event) { console.log("click"); titleClick(event.ctrlKey, key); })
                     .css('user-select', 'none')
                     .html(title))
             .append($('<button></button>')
@@ -279,26 +298,28 @@ function initWidget(key, widget, fact)
                     .attr('type', 'button')
                     .css('color', widget.color)
                     .css('user-select', 'none')
+                    .css('border-radius', '100%')
+                    .addClass('rounded-border')
                     .addClass('widget-main')
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
                             .attr('draggable', false)
-                            .css('user-select', 'none')))
-            .append($('<div></div>')
-                    .attr('id', 'progress' + fact.type + fact.address)
-                    .addClass('widget-progress')
-                    .css('user-select', 'none')
-                    .on({'mousedown touchstart' : function(e){
-                       e.preventDefault();
-                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
-                       moseDownOn.fact = fact;
-                       moseDownOn.div = $(this);
-                       console.log("mousedown on " + moseDownOn.object.attr('id'));
-                    }})
-                    .append($('<div></div>')
-                            .attr('id', 'progressBar' + fact.type + fact.address)
-                            .css('user-select', 'none')
-                            .addClass('progress-bar')));
+                            .css('user-select', 'none')));
+//            .append($('<div></div>')
+//                    .attr('id', 'progress' + fact.type + fact.address)
+//                    .addClass('widget-progress')
+//                    .css('user-select', 'none')
+//                    .on({'mousedown touchstart' : function(e){
+//                       e.preventDefault();
+//                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
+//                       moseDownOn.fact = fact;
+//                       moseDownOn.div = $(this);
+//                       console.log("mousedown on " + moseDownOn.object.attr('id'));
+//                    }})
+//                    .append($('<div></div>')
+//                            .attr('id', 'progressBar' + fact.type + fact.address)
+//                            .css('user-select', 'none')
+//                            .addClass('progress-bar')));
 
          if (!setupMode) {
             $('#button' + fact.type + fact.address)
@@ -349,24 +370,17 @@ function initWidget(key, widget, fact)
                });
          }
 
-         // needed for shower progress bar ?!?
-         //            .append($('<div></div>')
-         //                    .attr('id', 'progress' + fact.type + fact.address)
-         //                    .addClass('widget-progress')
-         //                    .css('visibility', 'hidden')
-         //                    .append($('<div></div>')
-         //                            .attr('id', 'progressBar' + fact.type + fact.address)
-         //                            .addClass('progress-bar')));   // .css('visible', true)));
          break;
       }
 
-      case 1: {        // Chart
-         elem.className = "widgetChart rounded-border widgetDropZone";
+      case 1:         // Chart
+      case 13: {
+         elem.className = "widgetChart widgetDropZone";
          var eTitle = document.createElement("div");
          var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
          eTitle.className = "widget-title " + cls + ' ' + titleClass;
          eTitle.innerHTML = title;
-         eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
+         eTitle.addEventListener("click", function(event) {titleClick(event.ctrlKey, key)}, false);
          elem.appendChild(eTitle);
 
          var ePeak = document.createElement("div");
@@ -396,37 +410,41 @@ function initWidget(key, widget, fact)
 
       case 3: {        // type 3 (Value)
          $(elem)
-            .addClass("widgetValue rounded-border widgetDropZone")
+            .addClass("widgetValue widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .css('user-select', 'none')
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
                     .addClass('widget-value')
                     .css('user-select', 'none')
-                    .css('color', widget.color))
+                    .css('color', widget.color)
+                    .click(function() {
+                       var cFact = fact;
+                       if (!setupMode && fact.record)
+                          toggleChartDialog(cFact.type, cFact.address, key);}))
             .append($('<div></div>')
                     .attr('id', 'peak' + fact.type + fact.address)
                     .css('user-select', 'none')
                     .addClass('chart-peak'));
 
-         var cFact = fact;
-         if (!setupMode && fact.record)
-            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
+//         var cFact = fact;
+//         if (!setupMode && fact.record)
+//            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
 
          break;
       }
       case 4: {        // Gauge
          $(elem)
-            .addClass("widgetGauge rounded-border participation widgetDropZone")
+            .addClass("widgetGauge participation widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .css('user-select', 'none')
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'svgDiv' + fact.type + fact.address)
@@ -478,11 +496,11 @@ function initWidget(key, widget, fact)
       case 5:            // Meter
       case 6: {          // MeterLevel
          var radial = widget.widgettype == 5;
-         elem.className = radial ? "widgetMeter rounded-border" : "widgetMeterLinear rounded-border";
+         elem.className = radial ? "widgetMeter" : "widgetMeterLinear";
          elem.className += " widgetDropZone";
          var eTitle = document.createElement("div");
          eTitle.className = "widget-title " + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : titleClass);
-         eTitle.addEventListener("click", function() {titleClick(fact.type, fact.address, key)}, false);
+         eTitle.addEventListener("click", function(event) {titleClick(event.ctrlKey, key)}, false);
          eTitle.innerHTML = title;
          elem.appendChild(eTitle);
 
@@ -620,13 +638,13 @@ function initWidget(key, widget, fact)
       }
 
       case 7: {    // 7 (PlainText)
-         $(elem).addClass('widgetPlain rounded-border widgetDropZone');
+         $(elem).addClass('widgetPlain widgetDropZone');
          if (setupMode)
             $(elem).append($('<div></div>')
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                            .addClass(titleClass)
                            .css('user-select', 'none')
-                           .click(function() {titleClick(fact.type, fact.address, key);})
+                           .click(function(event) {titleClick(event.ctrlKey, key);})
                            .html(title));
          var wFact = fact;
          $(elem).append($('<div></div>')
@@ -641,16 +659,16 @@ function initWidget(key, widget, fact)
 
       case 8: {     // 8 (Choice)
          $(elem)
-            .addClass("widget rounded-border widgetDropZone")
+            .addClass("widget widgetDropZone")
             .css('cursor', 'pointer')
             .click(function() {
-               socket.send({"event": "toggleio", "object": {"address": fact.address, "type": fact.type}});
+               socket.send({"event": "toggleio", "object": {"address": fact.address, "type": fact.type, "action": "toggle"}});
             })
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .css('user-select', 'none')
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
@@ -663,11 +681,11 @@ function initWidget(key, widget, fact)
       case 9:          // Symbol-Value
       case 12: {       // Symbol-Text
          $(elem)
-            .addClass("widgetSymbolValue rounded-border widgetDropZone")
+            .addClass("widgetSymbolValue widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .css('user-select', 'none')
                     .html(title))
             .append($('<button></button>')
@@ -679,23 +697,24 @@ function initWidget(key, widget, fact)
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
                             .attr('draggable', false)
+                            .addClass('rounded-border')
                             .css('user-select', 'none'))
                     .click(function() { toggleIo(fact.address, fact.type); }))
-            .append($('<div></div>')
-                    .attr('id', 'progress' + fact.type + fact.address)
-                    .addClass('widget-progress')
-                    .css('user-select', 'none')
-                    .on({'mousedown touchstart' : function(e){
-                       e.preventDefault();
-                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
-                       moseDownOn.fact = fact;
-                       moseDownOn.div = $(this);
-                       console.log("mousedown on " + moseDownOn.object.attr('id'));
-                    }})
-                    .append($('<div></div>')
-                            .attr('id', 'progressBar' + fact.type + fact.address)
-                            .css('user-select', 'none')
-                            .addClass('progress-bar')))
+//            .append($('<div></div>')
+//                    .attr('id', 'progress' + fact.type + fact.address)
+//                    .addClass('widget-progress')
+//                    .css('user-select', 'none')
+//                    .on({'mousedown touchstart' : function(e){
+//                       e.preventDefault();
+//                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
+//                       moseDownOn.fact = fact;
+//                       moseDownOn.div = $(this);
+//                       console.log("mousedown on " + moseDownOn.object.attr('id'));
+//                    }})
+//                    .append($('<div></div>')
+//                            .attr('id', 'progressBar' + fact.type + fact.address)
+//                            .css('user-select', 'none')
+//                            .addClass('progress-bar')))
             .append($('<div></div>')
                     .attr('id', 'value' + fact.type + fact.address)
                     .addClass('symbol-value')
@@ -706,11 +725,11 @@ function initWidget(key, widget, fact)
       }
 
       case 10: {   // space
-         $(elem).addClass("widgetSpacer rounded-border widgetDropZone");
+         $(elem).addClass("widgetSpacer widgetDropZone");
          $(elem).append($('<div></div>')
                         .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                         .addClass(titleClass)
-                        .click(function() {titleClick('', 0, key);})
+                        .click(function(event) {titleClick(event.ctrlKey, key);})
                         .html(setupMode ? ' spacer' : ''));
          if (!setupMode)
             $(elem).css('background-color', widget.color);
@@ -726,12 +745,12 @@ function initWidget(key, widget, fact)
 
       case 11: {   // actual time
          $(elem)
-            .addClass("widgetPlain rounded-border widgetDropZone")
+            .addClass("widgetPlain widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .css('user-select', 'none')
-                    .click(function() {titleClick('', 0, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(setupMode ? ' time' : ''));
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + key)
@@ -750,12 +769,12 @@ function initWidget(key, widget, fact)
 
       default: {      // type 2 (Text)
          $(elem)
-            .addClass("widget rounded-border widgetDropZone")
+            .addClass("widget widgetDropZone")
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
                     .css('user-select', 'none')
-                    .click(function() {titleClick(fact.type, fact.address, key);})
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(title))
             .append($('<div></div>')
                     .attr('id', 'widget' + fact.type + fact.address)
@@ -817,11 +836,15 @@ function initLightColorDialog()
                     }});
    });
 
-   $('#container').on('mouseup', function(e) {
+
+   /*
+     das stört den 'number' Input - z.B. Range auf der Chart Ansicht !!
+
+     $('#container').on('mouseup', function(e) {
       e.preventDefault();
       if ($(e.target).attr('id') != 'lightColorDiv' && !$('#lightColorDiv').has(e.target).length)
          $('#lightColorDiv').css('display', 'none');
-   });
+   }); */
 }
 
 function showLightColorDialog(key)
@@ -871,10 +894,10 @@ function getWeatherHtml(symbolView, wfact, weather)
       var wIconRef = 'img/weather/' + weather.icon + '@4x.png';
       if (!images.find(img => img == wIconRef))
          wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '@4x.png';
-      html += '<div style="display:block;color:orange;font-weight:bold;height:75%;padding-left:5px;"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
+      html += '<div style="display:block;font-weight:bold;height:75%;padding-left:5px;"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
       html += '<div style="display:flex;justify-content:space-between;padding-top:3px;">';
-      html += ' <span style="color:#00c3ff;font-weight:bold;padding-left:5px;">' + weather.temp.toFixed(1) + '°C</span>';
-      html += ' <span class="mdi mdi-walk" style="color:#00c3ff;font-weight:bold;font-size:smaller;">' + weather.tempfeels.toFixed(1) + '</span>';
+      html += ' <span style="color:orange;font-weight:bold;padding-left:5px;">' + weather.temp.toFixed(1) + '°C</span>';
+      html += ' <span class="mdi mdi-walk" style="color:orange;font-weight:bold;font-size:smaller;">' + weather.tempfeels.toFixed(1) + '</span>';
       html += '</div>';
 
    }
@@ -882,12 +905,12 @@ function getWeatherHtml(symbolView, wfact, weather)
       var wIconRef = 'img/weather/' + weather.icon + '.png';
       if (!images.find(img => img == wIconRef))
          wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
-      html += '<div style="display:inline-flex;color:orange;align-items:center;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
-      html += '<div><span style="color:#00c3ff;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
+      html += '<div style="display:inline-flex;align-items:center;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
+      html += '<div><span style="color:orange;font-weight:bold;">' + weather.temp.toFixed(1) + '°C</span>';
       html += '<span style="font-size:smaller;"> (' + weather.tempmin.toFixed(1) + ' / ' + weather.tempmax.toFixed(1) + ')' + '</span></div>';
-      html += '<div>Luftdruck: <span style="color:#00c3ff;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';
-      html += '<div>Luftfeuchte: <span style="color:#00c3ff;font-weight:bold;">' + weather.humidity + ' %' + '</span></div>';
-      html += '<div>Wind: <span style="color:#00c3ff;font-weight:bold;">' + weather.windspeed + ' m/s' + '</span></div>';
+      html += '<div>Luftdruck: <span style="color:orange;font-weight:bold;">' + weather.pressure + ' hPa' + '</span></div>';
+      html += '<div>Luftfeuchte: <span style="color:orange;font-weight:bold;">' + weather.humidity + ' %' + '</span></div>';
+      html += '<div>Wind: <span style="color:orange;font-weight:bold;">' + weather.windspeed + ' m/s' + '</span></div>';
    }
 
    return html;
@@ -947,15 +970,138 @@ function weatherForecast()
    });
 }
 
-function titleClick(type, address, key)
+function titleClick(ctrlKey, key)
 {
-   if (setupMode)
+   let fact = valueFacts[key];
+   let hasMode = fact && (fact.type == 'DO' || fact.type == 'SC');
+
+   // console.log("titleClick: ", ctrlKey, key);
+
+   if (setupMode) {
       widgetSetup(key);
-   else {
-      var fact = valueFacts[key];
+   }
+   else if (ctrlKey && hasMode) {
       if (fact && localStorage.getItem(storagePrefix + 'Rights') & fact.rights)
          // console.log("toggleMode(", fact.address, fact.type, ')');
          toggleMode(fact.address, fact.type);
+   }
+   else {
+      let sensor = allSensors[key];
+      let widget = dashboards[actDashboard].widgets[key];
+      let now = new Date();
+      var last = new Date(sensor.last * 1000);
+      var form = document.createElement("div");
+
+      $(form).append($('<div></div>')
+                     .css('z-index', '9999')
+                     .css('minWidth', '40vh')
+
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('ID'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(key + ' (' + parseInt(key.split(":")[1]) + ')')
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Title'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(fact.title)
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('User Title'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(fact.usrtitle)
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Value'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(sensor.value + ' ' + widget.unit)
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Peak'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .attr('id', 'dlgPeak')
+                                             .addClass('rounded-border')
+                                             .html(sensor.peak + ' ' + widget.unit)
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Last Update'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(last.toLocaleString('de-DE') + ' (' + Math.round((now-last)/1000) + 's)'))
+                                    ))
+                    );
+
+
+      let btns = {};
+
+      if (sensor.peak) {
+         btns['Reset Peak'] = function() {
+            $('#dlgPeak').html('-');
+            socket.send({ "event" : "command", "object" : { "what" : 'peak', "type": fact.type, "address": fact.address } });
+            let sensor = allSensors[key];
+            sensor.peak = null;
+         };
+      }
+
+      if (hasMode) {
+         btns['Manuel/Auto'] = function () {
+            if (fact && localStorage.getItem(storagePrefix + 'Rights') & fact.rights)
+               toggleMode(fact.address, fact.type);
+            $(this).dialog('close');
+         };
+      }
+
+      btns['Ok'] = function () { $(this).dialog('close'); };
+
+      $(form).dialog({
+         modal: true,
+         closeOnEscape: true,
+         hide: "fade",
+         width: "auto",
+         title: "Info",
+         buttons: btns,
+         close: function() { $(this).dialog('destroy').remove();}
+      });
    }
 }
 
@@ -991,6 +1137,20 @@ function updateWidget(sensor, refresh, widget)
       return;
    }
 
+   if (widget.unit == '')
+      widget.unit = fact.unit;
+
+   var widgetDiv = $('#div_' + key.replace(':', '\\:'));
+
+   if (widget.range > 2)
+   {
+      console.log("widget.range", key, widget.range);
+      sensor.valid = true;
+   }
+
+   widgetDiv.css('opacity', sensor.valid ? '100%' : '45%');
+   // $('#div_' + key.replace(':', '\\:')).css('opacity', sensor.valid ? '100%' : '25%');
+
    if (widget.widgettype == 0 || widget.widgettype == 9 || widget.widgettype == 12)         // Symbol, Symbol-Value, Symbol-Text
    {
       // console.log("sensor: ", JSON.stringify(sensor));
@@ -1024,9 +1184,15 @@ function updateWidget(sensor, refresh, widget)
          $("#button" + fact.type + fact.address).removeClass();
          $("#button" + fact.type + fact.address).addClass('widget-main');
          $("#button" + fact.type + fact.address).addClass(classes);
+
+         var fontSize = Math.min(widgetDiv.height(), widgetDiv.width()) * 0.6;
+         $("#button" + fact.type + fact.address).css('font-size', fontSize + 'px');
       }
 
-      $('#div_'+key.replace(':', '\\:')).css('background-color', (sensor.options == 3 && sensor.mode == 'manual') ? '#a27373' : '');
+      $("#button" + fact.type + fact.address).css('background-color', sensor.working ? '#7878787878' : 'transparent');
+
+      // $('#div_'+key.replace(':', '\\:')).css('background-color', (sensor.options == 3 && sensor.mode == 'manual') ? '#a27373' : '');
+      widgetDiv.css('background-color', (sensor.options == 3 && sensor.mode == 'manual') ? '#a27373' : '');
       widget.colorOn = widget.colorOn == null ? symbolOnColorDefault : widget.colorOn;
 
       if (sensor.hue)
@@ -1042,33 +1208,30 @@ function updateWidget(sensor, refresh, widget)
       else if (widget.widgettype == 12 && sensor.text != null)
          $("#value" + fact.type + fact.address).text(sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>'));
 
-      var prs = $('#progressBar' + fact.type + fact.address);
-
-      $('#progress' + fact.type + fact.address).css('display', fact.options & 0x02 && sensor.value ? 'block' : 'none');
-
-      if (sensor.score && prs != null) {
-         $(prs).css('width', sensor.score + '%');
-         // prs.style.visibility = (sensor.next == null || sensor.next == 0) ? "hidden" : "visible";
-      }
-
-      if (sensor.mode == "auto" && sensor.next > 0) {
-         var pWidth = 100;
-         var s = sensor;
-         var id = fact.type + fact.address;
-         var iid = setInterval(progress, 200);
-
-         function progress() {
-            if (pWidth <= 0) {
-               clearInterval(iid);
-            } else {
-               var d = new Date();
-               pWidth = 100 - ((d/1000 - s.last) / ((s.next - s.last) / 100));
-               document.getElementById("progressBar" + id).style.width = pWidth + "%";
-            }
-         }
-      }
+//      var prs = $('#progressBar' + fact.type + fact.address);
+//      $('#progress' + fact.type + fact.address).css('display', fact.options & 0x02 && sensor.value ? 'block' : 'none');
+//
+//      if (sensor.score && prs != null)
+//         $(prs).css('width', sensor.score + '%');
+//
+//      if (sensor.mode == "auto" && sensor.next > 0) {
+//         var pWidth = 100;
+//         var s = sensor;
+//         var id = fact.type + fact.address;
+//         var iid = setInterval(progress, 200);
+//
+//         function progress() {
+//            if (pWidth <= 0) {
+//               clearInterval(iid);
+//            } else {
+//               var d = new Date();
+//               pWidth = 100 - ((d/1000 - s.last) / ((s.next - s.last) / 100));
+//               document.getElementById("progressBar" + id).style.width = pWidth + "%";
+//            }
+//         }
+//      }
    }
-   else if (widget.widgettype == 1)    // Chart
+   else if (widget.widgettype == 1 || widget.widgettype == 13)    // Chart
    {
       if (widget.showpeak != null && widget.showpeak)
          $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
@@ -1077,7 +1240,9 @@ function updateWidget(sensor, refresh, widget)
 
       if (refresh) {
          var jsonRequest = {};
-         prepareChartRequest(jsonRequest, toKey(fact.type, fact.address), 0, 1, "chartwidget");
+         if (!widget.range)
+            widget.range = 1;
+         prepareChartRequest(jsonRequest, toKey(fact.type, fact.address), 0, widget.range, widget.widgettype == 13 ? "chartwidgetbar" : "chartwidget");
          socket.send({ "event" : "chartdata", "object" : jsonRequest });
       }
    }
@@ -1089,10 +1254,10 @@ function updateWidget(sensor, refresh, widget)
          weatherData = JSON.parse(sensor.text);
          // console.log("weather" + JSON.stringify(weatherData, undefined, 4));
          $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
-         if (wInterval)
-            clearInterval(wInterval);
+         if (weatherInterval)
+            clearInterval(weatherInterval);
          if (weatherData && config.toggleWeatherView != 0) {
-            wInterval = setInterval(function() {
+            weatherInterval = setInterval(function() {
                bigView = !bigView;
                $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
             }, 5*1000);
@@ -1164,7 +1329,6 @@ function addWidget()
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Filter'))
                           .append($('<input></input>')
@@ -1181,7 +1345,6 @@ function addWidget()
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Widget'))
                           .append($('<span></span>')
@@ -1201,7 +1364,7 @@ function addWidget()
          updateSelection();
       },
       buttons: {
-         'Cancel': function () {
+         'Abbrechen': function () {
             $(this).dialog('close');
          },
          'Ok': function () {
@@ -1318,9 +1481,14 @@ function toggleChartDialog(type, address)
 
       dialog.setAttribute('open', 'open');
 
-      var jsonRequest = {};
+      let jsonRequest = {};
+      let key = toKey(type, address);
+      let widget = dashboards[actDashboard].widgets[key];
 
-      prepareChartRequest(jsonRequest, toKey(type, address), 0, 1, "chartdialog");
+      if (!widget.range)
+         widget.range = 1;
+
+      prepareChartRequest(jsonRequest, toKey(type, address), 0, widget.range, "chartdialog");
       socket.send({ "event" : "chartdata", "object" : jsonRequest });
 
       // EventListener für ESC-Taste
@@ -1522,7 +1690,6 @@ function dashboardSetup(dashboardId)
                           .append($('<span></span>')
                                   .css('width', '25%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Titel'))
                           .append($('<span></span>')
@@ -1537,7 +1704,6 @@ function dashboardSetup(dashboardId)
                           .append($('<span></span>')
                                   .css('width', '25%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Symbol'))
                           .append($('<span></span>')
@@ -1552,7 +1718,6 @@ function dashboardSetup(dashboardId)
                           .append($('<span></span>')
                                   .css('width', '25%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Zeilenhöhe'))
                           .append($('<span></span>')
@@ -1564,7 +1729,6 @@ function dashboardSetup(dashboardId)
                           .append($('<span></span>')
                                   .css('width', '25%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Kiosk'))
                           .append($('<span></span>')
@@ -1573,7 +1737,20 @@ function dashboardSetup(dashboardId)
                                           .attr('id', 'heightfactorKiosk')
                                           .val(dashboards[dashboardId].options.heightfactorKiosk)
                                          )))
-
+                  .append($('<div></div>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '25%')
+                                  .css('text-align', 'end')
+                                  .css('margin-right', '10px')
+                                  .html('Gruppe'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('type', 'number')
+                                          .attr('id', 'group')
+                                          .val(dashboards[dashboardId].group)
+                                         )))
                  );
 
    $(form).dialog({
@@ -1613,14 +1790,16 @@ function dashboardSetup(dashboardId)
             console.log("change title from: " + dashboards[dashboardId].title + " to " + $("#dashTitle").val());
             dashboards[dashboardId].title = $("#dashTitle").val();
             dashboards[dashboardId].symbol = $("#dashSymbol").val();
+            dashboards[dashboardId].group = parseInt($("#group").val());
 
             socket.send({ "event" : "storedashboards", "object" : { [dashboardId] : { 'title' : dashboards[dashboardId].title,
+                                                                                      'group' : dashboards[dashboardId].group,
                                                                                       'symbol' : dashboards[dashboardId].symbol,
                                                                                       'options' : dashboards[dashboardId].options} } });
             socket.send({ "event" : "forcerefresh", "object" : {} });
             $(this).dialog('close');
          },
-         'Cancel': function () {
+         'Abbrechen': function () {
             $(this).dialog('close');
          }
       },
@@ -1637,8 +1816,8 @@ function widgetSetup(key)
 
    if (allSensors[key] != null)
    {
-      console.log("sensor " + JSON.stringify(allSensors[key], undefined, 4));
-      console.log("sensor found, batt is : " + allSensors[key].battery);
+      // console.log("sensor " + JSON.stringify(allSensors[key], undefined, 4));
+      // console.log("sensor found, batt is : " + allSensors[key].battery);
       battery = allSensors[key].battery;
    }
    else
@@ -1658,7 +1837,6 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('ID'))
                           .append($('<span></span>')
@@ -1671,7 +1849,6 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .html('Battery'))
                           .append($('<span></span>')
@@ -1686,8 +1863,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Widget'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1702,8 +1879,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Einheit'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1720,8 +1897,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Faktor'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1738,8 +1915,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Skala Min'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1756,8 +1933,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Skala Max'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1774,8 +1951,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Skala Step'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1792,8 +1969,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Skala Crit Min'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1811,8 +1988,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Skala Crit Max'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1830,9 +2007,9 @@ function widgetSetup(key)
                           .append($('<a></a>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .css('color', 'blue')
+                                  .css('align-self', 'center')
                                   .html('Icon')
                                   .attr('target','_blank')
                                   .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
@@ -1852,9 +2029,9 @@ function widgetSetup(key)
                           .append($('<a></a>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
                                   .css('color', 'blue')
+                                  .css('align-self', 'center')
                                   .html('Icon an')
                                   .attr('target','_blank')
                                   .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
@@ -1874,8 +2051,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Image'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1890,8 +2067,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Image An'))
                           .append($('<span></span>')
                                   .css('width', '300px')
@@ -1907,8 +2084,8 @@ function widgetSetup(key)
                                   .attr('id', 'spanColor')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Farbe aus / an'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1933,8 +2110,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Peak anzeigen'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1952,8 +2129,8 @@ function widgetSetup(key)
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Zeilenumbruch'))
                           .append($('<span></span>')
                                   .append($('<input></input>')
@@ -1964,31 +2141,59 @@ function widgetSetup(key)
                                   .append($('<label></label>')
                                           .prop('for', 'linefeed')
                                          )))
-
+                  .append($('<div></div>')
+                          .attr('id', 'divRange')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '30%')
+                                  .css('text-align', 'end')
+                                  .css('margin-right', '10px')
+                                  .css('align-self', 'center')
+                                  .html('Chart Bereich'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('title', 'Tage')
+                                          .attr('id', 'range')
+                                          .attr('type', 'number')
+                                          .attr('step', '0.5')
+                                          .val(widget.range)
+                                         )))
                   .append($('<div></div>')
                           .css('display', 'flex')
                           .append($('<span></span>')
                                   .css('width', '30%')
                                   .css('text-align', 'end')
-                                  .css('align-self', 'center')
                                   .css('margin-right', '10px')
+                                  .css('align-self', 'center')
                                   .html('Breite'))
                           .append($('<span></span>')
                                   .css('width', '300px')
                                   .append($('<select></select>')
                                           .addClass('rounded-border inputSetting')
                                           .attr('id', 'widthfactor')
-                                          .val(widget.unit)
                                          )))
-
+/*                  .append($('<div></div>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .css('width', '30%')
+                                  .css('text-align', 'end')
+                                  .css('margin-right', '10px')
+                                  .html('Höhe'))
+                          .append($('<span></span>')
+                                  .css('width', '300px')
+                                  .append($('<select></select>')
+                                          .addClass('rounded-border inputSetting')
+                                          .attr('id', 'heightfactor')
+                                         )))*/
                  );
 
    function widgetTypeChanged()
    {
       var wType = parseInt($('#widgettype').val());
 
-      $("#divUnit").css("display", [1,3,4,6,9].includes(wType) ? 'flex' : 'none');
-      $("#divFactor").css("display", [1,3,4,6,9].includes(wType) ? 'flex' : 'none');
+      $("#divUnit").css("display", [1,3,4,5,6,9,13].includes(wType) ? 'flex' : 'none');
+      $("#divFactor").css("display", [1,3,4,6,9,13].includes(wType) ? 'flex' : 'none');
       $("#divScalemax").css("display", [5,6].includes(wType) ? 'flex' : 'none');
       $("#divScalemin").css("display", [5,6].includes(wType) ? 'flex' : 'none');
       $("#divScalestep").css("display", [5,6].includes(wType) ? 'flex' : 'none');
@@ -1998,11 +2203,12 @@ function widgetSetup(key)
       $("#divSymbolOn").css("display", [0,9].includes(wType) ? 'flex' : 'none');
       $("#divImgon").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
       $("#divImgoff").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
-      $("#divPeak").css("display", [1,3,6,9].includes(wType) ? 'flex' : 'none');
-      $("#divColor").css("display", [0,1,2,3,4,6,7,9,10,11].includes(wType) ? 'flex' : 'none');
+      $("#divPeak").css("display", [1,3,6,9,13].includes(wType) ? 'flex' : 'none');
+      $("#divColor").css("display", [0,1,3,4,6,7,9,10,11,13].includes(wType) ? 'flex' : 'none');
       $("#divLinefeed").css("display", [10].includes(wType) ? 'flex' : 'none');
+      $("#divRange").css("display", [1,5,6,13].includes(wType) ? 'flex' : 'none');
 
-      if ([0].includes(wType) && $('#symbol').val() == '' &&  $('#symbolOn').val() == '')
+      if ([0].includes(wType) && $('#symbol').val() == '' && $('#symbolOn').val() == '')
          $("#divColor").css("display", 'none');
 
       if (![0,9].includes(wType) || $('#symbolOn').val() == '') {
@@ -2051,11 +2257,20 @@ function widgetSetup(key)
          if (widget.widthfactor == null)
             widget.widthfactor = 1;
 
-         for (var w = 0.5; w <= 2.0; w += 0.5)
+         for (var w = 0.5; w <= 4.0; w += 0.5)
             $('#widthfactor').append($('<option></option>')
                                      .val(w)
                                      .html(w)
                                      .attr('selected', widget.widthfactor == w));
+
+/*         if (widget.heightfactor == null)
+            widget.heightfactor = 1;
+
+         for (var h = 0.5; h <= 1.0; h += 0.5)
+            $('#heightfactor').append($('<option></option>')
+                                     .val(h)
+                                     .html(h)
+                                     .attr('selected', widget.heightfactor == h)); */
 
          $('#color').spectrum({
             type: "color",
@@ -2110,7 +2325,7 @@ function widgetSetup(key)
             $(this).dialog('close');
          },
 
-         'Cancel': function () {
+         'Abbrechen': function () {
             // socket.send({ "event" : "forcerefresh", "object" : {} });
             if (allSensors[key] == null) {
                console.log("missing sensor!!");
@@ -2120,7 +2335,7 @@ function widgetSetup(key)
 
             $(this).dialog('close');
          },
-         'Preview': function () {
+         'Vorschau': function () {
             widget = Object.create(dashboards[actDashboard].widgets[key]); // valueFacts[key]);
             widget.unit = $("#unit").val();
             widget.scalemax = parseFloat($("#factor").val()) || 1.0;
@@ -2139,6 +2354,8 @@ function widgetSetup(key)
             widget.showpeak = $("#peak").is(':checked');
             widget.linefeed = $("#linefeed").is(':checked');
             widget.widthfactor = $("#widthfactor").val();
+            widget.heightfactor = $("#heightfactor").val();
+            widget.range = $("#range").val();
 
             initWidget(key, widget);
             if (allSensors[key] != null)
@@ -2162,6 +2379,8 @@ function widgetSetup(key)
             widget.showpeak = $("#peak").is(':checked');
             widget.linefeed = $("#linefeed").is(':checked');
             widget.widthfactor = $("#widthfactor").val();
+            widget.heightfactor = $("#heightfactor").val();
+            widget.range = $("#range").val();
 
             initWidget(key, widget);
             if (allSensors[key] != null)
@@ -2197,6 +2416,8 @@ function widgetSetup(key)
                json[key]["imgoff"] = $("#imgoff").val();
 
             json[key]["widthfactor"] = parseFloat($("#widthfactor").val());
+            json[key]["heightfactor"] = parseFloat($("#heightfactor").val());
+            json[key]["range"] = parseFloat($("#range").val());
             json[key]["widgettype"] = parseInt($("#widgettype").val());
             json[key]["showpeak"] = $("#peak").is(':checked');
             json[key]["linefeed"] = $("#linefeed").is(':checked');
