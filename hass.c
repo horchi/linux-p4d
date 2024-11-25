@@ -206,7 +206,7 @@ int Daemon::mqttHaPublishSensor(SensorData& sensor, bool forceConfig)
 
    if (sensor.kind == "status")
    {
-      json_object_set_new(oValue, "state", json_string(sensor.value ? "ON" :"OFF"));
+      json_object_set_new(oValue, "state", json_string(sensor.state ? "ON" :"OFF"));
       json_object_set_new(oValue, "brightness", json_integer(255));
    }
    else if (sensor.text.length())

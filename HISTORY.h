@@ -5,7 +5,8 @@
  *
  */
 
-#define _VERSION     "0.10.2"
+#define _VERSION     "0.10.3"
+
 #define VERSION_DATE "25.11.2024"
 
 #ifdef GIT_REV
@@ -17,8 +18,11 @@
 /*
  * ------------------------------------
 
-2024-11-25:  version 0.10.2
-  - bugfix:  Fixed writing og change topic
+2024-11-25:  version 0.10.3
+  - bugfix:  Fixed writing of change topic
+
+2024-10-02:  version 0.10.2
+  - bugfix:  Fixed boolean values for MQTT HA interface
 
 2024-01-11:  version 0.10.1
   - change:  Updated configs/example_sensor.sh example
