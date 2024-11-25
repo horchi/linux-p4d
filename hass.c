@@ -442,7 +442,7 @@ int Daemon::mqttNodeRedPublishSensor(SensorData& sensor)
 int Daemon::mqttNodeRedPublishAction(SensorData& sensor, double value, bool publishOnly)
 {
    if (!mqttWriter || !mqttWriter->isConnected())
-       return done;
+      return done;
 
    json_t* oJson = json_object();
    char* key {};

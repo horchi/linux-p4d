@@ -399,7 +399,7 @@ int P4d::updateSensors()
 {
    Daemon::updateSensors();
 
-   time_t now = time(0);
+   time_t now {time(0)};
    sem->p();
 
    // check serial connection
@@ -466,9 +466,6 @@ int P4d::updateSensors()
                sensors[sensor->type][sensor->address].value = currentState.time;
                break;
             }
-
-            if (sensors[sensor->type][sensor->address].last == now)
-               mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
 
             // if (sensors[sensor->type][sensor->address].text != oldText || sensors[sensor->type][sensor->address].value != oldValue)
             //    sensors[sensor->type][sensor->address].last = now;
@@ -548,6 +545,9 @@ int P4d::updateSensors()
          // publish to HA always - we like to draw charts ...
 
          mqttHaPublish(sensors[sensor->type][sensor->address]);
+
+         if (sensors[sensor->type][sensor->address].last == now)
+            mqttNodeRedPublishSensor(sensors[sensor->type][sensor->address]);
       }
    }
 
@@ -1087,9 +1087,9 @@ int P4d::updateParameter(cDbTable* tableMenu)
 int P4d::updateTimeRangeData()
 {
    Fs::TimeRanges t;
-   int status;
-   char fName[10+TB];
-   char tName[10+TB];
+   int status {success};
+   char fName[10+TB] {};
+   char tName[10+TB] {};
 
    tell(eloAlways, "Updating time ranges data ...");
 
@@ -1131,9 +1131,9 @@ int P4d::updateTimeRangeData()
 
 int P4d::updateErrors()
 {
-   int status;
+   int status {success};
    Fs::ErrorInfo e;
-   time_t timeOne = 0;
+   time_t timeOne {0};
    cTimeMs timeMs;
 
    cDbStatement* select = new cDbStatement(tableErrors);
@@ -1224,9 +1224,9 @@ int P4d::updateErrors()
 
 int P4d::sendErrorMail()
 {
-   std::string body = "";
-   const char* subject = "Heizung: STÖRUNG";
-   char* html = 0;
+   std::string body;
+   const char* subject {"Heizung: STÖRUNG"};
+   char* html {};
 
    // check
 
@@ -1500,7 +1500,7 @@ int P4d::performPellets(json_t* oObject, long client)
 
    double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
    char* hint;
-   asprintf(&hint, "consumption sice tankering by %.2f kg / stoker hour", consumptionH);
+   asprintf(&hint, "consumption sice tankering by %.2f kg per stoker hour", consumptionH);
    tell(eloAlways, "Calculating %s", hint);
 
    json_t* oData = json_object();
@@ -2273,6 +2273,8 @@ int P4d::initValueFacts(bool truncate)
    tableValueFacts->find();
    tableValueFacts->setValue("STATE", "A");
    tableValueFacts->store();
+
+   addValueFact(0x1e0, "PA", 1, "Kessel-Solltemperatur", "°C", "Kessel-Solltemperatur");
 
    return success;
 }

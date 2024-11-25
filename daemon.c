@@ -94,6 +94,8 @@ Daemon::ValueTypes Daemon::defaultValueTypes[] =
    { "^P4.*",  "P4 Daemon" },
    { "^WEA",   "Wetter" },
    { "^CV",    "Calculated Values" },
+   { "^PA",    "Parameter" },
+   { "^UD",    "UD" },
 
    { "",      "" }
 };

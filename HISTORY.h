@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.10.1"
-#define VERSION_DATE "11.01.2024"
+#define _VERSION     "0.10.2"
+#define VERSION_DATE "25.11.2024"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2024-11-25:  version 0.10.2
+  - bugfix:  Fixed writing og change topic
 
 2024-01-11:  version 0.10.1
   - change:  Updated configs/example_sensor.sh example
