@@ -29,16 +29,15 @@ function initUserConfig(users)
       '  <thead>' +
       '    <tr>' +
       '      <td style="width:15%;">User</td>' +
-      '      <td style="width:32%;">Rights</td>' +
-      '      <td style="width:30%;"></td>' +
+      '        <td style="width:50%;">Rights</td>' +
+      '        <td style="width:35%;"></td>' +
       '    </tr>' +
       '  </thead>' +
       '  <tbody id="userTable">' +
       '  </tbody>' +
       '</table>' +
-      '<tbody id="ioOther"/>' +
-      '</div><br/>' +
-      '<div id="addUserDiv" class="rounded-border inputTableConfig"/>';
+      '  <div id="addUserDiv" class="rounded-border"/>' +
+      '</div>';
 
    var table = document.getElementById("userTable");
    table.innerHTML = "";
@@ -67,17 +66,16 @@ function initUserConfig(users)
       table.appendChild(elem);
    }
 
-   html =  "  <span>User: </span><input id=\"input_user\" class=\"rounded-border input\"/>";
-   html += "  <span>Passwort: </span><input id=\"input_passwd\" class=\"rounded-border input\"/>";
-   html += "  <button class=\"rounded-border buttonOptions\" onclick=\"addUser()\">+</button>";
-
+   html =  '  <span class="labelB1">User</span><input id="input_user" class="rounded-border input"/>';
+   html += '  <span class="labelB1">Passwort</span><input id=\"input_passwd\" class="rounded-border input"/>';
+   html += '  <button class="rounded-border buttonOptions" style="width:50px;" onclick="addUser()">+</button>';
    document.getElementById("addUserDiv").innerHTML = html;
 
    // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    };
 }
 
@@ -87,11 +85,11 @@ function initUser()
 
    document.getElementById("container").innerHTML =
       '<div id="userContainer" class="rounded-border inputTableConfig">' +
-      '  <button class="rounded-border buttonOptions" onclick="doLogout()">Logout</button>' +
+      '  <button class="rounded-border button1" onclick="doLogout()">Logout</button>' +
       '  <br/><br/>' +
       '  <span>Passwort: </span><input id="input_passwd" type="password" class="rounded-border input"/>' +
       '  <span>wiederholen: </span><input id="input_passwd2" type="password" class="rounded-border input"/>' +
-      '  <button class="rounded-border buttonOptions" onclick="chpwd()">Speichern</button>' +
+      '  <button class="rounded-border button1" onclick="chpwd()">Speichern</button>' +
       '</div>';
 }
 

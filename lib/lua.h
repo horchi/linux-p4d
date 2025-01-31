@@ -53,5 +53,5 @@ class Lua
 
    protected:
 
-      lua_State* handle {nullptr};
+      lua_State* handle {};
 };

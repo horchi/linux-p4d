@@ -15,10 +15,22 @@
 
 #include "websock.h"
 
-// LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG | LLL_PARSER |
-// LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY | LLL_USER | LLL_THREAD
+ // #define LLL_ERR               1
+ // #define LLL_WARN              2
+ // #define LLL_NOTICE            4
+ // #define LLL_INFO              8
+ // #define LLL_DEBUG            16
+ // #define LLL_PARSER           32
+ // #define LLL_HEADER           64
+ // #define LLL_EXT             128
+ // #define LLL_CLIENT          265
+ // #define LLL_LATENCY         512
+ // #define LLL_USER           1024
+ // #define LLL_THREAD         2048
 
+// int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG | LLL_PARSER };
 int cWebSock::wsLogLevel {LLL_ERR | LLL_WARN};
+
 lws_context* cWebSock::context {};
 int cWebSock::timeout {0};
 cWebSock::MsgType cWebSock::msgType {mtNone};
@@ -30,7 +42,7 @@ char* cWebSock::httpPath {};
 cWebInterface* cWebSock::singleton {};
 
 //***************************************************************************
-// Web Socket
+// Init
 //***************************************************************************
 
 cWebSock::cWebSock(cWebInterface* aProcess, const char* aHttpPath)
@@ -58,21 +70,23 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
 
    // setup websocket protocol
 
-   protocols[0].name = "http-only";
+   protocols[0].name = "http";
    protocols[0].callback = callbackHttp;
    protocols[0].per_session_data_size = sizeof(SessionData);
    protocols[0].rx_buffer_size = 0;
+   protocols[0].id = 0;
+   protocols[0].user = nullptr;
+   protocols[0].tx_packet_size = 0;
 
    protocols[1].name = singleton->myName();
    protocols[1].callback = callbackWs;
    protocols[1].per_session_data_size = 0;
-   protocols[1].rx_buffer_size = 128*1024;
+   protocols[1].rx_buffer_size = 128*1024;  // 80*1024
+   protocols[1].id = 0;
+   protocols[1].user = nullptr;
    protocols[1].tx_packet_size = 0;
 
-   protocols[2].name = 0;
-   protocols[2].callback = 0;
-   protocols[2].per_session_data_size = 0;
-   protocols[2].rx_buffer_size = 0;
+   protocols[2] = LWS_PROTOCOL_LIST_TERM;
 
    // mounts
 
@@ -98,12 +112,17 @@ int cWebSock::init(int aPort, int aTimeout, const char* confDir, bool ssl)
    // setup websocket context info
 
    memset(&info, 0, sizeof(info));
+
+   info.protocols = protocols;
+   info.mounts = nullptr;
    info.options = 0;
-   info.mounts = mounts;
+   // info.options = LWS_SERVER_OPTION_HTTP_HEADERS_SECURITY_BEST_PRACTICES_ENFORCE; // 0;
+   //info.extensions = extensions;
+   info.port = port;
    info.gid = -1;
    info.uid = -1;
-   info.port = port;
-   info.protocols = protocols;
+
+
 #if defined (LWS_LIBRARY_VERSION_MAJOR) && (LWS_LIBRARY_VERSION_MAJOR < 4)
    info.iface = nullptr;
 #endif
@@ -193,15 +212,13 @@ int cWebSock::exit()
 
 void* cWebSock::syncFct(void* user)
 {
-   ThreadControl* threadCtl = (ThreadControl*)user;
+   ThreadControl* threadCtl {static_cast<ThreadControl*>(user)};
    threadCtl->active = true;
 
    tell(eloDebugWebSock, " :: started syncThread");
 
    while (!threadCtl->close)
-   {
       service(threadCtl);
-   }
 
    threadCtl->active = false;
    // printf(" :: stopped syncThread regular\n");
@@ -235,7 +252,7 @@ int cWebSock::service(ThreadControl* threadCtl)
 }
 
 //***************************************************************************
-// Perform Data
+// Perform Data to the Clients
 //***************************************************************************
 
 int cWebSock::performData(MsgType type)
@@ -249,7 +266,10 @@ int cWebSock::performData(MsgType type)
    for (auto it = clients.begin(); it != clients.end(); ++it)
    {
       if (!it->second.messagesOut.empty())
+      {
          count++;
+         break;
+      }
    }
 
    if (count || msgType == mtPing)
@@ -259,13 +279,12 @@ int cWebSock::performData(MsgType type)
 }
 
 //***************************************************************************
-// Get Client Info of connection
+// Get Client Information
 //***************************************************************************
 
 void getClientInfo(lws* wsi, std::string* clientInfo)
 {
-   char clientName[100+TB] = "unknown";
-   // char clientIp[50+TB] = "";
+   char clientName[100+TB] {"unknown"};
 
    if (wsi)
    {
@@ -364,44 +383,26 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
          int res;
          char* file {};
          const char* url = (char*)in;
+         *sessionData = {};
 
-         memset(sessionData, 0, sizeof(SessionData));
+         tell(eloWebSock, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
 
-         tell(eloAlways, "HTTP: Requested url (%ld) '%s'", (ulong)len, url);
+         if (strcmp(url, "/") == 0)
+            url = "index.html";
 
-         // data or file request ...
+         // security, force httpPath path to inhibit access to the whole filesystem
 
-         if (strncmp(url, "/data/", 6) == 0)
+         asprintf(&file, "%s/%s", httpPath, url);
+         res = serveFile(wsi, file);
+         free(file);
+
+         if (res < 0)
          {
-            // data request
-
-            tell(eloAlways, "Got unexpected HTTP request!");
-            res = dispatchDataRequest(wsi, sessionData, url);
-
-            if (res < 0 || (res > 0 && lws_http_transaction_completed(wsi)))
-               return -1;
+            tell(eloAlways, "HTTP: Failed to serve url '%s' (%d)", url, res);
+            return -1;
          }
-         else
-         {
-            // file request
 
-            if (strcmp(url, "/") == 0 || strcmp(url, "/undefined") == 0)
-               url = "index.html";
-
-            // security, force httpPath path to inhibit access to the whole filesystem
-
-            asprintf(&file, "%s/%s", httpPath, url);
-            res = serveFile(wsi, file);
-            free(file);
-
-            if (res < 0)
-            {
-               tell(eloAlways, "HTTP: Failed to serve url '%s' (%d)", url, res);
-               return -1;
-            }
-
-            tell(eloWebSock, "HTTP: Done, url: '%s'", url);
-         }
+         tell(eloWebSock, "HTTP: Done, url: '%s'", url);
 
          break;
       }
@@ -453,10 +454,8 @@ int cWebSock::callbackHttp(lws* wsi, lws_callback_reasons reason, void* user, vo
 
 int cWebSock::serveFile(lws* wsi, const char* path)
 {
-   const char* suffix = suffixOf(path ? path : "");
-   const char* mime = "text/plain";
-
-   // LogDuration ld("serveFile", 1);
+   const char* suffix {suffixOf(path ? path : "")};
+   const char* mime {"text/plain"};
 
    // choose mime type based on the file extension
 
@@ -653,10 +652,10 @@ int cWebSock::callbackWs(lws* wsi, lws_callback_reasons reason, void* user, void
             singleton->pushInMessage(p);
             free(p);
          }
-/*         else
-         {
-            tell(eloDebugWebSock, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
-            } */
+         // else
+         // {
+         //   tell(eloDebugWebSock, "Debug: Ignoring '%s' request of client (%p) without login [%s]", strEvent, (void*)wsi, message);
+         // }
 
          json_decref(oData);
          free(message);
@@ -724,11 +723,11 @@ void cWebSock::atLogin(lws* wsi, const char* message, const char* clientInfo, js
 
    json_t* obj = json_object();
    addToJson(obj, "event", "login");
-   json_object_set_new(obj, "object", object);
+   json_object_set(obj, "object", object);
    addToJson(object, "client", (long)wsi);
 
    char* p = json_dumps(obj, 0);
-
+   json_decref(obj);
    singleton->pushInMessage(p);
    free(p);
 }
@@ -814,7 +813,7 @@ void cWebSock::pushOutMessage(const char* message, lws* wsi)
 
 int cWebSock::getIntParameter(lws* wsi, const char* name, int def)
 {
-   char buf[100];
+   char buf[100] {};
    const char* arg = lws_get_urlarg_by_name(wsi, name, buf, 100);
 
    return arg ? atoi(arg) : def;
@@ -826,7 +825,7 @@ int cWebSock::getIntParameter(lws* wsi, const char* name, int def)
 
 const char* cWebSock::getStrParameter(lws* wsi, const char* name, const char* def)
 {
-   static char buf[512+TB];
+   static char buf[512+TB] {};
    const char* arg = lws_get_urlarg_by_name(wsi, name, buf, 512);
 
    return arg ? arg : def;
@@ -838,7 +837,7 @@ const char* cWebSock::getStrParameter(lws* wsi, const char* name, const char* de
 
 const char* cWebSock::methodOf(const char* url)
 {
-   const char* p;
+   const char* p {};
 
    if (url && (p = strchr(url+1, '/')))
       return p+1;

@@ -6,20 +6,6 @@ button:focus {
     outline: none;
 }
 
-/* .body-background:after
-{
-    background: transparent url(/img/backgrounds/background.jpg) no-repeat 50% 0 fixed;
-    background-size: cover;
-    content: "";
-    opacity: 0.7;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    position: absolute;
-    z-index: -1;
-} */
-
 .ui-autocomplete
 {
   height: 120px;
@@ -59,6 +45,11 @@ button:focus {
     padding-bottom: 8px;
 }
 
+.navMenu
+{
+    padding: var(--containerPadding);
+}
+
 .menu
 {
     display: grid;
@@ -70,25 +61,30 @@ button:focus {
 
 .infoBox
 {
-    background-color: var(--info);
-    color: black;
-    padding: 5px;
-    width: fit-content;
-    opacity: 0;
+    background-color: var(--neutral3);
+    padding: var(--containerPadding);
+    box-sizing: border-box;
+    color: white;
+    width: 100%;
+    margin-top: 2px;
+    display: none;
+    max-height: 33%;
+    z-index: 9999;
     position: fixed;
-    margin: 5px;
-    top: -20rem;
-    left: -20rem;
-    transition-property: all;
-    transition-duration: 1.5s;
-    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    overflow: auto;
+}
+
+.infoBox > div
+{
+    display: inline-flex;
+    align-items: center;
+    width: -webkit-fill-available;
+    width: -moz-available;
 }
 
 .infoBox-active
 {
-    opacity: 1;
-    top: 0.5rem;
-    left: 0.5rem;
+    display: block;
 }
 
 .burgerMenu
@@ -96,6 +92,7 @@ button:focus {
     float: right;
     width: 42px;
     padding: 4px 4px !important;
+    margin-left: 8px;
 }
 
 .burgerMenu > div {
@@ -104,10 +101,59 @@ button:focus {
     background-color: white;
 }
 
-.vdrContent
+.burgerMenuInline
 {
-    margin: 0px 5px 0px 5px;
-    /*background-color: var(--background); */
+    float: right;
+    width: 35px;
+    padding: 2px 2px !important;
+    margin-left: 8px;
+}
+
+.burgerMenuInline > div {
+    height: 1px;
+    margin: 4px;
+    background-color: white;
+}
+
+.footer
+{
+    height: 30px;
+    position: fixed;
+    bottom: 0;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    padding: 3px;
+	 margin: 2px 5px env(safe-area-inset-bottom) 5px;
+    background-color: var(--menu);
+    display: flex;
+    color: white;
+    font-size: 12px;
+    align-items: center;
+}
+
+.footer :nth-child(2)
+{
+    padding-left: 10px;
+    font-size: medium;
+}
+
+.footer :nth-child(3)
+{
+    width: -webkit-fill-available;
+    width: -moz-available;
+    color: #4d9143;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    opacity: 0;
+}
+
+.footer :nth-child(4)
+{
+    width: 125px;
+    text-align: end;
+    padding-right: 5px;
+    padding-top: 3px;
 }
 
 .rounded-border
@@ -184,25 +230,23 @@ button:focus {
 
 .button1
 {
-    background-color: var(--caption1);
+    background-color: var(--neutral3);
     color: var(--buttonFont);
-    margin: 5px 1px 5px 1px;
     display: inline-block;
-    padding: 6px 6px;
+    padding: 6px;
     text-decoration: none;
-    box-shadow: 1px 1px 5px 1px var(--shadow);
-    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .button1:hover
 {
-    background-color: var(--caption2);
+    background-color: var(--neutral4);
 }
 
 .button2
 {
-    background-color: var(--caption2);
-    color: var(--buttonFont);
+    background-color: var(--neutral4);
+    color: var(--neutral0);
     padding: 3px 10px;
     text-decoration: none;
     height: 24px;
@@ -210,17 +254,19 @@ button:focus {
 
 .button2:hover
 {
-    background-color: var(--caption1);
+    background-color: var(--neutral3);
 }
 
 .buttonOptions
 {
     display: inline;
+    font-size: 14px;
     min-width: 76px;
     padding: 4px;
     margin: 2px;
-    color: white;
-    height: 28px;
+    color: var(--buttonFont);
+    min-height: 32px;
+    height: fit-content;
     background-color: slategray;
     text-decoration: none;
 }
@@ -233,7 +279,7 @@ button:focus {
 .tool-button
 {
     height: 32px;
-    color: white;
+    color: var(--buttonFont);
     font-size: 14px !important;
     background-color: var(--neutral3);
     cursor: pointer;
@@ -245,19 +291,68 @@ button:focus {
     margin-bottom: 4px;
 }
 
+.tool-button-svg
+{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    fill: var(--buttonFont);
+    color: var(--buttonFont);
+    height: 33px;
+    width: 33px;
+    align-self: center;
+    font-size: 14px;
+    background-color: var(--neutral3);
+    cursor: pointer;
+    white-space: nowrap;
+    vertical-align: middle;
+    transition: 0.3s;
+}
+
+.tool-button-svg > svg
+{
+    height: 20px;
+    min-width: 20px;
+}
+
+.tool-button-svg-smal
+{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    fill: var(--buttonFont);
+    color: var(--buttonFont);
+    align-self: center;
+    font-size: 14px;
+    background-color: transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    vertical-align: middle;
+    transition: 0.3s;
+}
+
+.tool-button-svg-smal > svg
+{
+    height: 18px;
+    width: 18px;
+}
+
 .menuDashboard
 {
     background-color: var(--dashboardMenuBackground);
     width: 99%;
     margin: 7px;
-    display: inline-block;
+    display: inline-flex;
+    overflow-x: auto;
+    padding: 0px 0px 0px env(safe-area-inset-left);
 }
 
 .buttonDashboard
 {
     display: inline;
     margin: 5px 3px 5px 3px;
-    color: white;
+    padding: 0px;
+    color: var(--buttonFont);
     background-color: transparent;
     text-decoration: none;
     cursor: pointer;
@@ -274,20 +369,16 @@ button:focus {
 .buttonDashboardActive
 {
     border-radius: 0;
-    border-bottom-color: white;
+    border-bottom-color: var(--buttonFont);
     border-bottom-style: solid;
     border-bottom-width: 2px;
 }
 
 .buttonDashboardTool
 {
-    display: inline;
     margin: 5px 5px 5px 2px;
+    align-self: center;
     color: orange;
-    background-color: transparent;
-    height: 28px;
-    text-decoration: none;
-    cursor: pointer;
 }
 
 .buttonDashboardTool:hover
@@ -308,7 +399,7 @@ button:focus {
 .seperatorFold
 {
     background-color: slategray;
-    color: var(--light2);
+    color: var(--light4);
     padding: 5px 15px;
     font-weight: bold;
     margin-top: 4px;
@@ -319,7 +410,7 @@ button:focus {
 .seperator
 {
     background-color: slategray;
-    color: var(--light2);
+    color: var(--light4);
     padding: 5px 15px;
     font-weight: bold;
     margin-top: 4px;
@@ -335,7 +426,15 @@ button:focus {
 .labelB1
 {
     font-size: 12px;
-    color: var(--neutral4);
+    color: var(--neutral4) !important;
+    margin-left: 6px;
+    font-weight: normal;
+}
+
+.labelB2
+{
+    font-size: 12px;
+    color: var(--neutral0) !important;
     margin-left: 6px;
     font-weight: normal;
 }
@@ -349,10 +448,10 @@ button:focus {
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     margin-bottom: 2px;
-    padding: 3px;
+    padding-right: 3px;
     height: 32px;
     box-sizing: border-box;
     font-size: 14px;
@@ -364,7 +463,7 @@ button:focus {
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     height: 32px;
     box-sizing: border-box;
@@ -378,7 +477,7 @@ button:focus {
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     margin-bottom: 2px;
     padding: 3px;
@@ -393,7 +492,7 @@ button:focus {
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     margin-bottom: 2px;
     padding: 3px;
@@ -408,23 +507,38 @@ button:focus {
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     margin-bottom: 2px;
     padding: 3px;
     margin: 1px;
     height: 32px;
     box-sizing: border-box;
-    width: 100%;
+    width: 99%;
 }
 
 .inputSettingScript
 {
     font-family: monospace !important;
     white-space: pre !important;
+    resize: vertical;
+    width: -webkit-fill-available;
+    width: -moz-available;
 }
-}
+
 span > input
+{
+    display: inline-block;
+    width: 98%;
+}
+
+span > input
+{
+    display: inline-block;
+    width: 98%;
+}
+
+span > select
 {
     display: inline-block;
     width: 98%;
@@ -441,7 +555,7 @@ span > input
     border-width: 1px;
     border-color: var(--neutral2);
     border-style: solid;
-    color: white;
+    color: var(--fontColor);
     margin-top: 2px;
     padding: 3px;
     width: 45px;
@@ -467,7 +581,7 @@ span > input
 .info
 {
     background-color: green;
-    color: white;
+    color: var(--fontColor);
     text-decoration: none;
     font-size: 22px;
     width: 95%;
@@ -484,7 +598,7 @@ span > input
 .infoWarn
 {
     background-color: orange;
-    color: white;
+    color: var(--fontColor);
     text-decoration: none;
     font-size: 22px;
     width: 95%;
@@ -495,7 +609,7 @@ span > input
 .infoError
 {
     background-color: red;
-    color: white;
+    color: var(--fontColor);
     text-decoration: none;
     font-size: 22px;
     width: 95%;
@@ -524,7 +638,7 @@ span > input
 
 .schemaDiv
 {
-    color: white;
+    color: var(--fontColor);
     padding-top: 5px;
     padding-left: 4px;
     padding-right: 4px;
@@ -543,12 +657,13 @@ span > input
     min-width: 100px;
     display: inline-table;
     text-align: left;
-    color: white;
+    color: var(--listFontColor);
 }
 
 .confirmDiv
 {
     margin-top: 5px;
+	 padding: 0px 0px 0px env(safe-area-inset-left);
 }
 
 .configDescriptionCaption
@@ -596,44 +711,6 @@ span > input
     padding: 5px;
 }
 
-.inputTableConfig > div > span
-{
-    width: 24%;
-    min-width: 100px;
-    display: inline-table;
-    text-align: left;
-    height: 24px;
-    color: var(--listFontColor);
-}
-
-.inputTableConfig > div > span:nth-child(3n)
-{
-    margin-left: 10px;
-    width: 45%;
-    min-width: 100px;
-    display: inline-table;
-    text-align: left;
-    height: 24px;
-    color: var(--listFontColor);
-}
-
-.inputTableConfig > div > span > input[type="search"]
-{
-    width: 100%;
-}
-
-.inputTableConfig > div > span > textarea
-{
-    width: 100%;
-    resize: vertical;
-    padding: 0px;
-}
-
-.inputTableConfig > div > span > select
-{
-    width: 100%;
-}
-
 .content
 {
     display: flex;
@@ -642,9 +719,11 @@ span > input
 .controlContainer
 {
     padding: var(--containerPadding);
+	 margin: 0px 0px 0px env(safe-area-inset-left);
+	 background-color: var(--menu);
     font-size: 10px;
     color: var(--light2);
-    margin: 0px 4px 0px 0px;
+    /*margin: 0px 4px 0px 0px;*/
     min-width: 180px;
     overflow-y: auto;
 }
@@ -654,6 +733,7 @@ span > input
     overflow-y: auto;
     width: -webkit-fill-available;
     width: -moz-available;
+    padding: 0px 0px 0px env(safe-area-inset-left);
 }
 
 .listContainer
@@ -701,9 +781,10 @@ span > input
     padding: 0px 0px 0px 10px;
 }
 
+/* used for p4d */
 .tableRow
 {
-    background: linear-gradient(to bottom right, var(--light3), var(--light1)); /* Standard syntax (must be last) */
+    background: linear-gradient(to bottom right, var(--light3), var(--light1));
     border-radius: var(--borderRadius);
     margin: 2px;
     height: 30px;
@@ -715,7 +796,6 @@ span > input
 {
     margin-left: 15px;
     align-self: center;
-    /* height: 18px; */
 }
 
 .tableRow > button
@@ -727,7 +807,6 @@ span > input
 
 .tableRow > input[type='search']
 {
-    /* height: 24px;*/
 }
 
 .tableRow > div
@@ -794,24 +873,18 @@ div.greenCircle
     height: 12px;
     border-radius: 8px;
     margin-left: 4px;
-    background-color: yellow;
-}
-
-.setupContainer
-{
-    background: linear-gradient(to bottom right, #00000096, black);
-    width: fit-content;
-    padding: var(--containerPadding);
-    width: -webkit-fill-available;
-    width: -moz-available;
+    background-color: var(--yellow);
 }
 
 .tableMultiCol
 {
-    width: 100%;
+    /*width: 100%;*/
     border-collapse: collapse;
     color: var(--buttonFont);
     margin-top: 5px;
+    white-space-collapse: preserve-breaks;
+    table-layout: fixed;
+    background: linear-gradient(to bottom right, #00000096, black);
 }
 
 table.tableMultiCol thead
@@ -828,8 +901,13 @@ table.tableMultiCol tr
 {
     height: 48px;
     border-width: 1px;
-    border-color: white;
+    border-color: var(--neutral3);
     border-bottom-style: solid;
+}
+
+table.tableMultiCol td
+{
+    word-wrap: break-word;
 }
 
 .stateInfo
@@ -916,6 +994,18 @@ table.tableMultiCol tr
 /* ----------------------- */
 /* VDR FB */
 
+.vdrContent
+{
+    margin: 0px 5px 0px 5px;
+    /*background-color: var(--background); */
+}
+
+.vdrPresent
+{
+    padding: var(--containerPadding);
+    background-color: var(--background);
+}
+
 .vdrFbContainer
 {
     display: flex;
@@ -931,13 +1021,13 @@ table.tableMultiCol tr
     display: block;
     overflow: hidden;
     width: 31%;
-    height: 90vh;
+    height: 80vh;
     margin: 2px;
 }
 
 @media only screen and (orientation:portrait)
 {
-    .vdrFbContainer > div { width: 99%; height: 33vh; }
+    .vdrFbContainer > div { width: 99%; height: 25vh; }
 }
 
 .vdrFbContainer > div > div
@@ -980,13 +1070,13 @@ table.tableMultiCol tr
 }
 
 .vdrButton:active {
-    background-color: var(--caption2);
+    background-color: var(--neutral2);
     transform: translateY(2px);
 }
 
 .vdrButton:hover
 {
-/*    background-color: var(--caption2); */
+/*    background-color: var(--neutral2); */
 }
 
 .vdrButtonRound
@@ -1085,7 +1175,7 @@ table.tableMultiCol tr
     width: 80px;
     padding: 2px;
     margin: 2px;
-    color: white;
+    color: var(--buttonFont);
     font-size: large;
     background-color: slategray;
 }
@@ -1107,7 +1197,7 @@ table.tableMultiCol tr
     min-width: 76px;
     padding: 2px;
     margin: 2px;
-    color: white;
+    color: var(--buttonFont);
     height: 28px;
     background-color: slategray;
 }
@@ -1131,6 +1221,185 @@ table.tableMultiCol tr
     display: inline;
     width: 300px;
     padding: 0px;
+}
+
+/* ----------------------- */
+/* config page */
+
+.tabButtons
+{
+    display: inline-flex;
+    width: inherit;
+    background-color: var(--menu);
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+.tabButtons > span:nth-child(1)
+{
+    align-content: center;
+    margin-left: 10px;
+}
+
+.tabButtons > span:nth-child(2)
+{
+    display: flex;
+    align-content: center;
+    margin-right: 10px;
+}
+
+.tabButtons > span:nth-child(2) > button
+{
+    cursor: pointer;
+    background-color: transparent;
+    color: var(--fontColor);
+    fill: var(--fontColor);
+    opacity: 0.6;
+    display: inline-block;
+    padding: 4px 12px;
+    /* margin-top: 5px; */
+    text-decoration: none;
+    transition: 0.5s;
+    border: none;
+}
+
+.tabButtons > span:nth-child(2) > button:hover
+{
+    opacity: 0.9;
+}
+
+.tabButtons > span:nth-child(2) > button.active
+{
+    opacity: 1.0;
+    font-weight: bold;
+}
+
+.setupContainer
+{
+    background: linear-gradient(to bottom right, #00000096, black);
+    padding: var(--containerPadding);
+    /*width: fit-content;*/
+    /*width: -webkit-fill-available;
+    width: -moz-available;*/
+}
+
+.setupMenu
+{
+    margin-top: 4px;
+/*    display: inline-flex;
+    overflow-x: auto;
+	 width: 94%; */
+}
+
+.setupMenu > button
+{
+	 text-wrap: nowrap;
+    margin: 1px;
+}
+
+.inputTableConfig
+{
+    background: linear-gradient(to bottom right, #00000096, black);
+    padding: var(--containerPadding);
+    display: table;
+    width: 92%;
+    margin: 3%;
+}
+
+.inputTableConfig > div
+{
+    display: inline-grid;
+    width: 48%;
+    padding: var(--containerPadding);
+}
+
+.inputTableConfig > div > span
+{
+    min-width: 100px;
+    text-align: left;
+    align-self: center;
+    /*color: var(--listFontColor);*/
+}
+
+.inputTableConfig > div > span:nth-child(1)
+{
+    align-self: center;
+
+}
+
+.inputTableConfig > div > span > span > span
+{
+    align-self: center;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.inputTableConfig > div > span:nth-child(3n)
+{
+    margin-left: 10px;
+    width: 45%;
+    min-width: 100px;
+    text-align: left;
+    color: var(--listFontColor);
+}
+
+.inputTableConfig > div > span > input
+{
+    width: 100%;
+}
+
+.inputTableConfig > div > span > textarea
+{
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+}
+
+.inputTableConfig > div > span > select
+{
+    width: 100%;
+}
+
+/* ----------------------- */
+/* Settings Dialog */
+
+.settingsDialogContent
+{
+    z-index: 9999;
+    min-width: 20vw;
+}
+
+.settingsDialogContent > div
+{
+    display: flex;
+}
+
+.settingsDialogContent > div > span:nth-child(1)
+{
+    width: 40%;
+    text-align: end;
+    margin-right: 10px;
+    align-self: center;
+}
+
+.settingsDialogContent > div > label:nth-child(1)
+{
+    width: 30%;
+    text-align: end;
+    margin-right: 10px;
+    align-self: center;
+}
+
+.settingsDialogContent > div > span:nth-child(1) > a
+{
+    color: blue;
+}
+
+.settingsDialogContent > div > span:nth-child(2)
+{
+    width: -webkit-fill-available;
+    width: -moz-available;
+    text-align: left;
 }
 
 /* ----------------------- */
@@ -1213,7 +1482,6 @@ table.tableMultiCol tr
     background-color: var(--light3);
 }
 
-
 .weatherForecast
 {
     position: absolute;
@@ -1224,7 +1492,7 @@ table.tableMultiCol tr
     overflow-x: hidden;
     overflow-y: scroll;
     background-color: black;
-    color: white;
+    color: var(--fontColor);
     outline: none;
 }
 
@@ -1248,19 +1516,15 @@ table.tableMultiCol tr
 
 .widgetContainer
 {
-    display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    color: white;
+    color: var(--fontColor);
 }
 
 .widgetContainer > div
 {
     justify-content: center;
     overflow: hidden;
-    width: 212px;
-    height: 212px;
-    margin: 3px;
+    margin: 2px;
     background-color: var(--widgetBackground);
     padding: 1px;
 }
@@ -1271,7 +1535,7 @@ table.tableMultiCol tr
     grid-template-areas:
       'title'
       'main';
-    grid-template-rows: 12% 88%;
+    grid-template-rows: 15% 85%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1287,9 +1551,8 @@ table.tableMultiCol tr
     grid-template-areas:
       'title'
       'main'
-      'value'
-      'progress';
-    grid-template-rows: 14% 62% 20% 2%;
+      'value';
+    grid-template-rows: 15% 65% 20%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1300,9 +1563,8 @@ table.tableMultiCol tr
     grid-template-areas:
       'title'
       'peak'
-      'main'
-      'progress';
-    grid-template-rows: 14% 14% 70% 2%;
+      'main';
+    grid-template-rows: 15% 12% 73%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1356,7 +1618,7 @@ table.tableMultiCol tr
       'title title'
       'main main'
       'ctrl1 ctrl2';
-    grid-template-rows: 15% 66% 16%;
+    grid-template-rows: 15% 73% 12%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1368,7 +1630,8 @@ table.tableMultiCol tr
       'title title'
       'peak value'
       'chart chart';
-    grid-template-rows: 10% 14% 75%;
+    grid-template-rows: 15% 12% 73%;
+    grid-template-columns: 50% 50%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
 }
@@ -1390,8 +1653,8 @@ table.tableMultiCol tr
     text-align: end;
     overflow: hidden;
     background-color: transparent;
-    margin-top: 0px;
     margin-right: 4px;
+    align-self: center;
     color: var(--buttonFont);
 }
 
@@ -1399,19 +1662,17 @@ table.tableMultiCol tr
 {
     grid-area: peak;
     font-size: 0.9em;
-    font-weight: bold;
     padding-left: 12px;
     overflow: hidden;
     background-color: transparent;
-    margin-top: 10px;
-    color: red;
+    margin-top: 2px;
+    align-self: center;
+    color: var(--peakColor);
 }
 
 .chart-canvas-container
 {
     grid-area: chart;
-    /* position: relative;*/
-    width: inherit;
 }
 
 .chart-canvas
@@ -1426,7 +1687,7 @@ table.tableMultiCol tr
     background-color: transparent;
     cursor: pointer;
     border: none;
-    color: var(--listFontColor);
+    color: var(--fontColor);
     justify-self: center;
     text-align: center;
     align-self: center;
@@ -1434,11 +1695,10 @@ table.tableMultiCol tr
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 0px;
+    padding: 4px;
     margin: 0px;
     user-select: none;
 }
-
 
 .widget-edit
 {
@@ -1447,26 +1707,8 @@ table.tableMultiCol tr
 
 .widget-edit:hover
 {
-/*    font-size: 1em;*/
     font-weight: bold;
 }
-
-/*.widget-progress {
-    grid-area: progress;
-    background-color: gray;
-    width: 80%;
-    justify-self: center;
-    border-radius: 8px;
-    margin-top: 7px;
-    margin-bottom: 7px;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background-color: #3498db;
-    border-radius: 8px;
-}*/
 
 .widget-mode
 {
@@ -1482,7 +1724,7 @@ table.tableMultiCol tr
     outline: none;
     cursor: pointer;
     text-align: center;
-    color: white;
+    color: var(--fontColor);
     padding: 0px;
     font-size: 12vh;
 }
@@ -1517,7 +1759,7 @@ table.tableMultiCol tr
         'title title'
         'main peak'
         'main value';
-    grid-template-rows: 15% 15% 70%;
+    grid-template-rows: 15% 12% 73%;
     grid-template-columns: 58% 42%;
     grid-gap: 1px;
     box-shadow: 1px 1px 1px 0px var(--shadow);
@@ -1526,25 +1768,14 @@ table.tableMultiCol tr
 .widget-main-meter
 {
     grid-area: main;
-    width: 100%;
-    height: 100%;
-    align-self: center;
-}
-
-.widget-main-meter-lin
-{
-    grid-area: main;
-    height: 100%;
-    /*align-self: center;*/
-    margin-left: 10%;
-    padding-left: 10%;
+    text-align: center;
+    margin-top: 5px;
 }
 
 .widget-main-value-lin
 {
     grid-area: value;
     font-size: 1.5em;
-    /*text-align: end;*/
     font-weight: bold;
     align-self: center;
 }
@@ -1553,20 +1784,13 @@ table.tableMultiCol tr
 {
     grid-area: peak;
     font-size: 0.9em;
-    font-weight: bold;
     padding-left: 2px;
     overflow: hidden;
     background-color: transparent;
     margin-top: 5px;
-    color: #ff5757;
+    color: var(--peakColor);
     text-align: right;
     margin-right: 5px;
-}
-
-.widget-main-meter > canvas
-{
-    width: 100%;
-    height: 100%;
 }
 
 .widget-value
@@ -1581,7 +1805,7 @@ table.tableMultiCol tr
     color: var(--light4);
 }
 
-.widget-time
+.widget-choice
 {
     grid-area: main;
     display: inline-grid;
@@ -1589,8 +1813,64 @@ table.tableMultiCol tr
     font-size: xx-large;
     font-weight: bold;
     align-items: center;
+    align-self: center;
+    height: fit-content;
     word-break: break-word;
     color: var(--light4);
+    user-select: none;
+    cursor: pointer;
+}
+
+.widget-choice > div:hover
+{
+    opacity: 0.8;
+    background-color: #335656a1;
+}
+
+.widget-text
+{
+    grid-area: main;
+    display: inline-grid;
+    width: -webkit-fill-available;
+    width: -moz-available;
+    text-align: left;
+    align-content: center;
+    padding: 5px;
+    color: var(--light4);
+}
+
+.widget-text > table
+{
+    /*font-size: x-large;*/
+    font-size: calc(2vh);
+    white-space: nowrap
+}
+
+.widget-time
+{
+    grid-area: main;
+    display: inline-grid;
+    grid-template-areas:
+      'main'
+      'value';
+    grid-template-rows: 40% 60%;
+    height: 100%;
+    text-align: center;
+    font-size: xx-large;
+    font-weight: bold;
+    align-items: center;
+    word-break: break-word;
+    color: var(--light4);
+}
+
+.widget-time > div:nth-child(1)
+{
+    grid-area: main;
+}
+
+.widget-time > div:nth-child(2)
+{
+    grid-area: value;
 }
 
 .widget-ctrl1 { grid-area: ctrl1; }
@@ -1616,9 +1896,11 @@ table.tableMultiCol tr
 .widget > button > img
 {
     max-width: 100%;
+    /*
+    auskommentiert wegen verschobener Darstellung (auffällig z.B. bei heightfactor 0,75)
     max-height: 90%;
     justify-self: center;
-    vertical-align: middle;
+    vertical-align: middle;*/
 }
 
 .widgetGauge > button > img
@@ -1651,7 +1933,7 @@ table.tableMultiCol tr
 
 .widgetGauge.participation path.data-peak
 {
-    stroke: red;
+    color: var(--peakColor);
 }
 
 .widgetGauge.participation path.data-arc
@@ -1665,7 +1947,7 @@ table.tableMultiCol tr
 .lmcButton
 {
     margin: 1px;
-    color: white;
+    color: var(--fontColor);
     padding: 0px;
     background-color: transparent;
     cursor: pointer;
@@ -1683,7 +1965,7 @@ table.tableMultiCol tr
     margin: 2px;
     background-color: var(--widgetBackground);
     padding: 4px;
-    box-shadow: 1px 1px 1px 0px var(--shadow);
+    /*box-shadow: 1px 1px 1px 0px var(--shadow);*/
 }
 
 .lmcContainer
@@ -1715,6 +1997,13 @@ table.tableMultiCol tr
     margin: 2px;
     background-color: var(--widgetBackground);
     box-shadow: 1px 1px 1px 0px var(--shadow);
+}
+
+.lmcControl > div > span
+{
+    align-self: center;
+    margin: 2px;
+    font-size: large;
 }
 
 .lmcCurrentTrack
@@ -1812,10 +2101,22 @@ table.tableMultiCol tr
 
 .lmcMenu > div
 {
-    /* line-height: 30px;
-    vertical-align: middle; */
+    height: 20px;
+    margin: 2px;
     padding: 12px;
     background-color: var(--widgetBackground);
+    align-items: center;
+    display: flex;
+}
+
+.lmcMenu > div > span
+{
+    height: 100%;
+}
+
+.lmcMenu > div > span > img
+{
+    height: 100%;
 }
 
 .lmcCover
@@ -1829,9 +2130,11 @@ table.tableMultiCol tr
 
 .lmcCover > img
 {
-    width: 95%;
-    height: 95%;
-    object-fit: contain;
+    height: 100%;
+    width: 100%;
+    object-fit: fill;
+    border-radius: max(6px, min(14px, 7%)) !important;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 25px;
 }
 
 .lmcTrackProgress
@@ -1847,6 +2150,13 @@ table.tableMultiCol tr
   height: 10px;
   background-color: var(--yellow2);
   border-radius: 10px;
+}
+
+.lmcContextMenu > button
+{
+    width: -webkit-fill-available;
+    width: -moz-available;
+    margin: 4px;
 }
 
 /* -------------- */
@@ -1887,56 +2197,84 @@ dialog::backdrop, #backdrop
 /* -------------- */
 /* Media specials */
 
+@media only screen and (max-width: 320px)
+{
+/*    .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; } */
+    .widget-weather            { font-size: large; margin-top: 0px;  }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 13vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
+}
+
 @media only screen and (max-width:395px)
 {
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
-    .button1                   { margin: 1px; }
-    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }
+    .button1                   { margin-right: 1px; }
+/*    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; } */
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 30%; }
     .buttonDashboard           { margin: 1px 0px 1px 0px; }
-    .menuDashboard             { margin: 2px; }
-    .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; }
+    .menuDashboard             { margin: 1px; }
+/*    .widgetContainer > div     { width: 175px; height: 160px; margin: 1px; } */
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widget-title              { font-size: 1.0em; }
     .widget-value              { font-size: 1.0em; }
+    .widget-text               { font-size: large; }
     .widget-weather            { font-size: x-large; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 13vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
+@media only screen and (max-width:500px)
+{
+    .buttonOptions.table       { min-width: unset; }
+}
+
 @media only screen and (min-width:396px) and (max-width:1080px)
 {
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
-    .button1                   { margin: 1px; }
-    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }
+    .button1                   { margin-right: 1px; }
+/*    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }*/
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
-    .inputTableConfig > div > span              { width: 30%; }
+    .inputTableConfig > div > span              { width: 90%; }
     .buttonDashboard           { padding: 4px; margin: 1px 0px 1px 0px; }
-    .menuDashboard             { margin: 2px; }
-    .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; }
+    .menuDashboard             { margin: 1px; }
+    /*    .widgetContainer > div     { width: 180px; height: 160px; margin: 2px; } */
     .widgetGauge               { grid-template-rows: 30% 70%; }
     .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 18% 67%; }
     .widgetMeterLinear         { grid-template-rows: 15% 25% 60%; }
+    .widgetMeter               { grid-template-rows: 15% 85%; }
+
     .widget-title              { padding: 3px; padding-top: 4px; font-size: 1.0em; }
     .widget-main-peak-lin      { font-size: 0.7em; }
-    .widget-value              { font-size: 1.2em; }
-    .widget-weather            { font-size: x-large; margin-top: 0px;  }
+    .widget-value              { font-size: x-large; }
+    .widget-text               { font-size: large; }
+    .widget-weather            { font-size: larger; margin-top: 0px;  }
     .widget-weather > br       { display: none; }
     .widget-main               { font-size: 11vh;}
+    .weatherForecast           { left: 2%; width: 95%; }
+    .inputTableConfig > div    { width: inherit; }
+}
+
+@media only screen and (min-width:321px) and (max-width: 375px)
+{
+/*    .widgetContainer > div     { width: 168px; padding: 0px; margin: 1px; }*/
+    .widget-weather            { font-size: large; margin-top: 0px;  }
+    .widget-weather > br       { display: none; }
+    .widget-main               { font-size: 13vh;}
     .weatherForecast           { left: 2%; width: 95%; }
 }
 
 @media only screen and (min-height:480px) and (max-height:500px)
 {
     .content                   { margin: 0px; }
-    .widgetContainer > div     { width: 120px; height: 95px; margin: 1px; }
+/*    .widgetContainer > div     { width: 120px; height: 95px; margin: 1px; } */
     .widget                    { grid-template-rows: 15% 85%; }
     .widgetChart               { grid-template-rows: 15% 14% 71%; }
     .buttonDashboard           { padding: 4px; margin: 0px 0px 0px 0px; }
@@ -1951,70 +2289,4 @@ dialog::backdrop, #backdrop
     .widget-weather > br       { display: block; }
     .symbol-value              { font-size: large;}
     .weatherForecast           { left: 5%; width: 90%; }
-}
-
-@media only screen and (max-width: 375px) and (min-width:321px)
-{
-    .widgetContainer > div     { width: 168px; padding: 0px; margin: 1px; }
-    .widget-weather            { font-size: large; margin-top: 0px;  }
-    .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 13vh;}
-    .weatherForecast           { left: 2%; width: 95%; }
-}
-
-@media only screen and (max-width: 320px)
-{
-    .widgetContainer > div     { width: 150px; padding: 0px; margin: 1px; }
-    .widget-weather            { font-size: large; margin-top: 0px;  }
-    .widget-weather > br       { display: none; }
-    .widget-main               { font-size: 13vh;}
-    .weatherForecast           { left: 2%; width: 95%; }
-}
-
-/* schema line draw stuff  */
-
-.resizable {
-  background: transparent;
-  width: 50px;
-  height: 50px;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-
-.resizable .resizers{
-  width: 100%;
-  height: 100%;
-  border: 1px solid #4286f4;
-  box-sizing: border-box;
-}
-
-.resizable .resizers .resizer{
-  width: 10px;
-  height: 10px;
-  border-radius: 50%; /*magic to turn square into circle*/
-  background: white;
-  border: 2px solid #4286f4;
-  position: absolute;
-}
-
-.resizable .resizers .resizer.top-left {
-  left: -5px;
-  top: -5px;
-  cursor: nwse-resize; /*resizer cursor*/
-}
-.resizable .resizers .resizer.top-right {
-  right: -5px;
-  top: -5px;
-  cursor: nesw-resize;
-}
-.resizable .resizers .resizer.bottom-left {
-  left: -5px;
-  bottom: -5px;
-  cursor: nesw-resize;
-}
-.resizable .resizers .resizer.bottom-right {
-  right: -5px;
-  bottom: -5px;
-  cursor: nwse-resize;
 }

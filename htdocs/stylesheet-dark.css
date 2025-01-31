@@ -6,6 +6,9 @@
 
 :root
 {
+    --widgetWidthBase: 110;
+    --widgetHeightBase: 110;
+
     /* colors */
 
     --menu: #171717;
@@ -21,6 +24,7 @@
     --neutral4: #a3a3a3;
 
     --listFontColor: white;
+    --fontColor: white;
     --blue: #2177AD;
     --blueshade: #495b67;
     --yellow: #fad600;
@@ -28,13 +32,14 @@
     --info: #f9f9ef;
 
     --containerPadding: 10px;
-    --widgetBackground: #272727b8;
+    --widgetBackground: #272727cc;
     --dashboardMenuBackground: #7080907a;
     --caption1: #292929;
     --caption2: #565353;
     --edit: #f9f9ef;
-    --editadd: #565353;
+    --editadd: #fffcab;
 
+    --peakColor: #ff5757;
     --background: #000000d1;
     --shadow: black;
 
@@ -50,9 +55,25 @@
 
     --dialogColor: black;
     --dialogBackground: lightgray;
-
+    --dialogColorDark: lightgray;
+    --dialogBackgroundDark: #272727;
     --scaleText: white;
     --scale: #ccc;
+
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+}
+
+@media only screen and (max-width: 500px)
+{
+    :root { --containerPadding: 5px; }
+}
+
+@media only screen and (max-width:900px)
+{
+    :root { --widgetWidthBase: 90; --widgetHeightBase:80; }
 }
 
 Body

@@ -482,7 +482,7 @@
             x = ye(r + (l ? d - k - b + g / 2 : s / 2)),
             T = !l || (t.hasLeft && t.hasRight) ? 0 : (((t.hasRight ? -1 : 1) * t.ticksWidth) / 100) * s,
             S = l || (t.hasLeft && t.hasRight) ? 0 : (((t.hasRight ? -1 : 1) * t.ticksWidth) / 100) * s;
-        return (
+       return (
             (e.barDimensions = {
                 isVertical: l,
                 width: s,

@@ -59,7 +59,7 @@ class P4d : public Daemon, public FroelingService
       int sendStateMail();
       int isMailState();
 
-      int process() override;
+      int process(bool force = false) override;
       int performJobs() override;
       void logReport() override;
       bool onCheckRights(long client, Event event, uint rights) override;

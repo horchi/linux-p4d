@@ -5,10 +5,15 @@
     <meta charset="utf-8">
     <meta name="author" content="Jörg Wendel"/>
     <meta name="copyright" content="Jörg Wendel"/>
-    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1"/>
+
+    <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover"/>
+	 <!-- see also env(safe-area-inset... in JS and CSS -->
+
     <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
 <!--    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/> -->
+    <meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 
     <link rel="icon" href="img/icon.png" type="image/png"/>
     <link rel="shortcut icon" href="img/icon.png" type="image/png"/>
@@ -46,6 +51,7 @@
     <script type="text/javascript" src="websocket.js"></script>
     <script type="text/javascript" src="main.js"></script>
     <script type="text/javascript" src="dashboard.js"></script>
+    <script type="text/javascript" src="widgetsetup.js"></script>
     <script type="text/javascript" src="list.js"></script>
     <script type="text/javascript" src="chart.js"></script>
     <script type="text/javascript" src="setup.js"></script>
@@ -66,8 +72,8 @@
   <body>
 
     <div id="menu" class="menu">
-      <nav id="navMenu"></nav>
-      <div id="infoBox" class="rounded-border infoBox"></div>
+      <nav id="navMenu" class="navMenu"></nav>
+      <div id="infoBox" class="infoBox"></div>
       <header id="header" class="rounded-border header"></header>
     </div>
     <div id="dashboardMenu" class="rounded-border menuDashboard"></div>
@@ -77,9 +83,31 @@
       <div id="container" class="container"></div>
     </div>
 
+	 <div id="footer" class="footer">
+		<span id="socketState"class="socketState greenCircle" style="min-width:max-content;"></span>
+		<span id="footerTime"></span>
+      <span id="action-state"></span>
+      <span id="version">Version 1.0</span>
+    </div>
+
     <dialog role="dialog">
       <canvas id="chartDialog" class="chartDialogCanvas" onclick="toggleChartDialog('',0)"></canvas>
     </dialog>
+
+    <svg display="none">
+      <symbol id="angle-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+         <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+      </symbol>
+      <symbol id="angle-up" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+         <path d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/>
+      </symbol>
+      <symbol id="close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
+      </symbol>
+      <symbol id="close1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+         <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
+      </symbol>
+    </svg>
 
   </body>
 </html>

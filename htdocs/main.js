@@ -9,6 +9,7 @@
  */
 
 var WebSocketClient = window.WebSocketClient
+var pingTimeoutMs = 4000;
 var colorStyle = null;
 var isDaytime = false;
 var daytimeCalcAt = null;
@@ -26,8 +27,11 @@ var valueTypes = [];
 var valueFacts = {};
 var dashboards = {};
 var allSensors = [];
-
+var wifis = [];
 var images = [];
+var systemServices = [];
+var syslogs = [];
+var syslogFilter = "";
 var currentPage = "dashboard";
 var startPage = null;
 var actDashboard = -1;
@@ -46,8 +50,14 @@ var lmcData = {};
 var setupMode = false;
 var dashboardGroup = 0;
 var kioskBackTime = 0;
+var kioskMode = null;    // 0 - with menu,    normal dash symbols, normal-widget-height
+							    // 1 - without menu, big dash symbols,    kiosk-widget-height
+							    // 2 - with menu,    big dash symbols,    kiosk-widget-height
+							    // 3 - with menu,    big dash symbols,    normal-widget-height
 
-var kioskMode = null;
+var heightFactor = null;
+
+var sab = 0;             // env(safe-area-inset-bottom)
 
 //  0 - with menu,    normal dash symbold, normal-widget-height
 //  1 - without menu, big dash symbold,    kiosk-widget-height
@@ -60,35 +70,37 @@ $('document').ready(function() {
 
    const urlParams = new URLSearchParams(window.location.href);
    kioskMode = urlParams.get('kiosk');
+   heightFactor = urlParams.get('heightFactor');
    dashboardGroup = urlParams.get('group') != null ? urlParams.get('group') : 0;
    kioskBackTime = urlParams.get('backTime');
-   console.log("kioskMode" + " : " + kioskMode);
+   console.log("kioskMode", kioskMode, "heightFactor", heightFactor);
    console.log("dashboardGroup" + " : " + dashboardGroup);
    startPage = urlParams.get('page') != null ? urlParams.get('page') : null;
    actDashboard = urlParams.get('dash') != null ? urlParams.get('dash') : -1;
    console.log("currentPage: " + currentPage);
    console.log("startPage: " + startPage);
 
-   var connectUrl = "";
+   let connectUrl = "";
 
    if (window.location.href.startsWith("https"))
       connectUrl = "wss://" + location.hostname + ":" + location.port;
    else
       connectUrl = "ws://" + location.hostname + ":" + location.port;
 
-   var protocol = myProtocol;
+   let protocol = myProtocol;
 
    moment.locale('de');
    connectWebSocket(connectUrl, protocol);
    colorStyle = getComputedStyle(document.body);
+   $('#socketState').click(function() { daemonStateDlg(); });
 });
 
 var socketStateInterval = null;
 
 function onSocketConnect(protocol)
 {
-   var token = localStorage.getItem(storagePrefix + 'Token');
-   var user = localStorage.getItem(storagePrefix + 'User');
+   let token = localStorage.getItem(storagePrefix + 'Token');
+   let user = localStorage.getItem(storagePrefix + 'User');
 
    if (token == null) token = "";
    if (user == null)  user = "";
@@ -110,6 +122,8 @@ function onSocketConnect(protocol)
 
    onSmalDevice = window.matchMedia("(max-width: 740px)").matches;
    console.log("onSmalDevice : " + onSmalDevice);
+
+   sab = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sab"));
 }
 
 function connectWebSocket(useUrl, protocol)
@@ -135,7 +149,45 @@ function connectWebSocket(useUrl, protocol)
       return !($el.innerHTML = "Your Browser will not support Websockets!");
 }
 
+function daemonStateDlg()
+{
+   let isOnline = daemonState.state != null && daemonState.state == 0;
+   let isConnected = socket && socket.ws.readyState == WebSocket.OPEN;
+   let form = '<div id="daemonStateDlg">';
+
+   form += ' <div class="dialog-content">';
+
+   if (isOnline) {
+      form += '  <div style="display:flex;padding:2px;"><span style="width:30%;display:inline-block;">Läuft seit:</span><span display="inline-block">' + daemonState.runningsince + '</span></div>\n';
+      form += '  <div style="display:flex;padding:2px;"><span style="width:30%;display:inline-block;">Version:</span> <span display="inline-block">' + daemonState.version + '</span></div>\n';
+      form += '  <div style="display:flex;padding:2px;"><span style="width:30%;display:inline-block;">CPU Last:</span><span display="inline-block">' + daemonState.average0 + ' / ' + daemonState.average1 + ' / '  + daemonState.average2 + '</span></div>\n';
+      form += '  <div style="display:flex;padding:2px;"><span style="width:30%;display:inline-block;">Verbunden:</span><span display="inline-block">' + (isConnected ? 'JA' : 'NEIN') + '</span></div>\n';
+   }
+
+   form += ' </div>';
+   form += '</div>';
+
+   $(form).dialog({
+      title: config.instanceName + (isOnline ? ' - ONLINE' : ' - OFFLINE'),
+      width: "400px",
+      modal: true,
+      resizable: false,
+      closeOnEscape: true,
+      hide: "fade",
+      open: function(event, ui) {
+         $('.ui-widget-overlay').bind('click', function()
+                                      { $("#daemonStateDlg").dialog('close'); });
+      },
+      close: function() {
+         $("body").off("click");
+         $(this).dialog('destroy').remove();
+      }
+   });
+
+}
+
 var socketStateCount = 0;
+var socketStateTimeInterval = null;
 
 function updateSocketState()
 {
@@ -145,7 +197,7 @@ function updateSocketState()
    // VDR did not support ping
 
    if (currentPage != "vdr") {
-      if (lastPingAt + 4000 <= new Date().getTime()) {
+      if (lastPingAt + pingTimeoutMs <= new Date().getTime()) {
          console.log("Warning: Reconnecting web socket");
          socket.reopen();
          lastPingAt = new Date().getTime();
@@ -164,7 +216,8 @@ function updateSocketState()
    $('#socketState').attr('class', '');
    $('#socketState').addClass('socketState ' + circle);
 
-   // console.log("updated socket state to", $('#socketState').attr('class'));
+   let now = new Date();
+   $('#footerTime').html(now.toTimeLocal());
 }
 
 function sleep(ms) {
@@ -175,90 +228,124 @@ var infoDialog = null;
 
 async function showInfoDialog(object)
 {
-   var message = object.message;
-   var titleMsg = "";
+   let message = object.message;
+   let titleMsg = '';
+   let msDuration = 2000;
+
+   if (object.status == 0)
+      msDuration = 4000;
+   else if (object.status <= 1)
+      msDuration = 10000;
+   else if (object.status >= 10)
+      msDuration = 5000;
 
    hideInfoDialog();
 
-   if (object.status == -1) {
+   if (object.status == 0) {
+      $('#action-state').css('opacity', 0);
+      $('#action-state').html(message + ' - success');
+      $('#action-state').animate({'opacity': '1'}, 300);
+   }
+
+   if (object.status == 0) {
+      titleMsg = '<a style="color:darkgreen;">Success</a>';
+   }
+   else if (object.status == -1) {
       titleMsg = "Error";
-      message = message.replace(/\n/g, "<br/>");
-      $('#infoBox').addClass('error-border');
+      titleMsg = '<a style="color:var(--red1);">Error</a>';
    }
    else if (object.status < -1) {
-      message = message.replace(/\n/g, "<br/>");
-      titleMsg = "Information (" + object.status + ")";
-      $('#infoBox').addClass('error-border');
+      titleMsg = '<a style="color:var(--red1);">Error (' + object.status + ')</a>';
    }
    else if (object.status == 1) {
-      var array = message.split("#:#");
+      let array = message.split("#:#");
       titleMsg = array[0];
-      message = array[1].replace(/\n/g, "<br/>");;
+   }
+   else if (object.status >= 10) {
+      titleMsg = '<a style="color:yellow;">Note</a>';
    }
 
-   var msDuration = 2000;
-   var bgColor = "";
-   var cls = "no-titlebar";
-   var align = "center";
+   let now = new Date();
+   titleMsg = now.toDatetimeLocal() + '  ' + titleMsg;
 
-   if (object.status != 0) {
-      msDuration = 30000;
-      cls = "";
-      align = "left";
-   }
-
-   var progress = ($('<div></div>')
-                   .addClass('progress-smaller')
-                   .css('margin-right', '15px')
-                   .click(function() { hideInfoDialog(); }));
-
+   if ($('#infoBox').html() == '')
    $('#infoBox').append($('<div></div>')
-                        .css('overflow', 'hidden')
-                        .css('display', 'inline-flex')
-                        .css('align-items', 'center')
-                        .click(function() {
-                           clearTimeout(infoDialogTimer);
-                           infoDialogTimer = null;
-                           progress.addClass('hidden');
-                           $('#progressButton').removeClass('hidden');
-                        })
+                           .attr('id', 'infoBoxFirstElement')
+                           .addClass('rounded-border')
                         .append($('<span></span>')
+                                   .css('width', '-webkit-fill-available')
                                 .append($('<button></button>')
-                                        .attr('id', 'progressButton')
-                                        .css('margin-right', '15px')
+                                           .addClass('rounded-border tool-button-svg-smal')
+                                           .html('<svg><use xlink:href="#close"></use></svg>')
+                                           .click(function(event) { $('#infoBox').html(''); }))
+                                   .append($('<span></span>')
+                                           .html('Clear messages'))));
+
+   let newDiv = $('<div></div>')
                                         .addClass('rounded-border')
-                                        .addClass('hidden')
-                                        .click(function() { hideInfoDialog(); })
-                                        .html('x')))
+       .css('background-color', 'rgb(173 169 87)')
                         .append($('<span></span>')
-                                .append(progress))
-                        .append($('<span></span>')
+               .css('width', '-webkit-fill-available')
+               .append($('<button></button>')
+                       .addClass('rounded-border tool-button-svg-smal')
+                       .html('<svg><use xlink:href="#close"></use></svg>')
+                       .click(function(event) { $(this).closest('div').remove(); }))
                                 .append($('<span></span>')
                                         .css('font-weight', 'bold')
                                         .html(titleMsg))
                                 .append($('<br></br>')
                                         .addClass(titleMsg == '' ? 'hidden' : ''))
-                                .append($('<span></span>')
-                                        .html(message)))
-                       );
+               .append($('<div></div>')
+                       .css('white-space', 'pre')
+                       .css('padding-left', '20px')
+                       .text(message)));
 
-   $('#infoBox').addClass('infoBox-active');
+   newDiv.insertAfter('#infoBoxFirstElement');
+   newDiv.animate({backgroundColor: 'transparent'}, 2000);
+
+   if (object.status != 0) {
+      viewInfoDialog();
+      $("#infoBox").scrollTop(0);
+   }
 
    infoDialogTimer = setTimeout(function() {
       hideInfoDialog();
    }, msDuration);
 }
 
+function toggleInfoDialog()
+{
+   if (infoDialogTimer) {
+      clearTimeout(infoDialogTimer);
+      infoDialogTimer = null;
+   }
+
+   if ($("#infoBox").hasClass('infoBox-active'))
+      hideInfoDialog();
+   else
+      viewInfoDialog();
+}
+
+function viewInfoDialog()
+{
+   $("#infoBox").css('top', $("#content").position().top);
+   $('#infoBox').addClass('infoBox-active');
+   $("#content").click(function() { hideInfoDialog(); });
+   $("#toggleMsgBtn").html('<svg><use xlink:href="#angle-up"></use></svg>');
+}
+
 function hideInfoDialog()
 {
+   $("#content").off("click");
+
+   if (infoDialogTimer) {
+      clearTimeout(infoDialogTimer);
    infoDialogTimer = null;
+   }
 
-   if ($('#progressDiv') != null)
-      $('#progressDiv').css("visibility", "hidden");
-
-   $('#infoBox').html('');
    $('#infoBox').removeClass('infoBox-active');
-   $('#infoBox').removeClass('error-border');
+   $('#toggleMsgBtn').html('<svg><use xlink:href="#angle-down"></use></svg>');
+   $('#action-state').animate({'opacity': '0'}, 1000);
 }
 
 var progressDialog = null;
@@ -277,11 +364,11 @@ async function showProgressDialog()
    while (progressDialog)
       await sleep(100);
 
-   var msDuration = 300000;   // timeout 5 minutes
+   let msDuration = 300000;   // timeout 5 minutes
 
-   var form = document.createElement("div");
+   let form = document.createElement("div");
    form.style.overflow = "hidden";
-   var div = document.createElement("div");
+   let div = document.createElement("div");
    form.appendChild(div);
    div.className = "progress";
 
@@ -310,13 +397,44 @@ async function showProgressDialog()
    });
 }
 
+function pwdDialog(onConfirm, message, okBtn = 'Continue', cancelBtn = 'Cancel')
+{
+   let form = '<div>' +
+       '  <div class="dialog-content">' +
+       '    <input class="rounded-border input" id="pwdDlgValue"></input>'
+       '  </div>';
+
+   $(form).dialog({
+      hide: "fade",
+      title: 'Wifi key',
+      buttons: {
+         [okBtn]:     function() { $(this).dialog('close'); onConfirm($('#pwdDlgValue').val()); },
+         [cancelBtn]: function() { $(this).dialog('close'); }
+      },
+      close: function() { $(this).dialog('destroy').remove(); }
+   });
+}
+
 function dispatchMessage(message)
 {
-   var jMessage = JSON.parse(message);
-   var event = jMessage.event;
+   let jMessage = JSON.parse(message);
+   let event = jMessage.event;
 
-//   if (event != "chartdata")
-//      console.log("got event: " + event);
+   if (currentPage == "vdr") {
+      if (event == 'actual') {
+         let actual = jMessage.object;
+         // console.log("VDR: Got", event, JSON.stringify(actual, undefined, 4));
+         const actualStart = new Date(actual.present.starttime * 1000)
+         $('#vdrChannel').html(actual.channel.channelname);
+         $('#vdrStartTime').html(actualStart.toTimeLocal());
+         $('#vdrTitle').html(actual.present.title);
+         $('#vdrShorttext').html(actual.present.shorttext);
+      }
+      return ;
+   }
+
+   // if (event != "chartdata" && event != "ping")
+   //    console.log("got event: " + event);
 
    if (event == "result") {
       hideProgressDialog();
@@ -342,7 +460,7 @@ function dispatchMessage(message)
          allSensors = jMessage.object;
       }
       else {
-         for (var key in jMessage.object)
+         for (let key in jMessage.object)
             allSensors[key] = jMessage.object[key];
       }
       if (currentPage == 'dashboard')
@@ -385,15 +503,30 @@ function dispatchMessage(message)
    }
    else if (event == "daemonstate") {
       daemonState = jMessage.object;
+		let now = new Date();
+		daemonState.timeOffset = Math.round(now/1000 - daemonState.systime);
+      console.log("daemonState", daemonState);
+		// console.log("timeOffset", daemonState.timeOffset, "s");
+		updateFooter();
    }
    else if (event == "widgettypes") {
       widgetTypes = jMessage.object;
    }
+   else if (event == "syslogs") {
+      syslogs = jMessage.object;
+   }
    else if (event == "syslog") {
       showSyslog(jMessage.object);
    }
-   else if (event == "system") {
-      showSystem(jMessage.object);
+   else if (event == "database") {
+      showDatabaseStatistic(jMessage.object);
+      hideProgressDialog();
+   }
+   else if (event == "wifis") {
+      pingTimeoutMs = 4000;
+      wifis = jMessage.object;
+      showWifiList();
+      hideProgressDialog();
    }
    else if (event == "token") {
       localStorage.setItem(storagePrefix + 'Token', jMessage.object.value);
@@ -425,7 +558,7 @@ function dispatchMessage(message)
       // console.log("valueFacts " + JSON.stringify(valueFacts, undefined, 4));
 
       if (currentPage == "iosetup")
-         initIoSetup(valueFacts);
+         initIoSetup();
    }
    else if (event == "images") {
       images = jMessage.object;
@@ -435,7 +568,7 @@ function dispatchMessage(message)
    }
    else if (event == "chartdata") {
       hideProgressDialog();
-      var id = jMessage.object.id;
+      let id = jMessage.object.id;
 
       if (currentPage == 'chart') {                                 // the charts page
          drawCharts(jMessage.object);
@@ -452,6 +585,12 @@ function dispatchMessage(message)
    }
    else if (event == "groups") {
       initGroupSetup(jMessage.object);
+   }
+   else if (event == "system-services") {
+      // console.log("systemServices", jMessage.object);
+      hideProgressDialog();
+      systemServices = jMessage.object;
+      showSystemServicesList();
    }
    else if (event == "grouplist") {
       grouplist = jMessage.object;
@@ -496,15 +635,20 @@ function dispatchMessage(message)
 
 function prepareMenu()
 {
-   var html = "";
-   // var haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
+   let html = "";
+   // let haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
 
-   if (kioskMode == 1)
+   if (kioskMode == 1) {
+      $('#menu').css('height', '0px');
+      $('#menu').css('padding', '0px');
+      $('#dashboardMenu').css('margin', '2px');
       return ;
+   }
 
    document.title = config.instanceName;
    console.log("prepareMenu: " + currentPage);
 
+   html += '<div>';
    html += '<button class="rounded-border button1" onclick="mainMenuSel(\'dashboard\')">Dash</button>';
    if (config.showList == '1')
       html += '<button class="rounded-border button1" onclick="mainMenuSel(\'list\')">Liste</button>';
@@ -512,7 +656,7 @@ function prepareMenu()
    if (config.schema)
       html += '<button class="rounded-border button1" onclick="mainMenuSel(\'schema\')">Schema</button>';
    if (config.lmcHost != '')
-      html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'lmc\')">Squeezebox</button>';
+      html += '<button id="lmcMenu" class="rounded-border button1" onclick="mainMenuSel(\'lmc\')">Music</button>';
    if (config.vdr != '')
       html += '<button id="vdrMenu" class="rounded-border button1" onclick="mainMenuSel(\'vdr\')">VDR</button>';
 
@@ -527,39 +671,43 @@ function prepareMenu()
 
    html +=
       '<div style="display:flex;float:right;">' +
-      ' <span id="socketState" class="socketState ' + 'grayCircle' + '" style="min-width:max-content;"></span>' +
+      // '<span id="socketState" class="socketState ' + 'grayCircle' + '" style="min-width:max-content;"></span>' +
       ' <button id="burgerMenu" class="rounded-border button1 burgerMenu" onclick="menuBurger()">' +
       '  <div></div>' +
       '  <div></div>' +
       '  <div></div>' +
       ' </button>' +
+		'<button id="toggleMsgBtn" class="rounded-border tool-button-svg" ' +
+      'style="background-color:transparent;width:22px;" onclick="toggleInfoDialog()" title="view messages">' +
+      '<svg><use xlink:href="#angle-down"></use></svg>' +
+      '</button>' +
+
       '</div>';
+   html += '</div>';
 
    // buttons below menu
 
+   console.log("currentPage", currentPage);
    if (currentPage == "setup" || currentPage == "iosetup" || currentPage == "userdetails" || currentPage == "groups" ||
        currentPage == "alerts" || currentPage == "syslog" || currentPage == "system" || currentPage == "images" || currentPage == "commands") {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
-         html += "<div>";
-         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'setup\')">Allg. Konfiguration</button>';
+         html += '<div class="setupMenu">';
+         html += '<button class="rounded-border button2" onclick="mainMenuSel(\'setup\')">Konfiguration</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'iosetup\')">IO Setup</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'userdetails\')">User</button>';
-         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'alerts\')">Sensor Alerts</button>';
+         html += '<button class="rounded-border button2" onclick="mainMenuSel(\'alerts\')">Alerts</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'groups\')">Baugruppen</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'images\')">Images</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'syslog\')">Syslog</button>';
-         html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'system\')">System</button>';
+         html += '<button class="rounded-border button2" onclick="mainMenuSel(\'system\', \'database\')">Database</button>';
          html += '  <button class="rounded-border button2" onclick="mainMenuSel(\'commands\')">Commands</button>';
-         html += "</div>";
+         html += '<button class="rounded-border button2" onclick="mainMenuSel(\'system\', \'wifis\')">Wifi</button>';
+         html += '<button class="rounded-border button2" onclick="mainMenuSel(\'system\', \'system-services\')">System Services</button>';
+         html += '</div>';
       }
    }
 
-   if (currentPage == "setup") {
-      html += "<div class=\"confirmDiv\">";
-      html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeConfig()\">Speichern</button>";
-      html += "</div>";
-   }
-   else if (currentPage == "groups") {
+   if (currentPage == "groups") {
       html += "<div class=\"confirmDiv\">";
       html += "  <button class=\"rounded-border buttonOptions\" onclick=\"storeGroups()\">Speichern</button>";
       html += "</div>";
@@ -587,22 +735,27 @@ function prepareMenu()
 
    $("#navMenu").html(html);
 
-   // var msg = "DEBUG: Browser: '" + $.browser.name + "' : '" + $.browser.versionNumber + "' : '" + $.browser.version + "'";
+   // let msg = "DEBUG: Browser: '" + $.browser.name + "' : '" + $.browser.versionNumber + "' : '" + $.browser.version + "'";
    // socket.send({ "event" : "logmessage", "object" : { "message" : msg } });
+}
+
+function updateFooter()
+{
+   $("#version").html(daemonState.version);
 }
 
 function menuBurger()
 {
-   var haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
-   var form = '<div id="burgerPopup" style="padding:0px;">';
+   let haveToken = localStorage.getItem(storagePrefix + 'Token') && localStorage.getItem(storagePrefix + 'Token') != "";
+   let form = '<div id="burgerPopup" style="padding:0px;">';
 
    if (haveToken)
-      form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'user\')">[' + localStorage.getItem(storagePrefix + 'User') + ']</button>';
+      form += '<button style="width:120px;margin:2px;" class="rounded-border button1" onclick="mainMenuSel(\'user\')">[' + localStorage.getItem(storagePrefix + 'User') + ']</button>';
    else
-      form += '<button style="width:120px;" class="rounded-border button1" onclick="mainMenuSel(\'login\')">Login</button>';
+      form += '<button style="width:120px;margin:2px;" class="rounded-border button1" onclick="mainMenuSel(\'login\')">Login</button>';
 
    if (currentPage == 'dashboard' && localStorage.getItem(storagePrefix + 'Rights') & 0x10)
-      form += '  <br/><div><button style="width:120px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupDashboard()">' + (setupMode ? ' Stop Setup' : ' Setup Dashboard') + '</button></div>';
+      form += '  <br/><div><button style="width:120px;margin:2px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupDashboard()">' + (setupMode ? ' Stop Setup' : ' Setup Dashboard') + '</button></div>';
 
    form += '</div>';
 
@@ -627,11 +780,11 @@ function menuBurger()
    });
 }
 
-function mainMenuSel(what)
+function mainMenuSel(what, action = null)
 {
    $("#burgerPopup").dialog("close");
 
-   var lastPage = currentPage;
+   let lastPage = currentPage;
    currentPage = what;
    console.log("switch to " + currentPage);
    hideAllContainer();
@@ -642,8 +795,8 @@ function mainMenuSel(what)
       // delete socket;
       socket = null;
 
-      var protocol = myProtocol;
-      var url = "ws://" + location.hostname + ":" + location.port;
+      let protocol = myProtocol;
+      let url = "ws://" + location.hostname + ":" + location.port;
 
       if (currentPage == "vdr") {
          protocol = "osd2vdr";
@@ -660,13 +813,15 @@ function mainMenuSel(what)
    if (currentPage != "vdr")
       socket.send({ "event" : "pagechange", "object" : { "page"  : currentPage }});
 
-   var event = null;
-   var jsonRequest = {};
+   let event = null;
+   let jsonRequest = {};
 
    if (currentPage == "setup")
       event = "setup";
-   else if (currentPage == "iosetup")
-      initIoSetup(valueFacts);
+   else if (currentPage == "iosetup") {
+      showProgressDialog();
+      socket.send({ "event" : "forcerefresh", "object" : { 'action' : 'valuefacts' } });
+   }
    else if (currentPage == "commands")
       initCommands();
    else if (currentPage == "user")
@@ -676,11 +831,15 @@ function mainMenuSel(what)
    else if (currentPage == "images")
       initImages();
    else if (currentPage == "syslog") {
-      showProgressDialog();
-      event = "syslog";
+		updateSyslog();
+		return;
    }
-   else if (currentPage == "system")
+   else if (currentPage == "system") {
       event = "system";
+      showProgressDialog();
+      if (action == "wifis")
+         pingTimeoutMs = 20000;
+   }
    else if (currentPage == "list")
       initList();
    else if (currentPage == "dashboard")
@@ -718,11 +877,13 @@ function mainMenuSel(what)
       event = "pellets";
    }
 
-   if (currentPage != "vdr" && currentPage != "iosetup") {
-      if (jsonRequest != {} && event != null)
-         socket.send({ "event" : event, "object" : jsonRequest });
+   if (currentPage != 'vdr' && currentPage != 'iosetup') {
+      if (!isObjectEmpty(jsonRequest) && event != null)
+         socket.send({ 'event' : event, 'object' : jsonRequest });
+      else if (event != null && action != null)
+         socket.send({ 'event' : event, 'object' : { 'action' : action } });
       else if (event != null)
-         socket.send({ "event" : event, "object" : { } });
+         socket.send({ 'event' : event, 'object' : { } });
 
       if (currentPage == 'login')
          initLogin();
@@ -753,35 +914,91 @@ function initLogin()
       '      <td><input id="password" class="rounded-border input" type="password" value=""></input></td>' +
       '    </tr>' +
       '  </table>' +
-      '  <button class="rounded-border buttonHighlighted" onclick="doLogin()">Anmelden</button>' +
+      '  <button class="rounded-border button1" onclick="doLogin()">Anmelden</button>' +
       '</div>';
 }
 
 function showSyslog(log)
 {
+   $('#controlContainer').removeClass('hidden');
    $('#container').removeClass('hidden');
-   document.getElementById("container").innerHTML = '<div id="syslogContainer" class="setupContainer log"></div>';
 
-   var root = document.getElementById("syslogContainer");
+   $("#controlContainer")
+      .empty()
+      .append($('<div></div>')
+              .addClass('labelB1')
+              .html('System Log'))
+      .append($('<select></select>')
+              .attr('id', 'selectSyslog')
+              .addClass('input rounded-border')
+              .css('width', '-webkit-fill-available')
+              .css('width', '-moz-available')
+              .css('margin-bottom', '8px')
+              .on('input', function() { updateSyslog(); }))
+
+	   .append($('<div></div>')
+              .addClass('button-group-spacing'))
+
+      .append($('<div></div>')
+              .addClass('labelB1')
+              .html('Filter'))
+      .append($('<input></input>')
+              .attr('id', 'syslogFilter')
+              .attr('placeholder', 'expression...')
+              .attr('type', 'search')
+              .addClass('input rounded-border clearableOD')
+              .css('width', '-webkit-fill-available')
+              .css('width', '-moz-available')
+              .css('margin-bottom', '8px')
+				  .val(syslogFilter))
+              // .on('input', function() { updateSyslog(); }))
+
+	   .append($('<div></div>')
+              .addClass('button-group-spacing'))
+
+	   .append($('<div></div>')
+              .append($('<button></button>')
+                      .addClass('rounded-border tool-button')
+                      .html('Refresh')
+                      .click(function() { updateSyslog(); })));
+
+	for (let i = 0; i < syslogs.length; ++i) {
+		$('#selectSyslog').append($('<option></option>')
+										  .attr('selected', syslogs[i].name == log.name)
+										  .html(syslogs[i].name));
+	}
+
+   $('#container').html('<div id="syslogContainer" class="setupContainer log"></div>');
+	$('#syslogContainer').css('width', 'fit-content');
+
+   let root = document.getElementById("syslogContainer");
    root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
    hideProgressDialog();
 
    // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    };
 }
 
-function showSystem(system)
+function updateSyslog()
 {
-   console.log("system: " + JSON.stringify(system, undefined, 2));
+	syslogFilter = $('#syslogFilter').val();
+	showProgressDialog();
+	socket.send({ "event" : "syslog", "object" :
+					  { 'log' : $('#selectSyslog').val(), 'filter' : syslogFilter } });
+}
+
+function showDatabaseStatistic(statistic)
+{
+   // console.log("DatabaseStatistic: " + JSON.stringify(statistic, undefined, 2));
 
    $('#container').removeClass('hidden');
    $('#container').html('<div id="systemContainer"></div>');
 
-   var html = '<div>';
+   let html = '<div>';
 
    html += '  <div class="rounded-border seperatorFold">Tabellen</div>';
    html += '  <table class="tableMultiCol">' +
@@ -795,10 +1012,10 @@ function showSystem(system)
       '    </thead>' +
       '    <tbody>';
 
-   for (var i = 0; i < system.tables.length; i++) {
-      var table = system.tables[i];
+   for (let i = 0; i < statistic.tables.length; i++) {
+      let table = statistic.tables[i];
 
-      html += '<tr style="height:28px;">';
+      html += '<tr style="height:39px;">';
       html += ' <td>' + table.name + '</td>';
       html += ' <td>' + table.tblsize + '</td>';
       html += ' <td>' + table.idxsize + '</td>';
@@ -813,6 +1030,224 @@ function showSystem(system)
 
    $('#systemContainer').html(html)
       .addClass('setupContainer');
+}
+
+function showWifiList()
+{
+   // console.log("WifiList: " + JSON.stringify(wifis, undefined, 2));
+
+   $('#container').removeClass('hidden');
+   $('#container').html('<div id="systemContainer"></div>');
+
+   let html = '<div>';
+
+   html += '  <div class="rounded-border seperatorFold">Wifi Networks</div>';
+   html += '  <table class="tableMultiCol">' +
+      '    <thead>' +
+      '     <tr style="height:30px;font-weight:bold;">' +
+      '       <td style="width:18%;">Network</td>' +
+      '       <td style="width:10%;">Rate</td>' +
+      '       <td style="width:8%;">Security</td>' +
+      '       <td style="width:5%;">Signal</td>' +
+      '       <td style="width:5%">Bars</td>' +
+      '       <td style="width:5%"></td>' +
+      '     </tr>' +
+      '    </thead>' +
+      '    <tbody>';
+
+   for (let i = 0; i < wifis.reachable.length; i++) {
+      let wifi = wifis.reachable[i];
+      let known = isWifiKnown(wifi.network);
+      let rowColor = wifi.active == 'yes' ? 'green' : '';
+      let signalColor = parseInt(wifi.signal) >= 50 ? 'lightgreen' : parseInt(wifi.signal) >= 20 ? 'orange' : '';
+      let action = wifi.active == 'yes' ? 'Disconnect' : known ? 'Connect' : 'Setup';
+      let btnColor = wifi.active == 'yes' ? 'orange' : known ? 'lightgreen' : 'yellow';
+
+      html += '<tr style="height:28px;color:' + rowColor + ';">';
+      html += ' <td>' + wifi.network + '</td>';
+      html += ' <td>' + wifi.rate + '</td>';
+      html += ' <td>' + wifi.security + '</td>';
+      html += ' <td>' + wifi.signal + '</td>';
+      html += ' <td style="font-family:monospace;color:' + signalColor + ';">' + wifi.bars + '</td>';
+      html += ' <td>' + '<button class="buttonOptions rounded-border" style="color:' + btnColor + ';" onclick="wifiAction(\'' + wifi.id + '\')">' + action + '</button>' + '</td>';
+      html += '</tr>';
+   }
+
+   html += '    </tbody>' +
+      '  </table>';
+
+   html += '</div>';
+
+   $('#systemContainer').html(html)
+      .addClass('setupContainer');
+}
+
+function isWifiKnown(network)
+{
+   for (let i = 0; i < wifis.known.length; i++) {
+      if (wifis.known[i].network == network) // && wifis.known[i].device != null && wifis.known[i].device != '')
+         return true;
+   }
+   return false;
+}
+
+function wifiAction(id)
+{
+   let i = 0;
+
+   for (i = 0; i < wifis.reachable.length; i++) {
+      if (wifis.reachable[i].id == id)
+         break;
+   }
+
+   if (wifis.reachable[i].id != id)
+      return ;
+
+   let active = wifis.reachable[i].active == 'yes';
+
+   function doWifiAction(password = '') {
+      pingTimeoutMs = 30000;
+      showProgressDialog();
+      console.log('wifiAction', wifis.reachable[i].network, wifis.reachable[i].active);
+      socket.send({ "event": "system", "object":
+                    {
+                       'action': active ? 'wifi-disconnect' : 'wifi-connect',
+                       'ssid': wifis.reachable[i].network,
+                       'password': password
+                    }
+                  });
+   }
+
+   if (!active && !isWifiKnown(wifis.reachable[i].network))
+      pwdDialog(doWifiAction, "Password");
+   else
+      doWifiAction();
+}
+
+function showSystemServicesList()
+{
+   // console.log("SystemServices: " + JSON.stringify(systemServices, undefined, 2));
+
+   $('#container').removeClass('hidden');
+   $('#container').html('<div id="systemContainer"></div>');
+
+   // systemServices.sort(function(a, b) {
+   //    return b.unitFileState.localeCompare(a.unitFileState);
+   // });
+
+   let html = '<div>';
+
+   html += '  <div class="rounded-border seperatorFold">System Services</div>';
+   html += '  <table class="tableMultiCol">' +
+      '    <thead>' +
+      '     <tr style="height:30px;font-weight:bold;">' +
+      '       <td style="width:8%;">Service</td>' +
+      '       <td style="width:14%;"></td>' +
+      '       <td style="width:6%;">Status</td>' +
+      '       <td style="width:3%"></td>' +
+      '     </tr>' +
+      '    </thead>' +
+      '    <tbody>';
+
+   for (let i = 0; i < systemServices.length; i++) {
+      let svc = systemServices[i];
+      let rowColor = svc.status == 'active' ? 'lightgreen' : 'var(--light4)';
+      // let action = svc.status == 'active' ? 'Stop' : 'Start';
+      let btnColor = svc.status == 'active' ? 'orange' : 'lightgreen';
+
+      html += '<tr style="height:28px;color:' + rowColor + ';">';
+      html += ' <td>' + svc.service + '</td>';
+      html += ' <td>' + svc.title + '</td>';
+      html += ' <td>' + svc.status + ' / ' + svc.subState + ' / ' + svc.unitFileState + '</td>';
+      html += ' <td>' + '<button id="btn_' + svc.service + '"class="rounded-border button1 burgerMenuInline" onclick="systemServiceMenu(\'' + svc.service + '\')"><div></div><div></div><div></div></button>' + '</td>';
+      html += '</tr>';
+   }
+
+   html += '    </tbody>' +
+      '  </table>';
+
+   html += '</div>';
+
+   $('#systemContainer').html(html)
+      .addClass('setupContainer');
+}
+
+function systemServiceMenu(service)
+{
+   let i = 0;
+
+   for (i = 0; i < systemServices.length; i++) {
+      if (systemServices[i].service == service)
+         break;
+   }
+
+   let active = systemServices[i].status == 'active';
+   let enabled = systemServices[i].unitFileState == 'enabled';
+   let form = document.createElement("div");
+
+   $(form)
+      .attr('id', 'actionPopup')
+      .css('display', 'grid')
+      .css('padding', '2px')
+      .append($('<button></button>')
+              .addClass('rounded-border button1')
+              .css('width', '80px')
+              .css('margin', '2px')
+              .html(active ? 'Stop' : 'Start')
+              .click({ "service" : service }, function(event) {
+                 systemServiceAction(event.data.service, active ? 'sys-service-Stop' : 'sys-service-Start');
+                 $("#actionPopup").dialog('close');
+              }))
+      .append($('<button></button>')
+              .addClass('rounded-border button1')
+              .css('width', '80px')
+              .css('margin', '2px')
+              .html('Kill')
+              .click({ "service" : service }, function(event) {
+                 systemServiceAction(event.data.service, active ? 'sys-service-Stop' : 'sys-service-Kill');
+                 $("#actionPopup").dialog('close');
+              }));
+   if (systemServices[i].unitFileState == 'enabled' || systemServices[i].unitFileState == 'disabled')
+      $(form).append($('<button></button>')
+                     .addClass('rounded-border button1')
+                     .css('width', '80px')
+                     .css('margin', '2px')
+                     .html(enabled ? 'Disable' : 'Enable')
+                     .click({ "service" : service }, function(event) {
+                        systemServiceAction(event.data.service, enabled ? 'sys-service-Disable' : 'sys-service-Enable');
+                        $("#actionPopup").dialog('close');
+                     })
+                    );
+
+   $(form).dialog({
+      position: { my: "right top", at: "left top", of: document.getElementById('btn_' + service)},
+      minHeight: "auto",
+      width: "auto",
+      dialogClass: "no-titlebar rounded-border",
+		modal: true,
+      resizable: false,
+		closeOnEscape: true,
+      hide: "fade",
+      open: function(event, ui) {
+         $(event.target).parent().css('background-color', 'var(--light1)');
+         $('.ui-widget-overlay').bind('click', function()
+                                      { $("#actionPopup").dialog('close'); });
+      },
+      close: function() {
+         $("body").off("click");
+         $(this).dialog('destroy').remove();
+      }
+   });
+}
+
+function systemServiceAction(service, action)
+{
+   socket.send({ "event": "system", "object":
+                 {
+                    'action': action,
+                    'service': service
+                 }
+               });
 }
 
 window.toggleMode = function(address, type)
@@ -872,7 +1307,7 @@ function hideAllContainer()
 
 function prepareChartRequest(jRequest, sensors, start, range, id)
 {
-   var gaugeSelected = false;
+   let gaugeSelected = false;
 
    if (!$.browser.safari || $.browser.versionNumber > 9)
    {
@@ -907,8 +1342,8 @@ function prepareChartRequest(jRequest, sensors, start, range, id)
 
 function drawChartWidget(dataObject)
 {
-   var root = document.getElementById("container");
-   var id = "widget" + dataObject.rows[0].sensor;
+   let root = document.getElementById("container");
+   let id = "widget" + dataObject.rows[0].sensor;
 
    if (widgetCharts[id] != null) {
       widgetCharts[id].destroy();
@@ -966,13 +1401,13 @@ function drawChartWidget(dataObject)
       }
    };
 
-   for (var i = 0; i < dataObject.rows.length; i++) {
-      var dataset = {};
+   for (let i = 0; i < dataObject.rows.length; i++) {
+      let dataset = {};
 
-      console.log("draw chart row with", dataObject.rows[i].data.length, "points");
+      // console.log("draw chart row with", dataObject.rows[i].data.length, "points");
 
       dataset["data"] = dataObject.rows[i].data;
-      dataset["backgroundColor"] = kioskMode ? "#3498db33" : "#3498db1A";  // fill color
+      dataset["backgroundColor"] = "#3498db33";  // fill color
       dataset["borderColor"] = "#3498db";        // line color
       dataset["borderWidth"] = 1;
       dataset["fill"] = true;
@@ -980,7 +1415,9 @@ function drawChartWidget(dataObject)
       config.data.datasets.push(dataset);
    }
 
-   var canvas = document.getElementById(id);
+   // console.log("draw chart widget to", id, $('#'+id).innerHeight());
+
+   let canvas = document.getElementById(id);
    widgetCharts[id] = new Chart(canvas, config);
 }
 
@@ -998,8 +1435,8 @@ function drawBarChartWidget(dataObject)
    //  letzteres ist derzeit krude hardcoded
    // soiwie die Anpassung der Axis im chart hier
 
-   var root = document.getElementById("container");
-   var id = "widget" + dataObject.rows[0].sensor;
+   let root = document.getElementById("container");
+   let id = "widget" + dataObject.rows[0].sensor;
 
    if (widgetCharts[id] != null) {
       widgetCharts[id].destroy();
@@ -1073,13 +1510,13 @@ function drawBarChartWidget(dataObject)
       }
    };
 
-   for (var i = 0; i < dataObject.rows.length; i++) {
-      var dataset = {};
+   for (let i = 0; i < dataObject.rows.length; i++) {
+      let dataset = {};
 
       console.log("draw bar chart row with", dataObject.rows[i].data.length, "points");
       console.log(dataObject.rows[i].data);
       dataset["data"] = dataObject.rows[i].data;
-      dataset["backgroundColor"] = kioskMode ? "#3498db33" : "#3498db1A";  // fill color
+      dataset["backgroundColor"] = "#3498db33";
       dataset["borderColor"] = "#3498db";        // line color
       dataset["borderWidth"] = 1;
       dataset["fill"] = true;
@@ -1087,7 +1524,7 @@ function drawBarChartWidget(dataObject)
       config.data.datasets.push(dataset);
    }
 
-   var canvas = document.getElementById(id);
+   let canvas = document.getElementById(id);
    widgetCharts[id] = new Chart(canvas, config);
 }
 
@@ -1097,7 +1534,7 @@ function drawBarChartWidget(dataObject)
 
 function drawChartDialog(dataObject)
 {
-   var root = document.querySelector('dialog')
+   let root = document.querySelector('dialog')
    if (dataObject.rows[0].sensor != chartDialogSensor) {
       return ;
    }
@@ -1107,7 +1544,7 @@ function drawChartDialog(dataObject)
       theChart = null;
    }
 
-   var data = {
+   let data = {
       type: "line",
       data: {
          datasets: []
@@ -1177,14 +1614,14 @@ function drawChartDialog(dataObject)
       }
    };
 
-   var key = '';
+   let key = '';
 
-   for (var i = 0; i < dataObject.rows.length; i++)
+   for (let i = 0; i < dataObject.rows.length; i++)
    {
-      var dataset = {};
+      let dataset = {};
 
       dataset["data"] = dataObject.rows[i].data;
-      dataset["backgroundColor"] = kioskMode ? "#3498db33" : "#3498db1A";  // fill color
+      dataset["backgroundColor"] = "#3498db33";  // fill color
       dataset["borderColor"] = "#3498db";      // line color
       dataset["borderWidth"] = 1;
       dataset["fill"] = true;
@@ -1197,7 +1634,7 @@ function drawChartDialog(dataObject)
 
    data.options.scales.yAxes[0].scaleLabel.labelString = '[' + valueFacts[key].unit + ']';
 
-   var canvas = root.querySelector("#chartDialog");
+   let canvas = root.querySelector("#chartDialog");
    theChart = new Chart(canvas, data);
 }
 
@@ -1218,14 +1655,14 @@ function parseBool(val)
 
 Number.prototype.pad = function(size)
 {
-  var s = String(this);
+  let s = String(this);
   while (s.length < (size || 2)) {s = "0" + s;}
   return s;
 }
 
 Date.prototype.toDatetimeLocal = function toDatetimeLocal()
 {
-   var date = this,
+   let date = this,
        ten = function (i) {
           return (i < 10 ? '0' : '') + i;
        },
@@ -1244,7 +1681,7 @@ Date.prototype.toDatetimeLocal = function toDatetimeLocal()
 
 Date.prototype.toDateLocal = function toDateLocal()
 {
-   var date = this,
+   let date = this,
        ten = function (i) {
           return (i < 10 ? '0' : '') + i;
        },
@@ -1256,9 +1693,24 @@ Date.prototype.toDateLocal = function toDateLocal()
    return YYYY + '-' + MM + '-' + DD;
 };
 
+Date.prototype.toTimeLocal = function toTimeLocal()
+{
+   let date = this,
+       ten = function (i) {
+          return (i < 10 ? '0' : '') + i;
+       },
+       HH = ten(date.getHours()),
+       II = ten(date.getMinutes()),
+       SS = ten(date.getSeconds())
+   ;
+
+   return HH + ':' + II; //  + ':' + SS;
+};
+
+
 function fileExist(url)
 {
-   var xhr = new XMLHttpRequest();
+   let xhr = new XMLHttpRequest();
    xhr.open('HEAD', url, false);
    xhr.send();
    return xhr.status != "404";
@@ -1271,7 +1723,7 @@ function getTotalHeightOf(id)
 
 function lNow()
 {
-   var currentDateTime = new Date();
+   let currentDateTime = new Date();
    return currentDateTime.getTime() / 1000;
 }
 
@@ -1281,4 +1733,36 @@ function changeFavicon(src)
    $('link[rel="shortcut icon"]').attr('href', src)
    $('link[rel="icon"]').attr('href', src)
    $('link[rel="apple-touch-icon-precomposed"]').attr('href', src)
+}
+
+function isObjectEmpty(object)
+{
+   return Object.keys(object).length === 0 && object.constructor === Object;
+}
+
+function trim()
+{
+   return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function alterColor(rgb, type, percent)
+{
+	rgb = rgb.replace('rgb(', '').replace(')', '').split(',');
+
+	let red = trim.call(rgb[0]);
+	let green = trim.call(rgb[1]);
+	let blue = trim.call(rgb[2]);
+
+	if (type === "darken") {
+		red = parseInt(red * (100 - percent) / 100, 10);
+		green = parseInt(green * (100 - percent) / 100, 10);
+		blue = parseInt(blue * (100 - percent) / 100, 10);
+	}
+   else {
+		red = parseInt(red * (100 + percent) / 100, 10);
+		green = parseInt(green * (100 + percent) / 100, 10);
+		blue = parseInt(blue * (100 + percent) / 100, 10);
+	}
+
+	return 'rgb(' + red + ', ' + green + ', ' + blue + ')';
 }

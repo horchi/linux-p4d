@@ -13,25 +13,29 @@ function initCommands()
    $('#container').removeClass('hidden');
    $('#container').html('');
 
+   $('#container').append($('<div></div>')
+                          .attr('id', 'inputTableConfig')
+                          .addClass('rounded-border inputTableConfig'));
+
    for (var i = 0; i < commands.length; i++) {
       var command = commands[i];
-      $('#container').append($('<div></div>')
-                             .addClass('rounded-border inputTableConfig')
-                             .css('margin', '4px')
-                             .append($('<span></span>')
-                                     .append($('<button></button>')
-                                             .css('width', '20%')
-                                             .addClass('rounded-border buttonOptions')
-                                             .html(command.title)
-                                             .click({'cmd' : command.cmd}, function(event) {
-                                                console.log("send command with " + event.data.cmd);
-                                                socket.send({ "event" : "command", "object" : { "what" : event.data.cmd } });
-                                             })
-                                            ))
-                             .append($('<span></span>')
-                                     .css('margin-left', '20px')
-                                     .html(' -> ' + command.description))
-                                    );
+      $('#inputTableConfig').append($('<div></div>')
+                                    .css('display', 'block')
+                                    .css('margin', '4px')
+                                    .append($('<span></span>')
+                                            .append($('<button></button>')
+                                                    .css('width', '20%')
+                                                    .addClass('rounded-border buttonOptions')
+                                                    .html(command.title)
+                                                    .click({'cmd' : command.cmd}, function(event) {
+                                                       console.log("send command with " + event.data.cmd);
+                                                       socket.send({ "event" : "command", "object" : { "what" : event.data.cmd } });
+                                                    })
+                                                   ))
+                                    .append($('<span></span>')
+                                            .css('margin-left', '20px')
+                                            .html(' -> ' + command.description))
+                                   );
    }
 
    $("#container").height($(window).height() - $("#menu").height() - 8);

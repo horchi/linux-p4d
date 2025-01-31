@@ -33,7 +33,7 @@ class Deconz
       const char* getApiKey() { return apiKey.c_str(); }
 
       int query(json_t*& jResult, const char* method, const char* apiKey);
-      int put(json_t*& jResult, const char* uuid, json_t* jData);
+      int put(std::string type, json_t*& jResult, const char* uuid, json_t* jData);
       int post(json_t*& jResult, const char* method, const char* payload);
       int checkResult(json_t* jArray);
 
@@ -44,14 +44,13 @@ class Deconz
       int toggle(const char* type, uint address, bool state, int bri = na, int transitiontime = na);
       int color(const char* type, uint address, int hue, int saturation, int bri);
 
-      static struct lws* client_wsi;  // needed???
-
       static cMyMutex messagesInMutex;
       static std::queue<std::string> messagesIn;
 
+      int initWsClient();
+
    private:
 
-      int initWsClient();
       int exitWsClient();
       int service();
       static int callbackDeconzWs(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
@@ -89,6 +88,8 @@ class Deconz
       static void* syncFct(void* user);
       int atInMessage(const char* data);
 
+   public:
       static Deconz* singleton;
       static struct lws_context* context;
+      static struct lws* client_wsi;
 };

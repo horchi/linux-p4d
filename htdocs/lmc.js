@@ -1,7 +1,7 @@
 /*
  *  lmc.js
  *
- *  (c) 2020-2022 Jörg Wendel
+ *  (c) 2020-2024 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -50,6 +50,13 @@ function initLmc()
                                               .attr('id', 'lmcCurrenStream')))
                               .append($('<div></div>')
                                       .addClass('lmcTrackProgress')
+                                      .attr('id', 'lmcTrackProgress')
+                                      .click(function(event) {
+                                         let relX = event.pageX - $(this).offset().left;
+                                         let percent = parseInt(relX / ($(this).width()/100));
+                                         // console.log("click position", percent, '%');
+                                         socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : 'time', 'percent' : percent} });
+                                      })
                                       .append($('<div></div>')
                                               .attr('id', 'lmcTrackProgressBar')
                                               .addClass('lmcTrackProgressBar')))
@@ -62,16 +69,31 @@ function initLmc()
                                               .attr('id', 'lmcTrackDuration')))
                              )
                       .append($('<div></div>')
-                              .attr('id', 'lmcCover')
-                              .addClass('lmcCover lmcWidget')
-                              .append($('<img></img>')
-                                      .attr('id', 'lmcCoverImage'))
-                             ))
+                              .addClass('lmcWidget')
+                              .css('display', 'flex')
+                              .css('overflow', 'hidden')
+                              .css('height', '-webkit-fill-available')
+                              .append($('<div></div>')
+                                      .css('margin', '5%')
+                                      .css('height', '-webkit-fill-available')
+                                      .attr('id', 'lmcCover')
+                                      .addClass('lmcCover ')
+                                      .append($('<img></img>')
+                                              .attr('id', 'lmcCoverImage'))
+                                     )))
               .append($('<div></div>')
                       .addClass('lmcRightColumn')
                       .attr('id', 'lmcRightColumn')
                       .append($('<div></div>')
                               .addClass('lmcControl')
+                              .append($('<button></button>')
+                                      .attr('id', 'lmcBtnBurgerMenu')
+                                      .addClass('mdi mdi-menu rounded-border lmcButton')
+                                      .click(function() { onMenu(); }))
+//                                      .addClass('rounded-border burgerMenu lmcButton')
+//                                      .append($('<div></div>'))
+//                                      .append($('<div></div>'))
+//                                      .append($('<div></div>')))
                               .append($('<button></button>')
                                       .attr('id', 'btnLmcPlay')
                                       .addClass('mdi mdi-play-circle rounded-border lmcButton')
@@ -107,32 +129,44 @@ function initLmc()
                                       .click(function() {  lmcAction('shuffle'); })
                                      )
                               .append($('<button></button>')
+                                      .attr('id', 'btnLmcRandonTracks')
+                                      .addClass('mdi mdi-dice-multiple rounded-border lmcButton')
+                                      .click(function() {  lmcAction('randomTracks'); })
+                                     )
+                              .append($('<button></button>')
                                       .css('width', '30px')
                                       .addClass('rounded-border lmcButton')
                                      )
-                              .append($('<button></button>')
-                                      .addClass('mdi mdi-volume-medium rounded-border lmcButton')
-                                      .click(function() { lmcAction('volumeDown'); })
-                                     )
-                              .append($('<button></button>')
-                                      .addClass('mdi mdi-volume-high rounded-border lmcButton')
-                                      .click(function() { lmcAction('volumeUp'); })
-                                     )
-                              .append($('<button></button>')
-                                      .attr('id', 'btnLmcMute')
-                                      .addClass('mdi mdi-volume-off rounded-border lmcButton')
-                                      .click(function() {  lmcAction('muteToggle'); })
-                                     )
+                              .append($('<div></div>')
+                                      .css('display', 'flex')
+                                      .append($('<button></button>')
+                                              .addClass('mdi mdi-volume-medium rounded-border lmcButton')
+                                              .click(function() { lmcAction('volumeDown'); })
+                                             )
+                                      .append($('<span></span>')
+                                              .attr('id', 'infoVolume')
+                                             )
+                                      .append($('<button></button>')
+                                              .addClass('mdi mdi-volume-high rounded-border lmcButton')
+                                              .click(function() { lmcAction('volumeUp'); })
+                                             )
+                                      .append($('<button></button>')
+                                              .attr('id', 'btnLmcMute')
+                                              .addClass('mdi mdi-volume-off rounded-border lmcButton')
+                                              .click(function() {  lmcAction('muteToggle'); })
+                                             ))
                               .append($('<div></div>')
                                       .css('flex-grow', '1'))
-                              .append($('<button></button>')
-                                      .attr('id', 'lmcBtnBurgerMenu')
-                                      .addClass('rounded-border burgerMenu lmcButton')
-                                      .click(function() { onMenu(); })
-                                      .append($('<div></div>'))
-                                      .append($('<div></div>'))
-                                      .append($('<div></div>'))
-                                     )
+                              .append($('<select></select>')
+                                      .attr('id', 'playerSelect')
+                                      .css('height', '30px')
+                                      .css('align-self', 'center')
+                                      .css('background-color', 'transparent')
+                                      .css('color', 'white')
+                                      .css('border-radius', '5px')
+                                      .on('change', function() {
+                                         socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : 'changePlayer', 'mac' : $(this).val()} });
+                                      }))
                              )
                       .append($('<div></div>')
                               .attr('id', 'lmcPlaylist')
@@ -143,10 +177,15 @@ function initLmc()
 
    // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - 5);
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 5);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - 5);
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 5);
    };
+}
+
+function lmcAction(action)
+{
+   socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : action } });
 }
 
 var lastTrackTime = 0;
@@ -162,12 +201,30 @@ function updateLmc()
       return;
    }
 
+   $('#playerSelect').empty();
+   let playerFound = false;
+
+   for (var i = 0; i < lmcData.players.length; i++) {
+      $('#playerSelect').append($('<option></option>')
+                                .html(lmcData.players[i].name)
+                                .val(lmcData.players[i].mac)
+                                .attr('selected', lmcData.players[i].iscurrent)
+                               );
+      if (lmcData.players[i].iscurrent)
+         playerFound = true;
+   }
+
+   // $('#playerSelect').append($('<option>xx</option>')
+   //                           .attr('selected', !playerFound));
+
    if (lmcData.state.mode != "play")
       clearProgressTrigger();
 
    $('#lmcCurrentArtist').html(lmcData.current.artist);
    $('#lmcCurrentTitle').html(lmcData.current.title);
    $('#lmcCurrentAlbum').html(lmcData.current.album);
+   $('#infoVolume').html(lmcData.state.volume + '%');
+
    $('#lmcCurrentGenreYear').html(lmcData.current.genre + ' / ' + lmcData.current.year);
    // $('#lmcCurrentYear').html(lmcData.current.year);
    $('#lmcCurrenStream').html(lmcData.current.bitrate + ' kb/s, ' + (lmcData.current.contentType == 'flc'? 'flac' : lmcData.current.contentType));
@@ -224,18 +281,17 @@ function updatePlaylist()
    if (startWith < 0)
       startWith = 0;
 
-   console.log("staring playlist display at", startWith, "of", lmcData.playlist.length, " : ", lmcData.playlist[startWith].title, " visibleCount:", visibleCount);
+   // console.log("staring playlist display at", startWith, "of", lmcData.playlist.length, " : ", lmcData.playlist[startWith].title, " visibleCount:", visibleCount);
 
    for (let i = startWith; i < lmcData.playlist.length; i++) {
-      // console.log("track", i, lmcData.playlist[i].title);
       $('#lmcPlaylist')
          .append($('<div></div>')
                  .attr('id', 'plItem_' + i)
                  .css('color', i != lmcData.state.plIndex ? '' : 'var(--yellow2)')
                  .addClass('rounded-border lmcWidget')
                  .click(function() {
-                    let index = parseInt($(this).attr('id').substring($(this).attr('id').indexOf("_") + 1));
-                    socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : 'play', 'index' : index } });
+                    let index = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
+                    socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : 'play', 'id' : index } });
                  })
                  .append($('<span></span>')
                          .append($('<img></img>')
@@ -273,7 +329,8 @@ function calcProgress()
    }
 
    let percent = time / (lmcData.current.duration / 100.0);
-   $('#lmcTrackProgressBar').css('width', percent+'%');
+   $('#lmcTrackProgressBar').css('width', percent + '%');
+
    // console.log("setting progress to", paserInt(percent)+'%');
 
    $('#lmcTrackTime').html(parseInt(time/60) + ':' + (time%60).toString().padStart(2, '0'));
@@ -285,7 +342,7 @@ function onMenu()
    if ($('#lmcLeftColumnMenu').hasClass('hidden')) {
       $('#lmcLeftColumnMenu').removeClass('hidden');
       $('#lmcLeftColumn').addClass('hidden');
-      showMenu();
+      lmcMenu();
    }
    else {
       $('#lmcLeftColumnMenu').addClass('hidden');
@@ -293,34 +350,103 @@ function onMenu()
    }
 }
 
-function showMenu(menuData)
+function lmcMenu(menuData)
 {
    let menu = menuData ? menuData : lmcData.menu;
 
    console.log("menu " + JSON.stringify(menu, undefined, 4));
 
-   $('#lmcLeftColumnMenu').empty();
+   $('#lmcLeftColumnMenu').empty()
+      .append($('<div></div>')
+              .append($('<span></span>')
+                      .addClass('rounded-border lmcWidget')
+                      .css('font-weight', 'bold')
+                      .css('font-size', 'x-large')
+                      .html(menu.title)
+                     ));
 
-   for (let i = 0; i < menu.length; i++) {
+   for (let i = 0; i < menu.items.length; i++) {
       $('#lmcLeftColumnMenu')
          .append($('<div></div>')
-                 .data('id', menu[i].id)
-                 .addClass('rounded-border lmcWidget')
-                 .click(function() {
-                    // console.log("send menu request", { 'event' : 'lmcaction', 'object' : { 'action' : 'menu', 'queryType' :  $(this).data('id')} });
-                    socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : 'menu', 'query' :  $(this).data('id')} });
-                 })
-                 .html(menu[i].name)
-                );
+                 .append($('<span></span>')
+                         .append($('<img></img>')
+                                 .attr('src', menu.items[i].icon)))
+                 .append($('<span></span>')
+                         .html(menu.items[i].tracknum ? menu.items[i].tracknum + ' - ' : ''))
+                 .append($('<span></span>')
+                         .attr('title', menu.items[i].id)
+                         .addClass('rounded-border lmcWidget')
+                         .html(menu.items[i].name)
+                         )
+                 .data('id', menu.items[i].id)
+                 .click({'menu' : menu, 'item' : menu.items[i] }, function(event) {
+                    console.log("menu", event.data.menu.type, "clicked");
+                    if (event.data.item.contextMenu)
+                       return lmcContextMenu(event, event.data.menu, $(this).data('id'));
+                    socket.send({ 'event' : 'lmcaction', 'object' : {
+                       'action' : 'menu',
+                       'text' : event.data.item.name,
+                       'cmd' : event.data.item.cmd,
+                       'cmdsp' : event.data.item.cmdsp,
+                       'typeid' : event.data.menu.typeid,
+                       'type' : event.data.menu.type,
+                       'id' : $(this).data('id').toString()
+                    }});
+                 }));
    }
 }
 
-function lmcMenu(menu)
+function lmcContextMenu(event, menu, id)
 {
-   showMenu(menu);
-}
+   var form = $('<div></div>')
+       .attr('id', 'lmcContextDlg')
+       .addClass('dialog-content');
 
-function lmcAction(action)
-{
-   socket.send({ 'event' : 'lmcaction', 'object' : { 'action' : action} });
+   form.append($('<div></div>')
+               .addClass('lmcContextMenu')
+               .append($('<button></button>')
+                       .addClass('rounded-border button1')
+                       .html('Play now')
+                       .click(function() {
+                          $('#lmcContextDlg').dialog('destroy').remove();
+                          socket.send({ 'event': 'lmcaction', 'object': {
+                             'action': 'menuaction',
+                             'what': 'playnow',
+                             'typeid': menu.typeid,
+                             'type' : menu.type,
+                             'id': id.toString()
+                          }});
+                       }))
+               .append($('<button></button>')
+                       .addClass('rounded-border button1')
+                       .html('Append to waitlist')
+                       .click(function() {
+                          $('#lmcContextDlg').dialog('destroy').remove();
+                          socket.send({ 'event': 'lmcaction', 'object': {
+                             'action': 'menuaction',
+                             'what': 'append',
+                             'typeid': menu.typeid,
+                             'type': menu.type,
+                             'id': id
+                          }});
+                       }))
+              );
+
+   form.dialog({
+      modal: true,
+      position: { my: "left top", at: "center", of: event },
+      minHeight: "0px",
+      width: "200px",
+      closeOnEscape: true,
+      dialogClass: "no-titlebar ui-widget-content-dark",
+      resizable: false,
+		closeOnEscape: true,
+      hide: "fade",
+      open: function(event, ui) {
+         $('.ui-widget-overlay').bind('click', function() { $("#lmcContextDlg").dialog('close'); });
+      },
+      close: function() {
+         $(this).dialog('destroy').remove();
+      }
+   });
 }

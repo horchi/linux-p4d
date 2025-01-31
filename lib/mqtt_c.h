@@ -1077,24 +1077,24 @@ struct mqtt_queued_message* mqtt_mq_find(struct mqtt_message_queue *mq, enum MQT
  */
 struct mqtt_client {
 
-    int close_now;
+    int close_now {0};
    // pthread_t threadId;
    // int signal;
 
     /** @brief The socket connecting to the MQTT broker. */
-    mqtt_pal_socket_handle socketfd;
+    mqtt_pal_socket_handle socketfd {-1};
 
     /** @brief The LFSR state used to generate packet ID's. */
-    uint16_t pid_lfsr;
+    uint16_t pid_lfsr {0};
 
     /** @brief The keep-alive time in seconds. */
-    uint16_t keep_alive;
+    uint16_t keep_alive {0};
 
     /**
      * @brief A counter counting pings that have been sent to keep the connection alive.
      * @see keep_alive
      */
-    int number_of_keep_alives;
+    int number_of_keep_alives {0};
 
     /**
      * @brief The timestamp of the last message sent to the buffer.
@@ -1103,7 +1103,7 @@ struct mqtt_client {
      *
      * @see keep_alive
     */
-    mqtt_pal_time_t time_of_last_send;
+    mqtt_pal_time_t time_of_last_send {0};
 
     /**
      * @brief The error state of the client.
@@ -1113,7 +1113,7 @@ struct mqtt_client {
      * @note The error state will be MQTT_ERROR_CONNECT_NOT_CALLED until
      *       you call mqtt_connect.
      */
-    enum MQTTErrors error;
+    enum MQTTErrors error {MQTT_OK};
 
     /**
      * @brief The timeout period in seconds.
@@ -1123,10 +1123,10 @@ struct mqtt_client {
      *
      * @note The default value is 30 [seconds] but you can change it at any time.
      */
-    int response_timeout;
+    int response_timeout {0};
 
     /** @brief A counter counting the number of timeouts that have occurred. */
-    int number_of_timeouts;
+    int number_of_timeouts {0};
 
     /**
      * @brief Approximately much time it has typically taken to receive responses from the
@@ -1134,7 +1134,7 @@ struct mqtt_client {
      *
      * @note This is tracked using a exponential-averaging.
      */
-    double typical_response_time;
+    double typical_response_time {0};
 
     /**
      * @brief The callback that is called whenever a publish is received from the broker.
@@ -1187,23 +1187,23 @@ struct mqtt_client {
      * @brief A pointer to some state. A pointer to this member is passed to
      *        \ref mqtt_client.reconnect_callback.
      */
-    void* reconnect_state;
+    void* reconnect_state {};
 
     /**
      * @brief The buffer where ingress data is temporarily stored.
      */
     struct {
         /** @brief The start of the receive buffer's memory. */
-        uint8_t *mem_start;
+        uint8_t *mem_start {};
 
         /** @brief The size of the receive buffer's memory. */
-        size_t mem_size;
+        size_t mem_size {};
 
         /** @brief A pointer to the next writtable location in the receive buffer. */
-        uint8_t *curr;
+        uint8_t *curr {};
 
         /** @brief The number of bytes that are still writable at curr. */
-        size_t curr_sz;
+        size_t curr_sz {0};
     } recv_buffer;
 
     /**

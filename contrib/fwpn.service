@@ -1,0 +1,16 @@
+[Unit]
+Description = Private Firewall
+DefaultDependencies = no
+After = systemd-sysctl.service
+Before = sysinit.target
+
+[Service]
+Type = oneshot
+RemainAfterExit = yes
+ExecStart = /usr/local/bin/fwpn start
+ExecStop = /usr/local/bin/fwpn stop
+
+[Install]
+WantedBy = multi-user.target
+
+

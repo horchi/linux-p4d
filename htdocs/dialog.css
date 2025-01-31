@@ -9,8 +9,18 @@
     border-radius: var(--borderRadius);
     border-color: var(--light2);
     background-color: var(--dialogBackground);
-    background: var(--dialogBackground);
+    /* background: var(--dialogBackground); */
     color: var(--dialogColor);
+    align-items: center;
+}
+
+.ui-widget-content-dark {
+    border-width: 1px;
+    border-radius: var(--borderRadius);
+    border-color: var(--light2);
+    background-color: var(--dialogBackgroundDark);
+    /* background: var(--dialogBackground); */
+    color: var(--dialogColorDark);
     align-items: center;
 }
 
@@ -28,13 +38,18 @@
 }
 
 .ui-dialog .ui-dialog-content {
-    text-align: center;
+    padding: 0px;
+    margin: 20px;
 }
 
 .ui-dialog .ui-dialog-titlebar {
     background: var(--dialogBackground);
     border-color: var(--dialogBackground);
     border-bottom-color: var(--blue);
+}
+
+.ui-dialog-titlebar-close {
+    display: none
 }
 
 .no-close .ui-dialog-titlebar-close {
@@ -51,8 +66,7 @@
 
 .ui-dialog .ui-dialog-buttonpane button {
     border-style: none;
-    background-color: var(--caption1);
-    background: var(--caption1);
+    background-color: var(--neutral0);
     color: var(--buttonFont);
     display: inline-block;
     padding: 6px 12px;

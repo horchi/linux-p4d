@@ -1,4 +1,6 @@
 /var/log/<TARGET>.log
+/var/log/iptables.log
+/var/log/sensormqtt.log
 {
         rotate 2
         size 10M

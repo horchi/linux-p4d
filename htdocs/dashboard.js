@@ -8,14 +8,16 @@
  *
  */
 
-var widgetWidthBase = null;
-var widgetHeightBase = null;
+// var layout = 'grid';
+var layout = 'flex';
+
 var weatherData = null;
 var weatherInterval = null;
 var moseDownOn = { 'object' : null };
 var lightClickTimeout = null;
 var lightClickPosX = null;
 var lightClickPosY = null;
+var dashboardGauges = {};
 
 const symbolColorDefault = '#ffffff';
 const symbolOnColorDefault = '#059eeb';
@@ -29,6 +31,14 @@ function initDashboard(update = false)
       return;
    }
 
+	for (const gkey in dashboardGauges) {
+		if (dashboardGauges.hasOwnProperty(gkey)) {
+			dashboardGauges[gkey].destroy();
+		}
+	}
+
+	dashboardGauges = {};
+
    if (!update) {
       $('#container').removeClass('hidden');
       $('#dashboardMenu').removeClass('hidden');
@@ -38,26 +48,24 @@ function initDashboard(update = false)
    if (!Object.keys(dashboards).length)
       setupMode = true;
 
-   // setupMode = true;  // to debug
-
    if (setupMode) {
       $('#dashboardMenu').append($('<button></button>')
-                                 .addClass('rounded-border buttonDashboardTool')
+                                 .addClass('rounded-border buttonDashboard buttonDashboardTool')
                                  .addClass('mdi mdi-close-outline')
                                  .attr('title', 'Setup beenden')
                                  .click(function() { setupDashboard(); })
                                 );
    }
 
-   var jDashboards = [];
-   for (var did in dashboards) {
+   let jDashboards = [];
+   for (let did in dashboards) {
       if (!dashboardGroup || dashboards[did].group == dashboardGroup)
          jDashboards.push([dashboards[did].order, did]);
    }
    jDashboards.sort();
 
-   for (var i = 0; i < jDashboards.length; i++) {
-      var did = jDashboards[i][1];
+   for (let i = 0; i < jDashboards.length; i++) {
+      let did = jDashboards[i][1];
       if (actDashboard < 0)
          actDashboard = did;
 
@@ -68,7 +76,7 @@ function initDashboard(update = false)
          }, kioskBackTime * 1000);
       }
 
-      var classes = dashboards[did].symbol != '' ? dashboards[did].symbol.replace(':', ' ') : '';
+      let classes = dashboards[did].symbol != '' ? dashboards[did].symbol.replace(':', ' ') : '';
 
       if (dashboards[actDashboard] == dashboards[did])
          classes += ' buttonDashboardActive';
@@ -76,7 +84,7 @@ function initDashboard(update = false)
       $('#dashboardMenu').append($('<button></button>')
                                  .addClass('rounded-border buttonDashboard widgetDropZone')
                                  .addClass(classes)
-                                 .attr('id', did)
+                                 .attr('id', 'dash' + did)
                                  .attr('draggable', setupMode)
                                  .attr('data-droppoint', setupMode)
                                  .attr('data-dragtype', 'dashboard')
@@ -91,14 +99,16 @@ function initDashboard(update = false)
                                     initDashboard();
                                  }));
 
-      if (kioskMode)
-         $('#'+did).css('font-size', '-webkit-xxx-large');
+      if (kioskMode) {
+         $('#dash'+did).css('font-size', '-webkit-xxx-large');
+         $('#dash'+did).css('font-size', 'xxx-large');
+      }
 
       if (setupMode && did == actDashboard)
          $('#dashboardMenu').append($('<button></button>')
-                                    .addClass('rounded-border buttonDashboardTool')
+                                    .addClass('rounded-border buttonDashboard buttonDashboardTool')
                                     .addClass('mdi mdi-lead-pencil')  //  mdi-draw-pen
-                                    .click({"id" : did}, function(event) { dashboardSetup(event.data.id); })
+                                    .click({"id" : 'dash'+did}, function(event) { dashboardSetup(event.data.id); })
                                    );
    }
 
@@ -107,25 +117,30 @@ function initDashboard(update = false)
    if (setupMode) {
       $('#dashboardMenu')
          .append($('<div></div>')
+                 .css('width', '-webkit-fill-available')
+                 .css('width', '-moz-available'))
+         .append($('<div></div>')
+                 .css('display', 'flex')
                  .css('float', 'right')
-                 .append($('<button></button>')
-                         .addClass('rounded-border buttonDashboardTool')
-                         .addClass('mdi mdi-shape-plus')
-                         .attr('title', 'widget zum dashboard hinzufügen')
-                         .css('font-size', 'x-large')
-                         .click(function() { addWidget(); })
-                        )
                  .append($('<input></input>')
                          .addClass('rounded-border input')
                          .css('margin', '15px,15px,15px,0px')
+                         .css('align-self', 'center')
                          .attr('id', 'newDashboard')
                          .attr('title', 'Neues Dashboard')
                         )
                  .append($('<button></button>')
-                         .addClass('rounded-border buttonDashboardTool')
+                         .addClass('rounded-border buttonDashboard buttonDashboardTool')
                          .addClass('mdi mdi-file-plus-outline')
                          .attr('title', 'dashboard hinzufügen')
                          .click(function() { newDashboard(); })
+                        )
+                 .append($('<button></button>')
+                         .addClass('rounded-border buttonDashboard buttonDashboardTool')
+                         .addClass('mdi mdi-shape-plus')
+                         .attr('title', 'widgets zum dashboard hinzufügen')
+                         .css('font-size', 'x-large')
+                         .click(function() { addWidget(); })
                         )
                 );
    }
@@ -134,8 +149,17 @@ function initDashboard(update = false)
 
    document.getElementById("container").innerHTML = '<div id="widgetContainer" class="widgetContainer"></div>';
 
+   if (layout == 'flex') {
+      $('#widgetContainer').css('display', 'flex');
+      $('#widgetContainer').css('flex-wrap', 'wrap');
+   }
+   else {
+      $('#widgetContainer').css('display', 'grid');
+      $('#widgetContainer').css('gap', '0px');
+   }
+
    if (dashboards[actDashboard] != null) {
-      for (var key in dashboards[actDashboard].widgets) {
+      for (let key in dashboards[actDashboard].widgets) {
          initWidget(key, dashboards[actDashboard].widgets[key]);
          updateWidget(allSensors[key], true, dashboards[actDashboard].widgets[key]);
       }
@@ -143,12 +167,31 @@ function initDashboard(update = false)
 
    initLightColorDialog();
 
-   // calc container size
+   resizeDashboard();
+   window.onresize = function() { resizeDashboard(); };
+}
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
-   window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
-   };
+function resizeDashboard()
+{
+   let space = 20;
+
+   if (getTotalHeightOf('menu') == 0)
+      space = 10;
+
+   $("#container").height($(window).outerHeight() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - getTotalHeightOf('footer') - sab - space);
+
+   if (layout != 'flex') {
+      let style = getComputedStyle(document.documentElement);
+      let widgetWidthBase = style.getPropertyValue('--widgetWidthBase');
+      let widgetHeightBase = style.getPropertyValue('--widgetHeightBase');
+
+      let colCount = parseInt($('#container').innerWidth() / widgetWidthBase);
+      let colWidthPercent = parseInt(100 / colCount);
+      let rep = 'repeat(' + colCount + ',' + colWidthPercent + '%)';
+
+      $('#widgetContainer').css('grid-template-columns', rep);
+      $('#widgetContainer').css('grid-auto-rows', widgetHeightBase + 'px');
+   }
 }
 
 function newDashboard()
@@ -156,22 +199,114 @@ function newDashboard()
    if (!$('#newDashboard').length)
       return;
 
-   var name = $('#newDashboard').val();
+   let name = $('#newDashboard').val();
    $('#newDashboard').val('');
 
    if (name != '') {
       console.log("new dashboard: " + name);
       socket.send({ "event" : "storedashboards", "object" : { [-1] : { 'title' : name, 'widgets' : {} } } });
-      socket.send({ "event" : "forcerefresh", "object" : {} });
+      socket.send({ "event" : "forcerefresh", "object" : { 'action' : 'dashboards' } });
    }
 }
 
-var keyTimeout = null;
+function getWidgetColor(widget, colorCondition, defaultColor, value)
+{
+   if (colorCondition == null || colorCondition == '') {
+		if (defaultColor != null)
+			return defaultColor;
+		return 'white';
+	}
+	else {
+		let conditions = colorCondition.split(",");
+      for (c = 0; c < conditions.length; ++c) {
+         if (conditions[c].indexOf('=') != -1) {
+            let [val,col] = conditions[c].split("=");
+            if (value == val)
+               return col;
+         }
+         else if (conditions[c].indexOf('~') != -1) {   // ~ für string enthalten in
+            let [val,col] = conditions[c].split("~");
+            if (value.indexOf(val) != -1)
+               return col;
+         }
+         else if (conditions[c].indexOf('<') != -1) {1
+            let [val,col] = conditions[c].split("<");
+            if (val < value)
+               return col;
+         }
+         else if (conditions[c].indexOf('>') != -1) {
+            let [val,col] = conditions[c].split(">");
+            if (val > value)
+               return col;
+         }
+         else if (conditions[c].indexOf('<=') != -1) {1
+            let [val,col] = conditions[c].split("<=");
+            if (val <= value)
+               return col;
+         }
+         else if (conditions[c].indexOf('>=') != -1) {
+            let [val,col] = conditions[c].split(">=");
+            if (val >= value)
+               return col;
+         }
+         else if (conditions[c].indexOf('<>') != -1) {
+            let [val,col] = conditions[c].split("<>");
+            if (val != value)
+               return col;
+         }
+      }
+   }
+}
+
+function getWidgetTitle(widget, fact)
+{
+   let title = ' ';
+
+   if (widget.title && widget.title != '')
+      title += widget.title;
+   else if (fact && fact.usrtitle && fact.usrtitle != '')
+      title += fact.usrtitle;
+   else if (fact)
+      title += fact.title;
+
+   return title;
+}
+
+function getWidgetTitleClass(widget, fact)
+{
+   let titleClass = '';
+   let title = '';
+
+   if (fact != null)
+      title = (fact.usrtitle != null ? fact.usrtitle : fact.title).toUpperCase();
+
+   // #TODO move to configuration
+
+   if (!setupMode && widget.unit == '°C' && title.indexOf('BOILER') != -1)
+      titleClass = 'mdi mdi-shower-head';
+   else if (!setupMode && widget.unit == '°C')
+      titleClass = 'mdi mdi-thermometer';
+   else if (!setupMode && (widget.unit == 'hPa' || widget.unit == 'A' || widget.unit == 'mA' ||
+                           widget.unit == 'W' || widget.unit == 'V' || widget.unit == 'Ah'))
+      titleClass = 'mdi mdi-gauge';
+   else if (!setupMode && widget.unit == '%' && title.indexOf('FEUCHT') != -1)
+      titleClass = 'mdi mdi-water-percent';
+   else if (!setupMode && title.indexOf('GAS') != -1)
+      titleClass = 'mdi mdi-gas-cylinder';
+   else if (!setupMode && widget.unit == '%')
+      titleClass = 'mdi mdi-label-percent-outline';
+   else if (!setupMode && widget.unit == 'l')
+      titleClass = 'mdi mdi-water';
+
+   return titleClass;
+}
+
+//***************************************************************************
+// Init a Widget
+//***************************************************************************
 
 function initWidget(key, widget, fact)
 {
-   // console.log("Widget " + key + ': '+ JSON.stringify(widget));
-
    if (key == null || key == '')
       return ;
 
@@ -188,6 +323,7 @@ function initWidget(key, widget, fact)
       return;
    }
 
+   // console.log("Widget " + key + ': '+ JSON.stringify(widget));
    // console.log("initWidget " + key + " : " + (fact ? fact.name : ''));
    // console.log("fact: " + JSON.stringify(fact, undefined, 4));
    // console.log("widget: " + JSON.stringify(widget, undefined, 4));
@@ -195,40 +331,74 @@ function initWidget(key, widget, fact)
    if (fact && widget.unit == '')
       widget.unit = fact.unit;
 
-   const marginPadding = 8;
-   var root = document.getElementById("widgetContainer");
-   var id = 'div_' + key;
-   var elem = document.getElementById(id);
+   const marginWidth = 3 *2;
+	const useKioskHeight = kioskMode == 1 || kioskMode == 2;
+   let root = document.getElementById("widgetContainer");
+   let id = 'div_' + key;
+   let elem = document.getElementById(id);
+
    if (elem == null) {
-      // console.log("element '" + id + "' not found, creating");
+
       elem = document.createElement("div");
       root.appendChild(elem);
       elem.setAttribute('id', id);
-      if (!widgetHeightBase)
-         widgetHeightBase = elem.clientHeight;
-      var eHeight = parseInt(elem.style.height);
-      var useKioskHeight = kioskMode == 1 || kioskMode == 2;
-      if (!useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactor)
-         eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactor;
-      if (useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactorKiosk)
-         eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactorKiosk;
 
-      // widget.heightfactor -> to be implementen (nur vorbereitet)
+      if (layout == 'flex') {
+         let style = getComputedStyle(document.documentElement);
+         let widgetHeightBase = style.getPropertyValue('--widgetHeightBase') * 2;
 
-      if (widget.heightfactor != null && widget.heightfactor != 1)
-         eHeight = eHeight * widget.heightfactor + ((widget.heightfactor-1) * marginPadding-1);
+         eHeight = widgetHeightBase;
 
-      elem.style.height = eHeight + 'px';
+         // verschiedene heightfactor für verscheidene dashboards und / kiosk mode
+
+         if (heightFactor && heightFactor != 1)
+            eHeight = widgetHeightBase * heightFactor;
+         else if (!useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactor)
+            eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactor;
+         else if (useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.heightfactorKiosk) {
+            eHeight = widgetHeightBase * dashboards[actDashboard].options.heightfactorKiosk;
+            // console.log("eHeight", eHeight, "dashboards[actDashboard].options.heightfactorKiosk", dashboards[actDashboard].options.heightfactorKiosk);
+         }
+
+         // widget.heightfactor für widget spezifische Höhen -> to be implemented (nur vorbereitet)
+
+         if (widget.heightfactor != null && widget.heightfactor != 1)
+            eHeight = eHeight * widget.heightfactor + ((widget.heightfactor-1) * marginWidth);
+
+         elem.style.height = eHeight + 'px';
+      }
+      else  // grid layout
+      {
+         if (widget.widthfactor != null)
+            $(elem).css('grid-column', 'span ' + widget.widthfactor * 2);
+         else
+            $(elem).css('grid-column', 'span 2');
+
+         if (widget.heightfactor != null)
+            $(elem).css('grid-row', 'span ' + widget.heightfactor * 2);
+         else
+            $(elem).css('grid-row', 'span 2');
+      }
    }
 
-   elem.innerHTML = "";
+   elem.innerHTML = '';
 
-   if (widgetWidthBase == null)
-      widgetWidthBase = elem.clientWidth;
+   if (layout == 'flex')
+   {
+      let style = getComputedStyle(document.documentElement);
+      let widgetWidthBase = style.getPropertyValue('--widgetWidthBase') * 2;
+      let widthFactor = widget.widthfactor != null ? widget.widthfactor : 1;
 
-   // console.log("clientWidth: " + elem.clientWidth + ' : ' + widgetWidthBase);
+      if (useKioskHeight && dashboards[actDashboard].options && dashboards[actDashboard].options.widthfactorKiosk)
+         widthFactor *= dashboards[actDashboard].options.widthfactorKiosk;
 
-   elem.style.width = widgetWidthBase * widget.widthfactor + ((widget.widthfactor-1) * marginPadding-1) + 'px';
+      if (widthFactor != 1)
+         elem.style.width = widgetWidthBase * widthFactor + ((widthFactor-1) * marginWidth) + 'px'; // adjust margin not the formula
+      else
+         elem.style.width = widgetWidthBase + 'px';
+
+      // console.log("widget", key, "width", elem.style.width, "widgetWidthBase", widgetWidthBase, "widthFactor", widthFactor);
+   }
 
    if (setupMode && (widget.widgettype < 900 || widget.widgettype == null)) {
       elem.setAttribute('draggable', true);
@@ -240,22 +410,8 @@ function initWidget(key, widget, fact)
       elem.addEventListener('drop', function(event) {dropWidget(event)}, false);
    }
 
-   var titleClass = '';
-   var title = setupMode ? ' ' : ' ';
-   if (fact != null)
-      title += fact.usrtitle && fact.usrtitle != '' ? fact.usrtitle : fact.title;
-
-   if (!setupMode && widget.unit == '°C')
-      titleClass = 'mdi mdi-thermometer';
-   else if (!setupMode && (widget.unit == 'hPa' || widget.unit == 'A' || widget.unit == 'mA' ||
-                           widget.unit == 'W' || widget.unit == 'V' || widget.unit == 'Ah'))
-      titleClass = 'mdi mdi-gauge';
-   else if (!setupMode && widget.unit == '%')
-      titleClass = 'mdi mdi-label-percent-outline';
-   else if (!setupMode && widget.unit == 'xxxx')  // can't detect if '%' is humidity
-      titleClass = 'mdi mdi-water-percent';
-   if (!setupMode && widget.unit == 'l')
-      titleClass = 'mdi mdi-water';
+   let titleClass = getWidgetTitleClass(widget, fact);
+   let title = getWidgetTitle(widget, fact);
 
    if (!widget.color)
       widget.color = 'white';
@@ -264,7 +420,7 @@ function initWidget(key, widget, fact)
       if (!moseDownOn.object)
          return;
       e.preventDefault();
-      var scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
+      let scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
       if (scale > 100) scale = 100;
       if (scale < 0) scale = 0;
       console.log("dim: " + scale + '%');
@@ -276,7 +432,7 @@ function initWidget(key, widget, fact)
       if (!moseDownOn.object)
          return;
       e.preventDefault();
-      var scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
+      let scale = parseInt((e.pageX - $(moseDownOn.div).position().left) / ($(moseDownOn.div).innerWidth() / 100));
       if (scale > 100) scale = 100;
       if (scale < 0) scale = 0;
       $(moseDownOn.object).css('width', scale + '%');
@@ -299,27 +455,15 @@ function initWidget(key, widget, fact)
                     .css('color', widget.color)
                     .css('user-select', 'none')
                     .css('border-radius', '100%')
+                    .css('width', '100%')
+                    .css('height', '100%')
                     .addClass('rounded-border')
                     .addClass('widget-main')
                     .append($('<img></img>')
                             .attr('id', 'widget' + fact.type + fact.address)
                             .attr('draggable', false)
-                            .css('user-select', 'none')));
-//            .append($('<div></div>')
-//                    .attr('id', 'progress' + fact.type + fact.address)
-//                    .addClass('widget-progress')
-//                    .css('user-select', 'none')
-//                    .on({'mousedown touchstart' : function(e){
-//                       e.preventDefault();
-//                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
-//                       moseDownOn.fact = fact;
-//                       moseDownOn.div = $(this);
-//                       console.log("mousedown on " + moseDownOn.object.attr('id'));
-//                    }})
-//                    .append($('<div></div>')
-//                            .attr('id', 'progressBar' + fact.type + fact.address)
-//                            .css('user-select', 'none')
-//                            .addClass('progress-bar')));
+                            .css('user-select', 'none'))
+                   );
 
          if (!setupMode) {
             $('#button' + fact.type + fact.address)
@@ -376,32 +520,34 @@ function initWidget(key, widget, fact)
       case 1:         // Chart
       case 13: {
          elem.className = "widgetChart widgetDropZone";
-         var eTitle = document.createElement("div");
-         var cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
+         let eTitle = document.createElement("div");
+         let cls = setupMode ? 'mdi mdi-lead-pencil widget-edit' : '';
          eTitle.className = "widget-title " + cls + ' ' + titleClass;
          eTitle.innerHTML = title;
          eTitle.addEventListener("click", function(event) {titleClick(event.ctrlKey, key)}, false);
          elem.appendChild(eTitle);
 
-         var ePeak = document.createElement("div");
+         let ePeak = document.createElement("div");
          ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
          ePeak.className = "chart-peak";
          elem.appendChild(ePeak);
 
-         var eValue = document.createElement("div");
+         let eValue = document.createElement("div");
          eValue.setAttribute('id', 'value' + fact.type + fact.address);
          eValue.className = "chart-value";
          eValue.style.color = widget.color;
          elem.appendChild(eValue);
 
-         var eChart = document.createElement("div");
+         let eChart = document.createElement("div");
          eChart.className = "chart-canvas-container";
-         var cFact = fact;
-         if (!setupMode && fact.record)
+         let cFact = fact;
+         if (!setupMode && fact.record) {
             eChart.setAttribute("onclick", "toggleChartDialog('" + cFact.type + "'," + cFact.address + ")");
+				$(eChart).css('cursor', 'pointer');
+			}
          elem.appendChild(eChart);
 
-         var eCanvas = document.createElement("canvas");
+         let eCanvas = document.createElement("canvas");
          eCanvas.setAttribute('id', 'widget' + fact.type + fact.address);
          eCanvas.className = "chart-canvas";
          eChart.appendChild(eCanvas);
@@ -422,18 +568,15 @@ function initWidget(key, widget, fact)
                     .addClass('widget-value')
                     .css('user-select', 'none')
                     .css('color', widget.color)
+						  .css('cursor', !setupMode && fact.record ? 'pointer' : '')
                     .click(function() {
-                       var cFact = fact;
+                       let cFact = fact;
                        if (!setupMode && fact.record)
                           toggleChartDialog(cFact.type, cFact.address, key);}))
             .append($('<div></div>')
                     .attr('id', 'peak' + fact.type + fact.address)
                     .css('user-select', 'none')
                     .addClass('chart-peak'));
-
-//         var cFact = fact;
-//         if (!setupMode && fact.record)
-//            $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
 
          break;
       }
@@ -484,186 +627,57 @@ function initWidget(key, widget, fact)
                                     .attr('alignment-baseline', 'middle')
                                     .attr('x', '950')
                                     .attr('y', '550'))));
-         var cFact = fact;
-         if (!setupMode && fact.record)
+         let cFact = fact;
+         if (!setupMode && fact.record) {
             $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
+				$(elem).css('cursor', 'pointer');
+			}
 
-         var divId = '#svgDiv' + fact.type + fact.address;
+         let divId = '#svgDiv' + fact.type + fact.address;
          $(divId).html($(divId).html());  // redraw to activate the SVG !!
          break;
       }
 
       case 5:            // Meter
       case 6: {          // MeterLevel
-         var radial = widget.widgettype == 5;
-         elem.className = radial ? "widgetMeter" : "widgetMeterLinear";
-         elem.className += " widgetDropZone";
-         var eTitle = document.createElement("div");
-         eTitle.className = "widget-title " + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : titleClass);
-         eTitle.addEventListener("click", function(event) {titleClick(event.ctrlKey, key)}, false);
-         eTitle.innerHTML = title;
-         elem.appendChild(eTitle);
-
-         var main = document.createElement("div");
-         main.className = radial ? "widget-main-meter" : "widget-main-meter-lin";
-         elem.appendChild(main);
-         var canvas = document.createElement('canvas');
-         main.appendChild(canvas);
-         canvas.setAttribute('id', 'widget' + fact.type + fact.address);
-         var cFact = fact;
-         if (!setupMode && fact.record)
-            $(canvas).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
-
-         if (!radial) {
-            var value = document.createElement("div");
-            value.setAttribute('id', 'widgetValue' + fact.type + fact.address);
-            value.className = "widget-main-value-lin";
-            elem.appendChild(value);
-            $("#widgetValue" + fact.type + fact.address).css('color', widget.color);
-            var ePeak = document.createElement("div");
-            ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
-            ePeak.className = "widget-main-peak-lin";
-            elem.appendChild(ePeak);
-         }
-
-         if (widget.scalemin == null)
-            widget.scalemin = 0;
-
-         var ticks = [];
-         var scaleRange = widget.scalemax - widget.scalemin;
-         var stepWidth = widget.scalestep != null ? widget.scalestep : 0;
-
-         if (!stepWidth) {
-            var steps = 10;
-            if (scaleRange <= 100)
-               steps = scaleRange % 10 == 0 ? 10 : scaleRange % 5 == 0 ? 5 : scaleRange;
-            if (steps < 10)
-               steps = 10;
-            if (!radial && widget.unit == '%')
-               steps = 4;
-            stepWidth = scaleRange / steps;
-         }
-
-         if (stepWidth <= 0) stepWidth = 1;
-         stepWidth = Math.round(stepWidth*10) / 10;
-         var steps = -1;
-         for (var step = widget.scalemin; step.toFixed(2) <= widget.scalemax; step += stepWidth) {
-            ticks.push(step % 1 ? parseFloat(step).toFixed(1) : parseInt(step));
-            steps++;
-         }
-
-         var scalemax = widget.scalemin + stepWidth * steps; // cals real scale max based on stepWidth and step count!
-         var highlights = {};
-         var critmin = (widget.critmin == null || widget.critmin == -1) ? widget.scalemin : widget.critmin;
-         var critmax = (widget.critmax == null || widget.critmax == -1) ? scalemax : widget.critmax;
-         var minColor = widget.unit == '°C' ? 'blue' : 'rgba(255,0,0,.6)';
-
-         highlights = [
-            { from: widget.scalemin, to: critmin,  color: minColor },
-            { from: critmin,         to: critmax,  color: 'rgba(0,255,0,.6)' },
-            { from: critmax,         to: scalemax, color: 'rgba(255,0,0,.6)' }
-         ];
-
-         // console.log("widget: " + JSON.stringify(widget, undefined, 4));
-         // console.log("ticks: " + ticks + " range; " + scaleRange);
-         // console.log("highlights: " + JSON.stringify(highlights, undefined, 4));
-
-         options = {
-            renderTo: 'widget' + fact.type + fact.address,
-            units: radial ? widget.unit : '',
-            // title: radial ? false : widget.unit
-            minValue: widget.scalemin,
-            maxValue: scalemax,
-            majorTicks: ticks,
-            minorTicks: 5,
-            strokeTicks: false,
-            highlights: highlights,
-            highlightsWidth: radial ? 8 : 6,
-
-            colorPlate: radial ? '#2177AD' : 'rgba(0,0,0,0)',
-            colorBar: colorStyle.getPropertyValue('--scale'),        // 'gray',
-            colorBarProgress: widget.unit == '%' ? 'blue' : 'red',
-            colorBarStroke: 'red',
-            colorMajorTicks: colorStyle.getPropertyValue('--scale'), // '#f5f5f5',
-            colorMinorTicks: colorStyle.getPropertyValue('--scale'), // '#ddd',
-            colorTitle: colorStyle.getPropertyValue('--scaleText'),
-            colorUnits: colorStyle.getPropertyValue('--scaleText'),  // '#ccc',
-            colorNumbers: colorStyle.getPropertyValue('--scaleText'),
-            colorNeedle: 'rgba(240, 128, 128, 1)',
-            colorNeedleEnd: 'rgba(255, 160, 122, .9)',
-
-            fontNumbersSize: radial ? 34 : (onSmalDevice ? 45 : 45),
-            fontUnitsSize: 45,
-            fontUnitsWeight: 'bold',
-            borderOuterWidth: 0,
-            borderMiddleWidth: 0,
-            borderInnerWidth: 0,
-            borderShadowWidth: 0,
-            needle: radial,
-            fontValueWeight: 'bold',
-            valueBox: radial,
-            valueInt: 0,
-            valueDec: 2,
-            colorValueText: colorStyle.getPropertyValue('--scale'),
-            colorValueBoxBackground: 'transparent',
-            // colorValueBoxBackground: '#2177AD',
-            valueBoxStroke: 0,
-            fontValueSize: 45,
-            valueTextShadow: false,
-            animationRule: 'bounce',
-            animationDuration: 500,
-            barWidth: radial ? 0 : (widget.unit == '%' ? 10 : 7),
-            numbersMargin: 0,
-
-            // linear gauge specials
-
-            barBeginCircle: widget.unit == '°C' ? 15 : 0,
-            tickSide: 'left',
-            needleSide: 'right',
-            numberSide: 'left',
-            colorPlate: 'transparent'
-         };
-
-         var gauge = null;
-
-         if (radial)
-            gauge = new RadialGauge(options);
-         else
-            gauge = new LinearGauge(options);
-
-         gauge.draw();
-         $('#widget' + fact.type + fact.address).data('gauge', gauge);
-
+         initMeter(key, widget, fact, widget.scalemax, null);
          break;
       }
 
-      case 7: {    // 7 (PlainText)
+      case 7: {          // PlainText
          $(elem).addClass('widgetPlain widgetDropZone');
          if (setupMode)
             $(elem).append($('<div></div>')
                            .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                            .addClass(titleClass)
                            .css('user-select', 'none')
+                           .css('padding', fact.type == 'WEA' ? '0px' : '')
                            .click(function(event) {titleClick(event.ctrlKey, key);})
                            .html(title));
-         var wFact = fact;
-         $(elem).append($('<div></div>')
-                        .attr('id', 'widget' + fact.type + fact.address)
-                        .addClass(fact.type == 'WEA' ? 'widget-weather' : 'widget-value')
-                        .css('user-select', 'none')
-                        .css('color', widget.color)
-                        .css('height', 'inherit')
-                        .click(function() { if (wFact.type == 'WEA') weatherForecast(); }));
+
+         if (fact.type == 'WEA' && fact.address != 1) {
+            if (fact.address == 2)
+               initWindy(key, widget, fact);
+            else if (fact.address == 3)
+               initWindyMap(key, widget, fact);
+         }
+         else {
+            let wFact = fact;
+            $(elem).append($('<div></div>')
+                           .attr('id', 'widget' + fact.type + fact.address)
+                           .addClass(fact.type == 'WEA' ? 'widget-weather' : 'widget-text')
+                           .css('user-select', 'none')
+                           .css('color', widget.color)
+                           .css('height', 'inherit')
+                           .click(function() { if (wFact.type == 'WEA' && wFact.address == 1) weatherForecast(); }));
+         }
          break;
       }
 
       case 8: {     // 8 (Choice)
+         console.log("choices:", fact.choices);
          $(elem)
             .addClass("widget widgetDropZone")
-            .css('cursor', 'pointer')
-            .click(function() {
-               socket.send({"event": "toggleio", "object": {"address": fact.address, "type": fact.type, "action": "toggle"}});
-            })
             .append($('<div></div>')
                     .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
                     .addClass(titleClass)
@@ -671,10 +685,22 @@ function initWidget(key, widget, fact)
                     .click(function(event) {titleClick(event.ctrlKey, key);})
                     .html(title))
             .append($('<div></div>')
-                    .attr('id', 'widget' + fact.type + fact.address)
-                    .addClass('widget-value')
-                    .css('user-select', 'none')
+                    .attr('id', 'choice' + fact.type + fact.address)
+                    .addClass('widget-choice rounded-border')
                     .css('color', widget.color));
+         let choices = fact.choices.split(",");
+         for (c = 0; c < choices.length; ++c) {
+            // console.log("c: ", choices[c]);
+            $('#choice' + fact.type + fact.address)
+               .append($('<div></div>')
+                       .attr('id', 'widget' + fact.type + fact.address + '_' + c)
+                       .addClass('rounded-border')
+                       .html(choices[c])
+                       .click({ "value" : choices[c] }, function(event) {
+                          socket.send({'event': 'toggleio', 'object': {'address': fact.address, 'type': fact.type, 'value': event.data.value, 'action': 'switch'}});
+                       }));
+         }
+
          break;
       }
 
@@ -700,21 +726,6 @@ function initWidget(key, widget, fact)
                             .addClass('rounded-border')
                             .css('user-select', 'none'))
                     .click(function() { toggleIo(fact.address, fact.type); }))
-//            .append($('<div></div>')
-//                    .attr('id', 'progress' + fact.type + fact.address)
-//                    .addClass('widget-progress')
-//                    .css('user-select', 'none')
-//                    .on({'mousedown touchstart' : function(e){
-//                       e.preventDefault();
-//                       moseDownOn.object = $('#progressBar' + fact.type + fact.address);
-//                       moseDownOn.fact = fact;
-//                       moseDownOn.div = $(this);
-//                       console.log("mousedown on " + moseDownOn.object.attr('id'));
-//                    }})
-//                    .append($('<div></div>')
-//                            .attr('id', 'progressBar' + fact.type + fact.address)
-//                            .css('user-select', 'none')
-//                            .addClass('progress-bar')))
             .append($('<div></div>')
                     .attr('id', 'value' + fact.type + fact.address)
                     .addClass('symbol-value')
@@ -755,14 +766,74 @@ function initWidget(key, widget, fact)
          $(elem).append($('<div></div>')
                         .attr('id', 'widget' + key)
                         .addClass('widget-time')
-                        .css('height', 'inherit')
                         .css('color', widget.color)
                         .css('user-select', 'none')
                         .html(getTimeHtml()));
          setInterval(function() {
-            var timeId = '#widget'+key.replace(':', '\\:');
+            let timeId = '#widget'+key.replace(':', '\\:');
             $(timeId).html(getTimeHtml());
          }, 1*1000);
+
+         break;
+      }
+
+      case 14: {      // Special Symbol
+         $(elem)
+            .addClass("widget widgetDropZone")
+            .append($('<div></div>')
+                    .addClass('widget-title ' + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : ''))
+                    .addClass(titleClass)
+                    .css('user-select', 'none')
+                    .click(function(event) {titleClick(event.ctrlKey, key);})
+                    .html(title));
+
+         let maxWidth = 280;
+         let html = '';
+         let yStart = 14;
+         let heightStart = 170;
+         let symbolWidth = maxWidth;
+         let xPos = 10;
+
+         if (widget.barwidth != null) {
+            symbolWidth = widget.barwidth;
+            xPos = (maxWidth - symbolWidth) / 2 + 10;
+         }
+
+         if (widget.symbol == null || widget.symbol == 0) {
+            // plain rectangular tank symbol
+
+            html = '<svg xmlns="http://www.w3.org/2000/svg" style="height:100%;aspect-ratio:1/1;" viewBox="0 0 300 200">' +
+               // äußerer Rahmen
+               '  <rect x="' + xPos + '"   y="10"    width="' + symbolWidth + '" rx="5" ry="5" height="180" fill="white" style="fill:white;stroke:black;stroke-width:5" />' +
+               // untere permanente Füllung wegen der Rundung in widget Farbe
+               '  <rect x="' + (xPos +0.5) + '" y="178.5" width="' + (symbolWidth - 3) + '" rx="4.5" height="10" fill="' + widget.color + '" />' +
+               // Rest weiß - leer
+               '  <rect x="' + (xPos +0.5) + '" y="14"    width="' + (symbolWidth - 3) + '" height="169" fill="rgb(255 255 255)" />' +
+               // Füllung in widget Farbe
+               '  <rect id="svg' + key + '" x="' + (xPos +0.5) + '" y="14" width="' + (symbolWidth - 3) + '" height="170" fill="' + widget.color + '" />' +
+               // die Oberfläche mit 3D Effekt
+               '  <ellipse id="svgEllipse' + key + '" rx="' + ((symbolWidth-6)/2) + '" ry="' + 8 + '" cx="' + (xPos + symbolWidth/2) + '" cy="100" stroke="' + widget.color + '" fill="' + alterColor(widget.color, 'lighten', 100) + '" style="stroke-width:2" />' +
+               // Text
+               '  <ellipse rx="40" ry="20" cx="' + (xPos + symbolWidth - 20) + '" cy="10" stroke="' + widget.color + '" style="fill:white;stroke-width:2" />' +
+               '  <text id="value' + key + '" x="' + (xPos + symbolWidth - 20) + '" y="11" fill="black" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="18">--</text>' +
+               '</svg>';
+         }
+
+         else if (widget.symbol == 1) {
+            // ...
+         }
+
+         $(elem).append($('<div></div>')
+                        .attr('id', 'widget' + key)
+                        .data('yStart', yStart)
+                        .data('heightStart', heightStart)
+                        .addClass('widget-main')
+                        .html(html)
+                        .click(function() {
+                           let cFact = fact;
+                           if (!setupMode && fact.record)
+                              toggleChartDialog(cFact.type, cFact.address, key);})
+                       );
 
          break;
       }
@@ -782,12 +853,270 @@ function initWidget(key, widget, fact)
                     .css('color', widget.color)
                     .addClass('widget-value'));
 
-         var cFact = fact;
-         if (!setupMode && fact.record)
+         let cFact = fact;
+         if (!setupMode && fact.record) {
             $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
+				$(elem).css('cursor', 'pointer');
+			}
          break;
       }
    }
+}
+
+//***************************************************************************
+// Init WindyApp Widget
+//***************************************************************************
+
+function initWindy(key, widget, fact)
+{
+   // https://windy.app/de/widgets
+
+   // Fields:
+   //   wind-direction, wind-speed, wind-gust, air-temp,
+   //   clouds, precipitation, waves-direction, waves-height,
+   //   waves-period, tides, moon-phase
+
+   let html = '<div ' +
+       '     data-windywidget="forecast"' +
+       '     data-customcss="windy-dark.css"' +
+       '     data-thememode="dark"' +            // white|dark
+       '     data-tempunit="C"' +                // C|F
+       '     data-windunit="bft"' +              // knots|bft|m/s|mph|km/h
+       '     data-heightunit="m"' +              // m|ft
+       '     data-spotid="' + config.windyAppSpotID + '"' +
+       // '     data-lat="54.0951002"' +         //
+       // '     data-lng="8.9516540"' +          //
+       '     data-fields="wind-speed,wind-gust,wind-direction,air-temp,clouds,precipitation"' +
+       '     data-appid="widgets_7e484018b8"' +
+       ' >' +
+       '</div>' +
+       '<script async="true" data-cfasync="false" type="text/javascript"' +
+       '        src="windy_forecast_async.js?v1.4.6"></script>';
+
+   let elem = document.getElementById('div_' + key);
+
+   // special - use the whole width and self adjusted height
+
+   $(elem).css('height', '');
+   $(elem).css('width', '');
+   $(elem).html(html);
+}
+
+function initWindyMap(key, widget, fact)
+{
+   return;
+
+   let html = '<div ' +
+      '    data-windywidget="map"' +
+      '    data-thememode="white"' +
+      '    data-spotid="' + config.windyAppSpotID + '"' +
+      '    data-appid="widgets_8bdd3cb645">' +
+      '</div>' +
+      '<script async="true" data-cfasync="false" type="text/javascript" src="//windy.app/widget3/windy_map_async.js?v289"></script>';
+
+   let elem = document.getElementById('div_' + key);
+
+   // special - use the whole width and self adjusted height
+
+   $(elem).css('height', '');
+   $(elem).css('width', '');
+   $(elem).html(html);
+}
+
+//***************************************************************************
+// Init Meter Widget
+//***************************************************************************
+
+function initMeter(key, widget, fact, neededScaleMax, value)
+{
+   let radial = widget.widgettype == 5;
+   let showValue = widget.showvalue == null || widget.showvalue == true;
+   let titleClass = getWidgetTitleClass(widget, fact);
+   let title = getWidgetTitle(widget, fact);
+   let elem = document.getElementById('div_' + key);
+
+   $(elem).empty();
+
+   if (radial || !showValue)
+      elem.className = 'widgetMeter widgetDropZone';
+   else if (showValue)
+      elem.className = 'widgetMeterLinear widgetDropZone';
+
+   let eTitle = document.createElement("div");
+   eTitle.className = "widget-title " + (setupMode ? 'mdi mdi-lead-pencil widget-edit' : titleClass);
+   eTitle.addEventListener("click", function(event) {titleClick(event.ctrlKey, key)}, false);
+   eTitle.innerHTML = title;
+   elem.appendChild(eTitle);
+
+   let main = document.createElement("div");
+   main.className = "widget-main-meter";
+   elem.appendChild(main);
+
+   let canvas = document.createElement('canvas');
+   main.appendChild(canvas);
+   canvas.setAttribute('id', 'widget' + fact.type + fact.address);
+
+   let cFact = fact;
+   if (!setupMode && fact.record) {
+      $(canvas).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
+		canvas.style.cursor = 'pointer';
+	}
+
+   if (!radial && showValue) {
+      let _value = document.createElement("div");
+      _value.setAttribute('id', 'widgetValue' + fact.type + fact.address);
+      _value.className = "widget-main-value-lin";
+      elem.appendChild(_value);
+      $("#widgetValue" + fact.type + fact.address).css('color', widget.color);
+      let ePeak = document.createElement("div");
+      ePeak.setAttribute('id', 'peak' + fact.type + fact.address);
+      ePeak.className = "widget-main-peak-lin";
+      elem.appendChild(ePeak);
+   }
+
+   if (widget.scalemin == null)
+      widget.scalemin = 0;
+
+   let neededScaleMin = widget.scalemin;
+
+   if (widget.scalemin < 0)
+      neededScaleMin = neededScaleMax*-1;
+
+   let ticks = [];
+   let scaleRange = neededScaleMax - neededScaleMin;
+   let stepWidth = widget.scalestep;
+
+   if (widget.rescale && widget.scalestep != null && widget.scalemax != neededScaleMax) {
+      let factor = widget.scalemax / neededScaleMax;
+      stepWidth = widget.scalestep / factor;
+
+      if (neededScaleMax >= 10)
+         stepWidth = Math.round(stepWidth);
+   }
+
+   if (!stepWidth) {
+      let steps = 10;
+      if (scaleRange <= 100)
+         steps = scaleRange % 10 == 0 ? 10 : scaleRange % 5 == 0 ? 5 : scaleRange;
+      if (steps < 10)
+         steps = 10;
+      if (!radial && widget.unit == '%')
+         steps = 4;
+      stepWidth = scaleRange / steps;
+   }
+
+   if (stepWidth <= 0)
+      stepWidth = 1;
+
+   stepWidth = Math.round(stepWidth*10) / 10;
+
+   if (neededScaleMax < widget.scalemax)
+      neededScaleMax += stepWidth;       // if we auto scale add one step
+
+   if (widget.scalemin < 0)
+      neededScaleMin = neededScaleMax*-1;
+
+   let steps = -1;
+   for (let step = neededScaleMin; step.toFixed(2) <= neededScaleMax; step += stepWidth) {
+      ticks.push(step % 1 ? parseFloat(step).toFixed(1) : parseInt(step));
+      steps++;
+   }
+
+   let highlights = {};
+   let critmin = (widget.critmin == null || widget.critmin == -1) ? neededScaleMin : widget.critmin;
+   let critmax = (widget.critmax == null || widget.critmax == -1) ? neededScaleMax : widget.critmax;
+   let minColor = widget.unit == '°C' ? 'blue' : 'rgba(255,0,0,.6)';
+
+   highlights = [
+      { 'from': neededScaleMin, 'to': critmin,        'color': minColor },
+      { 'from': critmin,        'to': critmax,        'color': 'rgba(0,255,0,.6)' },
+      { 'from': critmax,        'to': neededScaleMax, 'color': 'rgba(255,0,0,.6)' }
+   ];
+
+   let bWidth = radial ? 0 : (widget.unit == '%' || widget.unit == 'l' ? 12 : 7);
+
+   if (widget.barwidth != null)
+      bWidth = widget.barwidth;
+
+   let progressColor = widget.unit == '%' ? 'blue' : 'red';
+
+	if (widget.barcolor != null && widget.barcolor != '')
+		progressColor = widget.barcolor
+
+	progressColor = getWidgetColor(widget, widget.colorConditionBar, progressColor, value);
+
+   options = {
+      renderTo: 'widget' + fact.type + fact.address,
+
+      units: radial ? widget.unit : '',
+      minValue: neededScaleMin,
+      maxValue: neededScaleMax,
+      majorTicks: ticks,
+      minorTicks: 5,
+      highlights: highlights,
+      strokeTicks: false,
+      highlightsWidth: radial ? 8 : 6,
+
+      colorPlate: radial ? '#2177AD' : 'rgba(0,0,0,0)',
+      colorBar: colorStyle.getPropertyValue('--scale'),        // 'gray',
+      colorBarProgress: progressColor,
+      colorBarStroke: 'red',
+      colorMajorTicks: colorStyle.getPropertyValue('--scale'), // '#f5f5f5',
+      colorMinorTicks: colorStyle.getPropertyValue('--scale'), // '#ddd',
+      colorTitle: colorStyle.getPropertyValue('--scaleText'),
+      colorUnits: colorStyle.getPropertyValue('--scaleText'),  // '#ccc',
+      colorNumbers: colorStyle.getPropertyValue('--scaleText'),
+      colorNeedle: 'rgba(240, 128, 128, 1)',
+      colorNeedleEnd: 'rgba(255, 160, 122, .9)',
+
+      fontNumbersSize: radial ? 34 : (showValue ? 40 : 30),
+      fontUnitsSize: 45,
+      fontUnitsWeight: 'bold',
+      borderOuterWidth: 0,
+      borderMiddleWidth: 0,
+      borderInnerWidth: 0,
+      borderShadowWidth: 0,
+      fontValueWeight: 'bold',
+      valueBox: radial,
+      valueInt: 0,
+      valueDec: widget.unit == '%' ? 0 : 2,
+      colorValueText: colorStyle.getPropertyValue('--scale'),
+      colorValueBoxBackground: 'transparent',
+      valueBoxStroke: 0,
+      fontValueSize: 45,
+      valueTextShadow: false,
+      animationRule: 'bounce',
+      animationDuration: 500,
+      barWidth: bWidth,
+      numbersMargin: -3,
+      needle: radial,
+
+      // linear gauge specials
+
+      barBeginCircle: widget.unit == '°C' ? 15 : 0,
+
+      tickSide: 'left',
+      numberSide: 'left',
+      needleSide: 'left',
+      colorPlate: 'transparent'
+   };
+
+   // patch width and height due to strange behavior of (at least) the LinearGauge when wider than high
+
+   if ($(main).innerHeight() < $(main).innerWidth())
+      options.width = options.hight = $(main).innerHeight();
+
+	if (dashboardGauges[fact.type + fact.address] != null) {
+      dashboardGauges[fact.type + fact.address].destroy();
+      dashboardGauges[fact.type + fact.address] = null;
+   }
+
+   if (radial)
+      dashboardGauges[fact.type + fact.address] = new RadialGauge(options);
+   else
+      dashboardGauges[fact.type + fact.address] = new LinearGauge(options);
+
+   dashboardGauges[fact.type + fact.address].draw();
 }
 
 function initLightColorDialog()
@@ -804,7 +1133,7 @@ function initLightColorDialog()
                                   .click(function() { $('#lightColorDiv').css('display', 'none'); }))
                          );
 
-   var options = {
+   let options = {
       'cssClass' : 'lightColor',
       'layout' :  'block',
       'format' : 'hsv',
@@ -819,10 +1148,10 @@ function initLightColorDialog()
       if (!$(this).data('key'))
          return;
 
-      var fact = valueFacts[$(this).data('key')];
-      var hue = parseInt($(this).wheelColorPicker('getColor').h * 360);
-      var sat = parseInt($(this).wheelColorPicker('getColor').s * 100);
-      var bri = parseInt($(this).wheelColorPicker('getColor').v * 100);
+      let fact = valueFacts[$(this).data('key')];
+      let hue = parseInt($(this).wheelColorPicker('getColor').h * 360);
+      let sat = parseInt($(this).wheelColorPicker('getColor').s * 100);
+      let bri = parseInt($(this).wheelColorPicker('getColor').v * 100);
 
       console.log("color of " + fact.address + " changed to '" + hue + "' / " + bri + '% / ' + sat + '%');
 
@@ -849,9 +1178,9 @@ function initLightColorDialog()
 
 function showLightColorDialog(key)
 {
-   var posX = ($('#container').innerWidth() - $('#lightColorDiv').outerWidth()) / 2;
-   var posY = ($('#container').innerHeight() - $('#lightColorDiv').outerHeight()) / 2;
-   var sensor = allSensors[key];
+   let posX = ($('#container').innerWidth() - $('#lightColorDiv').outerWidth()) / 2;
+   let posY = ($('#container').innerHeight() - $('#lightColorDiv').outerHeight()) / 2;
+   let sensor = allSensors[key];
 
    $('#lightColor').data('key', key);
    $('#lightColorDiv').css('left', posX + 'px');
@@ -862,19 +1191,19 @@ function showLightColorDialog(key)
 
 function getTimeHtml()
 {
-   var now = new Date();
+   let now = new Date();
 
    // calc daytime every 60 seconds
 
    if (!daytimeCalcAt || now.getTime() >= daytimeCalcAt.getTime()+60000){
       daytimeCalcAt = now;
-      var sunset = new Date().sunset(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
-      var sunrise = new Date().sunrise(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
+      let sunset = new Date().sunset(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
+      let sunrise = new Date().sunrise(config.latitude.replace(',', '.'), config.longitude.replace(',', '.'));
       isDaytime = daytimeCalcAt > sunrise && daytimeCalcAt < sunset;
       // console.log("isDaytime: " + isDaytime + ' : ' + sunrise + ' : '+ sunset);
    }
 
-   var cls = isDaytime ? 'mdi mdi-weather-sunny' : 'mdi mdi-weather-night';
+   let cls = isDaytime ? 'mdi mdi-weather-sunny' : 'mdi mdi-weather-night';
 
    return '<div>'
       + '<span class="' + cls + ' " style="color:orange;"></span>'
@@ -888,10 +1217,10 @@ function getWeatherHtml(symbolView, wfact, weather)
 {
    // https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2
 
-   var html = '';
+   let html = '';
 
    if (symbolView) {
-      var wIconRef = 'img/weather/' + weather.icon + '@4x.png';
+      let wIconRef = 'img/weather/' + weather.icon + '@4x.png';
       if (!images.find(img => img == wIconRef))
          wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '@4x.png';
       html += '<div style="display:block;font-weight:bold;height:75%;padding-left:5px;"><span>' + weather.detail + '</span><img style="height:100%" src="' + wIconRef + '"></img></div>';
@@ -902,7 +1231,7 @@ function getWeatherHtml(symbolView, wfact, weather)
 
    }
    else {
-      var wIconRef = 'img/weather/' + weather.icon + '.png';
+      let wIconRef = 'img/weather/' + weather.icon + '.png';
       if (!images.find(img => img == wIconRef))
          wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
       html += '<div style="display:inline-flex;align-items:center;font-weight:bold;"><span><img src="' + wIconRef + '"></img></span><span>' + weather.detail + '</span></div>';
@@ -918,22 +1247,22 @@ function getWeatherHtml(symbolView, wfact, weather)
 
 function weatherForecast()
 {
-   var lastDay = '';
-   var form = document.createElement("div");
+   let lastDay = '';
+   let form = document.createElement("div");
 
    $(form).addClass('rounded-border weatherForecast');
    $(form).attr('tabindex', 0);
    $(form).click(function() { $(form).remove(); });
    $('#container').append(form);
 
-   var showExtras = $(form).outerWidth() > 580;
-   var html = '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
+   let showExtras = $(form).outerWidth() > 580;
+   let html = '<div class="rounded-border" style="justify-content:center;font-weight:bold;background-color:#2f2f2fd1;">' + weatherData.city + '</div>';
 
-   for (var i = 0; i < weatherData.forecasts.length; i++) {
-      var weather = weatherData.forecasts[i];
-      var day = moment(weather.time*1000).format('dddd Do MMMM');
-      var time = moment(weather.time*1000).format('HH:00');
-      var wIconRef = 'img/weather/' + weather.icon + '.png';
+   for (let i = 0; i < weatherData.forecasts.length; i++) {
+      let weather = weatherData.forecasts[i];
+      let day = moment(weather.time*1000).format('dddd Do MMMM');
+      let time = moment(weather.time*1000).format('HH:00');
+      let wIconRef = 'img/weather/' + weather.icon + '.png';
 
       if (!images.find(img => img == wIconRef))
          wIconRef = 'http://openweathermap.org/img/wn/' + weather.icon + '.png';
@@ -943,7 +1272,7 @@ function weatherForecast()
          html += '<div class="rounded-border" style="background-color:#2f2f2fd1;">' + day + '</div>';
       }
 
-      var tempColor = weather.temp < 0 ? '#2c99eb' : (weather.temp > 20 ? 'red' : 'white');
+      let tempColor = weather.temp < 0 ? '#2c99eb' : (weather.temp > 20 ? 'red' : 'white');
 
       html += '<div class="rounded-border">';
       html += '<span>' + time + '</span>';
@@ -973,9 +1302,10 @@ function weatherForecast()
 function titleClick(ctrlKey, key)
 {
    let fact = valueFacts[key];
-   let hasMode = fact && (fact.type == 'DO' || fact.type == 'SC');
+   let widget = dashboards[actDashboard].widgets[key];
+   let hasMode = fact && fact.outputModes == 3 //  -> ooUser and ooAuto are set
 
-   // console.log("titleClick: ", ctrlKey, key);
+   // console.log("titleClick: ", ctrlKey, key, "fact.outputModes", fact.outputModes);
 
    if (setupMode) {
       widgetSetup(key);
@@ -987,10 +1317,15 @@ function titleClick(ctrlKey, key)
    }
    else {
       let sensor = allSensors[key];
-      let widget = dashboards[actDashboard].widgets[key];
       let now = new Date();
-      var last = new Date(sensor.last * 1000);
-      var form = document.createElement("div");
+      let last = new Date(sensor.last * 1000);
+		let before = Math.round((now - daemonState.timeOffset -last)/1000)
+      let peakMaxTime = new Date(sensor.peakmaxtime * 1000);
+      let peakMinTime = new Date(sensor.peakmintime * 1000);
+      let form = document.createElement("div");
+
+      // console.log(sensor);
+      // console.log(fact);
 
       $(form).append($('<div></div>')
                      .css('z-index', '9999')
@@ -998,6 +1333,7 @@ function titleClick(ctrlKey, key)
 
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
@@ -1006,10 +1342,13 @@ function titleClick(ctrlKey, key)
                              .append($('<span></span>')
                                      .append($('<div></div>')
                                              .addClass('rounded-border')
+                                             .css('font-family', 'monospace')
+                                             .css('font-size', 'larger')
                                              .html(key + ' (' + parseInt(key.split(":")[1]) + ')')
                                             )))
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
@@ -1017,11 +1356,13 @@ function titleClick(ctrlKey, key)
                                      .html('Title'))
                              .append($('<span></span>')
                                      .append($('<div></div>')
+                                             .css('font-style', 'italic')
                                              .addClass('rounded-border')
                                              .html(fact.title)
                                             )))
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
@@ -1029,11 +1370,13 @@ function titleClick(ctrlKey, key)
                                      .html('User Title'))
                              .append($('<span></span>')
                                      .append($('<div></div>')
+                                             .css('font-style', 'italic')
                                              .addClass('rounded-border')
                                              .html(fact.usrtitle)
                                             )))
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
@@ -1046,19 +1389,35 @@ function titleClick(ctrlKey, key)
                                             )))
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
                                      .css('margin-right', '10px')
-                                     .html('Peak'))
+                                     .html('Peak Max'))
                              .append($('<span></span>')
                                      .append($('<div></div>')
-                                             .attr('id', 'dlgPeak')
+                                             .attr('id', 'dlgPeakMax')
                                              .addClass('rounded-border')
-                                             .html(sensor.peak + ' ' + widget.unit)
+                                             .html(sensor.peakmax != null ? (sensor.peakmax + ' ' + widget.unit + ' / ' + peakMaxTime.toLocaleString('de-DE')) : '-')
                                             )))
                      .append($('<div></div>')
                              .css('display', 'flex')
+                             .css('margin-bottom', '4px')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Peak Min'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .attr('id', 'dlgPeakMin')
+                                             .addClass('rounded-border')
+                                             .html(sensor.peakmin != null ? (sensor.peakmin + ' ' + widget.unit + ' / ' + peakMinTime.toLocaleString('de-DE')) : '-')
+                                            )))
+                     .append($('<div></div>')
+                             .css('display', 'flex')
+                             .css('margin-bottom', '4px')
                              .append($('<span></span>')
                                      .css('width', '30%')
                                      .css('text-align', 'end')
@@ -1067,19 +1426,34 @@ function titleClick(ctrlKey, key)
                              .append($('<span></span>')
                                      .append($('<div></div>')
                                              .addClass('rounded-border')
-                                             .html(last.toLocaleString('de-DE') + ' (' + Math.round((now-last)/1000) + 's)'))
+                                             .html(last.toLocaleString('de-DE') + ' (' + before + 's)'))
                                     ))
+                     .append($('<div></div>')
+                             .css('display', sensor.battery ? 'flex' : 'none')
+                             .css('margin-bottom', '4px')
+                             .append($('<span></span>')
+                                     .css('width', '30%')
+                                     .css('text-align', 'end')
+                                     .css('margin-right', '10px')
+                                     .html('Battery'))
+                             .append($('<span></span>')
+                                     .append($('<div></div>')
+                                             .addClass('rounded-border')
+                                             .html(sensor.battery ? sensor.battery + ' %' :  '-')
+                                            )))
                     );
 
 
       let btns = {};
 
-      if (sensor.peak) {
+      if (sensor.peakmax) {
          btns['Reset Peak'] = function() {
-            $('#dlgPeak').html('-');
+            $('#dlgPeakMax').html('-');
+            $('#dlgPeakMin').html('-');
             socket.send({ "event" : "command", "object" : { "what" : 'peak', "type": fact.type, "address": fact.address } });
             let sensor = allSensors[key];
-            sensor.peak = null;
+            sensor.peakmax = null;
+            sensor.peakmin = null;
          };
       }
 
@@ -1108,7 +1482,7 @@ function titleClick(ctrlKey, key)
 function updateDashboard(widgets, refresh)
 {
    if (widgets != null && dashboards[actDashboard] != null) {
-      for (var key in widgets) {
+      for (let key in widgets) {
          if (dashboards[actDashboard].widgets[key] == null)
             continue;
 
@@ -1122,7 +1496,7 @@ function updateWidget(sensor, refresh, widget)
    if (sensor == null)
       return ;
 
-   var key = toKey(sensor.type, sensor.address);
+   let key = toKey(sensor.type, sensor.address);
    fact = valueFacts[key];
 
    // console.log("updateWidget " + fact.name + " of type " + widget.widgettype);
@@ -1140,7 +1514,7 @@ function updateWidget(sensor, refresh, widget)
    if (widget.unit == '')
       widget.unit = fact.unit;
 
-   var widgetDiv = $('#div_' + key.replace(':', '\\:'));
+   let widgetDiv = $('#div_' + key.replace(':', '\\:'));
 
    if (widget.range > 2)
    {
@@ -1148,34 +1522,34 @@ function updateWidget(sensor, refresh, widget)
       sensor.valid = true;
    }
 
+   if (sensor.type == 'WEA' && (sensor.address == 2 || sensor.address == 3)) // Windy App
+      sensor.valid = true;
+
    widgetDiv.css('opacity', sensor.valid ? '100%' : '45%');
    // $('#div_' + key.replace(':', '\\:')).css('opacity', sensor.valid ? '100%' : '25%');
 
    if (widget.widgettype == 0 || widget.widgettype == 9 || widget.widgettype == 12)         // Symbol, Symbol-Value, Symbol-Text
    {
       // console.log("sensor: ", JSON.stringify(sensor));
-      var state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
-      var image = '';
-      var classes = '';
+      let state = fact.type != 'HMB' ? sensor.value != 0 : sensor.value == 100;
+      let image = '';
+      let classes = '';
 
-      if (sensor.image != null)
+      if (sensor.image != null)                                      // own image got by data
          image = sensor.image;
-      else if (state && widget.symbolOn && widget.symbolOn != '') {
+      else if (state && widget.symbolOn && widget.symbolOn != '') {  // MDI Icon ON
          classes = widget.symbolOn.replace(':', ' ');
-         image = '';
          $("#widget" + fact.type + fact.address).remove();
       }
-      else if (!state && widget.symbol && widget.symbol != '') {
+      else if (!state && widget.symbol && widget.symbol != '') {     // MDI Icon OFF
          classes = widget.symbol.replace(':', ' ');
-         image = '';
          $("#widget" + fact.type + fact.address).remove();
       }
-      else if (widget.symbol && widget.symbol != '') {
+      else if (widget.symbol && widget.symbol != '') {               // MDI Icon
          classes = widget.symbol.replace(':', ' ');
-         image = '';
          $("#widget" + fact.type + fact.address).remove();
       }
-      else
+      else                                                           // image by patch as <img> element
          image = state ? widget.imgon : widget.imgoff;
 
       if (image != '')
@@ -1185,46 +1559,51 @@ function updateWidget(sensor, refresh, widget)
          $("#button" + fact.type + fact.address).addClass('widget-main');
          $("#button" + fact.type + fact.address).addClass(classes);
 
-         var fontSize = Math.min(widgetDiv.height(), widgetDiv.width()) * 0.6;
+         let fontSize = Math.min(widgetDiv.height(), widgetDiv.width()) * 0.6;
          $("#button" + fact.type + fact.address).css('font-size', fontSize + 'px');
       }
 
       $("#button" + fact.type + fact.address).css('background-color', sensor.working ? '#7878787878' : 'transparent');
 
-      // $('#div_'+key.replace(':', '\\:')).css('background-color', (sensor.options == 3 && sensor.mode == 'manual') ? '#a27373' : '');
-      widgetDiv.css('background-color', (sensor.options == 3 && sensor.mode == 'manual') ? '#a27373' : '');
+      // $('#div_'+key.replace(':', '\\:')).css('background-color', (fact.outputModes == 3 && sensor.mode == 'manual') ? '#a27373' : '');
+      widgetDiv.css('background-color', (fact.outputModes == 3 && sensor.mode == 'manual') ? '#a27373' : '');
       widget.colorOn = widget.colorOn == null ? symbolOnColorDefault : widget.colorOn;
 
+		let color = state ? widget.colorOn : widget.color;
+
+		color = getWidgetColor(widget, widget.colorCondition, color, sensor.value);
+
       if (sensor.hue)
-         widget.colorOn = tinycolor({ 'h': sensor.hue, 's': sensor.sat, 'v': sensor.score }).toHslString();
+         color = tinycolor({ 'h': sensor.hue, 's': sensor.sat, 'v': sensor.score }).toHslString();
+		else if (sensor.color)
+			color = sensor.color;
 
-      widget.color = widget.color == null ? symbolColorDefault : widget.color;
+      // widget.color = widget.color == null ? symbolColorDefault : widget.color;
 
-      // console.log("set color to: : ", widget.colorOn);
-      $("#button" + fact.type + fact.address).css('color', state ? widget.colorOn : widget.color);
+      $("#button" + fact.type + fact.address).css('color', color);
 
       if (widget.widgettype == 9)
-         $("#value" + fact.type + fact.address).text(sensor.value.toFixed(widget.unit=="%" ? 0 : 2) + (widget.unit!="" ? " " : "") + widget.unit);
+         $("#value" + fact.type + fact.address).text(sensor.value.toFixed(widget.unit == '%' || widget.unit == '' ? 0 : 2) + (widget.unit != '' ? ' ' : '') + widget.unit);
       else if (widget.widgettype == 12 && sensor.text != null)
          $("#value" + fact.type + fact.address).text(sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>'));
 
-//      var prs = $('#progressBar' + fact.type + fact.address);
+//      let prs = $('#progressBar' + fact.type + fact.address);
 //      $('#progress' + fact.type + fact.address).css('display', fact.options & 0x02 && sensor.value ? 'block' : 'none');
 //
 //      if (sensor.score && prs != null)
 //         $(prs).css('width', sensor.score + '%');
 //
 //      if (sensor.mode == "auto" && sensor.next > 0) {
-//         var pWidth = 100;
-//         var s = sensor;
-//         var id = fact.type + fact.address;
-//         var iid = setInterval(progress, 200);
+//         let pWidth = 100;
+//         let s = sensor;
+//         let id = fact.type + fact.address;
+//         let iid = setInterval(progress, 200);
 //
 //         function progress() {
 //            if (pWidth <= 0) {
 //               clearInterval(iid);
 //            } else {
-//               var d = new Date();
+//               let d = new Date();
 //               pWidth = 100 - ((d/1000 - s.last) / ((s.next - s.last) / 100));
 //               document.getElementById("progressBar" + id).style.width = pWidth + "%";
 //            }
@@ -1234,52 +1613,83 @@ function updateWidget(sensor, refresh, widget)
    else if (widget.widgettype == 1 || widget.widgettype == 13)    // Chart
    {
       if (widget.showpeak != null && widget.showpeak)
-         $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
+         $("#peak" + fact.type + fact.address).text(sensor.peakmax != null ? sensor.peakmax.toFixed(2) + " " + widget.unit : "");
 
       $("#value" + fact.type + fact.address).text(sensor.value.toFixed(2) + " " + widget.unit);
 
       if (refresh) {
-         var jsonRequest = {};
+         let jsonRequest = {};
          if (!widget.range)
             widget.range = 1;
          prepareChartRequest(jsonRequest, toKey(fact.type, fact.address), 0, widget.range, widget.widgettype == 13 ? "chartwidgetbar" : "chartwidget");
          socket.send({ "event" : "chartdata", "object" : jsonRequest });
       }
    }
-   else if (widget.widgettype == 2 || widget.widgettype == 7 || widget.widgettype == 8)    // Text, PlainText, Choice
+   else if (widget.widgettype == 8)    // Choice
    {
-      if (sensor.type == 'WEA' && sensor.text != null) {
-         var bigView = false;
-         var wfact = fact;
+      // let text = sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+
+      let choices = fact.choices.split(",");
+      for (c = 0; c < choices.length; ++c) {
+         $("#widget" + fact.type + fact.address + '_' + c).css('background-color', sensor.text == choices[c] ? 'gray' : "");
+      }
+   }
+   else if (widget.widgettype == 2 || widget.widgettype == 7)    // Text, PlainText
+   {
+      if (sensor.type == 'WEA' && sensor.address == 1 && sensor.text != null) { // Open Weather Map
+         let bigView = false;
+         let wfact = fact;
          weatherData = JSON.parse(sensor.text);
-         // console.log("weather" + JSON.stringify(weatherData, undefined, 4));
-         $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
+         $("#widget" + fact.type + fact.address).html(getWeatherHtml(bigView, wfact, weatherData));
          if (weatherInterval)
             clearInterval(weatherInterval);
          if (weatherData && config.toggleWeatherView != 0) {
             weatherInterval = setInterval(function() {
                bigView = !bigView;
-               $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
+               $("#widget" + fact.type + fact.address).html(getWeatherHtml(bigView, wfact, weatherData));
             }, 5*1000);
          }
       }
+      else if (sensor.type == 'WEA' && (sensor.address == 2 || sensor.address == 3)) { // Windy App
+
+      }
       else if (sensor.text != null) {
-         var text = sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>');
-         $("#widget" + fact.type + fact.address).html(text);
+         $("#widget" + fact.type + fact.address).css('color', getWidgetColor(widget, widget.colorCondition, widget.color, sensor.text));
+         if (widget.widgettype == 7 && sensor.text.indexOf('\n') != -1) {
+            // show plain with tabs text as table
+
+            let lines = sensor.text.split(/(?:\r\n|\r|\n)/);
+            let html = '';
+
+            for (l = 0; l < lines.length; ++l) {
+               let tabs = lines[l].split(/(?:\t)/);
+               let tabHtml = '';
+               for (t = 0; t < tabs.length; ++t)
+                  tabHtml += '<td>' + tabs[t] + '</td>';
+               html += '<tr>' + tabHtml + '</tr>\n';
+            }
+
+            $("#widget" + fact.type + fact.address).html('<table>' + html + '</table>');
+         }
+         else {
+            let text = sensor.text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+            $("#widget" + fact.type + fact.address).html(text);
+         }
       }
    }
-   else if (widget.widgettype == 3)      // plain value
+   else if (widget.widgettype == 3)      // Value
    {
+      $("#widget" + fact.type + fact.address).css('color', getWidgetColor(widget, widget.colorCondition, widget.color, sensor.value));
       $("#widget" + fact.type + fact.address).html(sensor.value + " " + widget.unit);
       if (widget.showpeak != null && widget.showpeak)
-         $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
+         $("#peak" + fact.type + fact.address).text(sensor.peakmax != null ? sensor.peakmax.toFixed(2) + " " + widget.unit : "");
    }
    else if (widget.widgettype == 4)      // Gauge
    {
-      var value = sensor.value.toFixed(2);
-      var scaleMax = !widget.scalemax || widget.unit == '%' ? 100 : widget.scalemax.toFixed(0);
-      var scaleMin = value >= 0 ? "0" : Math.ceil(value / 5) * 5 - 5;
-      var _peak = sensor.peak != null ? sensor.peak : 0;
+      let value = sensor.value.toFixed(2);
+      let scaleMax = !widget.scalemax || widget.unit == '%' ? 100 : widget.scalemax.toFixed(0);
+      let scaleMin = value >= 0 ? "0" : Math.ceil(value / 5) * 5 - 5;
+      let _peak = sensor.peakmax != null ? sensor.peakmax : 0;
       if (scaleMax < Math.ceil(value))
          scaleMax = value;
       if (widget.showpeak != null && widget.showpeak && scaleMax < Math.ceil(_peak))
@@ -1287,8 +1697,8 @@ function updateWidget(sensor, refresh, widget)
       $("#sMin" + fact.type + fact.address).text(scaleMin);
       $("#sMax" + fact.type + fact.address).text(scaleMax);
       $("#value" + fact.type + fact.address).text(value + " " + widget.unit);
-      var ratio = (value - scaleMin) / (scaleMax - scaleMin);
-      var peak = (_peak.toFixed(2) - scaleMin) / (scaleMax - scaleMin);
+      let ratio = (value - scaleMin) / (scaleMax - scaleMin);
+      let peak = (_peak.toFixed(2) - scaleMin) / (scaleMax - scaleMin);
 
       $("#pb" + fact.type + fact.address).attr("d", "M 950 500 A 450 450 0 0 0 50 500");
       $("#pv" + fact.type + fact.address).attr("d", svg_circle_arc_path(500, 500, 450 /*radius*/, -90, ratio * 180.0 - 90));
@@ -1298,19 +1708,90 @@ function updateWidget(sensor, refresh, widget)
    else if (widget.widgettype == 5 || widget.widgettype == 6)    // Meter
    {
       if (sensor.value != null) {
-         var value = (widget.factor != null && widget.factor) ? widget.factor*sensor.value : sensor.value;
-         // console.log("DEBUG: Update " + '#widget' + fact.type + fact.address + " to: " + value + " (" + sensor.value +")");
-         $('#widgetValue' + fact.type + fact.address).html(value.toFixed(widget.unit == '%' ? 0 : 1) + ' ' + widget.unit);
-         var gauge = $('#widget' + fact.type + fact.address).data('gauge');
+         let value = sensor.value;
+			let reInitMeter = false;
+
+			if (widgetDiv.data('scalemax') != widget.scalemax)
+				widgetDiv.data('scalemax', widget.scalemax);
+
+         if (widget.rescale) {
+            let neededScaleMax = widget.scalemax;
+
+            if (value <= 0)
+               ;
+            else if (value < parseInt(widget.scalemax / 100))
+               neededScaleMax = parseInt(widget.scalemax / 100);
+            else if (value < parseInt(widget.scalemax / 80))
+               neededScaleMax = parseInt(widget.scalemax / 80);
+            else if (value < parseInt(widget.scalemax / 40))
+               neededScaleMax = parseInt(widget.scalemax / 40);
+            else if (value < parseInt(widget.scalemax / 20))
+               neededScaleMax = parseInt(widget.scalemax / 20);
+            else if (value < parseInt(widget.scalemax / 10))
+               neededScaleMax = parseInt(widget.scalemax / 10);
+            else if (value < parseInt(widget.scalemax / 4))
+               neededScaleMax = parseInt(widget.scalemax / 4);
+            else if (value < parseInt(widget.scalemax / 2))
+               neededScaleMax = parseInt(widget.scalemax / 2);
+            else if (value < parseInt(widget.scalemax / 1.5))
+               neededScaleMax = parseInt(widget.scalemax / 1.5);
+
+            if (widgetDiv.data('scalemax') != neededScaleMax) {
+               widgetDiv.data('scalemax', neededScaleMax);
+					reInitMeter = true;
+               // initMeter(key, widget, fact, neededScaleMax, sensor.value);
+            }
+         }
+
+			let progressColor = getWidgetColor(widget, widget.colorConditionBar, widget.barcolor, value);
+
+			if (widgetDiv.data('progressColor') != progressColor) {
+            widgetDiv.data('progressColor', progressColor);
+				reInitMeter = true;
+			}
+
+			if (reInitMeter)
+            initMeter(key, widget, fact, widgetDiv.data('scalemax'), sensor.value);
+
+         if (widget.widgettype == 6) {
+            $("#widgetValue" + fact.type + fact.address).css('color', getWidgetColor(widget, widget.colorCondition, widget.color, value));
+            $('#widgetValue' + fact.type + fact.address).html(value.toFixed(widget.unit == '%' ? 0 : 1) + ' ' + widget.unit);
+         }
+
+			let gauge = dashboardGauges[fact.type + fact.address];
+
          if (gauge != null)
             gauge.value = value;
          else
             console.log("Missing gauge instance for " + '#widget' + fact.type + fact.address);
+
          if (widget.showpeak != null && widget.showpeak)
-            $("#peak" + fact.type + fact.address).text(sensor.peak != null ? sensor.peak.toFixed(2) + " " + widget.unit : "");
+            $("#peak" + fact.type + fact.address).text(sensor.peakmax != null ? sensor.peakmax.toFixed(2) + " " + widget.unit : "");
       }
       else
          console.log("Missing value for " + '#widget' + fact.type + fact.address);
+   }
+   else if (widget.widgettype == 14) {  // Special Symbol
+      let div = document.getElementById('widget' + key);
+      let l = document.getElementById('svg' + key);
+      let v = document.getElementById('value' + key);
+      let y = parseFloat($(div).data('yStart'));
+      let fullPx = parseFloat($(div).data('heightStart'));
+      let percent = sensor.value;
+      if (widget.unit != '%')
+         percent = sensor.value / (widget.scalemax / 100);
+      let levelPx = Math.round((fullPx / 100) * percent);
+
+      v.innerHTML = sensor.value + ' ' + widget.unit;
+      l.setAttribute('y', fullPx - levelPx + y);
+      l.setAttribute('height', levelPx);
+
+      let ellipse = document.getElementById('svgEllipse' + key);
+
+      if (ellipse != null)
+         ellipse.setAttribute('cy', fullPx - levelPx + y);
+
+      // console.log("value:", sensor.value, "levelPx:", levelPx);
    }
 }
 
@@ -1321,37 +1802,31 @@ function addWidget()
 {
    // console.log("add widget ..");
 
-   var form = document.createElement("div");
+   let form = document.createElement("div");
 
-   $(form).append($('<div></div>')
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Filter'))
-                          .append($('<input></input>')
-                                  .attr('id', 'incFilter')
-                                  .attr('type', 'search')
-                                  .attr('placeholder', 'expression...')
-                                  .addClass('rounded-border inputSetting')
-                                  .val(addFilterString)
+   $(form)
+      .append($('<div></div>')
+              .append($('<span></span>')
+                      .addClass('labelB2')
+                      .html('Filter'))
+              .append($('<span></span>')
+                      .append($('<input></input>')
+                              .attr('id', 'incFilter')
+                              .attr('type', 'search')
+                              .attr('placeholder', 'expression...')
+                              .addClass('rounded-border input')
+                              .val(addFilterString)
                                   .on('input', function() {updateSelection();})
-                                 ))
-                  .append($('<br></br>'))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Widget'))
-                          .append($('<span></span>')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'widgetKey')
-                                         ))));
+                             )))
+      .append($('<div></div>')
+              .append($('<span></span>')
+                      .addClass('labelB2')
+                      .html('Widget'))
+              .append($('<span></span>')
+                      .append($('<select></select>')
+                              .addClass('rounded-border input')
+                              .attr('id', 'widgetKey')
+                             )));
 
    $(form).dialog({
       modal: true,
@@ -1368,16 +1843,15 @@ function addWidget()
             $(this).dialog('close');
          },
          'Ok': function () {
-            var json = {};
+            let json = {};
             console.log("store widget");
             $('#widgetContainer > div').each(function () {
-               var key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-               // console.log(" add " + sensor + " for sensor " + $(this).attr('id'));
+               let key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
                json[key] = dashboards[actDashboard].widgets[key];
             });
 
             if ($("#widgetKey").val() == 'ALL') {
-               for (var key in valueFacts) {
+               for (let key in valueFacts) {
                   if (!valueFacts[key].state)   // use only active facts
                      continue;
                   if (filterExpression && !filterExpression.test(valueFacts[key].title) &&
@@ -1392,11 +1866,8 @@ function addWidget()
             else
                json[$("#widgetKey").val()] = "";
 
-            // console.log("storedashboards " + JSON.stringify(json, undefined, 4));
-            // console.log("storedashboards key " + $("#widgetKey").val());
-
             socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
-            socket.send({ "event" : "forcerefresh", "object" : {} });
+            socket.send({ "event" : "forcerefresh", "object" : { 'action' : 'dashboards' } });
             $(this).dialog('close');
          }
       },
@@ -1404,11 +1875,11 @@ function addWidget()
    });
 
    function updateSelection() {
-      var addrSpacer = -1;
-      var addrTime = -1;
+      let addrSpacer = -1;
+      let addrTime = -1;
       $('#widgetKey').empty();
       // console.log("update selection: " + $('#incFilter').val());
-      for (var key in dashboards[actDashboard].widgets) {
+      for (let key in dashboards[actDashboard].widgets) {
          n = parseInt(key.split(":")[1]);
          if (key.split(":")[0] == 'SPACER' && n > addrSpacer)
             addrSpacer = n;
@@ -1422,18 +1893,18 @@ function addWidget()
                              .val('TIME:0x' + (addrTime + 1).toString(16))
                              .html('Time'));
 
-      var jArray = [];
+      let jArray = [];
       filterExpression = null;
       addFilterString = $('#incFilter').val();
 
       if ($('#incFilter').val() != '')
          filterExpression = new RegExp(addFilterString);
 
-      for (var key in valueFacts) {
+      for (let key in valueFacts) {
          if (!valueFacts[key].state)   // use only active facts here
             continue;
-//         if (dashboards[actDashboard].widgets[key] != null)
-//            continue;
+         // if (dashboards[actDashboard].widgets[key] != null)
+         //    continue;
          if (filterExpression && !filterExpression.test(valueFacts[key].title) &&
              !filterExpression.test(valueFacts[key].usrtitle) &&
              !filterExpression.test(valueFacts[key].type))
@@ -1443,16 +1914,16 @@ function addWidget()
       }
       jArray.push(['ALL', { 'title': '- ALLE -'}]);
       jArray.sort(function(a, b) {
-         var A = (a[1].usrtitle ? a[1].usrtitle : a[1].title).toLowerCase();
-         var B = (b[1].usrtitle ? b[1].usrtitle : b[1].title).toLowerCase();
+         let A = (a[1].usrtitle ? a[1].usrtitle : a[1].title).toLowerCase();
+         let B = (b[1].usrtitle ? b[1].usrtitle : b[1].title).toLowerCase();
          if (B > A) return -1;
          if (A > B) return  1;
          return 0;
 
       });
-      for (var i = 0; i < jArray.length; i++) {
-         var key = jArray[i][0];
-         var title = jArray[i][1].usrtitle ? jArray[i][1].usrtitle : jArray[i][1].title;
+      for (let i = 0; i < jArray.length; i++) {
+         let key = jArray[i][0];
+         let title = jArray[i][1].usrtitle ? jArray[i][1].usrtitle : jArray[i][1].title;
 
          if (valueFacts[key] != null)
             title += ' / ' + valueFacts[key].type;
@@ -1468,12 +1939,12 @@ function addWidget()
 
 function toggleChartDialog(type, address)
 {
-   var dialog = document.querySelector('dialog');
+   let dialog = document.querySelector('dialog');
    dialog.style.position = 'fixed';
    console.log("chart for " + type + address);
 
    if (type != "" && !dialog.hasAttribute('open')) {
-      var canvas = document.querySelector("#chartDialog");
+      let canvas = document.querySelector("#chartDialog");
       canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       chartDialogSensor = type + address;
 
@@ -1498,7 +1969,7 @@ function toggleChartDialog(type, address)
       // only hide the background *after* you've moved focus out of
       //   the content that will be "hidden"
 
-      var div = document.createElement('div');
+      let div = document.createElement('div');
       div.id = 'backdrop';
       document.body.appendChild(div);
    }
@@ -1506,7 +1977,7 @@ function toggleChartDialog(type, address)
       chartDialogSensor = "";
       document.removeEventListener('keydown', closeChartDialog);
       dialog.removeAttribute('open');
-      var div = document.querySelector('#backdrop');
+      let div = document.querySelector('#backdrop');
       div.parentNode.removeChild(div);
    }
 }
@@ -1522,14 +1993,14 @@ function closeChartDialog(event)
 
 function polar_to_cartesian(cx, cy, radius, angle)
 {
-   var radians = (angle - 90) * Math.PI / 180.0;
+   let radians = (angle - 90) * Math.PI / 180.0;
    return [Math.round((cx + (radius * Math.cos(radians))) * 100) / 100, Math.round((cy + (radius * Math.sin(radians))) * 100) / 100];
 };
 
 function svg_circle_arc_path(x, y, radius, start_angle, end_angle)
 {
-   var start_xy = polar_to_cartesian(x, y, radius, end_angle);
-   var end_xy = polar_to_cartesian(x, y, radius, start_angle);
+   let start_xy = polar_to_cartesian(x, y, radius, end_angle);
+   let end_xy = polar_to_cartesian(x, y, radius, start_angle);
    return "M " + start_xy[0] + " " + start_xy[1] + " A " + radius + " " + radius + " 0 0 0 " + end_xy[0] + " " + end_xy[1];
 };
 
@@ -1546,35 +2017,35 @@ function dragDashboard(ev)
 function dragOverDashboard(ev)
 {
    event.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    target.setAttribute('drop-active', true);
 }
 
 function dragLeaveDashboard(ev)
 {
    event.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    target.removeAttribute('drop-active', true);
 }
 
 function dropDashboard(ev)
 {
    ev.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    target.removeAttribute('drop-active', true);
    // console.log("drop: " + ev.target.getAttribute('id'));
 
-   var source = document.getElementById(ev.originalEvent.dataTransfer.getData("source"));
+   let source = document.getElementById(ev.originalEvent.dataTransfer.getData("source"));
 
    if (source.dataset.dragtype == 'widget') {
-      var key = source.getAttribute('id').substring(source.getAttribute('id').indexOf("_") + 1);
+      let key = source.getAttribute('id').substring(source.getAttribute('id').indexOf("_") + 1);
       // console.log("drag widget " + key + " from dashboard " + parseInt(actDashboard) + " to " + parseInt(target.getAttribute('id')));
       source.remove();
       socket.send({ "event" : "storedashboards", "object" :
                     { 'action' : 'move',
                       'key' : key,
                       'from' : parseInt(actDashboard),
-                      'to': parseInt(target.getAttribute('id')) } });
+                      'to': parseInt(target.getAttribute('id').substring(4)) } });
 
       return;
    }
@@ -1584,7 +2055,6 @@ function dropDashboard(ev)
       return;
    }
 
-   // console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
    target.after(source);
 
    // -> The order for json objects follows a certain set of rules since ES2015,
@@ -1593,20 +2063,19 @@ function dropDashboard(ev)
    //    and ascending order for number keys
    // terefore we use a array instead
 
-   var jOrder = [];
-   var i = 0;
+   let jOrder = [];
+   let i = 0;
 
    $('#dashboardMenu > button').each(function () {
       if ($(this).attr('data-dragtype') == 'dashboard') {
-         var did = $(this).attr('id');
+         let did = $(this).attr('id');
          console.log("add: " + did);
-         jOrder[i++] = parseInt(did);
+         jOrder[i++] = parseInt(did.substring(4));
       }
    });
 
-   // console.log("store:  " + JSON.stringify( { 'action' : 'order', 'order' : jOrder }, undefined, 4));
    socket.send({ "event" : "storedashboards", "object" : { 'action' : 'order', 'order' : jOrder } });
-   socket.send({ "event" : "forcerefresh", "object" : {} });
+   socket.send({ "event" : "forcerefresh", "object" : { 'action' : 'dashboards' } });
 }
 
 // widgets
@@ -1620,7 +2089,7 @@ function dragWidget(ev)
 function dragOver(ev)
 {
    event.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    while (target) {
       if (target.dataset.droppoint)
          break;
@@ -1632,7 +2101,7 @@ function dragOver(ev)
 function dragLeave(ev)
 {
    event.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    while (target) {
       if (target.dataset.droppoint)
          break;
@@ -1644,7 +2113,7 @@ function dragLeave(ev)
 function dropWidget(ev)
 {
    ev.preventDefault();
-   var target = ev.target;
+   let target = ev.target;
    while (target) {
       if (target.dataset.droppoint)
          break;
@@ -1652,7 +2121,7 @@ function dropWidget(ev)
    }
    target.removeAttribute('drop-active', true);
 
-   var source = document.getElementById(ev.dataTransfer.getData("source"));
+   let source = document.getElementById(ev.dataTransfer.getData("source"));
 
    if (source.dataset.dragtype != 'widget') {
       console.log("drag source not a widget");
@@ -1662,774 +2131,12 @@ function dropWidget(ev)
    console.log("drop element: " + source.getAttribute('id') + ' on ' + target.getAttribute('id'));
    target.after(source);
 
-   var json = {};
+   let json = {};
    $('#widgetContainer > div').each(function () {
-      var key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-      // console.log(" add " + key + " for " + $(this).attr('id'));
+      let key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
       json[key] = dashboards[actDashboard].widgets[key];
    });
 
-   // console.log("dashboards " + JSON.stringify(json));
    socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
-   socket.send({ "event" : "forcerefresh", "object" : {} });
-}
-
-function dashboardSetup(dashboardId)
-{
-   var form = document.createElement("div");
-
-   if (dashboards[dashboardId].options == null)
-      dashboards[dashboardId].options = {};
-
-   $(form).append($('<div></div>')
-                  .css('z-index', '9999')
-                  .css('minWidth', '40vh')
-
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '25%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Titel'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'dashTitle')
-                                          .attr('type', 'search')
-                                          .val(dashboards[dashboardId].title)
-                                         )))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '25%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Symbol'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'dashSymbol')
-                                          .attr('type', 'search')
-                                          .val(dashboards[dashboardId].symbol)
-                                         )))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '25%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Zeilenhöhe'))
-                          .append($('<span></span>')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'heightfactor')
-                                          .val(dashboards[dashboardId].options.heightfactor)
-                                         ))
-                          .append($('<span></span>')
-                                  .css('width', '25%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Kiosk'))
-                          .append($('<span></span>')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'heightfactorKiosk')
-                                          .val(dashboards[dashboardId].options.heightfactorKiosk)
-                                         )))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '25%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Gruppe'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('type', 'number')
-                                          .attr('id', 'group')
-                                          .val(dashboards[dashboardId].group)
-                                         )))
-                 );
-
-   $(form).dialog({
-      modal: true,
-      resizable: false,
-      closeOnEscape: true,
-      hide: "fade",
-      width: "auto",
-      title: "Dashbord - " + dashboards[dashboardId].title,
-      open: function() {
-         $(".ui-dialog-buttonpane button:contains('Dashboard löschen')").attr('style','color:red');
-
-         if (!dashboards[dashboardId].options.heightfactor)
-            dashboards[dashboardId].options.heightfactor = 1;
-         if (!dashboards[dashboardId].options.heightfactorKiosk)
-            dashboards[dashboardId].options.heightfactorKiosk = 1;
-
-         for (var w = 0.5; w <= 2.0; w += 0.5) {
-            $('#heightfactor').append($('<option></option>')
-                                      .val(w).html(w).attr('selected', dashboards[dashboardId].options.heightfactor == w));
-            $('#heightfactorKiosk').append($('<option></option>')
-                                      .val(w).html(w).attr('selected', dashboards[dashboardId].options.heightfactorKiosk == w));
-         }
-      },
-      buttons: {
-         'Dashboard löschen': function () {
-            console.log("delete dashboard: " + dashboards[dashboardId].title);
-            socket.send({ "event" : "storedashboards", "object" : { [dashboardId] : { 'action' : 'delete' } } });
-            socket.send({ "event" : "forcerefresh", "object" : {} });
-
-            $(this).dialog('close');
-         },
-         'Ok': function () {
-            dashboards[dashboardId].options = {};
-            dashboards[dashboardId].options.heightfactor = $("#heightfactor").val();
-            dashboards[dashboardId].options.heightfactorKiosk = $("#heightfactorKiosk").val();
-            console.log("change title from: " + dashboards[dashboardId].title + " to " + $("#dashTitle").val());
-            dashboards[dashboardId].title = $("#dashTitle").val();
-            dashboards[dashboardId].symbol = $("#dashSymbol").val();
-            dashboards[dashboardId].group = parseInt($("#group").val());
-
-            socket.send({ "event" : "storedashboards", "object" : { [dashboardId] : { 'title' : dashboards[dashboardId].title,
-                                                                                      'group' : dashboards[dashboardId].group,
-                                                                                      'symbol' : dashboards[dashboardId].symbol,
-                                                                                      'options' : dashboards[dashboardId].options} } });
-            socket.send({ "event" : "forcerefresh", "object" : {} });
-            $(this).dialog('close');
-         },
-         'Abbrechen': function () {
-            $(this).dialog('close');
-         }
-      },
-
-      close: function() { $(this).dialog('destroy').remove(); }
-   });
-}
-
-function widgetSetup(key)
-{
-   var item = valueFacts[key];
-   var widget = dashboards[actDashboard].widgets[key];
-   var battery = null;
-
-   if (allSensors[key] != null)
-   {
-      // console.log("sensor " + JSON.stringify(allSensors[key], undefined, 4));
-      // console.log("sensor found, batt is : " + allSensors[key].battery);
-      battery = allSensors[key].battery;
-   }
-   else
-      console.log("sensor not found: " + key);
-
-   if (widget == null)
-      console.log("widget not found: " + key);
-
-   var form = document.createElement("div");
-
-   $(form).append($('<div></div>')
-                  .css('z-index', '9999')
-                  .css('minWidth', '40vh')
-
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('ID'))
-                          .append($('<span></span>')
-                                  .append($('<div></div>')
-                                          .addClass('rounded-border')
-                                          .html(key + ' (' + parseInt(key.split(":")[1]) + ')')
-                                         )))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Battery'))
-                          .append($('<span></span>')
-                                  .append($('<div></div>')
-                                          .addClass('rounded-border')
-                                          .html(battery ? battery + ' %' :  '-')
-                                         )))
-                  .append($('<br></br>'))
-
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Widget'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<select></select>')
-                                          .change(function() {widgetTypeChanged();})
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'widgettype')
-                                         )))
-                  .append($('<div></div>')
-                          .attr('id', 'divUnit')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Einheit'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('type', 'search')
-                                          .attr('id', 'unit')
-                                          .val(widget.unit)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divFactor')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Faktor'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'factor')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.factor)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divScalemin')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Skala Min'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'scalemin')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.scalemin)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divScalemax')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Skala Max'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'scalemax')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.scalemax)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divScalestep')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Skala Step'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'scalestep')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.scalestep)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divCritmin')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Skala Crit Min'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'critmin')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.critmin)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divCritmax')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Skala Crit Max'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'critmax')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.1')
-                                          .val(widget.critmax)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divSymbol')
-                          .css('display', 'flex')
-                          .append($('<a></a>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('color', 'blue')
-                                  .css('align-self', 'center')
-                                  .html('Icon')
-                                  .attr('target','_blank')
-                                  .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'symbol')
-                                          .attr('type', 'search')
-                                          .val(widget.symbol)
-                                          .change(function() {widgetTypeChanged();})
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divSymbolOn')
-                          .css('display', 'flex')
-                          .append($('<a></a>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('color', 'blue')
-                                  .css('align-self', 'center')
-                                  .html('Icon an')
-                                  .attr('target','_blank')
-                                  .attr('href', 'https://pictogrammers.github.io/@mdi/font/6.5.95'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'symbolOn')
-                                          .attr('type', 'search')
-                                          .val(widget.symbolOn)
-                                          .change(function() {widgetTypeChanged();})
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divImgoff')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Image'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'imgoff')
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divImgon')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Image An'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'imgon')
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divColor')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .attr('id', 'spanColor')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Farbe aus / an'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .css('width', '80px')
-                                          .attr('id', 'color')
-                                          .attr('type', 'text')
-                                          .val(widget.color)
-                                         ))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .css('width', '80px')
-                                          .attr('id', 'colorOn')
-                                          .attr('type', 'text')
-                                          .val(widget.colorOn)
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divPeak')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Peak anzeigen'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'peak')
-                                          .attr('type', 'checkbox')
-                                          .prop('checked', widget.showpeak))
-                                  .append($('<label></label>')
-                                          .prop('for', 'peak')
-                                         )))
-
-                  .append($('<div></div>')
-                          .attr('id', 'divLinefeed')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Zeilenumbruch'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'linefeed')
-                                          .attr('type', 'checkbox')
-                                          .prop('checked', widget.linefeed))
-                                  .append($('<label></label>')
-                                          .prop('for', 'linefeed')
-                                         )))
-                  .append($('<div></div>')
-                          .attr('id', 'divRange')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Chart Bereich'))
-                          .append($('<span></span>')
-                                  .append($('<input></input>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('title', 'Tage')
-                                          .attr('id', 'range')
-                                          .attr('type', 'number')
-                                          .attr('step', '0.5')
-                                          .val(widget.range)
-                                         )))
-                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .css('align-self', 'center')
-                                  .html('Breite'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'widthfactor')
-                                         )))
-/*                  .append($('<div></div>')
-                          .css('display', 'flex')
-                          .append($('<span></span>')
-                                  .css('width', '30%')
-                                  .css('text-align', 'end')
-                                  .css('margin-right', '10px')
-                                  .html('Höhe'))
-                          .append($('<span></span>')
-                                  .css('width', '300px')
-                                  .append($('<select></select>')
-                                          .addClass('rounded-border inputSetting')
-                                          .attr('id', 'heightfactor')
-                                         )))*/
-                 );
-
-   function widgetTypeChanged()
-   {
-      var wType = parseInt($('#widgettype').val());
-
-      $("#divUnit").css("display", [1,3,4,5,6,9,13].includes(wType) ? 'flex' : 'none');
-      $("#divFactor").css("display", [1,3,4,6,9,13].includes(wType) ? 'flex' : 'none');
-      $("#divScalemax").css("display", [5,6].includes(wType) ? 'flex' : 'none');
-      $("#divScalemin").css("display", [5,6].includes(wType) ? 'flex' : 'none');
-      $("#divScalestep").css("display", [5,6].includes(wType) ? 'flex' : 'none');
-      $("#divCritmin").css("display", [5,6].includes(wType) ? 'flex' : 'none');
-      $("#divCritmax").css("display", [5,6].includes(wType) ? 'flex' : 'none');
-      $("#divSymbol").css("display", [0,9].includes(wType) ? 'flex' : 'none');
-      $("#divSymbolOn").css("display", [0,9].includes(wType) ? 'flex' : 'none');
-      $("#divImgon").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
-      $("#divImgoff").css("display", ([0,9].includes(wType) && $('#symbol').val() == '') ? 'flex' : 'none');
-      $("#divPeak").css("display", [1,3,6,9,13].includes(wType) ? 'flex' : 'none');
-      $("#divColor").css("display", [0,1,3,4,6,7,9,10,11,13].includes(wType) ? 'flex' : 'none');
-      $("#divLinefeed").css("display", [10].includes(wType) ? 'flex' : 'none');
-      $("#divRange").css("display", [1,5,6,13].includes(wType) ? 'flex' : 'none');
-
-      if ([0].includes(wType) && $('#symbol').val() == '' && $('#symbolOn').val() == '')
-         $("#divColor").css("display", 'none');
-
-      if (![0,9].includes(wType) || $('#symbolOn').val() == '') {
-         $('.spColorOn').css('display', 'none');
-         $('#spanColor').html("Farbe");
-      }
-      else {
-         $('.spColorOn').css('display', 'flex');
-         $('#spanColor').html("Farbe aus / an");
-      }
-   }
-
-   var title = key.split(":")[0];
-
-   if (item != null)
-      title = (item.usrtitle ? item.usrtitle : item.title);
-
-   $(form).dialog({
-      modal: true,
-      resizable: false,
-      closeOnEscape: true,
-      hide: "fade",
-      width: "auto",
-      title: "Widget - " + title,
-      open: function() {
-         for (var wdKey in widgetTypes) {
-            $('#widgettype').append($('<option></option>')
-                                    .val(widgetTypes[wdKey])
-                                    .html(wdKey)
-                                    .attr('selected', widgetTypes[wdKey] == widget.widgettype));
-         }
-
-         images.sort();
-
-         for (var img in images) {
-            $('#imgoff').append($('<option></option>')
-                                .val(images[img])
-                                .html(images[img])
-                                .attr('selected', widget.imgoff == images[img]));
-            $('#imgon').append($('<option></option>')
-                               .val(images[img])
-                               .html(images[img])
-                               .attr('selected', widget.imgon == images[img]));
-         }
-
-         if (widget.widthfactor == null)
-            widget.widthfactor = 1;
-
-         for (var w = 0.5; w <= 4.0; w += 0.5)
-            $('#widthfactor').append($('<option></option>')
-                                     .val(w)
-                                     .html(w)
-                                     .attr('selected', widget.widthfactor == w));
-
-/*         if (widget.heightfactor == null)
-            widget.heightfactor = 1;
-
-         for (var h = 0.5; h <= 1.0; h += 0.5)
-            $('#heightfactor').append($('<option></option>')
-                                     .val(h)
-                                     .html(h)
-                                     .attr('selected', widget.heightfactor == h)); */
-
-         $('#color').spectrum({
-            type: "color",
-            showPalette: true,
-            showSelectionPalette: true,
-            palette: [ ],
-            localStorageKey: "homectrl",
-            togglePaletteOnly: false,
-            showInitial: true,
-            showAlpha: true,
-            allowEmpty: false,
-            replacerClassName: 'spColor'
-         });
-
-         $('#colorOn').spectrum({
-            type : "color",
-            showPalette: true,
-            showSelectionPalette: true,
-            palette: [ ],
-            localStorageKey: "homectrl",
-            togglePaletteOnly: false,
-            showInitial: true,
-            showAlpha: true,
-            allowEmpty: false,
-            replacerClassName: 'spColorOn'
-         });
-
-         var wType = parseInt($('#widgettype').val());
-
-         if (![0,9].includes(wType) || $('#symbolOn').val() == '') {
-            $('.spColorOn').css('display', 'none');
-            $('#spanColor').html("Farbe");
-         }
-
-         widgetTypeChanged();
-         $(".ui-dialog-buttonpane button:contains('Widget löschen')").attr('style','color:red');
-      },
-      buttons: {
-         'Widget löschen': function () {
-            console.log("delete widget: " + key);
-            document.getElementById('div_' + key).remove();
-
-            var json = {};
-            $('#widgetContainer > div').each(function () {
-               var key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-               json[key] = dashboards[actDashboard].widgets[key];
-            });
-
-            // console.log("delete widget " + JSON.stringify(json, undefined, 4));
-            socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
-            socket.send({ "event" : "forcerefresh", "object" : {} });
-            $(this).dialog('close');
-         },
-
-         'Abbrechen': function () {
-            // socket.send({ "event" : "forcerefresh", "object" : {} });
-            if (allSensors[key] == null) {
-               console.log("missing sensor!!");
-            }
-            initWidget(key, dashboards[actDashboard].widgets[key]);
-            updateWidget(allSensors[key], true, dashboards[actDashboard].widgets[key]);
-
-            $(this).dialog('close');
-         },
-         'Vorschau': function () {
-            widget = Object.create(dashboards[actDashboard].widgets[key]); // valueFacts[key]);
-            widget.unit = $("#unit").val();
-            widget.scalemax = parseFloat($("#factor").val()) || 1.0;
-            widget.scalemax = parseFloat($("#scalemax").val()) || 0.0;
-            widget.scalemin = parseFloat($("#scalemin").val()) || 0.0;
-            widget.scalestep = parseFloat($("#scalestep").val()) || 0.0;
-            widget.critmin = parseFloat($("#critmin").val()) || -1;
-            widget.critmax = parseFloat($("#critmax").val()) || -1;
-            widget.symbol = $("#symbol").val();
-            widget.symbolOn = $("#symbolOn").val();
-            widget.imgon = $("#imgon").val();
-            widget.imgoff = $("#imgoff").val();
-            widget.widgettype = parseInt($("#widgettype").val());
-            widget.color = $("#color").spectrum('get').toRgbString();
-            widget.colorOn = $("#colorOn").spectrum('get').toRgbString();
-            widget.showpeak = $("#peak").is(':checked');
-            widget.linefeed = $("#linefeed").is(':checked');
-            widget.widthfactor = $("#widthfactor").val();
-            widget.heightfactor = $("#heightfactor").val();
-            widget.range = $("#range").val();
-
-            initWidget(key, widget);
-            if (allSensors[key] != null)
-               updateWidget(allSensors[key], true, widget);
-         },
-         'Ok': function () {
-            widget.unit = $("#unit").val();
-            widget.scalemax = parseFloat($("#factor").val()) || 1.0;
-            widget.scalemax = parseFloat($("#scalemax").val()) || 0.0;
-            widget.scalemin = parseFloat($("#scalemin").val()) || 0.0;
-            widget.scalestep = parseFloat($("#scalestep").val()) || 0.0;
-            widget.critmin = parseFloat($("#critmin").val()) || -1;
-            widget.critmax = parseFloat($("#critmax").val()) || -1;
-            widget.symbol = $("#symbol").val();
-            widget.symbolOn = $("#symbolOn").val();
-            widget.imgon = $("#imgon").val();
-            widget.imgoff = $("#imgoff").val();
-            widget.widgettype = parseInt($("#widgettype").val());
-            widget.color = $("#color").spectrum("get").toRgbString();
-            widget.colorOn = $("#colorOn").spectrum("get").toRgbString();
-            widget.showpeak = $("#peak").is(':checked');
-            widget.linefeed = $("#linefeed").is(':checked');
-            widget.widthfactor = $("#widthfactor").val();
-            widget.heightfactor = $("#heightfactor").val();
-            widget.range = $("#range").val();
-
-            initWidget(key, widget);
-            if (allSensors[key] != null)
-               updateWidget(allSensors[key], true, widget);
-
-            var json = {};
-            $('#widgetContainer > div').each(function () {
-               var key = $(this).attr('id').substring($(this).attr('id').indexOf("_") + 1);
-               json[key] = dashboards[actDashboard].widgets[key];
-            });
-
-            if ($("#unit").length)
-               json[key]["unit"] = $("#unit").val();
-            if ($("#factor").length)
-               json[key]["factor"] = parseFloat($("#factor").val());
-            if ($("#scalemax").length)
-               json[key]["scalemax"] = parseFloat($("#scalemax").val());
-            if ($("#scalemin").length)
-               json[key]["scalemin"] = parseFloat($("#scalemin").val());
-            if ($("#scalestep").length)
-               json[key]["scalestep"] = parseFloat($("#scalestep").val());
-            if ($("#critmin").length)
-               json[key]["critmin"] = parseFloat($("#critmin").val());
-            if ($("#critmax").length)
-               json[key]["critmax"] = parseFloat($("#critmax").val());
-            if ($("#symbol").length)
-               json[key]["symbol"] = $("#symbol").val();
-            if ($("#symbolOn").length)
-               json[key]["symbolOn"] = $("#symbolOn").val();
-            if ($("#imgon").length)
-               json[key]["imgon"] = $("#imgon").val();
-            if ($("#imgoff").length)
-               json[key]["imgoff"] = $("#imgoff").val();
-
-            json[key]["widthfactor"] = parseFloat($("#widthfactor").val());
-            json[key]["heightfactor"] = parseFloat($("#heightfactor").val());
-            json[key]["range"] = parseFloat($("#range").val());
-            json[key]["widgettype"] = parseInt($("#widgettype").val());
-            json[key]["showpeak"] = $("#peak").is(':checked');
-            json[key]["linefeed"] = $("#linefeed").is(':checked');
-            json[key]["color"] = $("#color").spectrum("get").toRgbString();
-            json[key]["colorOn"] = $("#colorOn").spectrum("get").toRgbString();
-
-            socket.send({ "event" : "storedashboards", "object" : { [actDashboard] : { 'title' : dashboards[actDashboard].title, 'widgets' : json } } });
-            socket.send({ "event" : "forcerefresh", "object" : {} });
-
-            $(this).dialog('close');
-         }
-      },
-      close: function() { $(this).dialog('destroy').remove(); }
-   });
+   socket.send({ "event" : "forcerefresh", "object" : { 'action' : 'dashboards' } });
 }

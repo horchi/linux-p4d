@@ -1,7 +1,7 @@
 /*
  *  vdr.js
  *
- *  (c) 2020-2023 Jörg Wendel
+ *  (c) 2020-2024 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -12,11 +12,17 @@ function initVdr()
 {
    $('#container').removeClass('hidden');
 
-//   if ($(window).height() < $(window).width())
-//      console.log("horizontally !!");
+   // if ($(window).height() < $(window).width())
+   //    console.log("horizontally !!");
 
    document.getElementById("container").innerHTML =
       '<div class="vdrContent">' +
+      '  <div class="vdrPresent rounded-border">' +
+      '    <div id="vdrChannel"></div>' +
+      '    <span id="vdrStartTime" style="font-weight:bold;"></span>' +
+      '    <span id="vdrTitle"></span>' +
+      '    <div id="vdrShorttext"></div>' +
+      '  </div>' +
       '  <div id="vdrFbContainer" class="vdrFbContainer">' +
       '    <div>' +
       '       <div>' +
@@ -70,9 +76,9 @@ function initVdr()
 
       // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - getTotalHeightOf('footer') - sab - 15);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - 15);
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('dashboardMenu') - getTotalHeightOf('footer') - sab - 15);
    };
 }
 

@@ -1,15 +1,15 @@
 /*
  *  setup.js
  *
- *  (c) 2020-2023 Jörg Wendel
+ *  (c) 2020-2024 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  *
  */
 
-var configCategories = {};
-var theConfigdetails = {}
+var theConfigdetails = {};
+var setupCategory = '';
 
 // ----------------------------------------------------------------
 // Base Setup
@@ -20,138 +20,180 @@ function initConfig(configdetails)
    theConfigdetails = configdetails;
 
    $('#container').removeClass('hidden');
+   $('#container').empty();
 
-   document.getElementById("container").innerHTML =
-      '<div id="setupContainer" class="rounded-border inputTableConfig">';
+   dlgTabs = ($('<div></div>')
+              .addClass('tabButtons')
+              .attr('id', 'setupTabs'));
 
-   var root = document.getElementById("setupContainer");
-   var lastCat = "";
-   root.innerHTML = "";
+   $('#container').append(dlgTabs);
 
-   $('#btnInitMenu').bind('click', function(event) {
-      if (event.ctrlKey)
-         initTables('menu-force');
-      else
-         initTables('menu');
-   });
+   $(dlgTabs).append($('<span></span>')
+                     .append($('<button></button>')
+                             .addClass('rounded-border buttonOptions')
+                             .html('Speichern')
+                             .click(function() { storeConfig(); })));
 
-   // console.log("initConfig", JSON.stringify(configdetails, undefined, 4));
+   $(dlgTabs).append($('<span></span>')
+                     .attr('id', 'btnTabs'));
+
+   dlgContent = ($('<div></div>')
+                 .attr('id', 'setupContainer')
+                 .addClass('inputTableConfig'));
+
+   $('#container').append(dlgContent);
+
+   let lastCat = '';
 
    for (var i = 0; i < configdetails.length; i++) {
-      var item = configdetails[i];
-      var html = "";
+      let item = configdetails[i];
+      let choiceSel = null;
 
       if (lastCat != item.category) {
-         if (!configCategories.hasOwnProperty(item.category))
-            configCategories[item.category] = true;
 
-         var sign = configCategories[item.category] ? '&#11013;' : '&#11015;';
-         html += '<div class="rounded-border seperatorFold" onclick="foldCategory(\'' + item.category + '\')">' + sign + ' ' + item.category + "</div>";
-         var elem = document.createElement("div");
-         elem.innerHTML = html;
-         root.appendChild(elem);
-         html = "";
+         if (setupCategory == '')
+            setupCategory = item.category;
+
+         $('#btnTabs').append($('<button></button>')
+                           .html(item.category)
+                           .addClass(setupCategory == item.category ? 'active' : '')
+                           .click(function() {
+                              setupCategory = $(this).html();
+                              initConfig(theConfigdetails);
+                           }));
+
          lastCat = item.category;
       }
 
-      if (!configCategories[item.category]) {
-         console.log("Skipping category", item.category)
+      if (item.category != setupCategory) {
+         // console.log("Skipping category", item.category)
          continue;
       }
 
-      html += "    <span>" + item.title + ":</span>\n";
-
-      if (item.description == "")
-         item.description = "&nbsp;";  // on totally empty the line height not fit :(
+      let itemsDiv = null;
+      $(dlgContent).append(itemsDiv = $('<div></div>')
+                           .attr('title', item.description)
+                           .append($('<span></span>')
+                                   .addClass('labelB1')
+                                   .html(item.title)));
 
       switch (item.type) {
       case 0:     // ctInteger
-         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputNum\" type=\"number\" value=\"" + item.value + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append($('<input></input>')
+                            .attr('id', 'input_' + item.name)
+                            .attr('type', 'number')
+                            .addClass('rounded-border inputNum')
+                            .val(item.value)));
          break;
 
       case 1:     // ctNumber (float)
-         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border inputFloat\" type=\"number\" step=\"0.1\" value=\"" + parseFloat(item.value.replace(',', '.')) + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append($('<input></input>')
+                            .attr('id', 'input_' + item.name)
+                            .attr('type', 'number')
+                            .attr('step', '0.1')
+                            .addClass('rounded-border inputFloat')
+                            .val(parseFloat(item.value.replace(',', '.')))));
          break;
 
       case 2:     // ctString
-
-         html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border input\" type=\"search\" value=\"" + item.value + "\"/></span>\n";
-         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
-         break;
-
-      case 8:     // ctText
-         // html += "    <span><input id=\"input_" + item.name + "\" class=\"rounded-border input\" type=\"search\" value=\"" + item.value + "\"/></span>\n";
-         html += '    <span><textarea id="input_' + item.name + '" class="rounded-border input">' + item.value + '</textarea></span>\n';
-         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append($('<input></input>')
+                            .attr('id', 'input_' + item.name)
+                            .attr('type', 'search')
+                            .addClass('rounded-border input')
+                            .val(item.value)));
          break;
 
       case 3:     // ctBool
-         html += "    <span><input id=\"checkbox_" + item.name + "\" class=\"rounded-border input\" style=\"width:auto;\" type=\"checkbox\" " + (item.value == 1 ? "checked" : "") + "/>" +
-            '<label for="checkbox_' + item.name + '"></label></span></span>\n';
-         html += "    <span class=\"inputComment\">" + item.description + "</span>\n";
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append($('<input></input>')
+                            .attr('id', 'checkbox_' + item.name)
+                            .attr('type', 'checkbox')
+                            .addClass('rounded-border input')
+                            .prop('checked', item.value == 1))
+                    .append($('<label></label>')
+                            .prop('for', 'checkbox_' + item.name)));
          break;
 
       case 4:     // ctRange
-         var n = 0;
-
-         if (item.value != "")
          {
-            var ranges = item.value.split(",");
-
-            for (n = 0; n < ranges.length; n++)
+         $(itemsDiv).append(rangeDiv = $('<span></span>')
+                       .css('display', 'inline-grid'));
+         function appendRangeTuple(index, name, range, description = '')
             {
-               var range = ranges[n].split("-");
-               var nameFrom = item.name + n + "From";
-               var nameTo = item.name + n + "To";
+            var aRange = range.split("-");
 
-               if (!range[1]) range[1] = "";
-               if (n > 0) html += "  <span/>  </span>\n";
-               html += "   <span>\n";
-               html += "     <input id=\"range_" + nameFrom + "\" type=\"search\" class=\"rounded-border inputTime\" value=\"" + range[0] + "\"/> -";
-               html += "     <input id=\"range_" + nameTo + "\" type=\"search\" class=\"rounded-border inputTime\" value=\"" + range[1] + "\"/>\n";
-               html += "   </span>\n";
-               html += "   <span></span>\n";
-            }
+            $(rangeDiv)
+               .append($('<span></span>')
+                       .css('display', 'inline-flex')
+                       .append($('<input></input>')
+                               .attr('id', 'range_' + name + index + 'From')
+                               .attr('type', 'search')
+                               .addClass('rounded-border inputTime')
+                               .val(aRange[0] ? aRange[0] : ''))
+                       .append($('<span></span>')
+                               .html(' bis '))
+                       .append($('<input></input>')
+                               .attr('id', 'range_' + name + index + 'To')
+                               .attr('type', 'search')
+                               .addClass('rounded-border inputTime')
+                               .val(aRange[1] ? aRange[1] : '')));
          }
 
-         var nameFrom = item.name + n + "From";
-         var nameTo = item.name + n + "To";
+         let n = 0;
 
-         if (n > 0) html += "  <span/>  </span>\n";
-         html += "  <span>\n";
-         html += "    <input id=\"range_" + nameFrom + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" /> -";
-         html += "    <input id=\"range_" + nameTo + "\" value=\"\" type=\"search\" class=\"rounded-border inputTime\" />\n";
-         html += "  </span>\n";
-         html += "  <span class=\"inputComment\">" + item.description + "</span>\n";
+         if (item.value != '') {
+            var ranges = item.value.split(",");
+            for (n = 0; n < ranges.length; ++n)
+               appendRangeTuple(n, item.name, ranges[n]);
+         }
+         appendRangeTuple(n, item.name, '', item.description);
 
          break;
-
+      }
       case 5:    // ctChoice
-         html += '<span>\n';
-         html += '  <select id="input_' + item.name + '" class="rounded-border input" name="style">\n';
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append(choiceSel = $('<select></select>')
+                            .attr('id', 'input_' + item.name)
+                            .addClass('rounded-border input')
+                            .prop('name', 'style')));
+
          if (item.options != null) {
             for (var o = 0; o < item.options.length; o++) {
-               var option = item.options[o];
-               var sel = item.value == option ? 'SELECTED' : '';
-               html += '    <option value="' + option + '" ' + sel + '>' + option + '</option>\n';
+               $(choiceSel).append($('<option></option>')
+                                   .val(item.options[o])
+                                   .html(item.options[o])
+                                   .attr('selected', item.options[o] == item.value));
             }
          }
-         html += '  </select>\n';
-         html += '</span>\n';
          break;
 
       case 6:    // ctMultiSelect
-         html += '<span style="width:75%;">\n';
-         html += '  <input style="width:inherit;" class="rounded-border input" ' +
-            ' id="mselect_' + item.name + '" data-index="' + i +
-            '" data-value="' + item.value + '" type="text" value=""/>\n';
-         html += '</span>\n';
+         $(itemsDiv)
+            .append(choiceSel = $('<span></span>')
+                    .append($('<input></input>')
+                            .attr('id', 'mselect_' + item.name)
+                            .attr('type', 'text')
+                            .addClass('rounded-border input')
+                            .data('index', i)
+                            .data('value', item.value)
+                            .prop('name', 'style')
+                            .val('')
+                           ));
          break;
 
       case 7:    // ctBitSelect
-         html += '<span id="bmaskgroup_' + item.name + '" style="width:75%;">';
+         let bmGroup = null;
+         $(itemsDiv)
+            .append(bmGroup = $('<span></span>')
+                    .attr('id', 'bmaskgroup_' + item.name));
 
          var array = item.value.split(',');
 
@@ -161,42 +203,44 @@ function initConfig(configdetails)
                if (array[n] == item.options[o])
                   checked = true;
             }
-            html += '<input class="rounded-border input" id="bmask' + item.name + '_' + item.options[o] + '"' +
-               ' type="checkbox" ' + (checked ? 'checked' : '') + '/>' +
-               '<label for="bmask' + item.name + '_' + item.options[o] + '">' + item.options[o] + '</label>';
+            $(bmGroup)
+               .append($('<input></input>')
+                       .attr('id', 'bmask' + item.name + '_' + item.options[o])
+                       .attr('type', 'checkbox')
+                       .prop('checked', checked)
+                       .addClass('rounded-border input'))
+               .append($('<label></label>')
+                       .prop('for', 'bmask' + item.name + '_' + item.options[o])
+                       .html(item.options[o]));
          }
-         html += '</span>';
+         break;
 
+      case 8:     // ctText
+         $(itemsDiv)
+            .append($('<span></span>')
+                    .append($('<textarea></textarea>')
+                            .attr('id', 'input_' + item.name)
+                            .attr('type', 'number')
+                            .addClass('rounded-border input')
+                            .val(item.value)));
          break;
       }
-
-      var elem = document.createElement("div");
-      // elem.style.display = 'list-item';
-      elem.innerHTML = html;
-      root.appendChild(elem);
    }
 
    $('input[id^="mselect_"]').each(function () {
-      var item = configdetails[$(this).data("index")];
+      var item = configdetails[$(this).data('index')];
       $(this).autocomplete({
          source: item.options,
          multiselect: true});
-      if ($(this).data("value").trim() != "") {
-         // console.log("set", $(this).data("value"));
-         setAutoCompleteValues($(this), $(this).data("value").trim().split(","));
+      if ($(this).data('value').trim() != "") {
+         setAutoCompleteValues($(this), $(this).data('value').trim().split(','));
       }
    });
 
-   $("#container").height($(window).height() - $("#menu").height() - 8);
+   $("#container").height($(window).height() - $("#menu").height() - getTotalHeightOf('footer') - sab - 8);
    window.onresize = function() {
-      $("#container").height($(window).height() - $("#menu").height() - 8);
+      $("#container").height($(window).height() - $("#menu").height() - getTotalHeightOf('footer') - sab - 8);
    };
-}
-
-function initTables(what)
-{
-   showProgressDialog();
-   socket.send({ "event" : "inittables", "object" : { "action" : what } });
 }
 
 function storeConfig()
@@ -278,7 +322,7 @@ function storeConfig()
 
 function toTimeRangesString(base)
 {
-   var times = "";
+   var times = '';
 
    for (var i = 0; i < 10; i++) {
       var id = "#" + base + i;
@@ -293,11 +337,4 @@ function toTimeRangesString(base)
    }
 
    return times;
-}
-
-function foldCategory(category)
-{
-   configCategories[category] = !configCategories[category];
-   console.log(category + ' : ' + configCategories[category]);
-   initConfig(theConfigdetails);
 }

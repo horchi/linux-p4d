@@ -160,7 +160,13 @@ int Deconz::initDevices()
    processDevices(jData, "light");
    json_decref(jData);
 
-   initWsClient();
+   if (query(jData, "groups", apiKey.c_str()) != success)
+      return fail;
+
+   processDevices(jData, "light");
+   json_decref(jData);
+
+   // initWsClient();
 
    return done;
 }
@@ -184,11 +190,24 @@ int Deconz::processDevices(json_t* jData, std::string kind)
       //          "state":{"alert":"none","bri":254,"colormode":"ct","ct":250,"on":false,"reachable":true},
       //          "swversion":"2.0.022","type":"Color temperature light","uniqueid":"14:b4:57:ff:fe:7e:7a:57-01"}
 
-      char* type {};
-      asprintf(&type, "DZ%s", kind == "sensor" ? "S" : "L");
-
       std::string dzType = getStringFromJson(jItem, "type", "");
-      const char* uuid = getStringFromJson(jItem, "uniqueid");
+
+      const char* uuid {};
+      char* type {};
+
+      if (dzType == "LightGroup")
+      {
+         if (!isEmpty(getStringFromJson(jItem, "uniqueid")))
+             continue;
+
+         uuid = getStringFromJson(jItem, "id");
+         asprintf(&type, "DZLG");
+      }
+      else
+      {
+         uuid = getStringFromJson(jItem, "uniqueid");
+         asprintf(&type, "DZ%s", kind == "sensor" ? "S" : "L");
+      }
 
       cDbTable* table = kind == "light" ? tableDeconzLights : tableDeconzSensors;
       cDbStatement* select = kind == "light" ? selectLightByUuid : selectSensorByUuid;
@@ -232,12 +251,15 @@ int Deconz::processDevices(json_t* jData, std::string kind)
          cMyMutexLock lock(&mapsMutex);
 
          if (kind == "light")
+         {
             lights[uuid] = address;
+            // tell(eloAlways, "DECONZ: Debug: Address of '%s' uuid '%s' is set to 0x%0x", type, uuid, address);
+         }
          else
             sensors[uuid] = address;
       }
 
-      tell(eloDebugDeconz, "Found '%s' %d with uuid '%s'", kind.c_str(), address, uuid);
+      tell(eloDebugDeconz, "DECONZ: Found '%s' %d with uuid '%s'", kind.c_str(), address, uuid);
 
       const char* unit{""};
       int so {Daemon::soNone};
@@ -370,7 +392,11 @@ int Deconz::toggle(const char* type, uint address, bool state, int bri, int tran
       state = false;
 
    json_t* jObj = json_object();
-   json_object_set_new(jObj, "on", json_boolean(state));
+
+   if (std::string(type) == "DZL")
+      json_object_set_new(jObj, "on", json_boolean(state));
+   else
+      json_object_set_new(jObj, "toggle", json_boolean(true));
 
    if (transitiontime != na)
       json_object_set_new(jObj, "transitiontime", json_integer(transitiontime));
@@ -383,11 +409,11 @@ int Deconz::toggle(const char* type, uint address, bool state, int bri, int tran
 
    int status {success};
 
-   if ((status = put(jArray, uuid.c_str(), jObj)) == success)
+   if ((status = put(type, jArray, uuid.c_str(), jObj)) == success)
       status = checkResult(jArray);
 
    if (status == success)
-      tell(eloDeconz, "Toggled '%s' to %s", uuid.c_str(), state ? "on" : "off");
+      tell(eloDeconz, "DECONZ: Toggled '%s' to %s", uuid.c_str(), state ? "on" : "off");
 
    json_decref(jArray);
 
@@ -429,11 +455,11 @@ int Deconz::color(const char* type, uint address, int hue, int sat, int bri)
 
    int status {success};
 
-   if ((status = put(jArray, uuid.c_str(), jObj)) == success)
+   if ((status = put(type, jArray, uuid.c_str(), jObj)) == success)
       status = checkResult(jArray);
 
    if (status == success)
-      tell(eloDeconz, "Changed color of %s to %d", uuid.c_str(), hue);
+      tell(eloDeconz, "DECONZ: Changed color of %s to %d", uuid.c_str(), hue);
 
    json_decref(jArray);
 
@@ -457,7 +483,7 @@ int Deconz::checkResult(json_t* jArray)
    {
       if (strcmp(status, "success") != 0)
       {
-         tell(eloAlways, "DECONZ: Error: '%s'", getStringFromJson(jItem, "description", "<unknown error>"));
+         tell(eloAlways, "DECONZ: Error: '%s', address was '%s'", getStringFromJson(jItem, "description", "<unknown error>"), getStringFromJson(jItem, "address"));
          return fail;
       }
    }
@@ -469,13 +495,18 @@ int Deconz::checkResult(json_t* jArray)
 // Put
 //***************************************************************************
 
-int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
+int Deconz::put(std::string type, json_t*& jResult, const char* uuid, json_t* jData)
 {
    // /api/<apikey>/lights/<id>/state
 
    std::string data;
    char* url {};
-   asprintf(&url, "http://%s/api/%s/lights/%s/state", httpUrl.c_str(), apiKey.c_str(), uuid);
+
+   if (type == "DZL")
+      asprintf(&url, "http://%s/api/%s/lights/%s/state", httpUrl.c_str(), apiKey.c_str(), uuid);
+   else
+      asprintf(&url, "http://%s/api/%s/groups/%s/action", httpUrl.c_str(), apiKey.c_str(), uuid);
+
    tell(eloDebugDeconz, "DECONZ: REST call '%s'", url);
 
    char* payload = json_dumps(jData, JSON_REAL_PRECISION(4));
@@ -488,7 +519,7 @@ int Deconz::put(json_t*& jResult, const char* uuid, json_t* jData)
       return fail;
    }
 
-   tell(eloDeconz, "-> (DECONZ) put '%s' '%s'; result [%s]", url, payload, data.c_str());
+   tell(eloDeconz, "DECONZ: -> put '%s' '%s'; result [%s]", url, payload, data.c_str());
    free(url);
    free(payload);
 
@@ -554,7 +585,7 @@ int Deconz::query(json_t*& jResult, const char* method, const char* key)
       return fail;
    }
 
-   tell(eloDeconz, "<- (DECONZ) '%s' [%s]", url, data.memory);
+   tell(eloDeconz, "DECONZ: <- '%s' [%s]", url, data.memory);
 
    free(url);
 
@@ -566,20 +597,50 @@ int Deconz::query(json_t*& jResult, const char* method, const char* key)
    return done;
 }
 
-#include <libwebsockets.h>
-
-struct lws* Deconz::client_wsi {};
+lws* Deconz::client_wsi {};
 lws_context* Deconz::context {};
 Deconz* Deconz::singleton {};
 
 cMyMutex Deconz::messagesInMutex;
 std::queue<std::string> Deconz::messagesIn;
+constexpr const char* protocollName {"deConz"};
+static lws_sorted_usec_list_t sul;
 
 //***************************************************************************
 // Init / Exit Ws Client
 //***************************************************************************
 
-static lws_retry_bo retry {};
+static lws_retry_bo_t retry {
+   .secs_since_valid_ping = 3,
+	.secs_since_valid_hangup = 10,
+};
+
+void callbackConnect(lws_sorted_usec_list_t* _sul)
+{
+   lws_client_connect_info ci;
+	memset(&ci, 0, sizeof(ci));
+
+	ci.context = Deconz::context;
+	ci.port = 443;
+	ci.address = "192.168.200.101";
+	ci.path = "/";
+	ci.host = ci.address;
+	ci.origin = ci.address;
+	ci.protocol = protocollName;
+   ci.alpn = "h2;http/1.1";
+	ci.pwsi = &Deconz::client_wsi;
+   ci.retry_and_idle_policy = &retry;
+
+   // tell(eloAlways, "calling lws_client_connect_via_info with context %p", (void*)ci.context);
+
+   if (!lws_client_connect_via_info(&ci))
+   {
+		lws_sul_schedule(Deconz::context, 0, _sul, callbackConnect, 5 * LWS_USEC_PER_SEC);
+      return;
+   }
+
+   tell(eloAlways, "DECONZ: WS connection established");
+}
 
 int Deconz::initWsClient()
 {
@@ -588,21 +649,15 @@ int Deconz::initWsClient()
    int logs {LLL_ERR | LLL_WARN | LLL_USER}; // {LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE};
    lws_set_log_level(logs, NULL);
 
-   retry.secs_since_valid_ping = 3;
-   retry.secs_since_valid_hangup = 10;
-   retry.conceal_count = LWS_RETRY_CONCEAL_ALWAYS;
-
-   protocols[0].name = "deConz";
+   memset(&protocols, 0, sizeof(protocols));
+   protocols[0].name = protocollName;
    protocols[0].callback = callbackDeconzWs;
 
-   struct lws_context_creation_info info;
-	memset(&info, 0, sizeof info);
+   lws_context_creation_info info;
+	memset(&info, 0, sizeof(info));
 	info.options = 0;
 	info.port = CONTEXT_PORT_NO_LISTEN;  // client side - no listener
 	info.protocols = protocols;
-	info.timeout_secs = 10;
-        info.retry_and_idle_policy = &retry;
-	// info.connect_timeout_secs = 30;
 
 	/*
 	 * since we know this lws context is only ever going to be used with
@@ -617,29 +672,21 @@ int Deconz::initWsClient()
 
 	if (!context)
    {
-		lwsl_err("lws init failed\n");
-		return 1;
+		tell(eloAlways, "DECONZ: WS init failed");
+		return fail;
 	}
 
-   struct lws_client_connect_info ci;
-	memset(&ci, 0, sizeof(ci));
-	ci.context = context;
-	ci.port = 443;
-	ci.address = "192.168.200.101";
-	ci.path = "/";
-	ci.host = ci.address;
-	ci.origin = ci.address;
-	ci.protocol = protocols[0].name;
-	ci.pwsi = &client_wsi;
+   tell(eloAlways, "DECONZ: context created");
 
-	lws_client_connect_via_info(&ci);
+   // connectClient();
+	lws_sul_schedule(context, 0, &sul, callbackConnect, 100);
 
    threadCtl.deconz = this;
    threadCtl.timeout = 30;
 
    if (pthread_create(&syncThread, NULL, syncFct, &threadCtl))
    {
-      tell(eloAlways, "Error: Failed to start client daemon thread");
+      tell(eloAlways, "DECONZ: Error: Failed to start client daemon thread");
       return fail;
    }
 
@@ -680,7 +727,7 @@ void* Deconz::syncFct(void* user)
    ThreadControl* threadCtl = (ThreadControl*)user;
    threadCtl->active = true;
 
-   tell(eloDebugDeconz, " :: started DECONZ syncThread");
+   tell(eloDebugDeconz, "DECONZ: Started syncThread");
 
    while (!threadCtl->close)
    {
@@ -688,7 +735,7 @@ void* Deconz::syncFct(void* user)
    }
 
    threadCtl->active = false;
-   tell(eloDebugDeconz, " :: stopped DECONZ syncThread regular\n");
+   tell(eloDebugDeconz, "DECONZ:  Stopped syncThread regular");
 
    return nullptr;
 }
@@ -699,18 +746,29 @@ int Deconz::atInMessage(const char* data)
    // {"e":"changed","id":"26","r":"lights","state":{"alert":null,"bri":244,"colormode":"hs","ct":500,"effect":"none","hue":64581,"on":true,"reachable":true,"sat":18,"xy":[0.3274,0.3218]},"t":"event","uniqueid":"00:12:4b:00:1e:d0:03:dd-0b"}
    // {"e":"changed","id":"31","r":"sensors","state":{"buttonevent":1002,"lastupdated":"2021-12-15T18:30:58.779"},"t":"event","uniqueid":"00:15:8d:00:02:13:87:2c-01-0012"}
    // {"e":"changed","id":"33","r":"sensors","state":{"lastupdated":"2021-12-16T18:34:17.872","presence":true},"t":"event","uniqueid":"00:15:8d:00:02:57:b7:41-01-0406"}
+   // {"e":"changed","id":"8","r":"groups","state":{"all_on":false,"any_on":false},"t":"event"}
+
+   if (strcmp(data, "WS CONNECTED") == 0)
+   {
+      cMyMutexLock lock(&messagesInMutex);
+      messagesIn.push(data);
+      return done;
+   }
 
    json_t* obj = jsonLoad(data);
+
+   tell(eloDeconz, "DECONZ: Debug: Got [%s]", data);
 
    if (!obj)
       return fail;
 
    // process message, build message
 
-   const char* uuid = getStringFromJson(obj, "uniqueid");
+   std::string resource = getStringFromJson(obj, "r");
+   const char* uuid = getStringFromJson(obj, resource == "groups" ? "id" : "uniqueid");
    const char* t = getStringFromJson(obj, "t");
    const char* event = getStringFromJson(obj, "e");
-   std::string resource = getStringFromJson(obj, "r");
+
    long address {na};
 
    // we start with 'sensors' and 'lights', later on may be 'groups'
@@ -722,13 +780,15 @@ int Deconz::atInMessage(const char* data)
          address = lights[uuid];
       else if (resource == "sensors")
          address = sensors[uuid];
+      else if (resource == "groups")
+         address = lights[uuid];
       else
       {
          json_decref(obj);
          return done;
       }
 
-      tell(eloDebugDeconz, "Got address %ld for uuid '%s'", address, uuid);
+      tell(eloDebugDeconz, "DECONZ: Got address %ld for uuid '%s'", address, uuid);
    }
 
    if (!getObjectFromJson(obj, "state"))
@@ -739,14 +799,14 @@ int Deconz::atInMessage(const char* data)
 
    if (address == na || strcmp(t, "event") != 0 || strcmp(event, "changed") != 0)
    {
-      tell(eloAlways, "Debug::: ignoring '%s' !!", uuid);
+      tell(eloAlways, "DECONZ: Debug: Ignoring '%s' !!", uuid);
       json_decref(obj);
       return done;
    }
 
    json_t* jData = json_object();
    char* type {};
-   asprintf(&type, "DZ%s", resource == "sensors" ? "S" : "L");
+   asprintf(&type, "DZ%s", resource == "sensors" ? "S" : resource == "groups" ? "LG" : "L");
 
    json_object_set_new(jData, "type", json_string(type));
    json_object_set_new(jData, "address", json_integer(address));
@@ -767,6 +827,10 @@ int Deconz::atInMessage(const char* data)
 
       if (getObjectByPath(obj, "state/presence"))
          json_object_set_new(jData, "presence", json_boolean(getBoolByPath(obj, "state/presence")));
+   }
+   else if (resource == "groups")
+   {
+      json_object_set_new(jData, "state", json_boolean(getBoolByPath(obj, "state/any_on")));
    }
    else
    {
@@ -809,29 +873,42 @@ int Deconz::atInMessage(const char* data)
 // Websocket Client Callback
 //***************************************************************************
 
-int Deconz::callbackDeconzWs(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len)
+int Deconz::callbackDeconzWs(lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len)
 {
 	switch (reason)
    {
       case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-         tell(eloAlways, "CLIENT_CONNECTION_ERROR: %s\n", in ? (char*)in : "(null)");
-         Deconz::client_wsi = nullptr;
+      {
+         tell(eloAlways, "DECONZ: Client connection error '%s'", in ? (char*)in : "(null)");
+         lws_sul_schedule(Deconz::context, 0, &sul, callbackConnect, 5 * LWS_USEC_PER_SEC);
          break;
-
+      }
       case LWS_CALLBACK_CLIENT_ESTABLISHED:
-         tell(eloDebugDeconz, "%s: established\n", __func__);
-         break;
+      {
+         // push a (re) conect message to call initDevices() again
 
+         tell(eloDebugDeconz, "DECONZ: Established");
+         Deconz::singleton->atInMessage("WS CONNECTED");
+         break;
+      }
       case LWS_CALLBACK_CLIENT_RECEIVE:
       {
-         tell(eloDebugDeconz, "Debug: Rx (DECONZ) [%s]", (const char*)in);
+         tell(eloDebugDeconz, "DECONZ: Debug: Rx [%s]", (const char*)in);
          singleton->atInMessage((const char*)in);
 
          break;
       }
-      case LWS_CALLBACK_CLIENT_CLOSED:
-         Deconz::client_wsi = nullptr;
+      case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
+      {
+         tell(eloDebugDeconz, "DECONZ: Received pong");
          break;
+      }
+      case LWS_CALLBACK_CLIENT_CLOSED:
+      {
+         tell(eloAlways, "DECONZ: Client closed");
+         lws_sul_schedule(Deconz::context, 0, &sul, callbackConnect, 5 * LWS_USEC_PER_SEC);
+         break;
+      }
 
       default: break;
 	}

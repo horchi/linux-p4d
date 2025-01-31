@@ -95,20 +95,22 @@ function initList()
       var title = fact.usrtitle != '' && fact.usrtitle != null ? fact.usrtitle : fact.title;
       var html = "";
 
-      html += '<span class="listFirstCol listText" >' + title + '</span>';
-
       if (fact.widget.widgettype == 0) {                                             // Symbol
          if (localStorage.getItem(storagePrefix + 'Rights') & fact.rights)
-            html += '   <div class="listSecondCol" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')"><img id="widget' + elemId + '"/></div>\n';
+            html += '   <div class="listFirstCol" onclick="toggleIo(' + fact.address + ",'" + fact.type + '\')"><img id="widget' + elemId + '"/></div>\n';
          else
-            html += '   <div class="listSecondCol"><img id="widget' + elemId + '"/></div>\n';
+            html += '   <div class="listFirstCol"><img id="widget' + elemId + '"/></div>\n';
       }
       else if (fact.widget.widgettype == 2 || fact.widget.widgettype == 8) {         // Text, Choice
-         html += '<div class="listSecondCol" id="widget' + elemId + '"></div>';
+         html += '<div class="listFirstCol" id="widget' + elemId + '"></div>';
       }
       else {
-         html += '<span class="listSecondCol" id="widget' + elemId + '"></span>';
+         html += '<span class="listFirstCol" id=widget' + elemId + '">' + (sensor.value ? sensor.value.toFixed(2) : '-') + '&nbsp;' + fact.widget.unit;
+         html += '&nbsp; <p style="display:inline;font-size:12px;font-style:italic;">(' + (sensor.peakmax != null ? sensor.peakmax.toFixed(2) : '  ') + ')</p>';
+         html += '</span>';
       }
+
+      html += '<span class="listSecondCol listText" >' + title + '</span>';
 
       $('#listContainer').append($('<div></div>')
                                  .addClass('listRow')
@@ -119,9 +121,9 @@ function initList()
 
    // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu'));
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu'));
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab);
    };
 }
 
@@ -139,14 +141,14 @@ function updateList()
       var elemId = "#widget" + key.replace(':', '_');
 
       if (fact.widget.widgettype == 1 || fact.widget.widgettype == 3 || fact.widget.widgettype == 5) {
-         var peak = sensor.peak != null ? sensor.peak.toFixed(2) : "  ";
+         var peak = sensor.peakmax != null ? sensor.peakmax.toFixed(2) : "  ";
          $(elemId).html(sensor.value.toFixed(2) + "&nbsp;" + fact.widget.unit +
                         "&nbsp; <p style=\"display:inline;font-size:12px;font-style:italic;\">(" + peak + ")</p>");
       }
       else if (fact.widget.widgettype == 0) {   // Symbol
          var image = sensor.value != 0 ? fact.widget.imgon : fact.widget.imgoff;
          $(elemId).attr("src", image);
-         // $("#container").height($(window).height() - getTotalHeightOf('menu'));
+         // $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab );
       }
       else if (fact.widget.widgettype == 2 || fact.widget.widgettype == 7 || fact.widget.widgettype == 12) {   // Text, PlainText
          $(elemId).html(sensor.text);
@@ -155,7 +157,7 @@ function updateList()
          if (!sensor.value)
             console.log("Missing value for " + key);
          else
-            $(elemId).html(sensor.value.toFixed(2));
+            $(elemId).html(sensor.value.toFixed(0));
       }
    }
 }

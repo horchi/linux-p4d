@@ -216,9 +216,9 @@ int W1::update()
          {
             double value = atoi(p+3) / 1000.0;
 
-            if (value == 85 || value == -85)
+            if (value == 84 || value == -85 || value < -55 || value > 125)
             {
-               // at error we get sometimes +85 or -85 from the sensor
+               // at error we get sometimes like +85 or -85 from the sensor :o
 
                tell(eloAlways, "Error: Ignoring invalid value (%0.2f) of w1 sensor '%s'", value, it->first.c_str());
                break;
@@ -234,7 +234,7 @@ int W1::update()
                     it->first.c_str(), value, sensors[it->first].values.size(), average, average - value);
 
                if (delta > 5)
-                  tell(eloDetail, "Warning: delta %0.2f", delta);
+                  tell(eloDetail, "Info: delta %0.2f", delta);
             }
 
             if (sensors[it->first].values.size() >= 3)
@@ -246,6 +246,11 @@ int W1::update()
             json_t* ojData = json_object();
             json_array_append_new(oJson, ojData);
             count++;
+
+            // round one wire sensors to 0.5° (TODO make it configurable?)
+
+            value = round(2.0 * value) / 2.0;     // to 0.50
+            // value = round(4.0 * value) / 4.0;  // to 0.25
 
             json_object_set_new(ojData, "name", json_string(it->first.c_str()));
             json_object_set_new(ojData, "value", json_real(value));
@@ -341,8 +346,6 @@ int main(int argc, char** argv)
    Eloquence _eloquence {eloAlways};
    const char* url {"tcp://localhost:1883"};
 
-   logstdout = yes;
-
    // Usage ..
 
    if (argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
@@ -371,7 +374,7 @@ int main(int argc, char** argv)
    if (_stdout != na)
       logstdout = _stdout;
    else
-      logstdout = no;
+      logstdout = false;
 
    eloquence = _eloquence;
 

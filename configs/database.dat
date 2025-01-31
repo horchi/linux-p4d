@@ -38,7 +38,8 @@ Table valuefacts
    SUBTYPE              "data type" res1                 Int          4 Data,
    CHOICES              ""          choices              Ascii      250 Data,
    RIGHTS   "needed control rights" rights               Int          0 Data,
-   CALIBRATION          ""          calibration          Text      1000 Data,
+   PARAMETER            ""               parameter            Text      1000 Data,
+   SETTINGS             "user settings"  calibration          Text      1000 Data,
 }
 
 // ----------------------------------------------------------------
@@ -84,6 +85,8 @@ Table peaks
    INSSP                ""  inssp                Int         10 Meta,
    UPDSP                ""  updsp                Int         10 Meta,
 
+   TIMEMIN              ""  timemin              DateTime     0 Data,
+   TIMEMAX              ""  timemax              DateTime     0 Data,
    MIN                  ""  minv                 Float      122 Data,
    MAX                  ""  maxv                 Float      122 Data,
 }
@@ -193,24 +196,24 @@ Table sensoralert
 // Table
 // ----------------------------------------------------------------
 
-Table scripts
-{
-   ID                   ""                      id                   UInt        11 Primary|Autoinc,
-
-   INSSP                ""                      inssp                Int          0 Meta,
-   UPDSP                ""                      updsp                Int          0 Meta,
-
-   PATH                 ""                      path                 Ascii      100 Data,
-}
-
+// Table scripts
+// {
+//    ID                   ""                      id                   UInt        11 Primary|Autoinc,
+//
+//    INSSP                ""                      inssp                Int          0 Meta,
+//    UPDSP                ""                      updsp                Int          0 Meta,
+//
+//    PATH                 ""                      path                 Ascii      100 Data,
+// }
+//
 // ----------------------------------------------------------------
 // Indices for scrips table
 // ----------------------------------------------------------------
-
-Index scripts
-{
-   path             ""  PATH
-}
+//
+// Index scripts
+// {
+//    path             ""  PATH
+// }
 
 // ----------------------------------------------------------------
 // Table SchemaConf

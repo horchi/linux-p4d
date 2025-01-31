@@ -41,8 +41,8 @@ class cCurl
       int SetCookieFile(char *filename);
       int postUrl(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer = "");
       int postRaw(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer = "");
-      int doPost(const char *url, std::string *sOutput, const std::string &sReferer,
-                 struct curl_httppost *formpost, struct curl_slist *headerlist);
+      int doPost(const char* url, std::string* sOutput, const std::string& sReferer,
+                 curl_mime* multipart, struct curl_slist* headerlist);
 
       int post(const char* url, const std::string& sPost, std::string* sOutput);
       int put(const char* url, const std::string& sPost, std::string* sOutput);

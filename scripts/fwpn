@@ -1,0 +1,187 @@
+#!/bin/bash
+#
+# used tools
+
+IPTABLES="/usr/sbin/iptables"
+INSMOD="/sbin/modprobe"
+LSMOD="/sbin/lsmod"
+RMMOD="/sbin/rmmod"
+
+# kernel modules
+
+IPT_MODLIST="ip_tables ip_conntrack ip_conntrack_ftp ip_conntrack_irc pt_state iptable_nat ipt_MASQUERADE"
+IPT_MODLIST_REV="ipt_MASQUERADE iptable_nat ipt_state ip_conntrack_irc ip_conntrack_ftp ip_conntrack ip_tables"
+
+# settings
+
+PN_FILTER="pnfilter"		         # Our firewall filter chain
+
+#MSQ_DEV="wlan0"                 # Interface to outside DSL
+MSQ_DEV="wlan0"                  # Interface to outside DSL
+#MSQ_DEV="usb0"                  # Interface to outside DSL
+INTRA_IF="eth0"                  # Internes Interface
+
+INTRA_SUBNET="192.168.220.0/24"  # Internes Netz
+ANY="0.0.0.0/0"                  # Any IP
+
+DEFAULT_POL="DROP"               # Default policy for incoming connections
+IDENT_POL="REJECT"               # Policy auf 113: U.a. wichtig wegen smtp
+IRCCHK_POL="REJECT"              # Einige Ports, die IRC-Server untersuchen
+HTTP_POL="REJECT"                # Dito für Port 80
+
+# ----- Library: -----
+
+# Alle Regelwerke leeren und die Counter auf 0 setzen:
+
+Flush_and_Zero()
+{
+	# Die hier definierte Filter-Chain:
+
+	$IPTABLES -F $PN_FILTER
+	$IPTABLES -Z $PN_FILTER
+
+	# Auch die Standardchains initialisieren:
+
+	$IPTABLES -t nat -F
+	$IPTABLES -t nat -Z
+	$IPTABLES -F
+	$IPTABLES -Z
+}
+
+# ----- End library: -----
+
+# The echo return value for success (defined in /etc/rc.config).
+
+return=$rc_done
+
+
+# Let's go...
+
+case "$1" in
+
+    start)
+    	  echo -n "Starting firewall..."
+
+	     # IP Masqerading aktivieren
+
+	     echo "1" > /proc/sys/net/ipv4/ip_forward
+
+	     # kernel module laden:
+
+	     $INSMOD $IPT_MODLIST
+
+	     # Unsere Filterchain anlegen und initialisieren:
+
+	     $IPTABLES -N $PN_FILTER
+	     Flush_and_Zero
+
+	     # Regeln fuer die Filter-Chain $PN_FILTER:
+
+	     # IP-Spoofing loggen und unterbinden:
+
+	     SPOOF_COND="-i $MSQ_DEV -s $INTRA_SUBNET"
+	     $IPTABLES -A $PN_FILTER $SPOOF_COND -j LOG --log-level info --log-prefix "firewall: (spoofing!) "
+	     $IPTABLES -A $PN_FILTER $SPOOF_COND -j DROP
+
+	     # Loopback freigeben:
+
+	     $IPTABLES -A $PN_FILTER -i lo -s 127.0.0.1 -d 127.0.0.1 -j ACCEPT
+
+	     # Alle erlaubten Verbindungen definieren:
+
+        # Zugriffe über tun devices (openvpn)
+
+        $IPTABLES -A $PN_FILTER -p icmp -i tun+ -j ACCEPT
+        $IPTABLES -A $PN_FILTER -p tcp -i tun+ -j ACCEPT
+        $IPTABLES -A $PN_FILTER -p udp -i tun+ -j ACCEPT
+
+        # Zugriffe von 'world' aus
+        #   - nur zuhause aktivieren, für Zugriff über VPN nicht nötig!
+
+        $IPTABLES -A $PN_FILTER -p TCP -s $ANY --dport 22 -j ACCEPT    # ssh
+        $IPTABLES -A $PN_FILTER -p TCP -s $ANY --dport 61109 -j ACCEPT # homectld
+        $IPTABLES -A $PN_FILTER -p icmp -s $ANY -j ACCEPT              # ping
+
+	     # Wir akzeptieren alles was zu bestehenden, externen Verbindungen gehoert
+
+	     $IPTABLES -A $PN_FILTER -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+	     # Aus dem Intranet wird alles akzeptiert
+
+	     $IPTABLES -A $PN_FILTER ! -i $MSQ_DEV -s $INTRA_SUBNET -j ACCEPT
+
+	     # IDENT-Port 'sondern', u.a. fuer verzoegerungsfreies smtp:
+
+	     $IPTABLES -A $PN_FILTER -p TCP --dport ident -j $IDENT_POL
+
+	     # Weitere Ports dieser Art:
+	     # "Legale "Sicherheitschecks" durch serioese Server)
+
+	     $IPTABLES -A $PN_FILTER -p TCP --dport http -j $HTTP_POL # todo
+	     $IPTABLES -A $PN_FILTER -p TCP --dport socks -j $IRCCHK_POL
+	     $IPTABLES -A $PN_FILTER -p TCP --dport 8080 -j $IRCCHK_POL
+	     $IPTABLES -A $PN_FILTER -p TCP --dport 3128 -j $IRCCHK_POL
+
+        # DHCP aus dem internen Netz(en) erlauben
+
+        $IPTABLES -A $PN_FILTER -j ACCEPT -i $INTRA_IF -m state --state NEW,ESTABLISHED -p udp --sport 68 -d 255.255.255.255/32 --dport 67
+
+	     # Alle berechtigten Pakete sind nun behandelt,
+	     # verbleibende nun [nach logging] verwerfen:
+
+	     # Wie wollen aber nicht alles loggen...:
+
+	     $IPTABLES -A $PN_FILTER -s 0.0.0.0 -d 255.255.255.255 -j DROP
+	     $IPTABLES -A $PN_FILTER -p ICMP                       -j DROP
+        #$IPTABLES -A $PN_FILTER -p UDP ! -i $INTRA_IF --dport 138 -j DROP
+
+	     # .. nur das, was jetzt noch uebrig ist!
+
+	     $IPTABLES -A $PN_FILTER -j LOG --log-level info --log-prefix "firewall: "
+
+	     # Default-Aktion fuer verbotene Pakete:
+
+	     $IPTABLES -A $PN_FILTER -j $DEFAULT_POL
+
+	     # Obige Filter-Chain in INPUT und FORWARD einhaengen,
+	     # damit sowohl das Gateway selber als auch das Intranet
+	     # geschuezt sind: Andernfalls keine FW-Funktionalitaet!
+
+	     $IPTABLES -A INPUT   -j $PN_FILTER
+	     $IPTABLES -A FORWARD -j $PN_FILTER
+
+	     # IP-Masquerading aktivieren:
+	     # (fuer alle Masqueradingdevices ausfuehren!)
+
+	     $IPTABLES -A POSTROUTING -t nat -o $MSQ_DEV -j MASQUERADE
+	     $IPTABLES -A POSTROUTING -t nat -o tun+ -j MASQUERADE
+
+	     echo -e "$return"
+        ;;
+
+    stop)
+    	  echo -n "Shutting down firewall"
+	     Flush_and_Zero
+	     $IPTABLES -X $PN_FILTER
+	     echo -e "$return"
+        ;;
+
+    restart|reload)
+        $0 stop  &&  $0 start  ||  return=$rc_failed
+        ;;
+
+    status)
+	     $IPTABLES -L -v
+	     echo
+	     $IPTABLES -t nat -L -v
+	     ;;
+
+    *)
+        echo ""
+        echo "Usage: $0 {start|stop|status|restart|reload}"
+        exit 1
+
+esac
+
+test "$return" = "$rc_done" || exit 1
+exit 0

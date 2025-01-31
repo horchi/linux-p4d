@@ -6,18 +6,13 @@ MQTTURL="$3"
 
 STATE="true"
 
-RESULT="{ \"type\":\"SC\",\"address\":$2,\"kind\":\"status\",\"valid\":true,\"value\":${STATE} }"
+if [[ "${COMMAND}" == "init" ]]; then
+   PARAMETER='{"cloneable": false, "symbol": "mdi:mdi-power", "symbolOn": "mdi:mdi-power", "color": "rgb(225, 5, 3)", "colorOn": "rgb(225, 5, 3)"}'
+   RESULT="{ \"type\":\"SC\",\"address\":$2,\"kind\":\"status\",\"valid\":true,\"value\":${STATE}, \"parameter\": ${PARAMETER} }"
 echo -n ${RESULT}
-
-if [ "${COMMAND}" == "init" ]; then
-   exit 0
-fi
-
-if [ "${COMMAND}" == "start" ]; then
+elif [ "${COMMAND}" == "toggle" ]; then
    systemctl poweroff
-fi
-
-if [ "${COMMAND}" != "init" ]; then
+elif [ "${COMMAND}" == "status" ]; then
    mosquitto_pub --quiet -L ${MQTTURL} -m "{ \"type\":\"SC\",\"address\":${ADDRESS},\"kind\":\"status\",\"state\":${STATE} }"
 fi
 

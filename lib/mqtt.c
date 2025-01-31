@@ -29,7 +29,7 @@ Mqtt::Mqtt(int aHeartBeat)
    heartBeat = aHeartBeat;
    lastResult = MQTT_OK;
    mqttClient = new mqtt_client;
-   memset(mqttClient, 0, sizeof(mqtt_client));
+   // memset(mqttClient, 0, sizeof(mqtt_client));
 }
 
 Mqtt::~Mqtt()
@@ -57,12 +57,13 @@ void Mqtt::publishCallback(void** user, mqtt_response_publish* published)
 
 void* Mqtt::refreshFct(void* client)
 {
-   int result;
    Mqtt* mqtt = (Mqtt*)client;
-   mqtt_client* cl = mqtt->mqttClient; //(mqtt_client*)client;
+   mqtt_client* cl = mqtt->mqttClient;
 
    while (!cl->close_now)
    {
+      int result {0};
+
       if ((result = mqtt_sync(cl)) != MQTT_OK)
       {
          tell(eloAlways, "Error: mqtt_sync for connection '%s' failed, result was %d '%s'",
@@ -107,11 +108,11 @@ int Mqtt::connect(const char* aUrl, const char* user, const char* password)
 {
    disconnect();
 
-   char url[512+TB];
+   char url[512+TB] {};
    strcpy(url, aUrl);
-   int port = 1883;
-   char* hostname = url;
-   char* p;
+   int port {1883};
+   char* hostname {url};
+   char* p {};
 
    if ((p = strrchr(hostname, '/')))
       hostname = p+1;
@@ -151,9 +152,6 @@ int Mqtt::connect(const char* aUrl, const char* user, const char* password)
    }
 
    pthread_detach(refreshThread);
-
-   //
-
    mqttClient->publish_response_callback_state = this;
    lastResult = mqtt_init(mqttClient, sockfd, sendbuf, sizeSendBuf, recvbuf, sizeReceiveBuf, publishCallback, refreshThread, SIGUSR2);
 
@@ -367,7 +365,7 @@ int Mqtt::write(const char* topic, const char* message, size_t len, uint8_t flag
    }
 
    theTopic = topic;
-   tell(eloMqtt, "-> (%s)[%s]", topic, message);
+   tell(eloMqtt, "-> (%s) [%s]", topic, message);
 
    return success;
 }

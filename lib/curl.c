@@ -211,15 +211,17 @@ int cCurl::GetUrlFile(const char *url, const char *filename, const std::string &
    return nRet;
 }
 
-int cCurl::postUrl(const char* url, const std::string& sPost, std::string* sOutput, const std::string& sReferer)
+int cCurl::postUrl(const char* url, const std::string &sPost, std::string* sOutput, const std::string &sReferer)
 {
    init();
 
-   std::string::size_type nStart = 0, nEnd, nPos;
+   int retval {1};
+   std::string::size_type nStart {0}, nEnd {0}, nPos {0};
    std::string sTmp, sName, sValue;
-   struct curl_httppost* formpost = NULL;
-   struct curl_httppost* lastptr = NULL;
-   struct curl_slist* headerlist = NULL;
+   struct curl_slist* headerlist {};
+
+   curl_mime* multipart {curl_mime_init(handle)};
+   curl_mimepart* part {};
 
    // Add the POST variables here
 
@@ -228,86 +230,77 @@ int cCurl::postUrl(const char* url, const std::string& sPost, std::string* sOutp
       sTmp = sPost.substr(nStart, nEnd - nStart);
 
       if ((nPos = sTmp.find("=")) == std::string::npos)
-         return fail;
+         return 0;
 
       sName = sTmp.substr(0, nPos);
       sValue = sTmp.substr(nPos+1);
-      curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
+
+      part = curl_mime_addpart(multipart);
+      curl_mime_name(part, sName.c_str());
+      curl_mime_data(part, sValue.c_str(), CURL_ZERO_TERMINATED);
+
       nStart = nEnd + 2;
    }
-
    sTmp = sPost.substr(nStart);
 
    if ((nPos = sTmp.find("=")) == std::string::npos)
-      return fail;
+      return 0;
 
    sName = sTmp.substr(0, nPos);
    sValue = sTmp.substr(nPos+1);
-   curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
 
-   int status = curl.doPost(url, sOutput, sReferer, formpost, headerlist);
+   part = curl_mime_addpart(multipart);
+   curl_mime_name(part, sName.c_str());
+   curl_mime_data(part, sValue.c_str(), CURL_ZERO_TERMINATED);
 
-   curl_formfree(formpost);
+   retval = curl.doPost(url, sOutput, sReferer, multipart, headerlist);
+   curl_mime_free(multipart);
    curl_slist_free_all(headerlist);
 
-   return status;
+   return retval;
 }
 
-int cCurl::postRaw(const char* url, const std::string& sPost, std::string* sOutput, const std::string& sReferer)
+int cCurl::postRaw(const char* url, const std::string &sPost, std::string* sOutput, const std::string &sReferer)
 {
-   init();
+  init();
 
-   struct curl_httppost* formpost = NULL;
-   struct curl_slist* headerlist = NULL;
+  int retval {0};
+  curl_mime* multipart = curl_mime_init(handle);
+  struct curl_slist* headerlist {};
 
-   curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
-   curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, sPost.length());
+  curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
+  curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, 0); //FIXME: Should this be the size instead, in case this is binary string?
 
-   headerlist = curl_slist_append(headerlist, "Accept: application/json");
-   headerlist = curl_slist_append(headerlist, "Content-Type: application/json");
-   headerlist = curl_slist_append(headerlist, "charset: utf-8");
+  retval = curl.doPost(url, sOutput, sReferer, multipart, headerlist);
 
-   int status = curl.doPost(url, sOutput, sReferer, formpost, headerlist);
-
-   if (status != success)
-      tell(eloAlways, "Post '%s' to '%s' failed", sPost.c_str(), url);
-
-   curl_formfree(formpost);
-   curl_slist_free_all(headerlist);
-
-   return status;
+  curl_mime_free(multipart);
+  curl_slist_free_all(headerlist);
+  return retval;
 }
 
-int cCurl::doPost(const char *url, std::string* sOutput, const std::string &sReferer,
-                      struct curl_httppost* formpost, struct curl_slist* headerlist)
+int cCurl::doPost(const char* url, std::string* sOutput, const std::string& sReferer,
+                  curl_mime* multipart, struct curl_slist* headerlist)
 {
-   // headerlist = curl_slist_append(headerlist, "Expect:");
+   headerlist = curl_slist_append(headerlist, "Expect:");
 
    // Now do the form post
 
-   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, "POST");
-   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerlist);
    curl_easy_setopt(handle, CURLOPT_URL, url);
-
-   curl_easy_setopt(handle, CURLOPT_HTTPPOST, formpost);
-   curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0); // Set option to write to string
 
    if (sReferer != "")
       curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
 
-   sBuf = "";
+   curl_easy_setopt(handle, CURLOPT_MIMEPOST, multipart);
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, sOutput); // Set option to write to string
 
    if (curl_easy_perform(handle) == 0)
-   {
-      *sOutput = sBuf;
-      return success;
-   }
-   else
-   {
-      // We have an error
-      *sOutput = "";
-      return fail;
-   }
+      return 1;
+
+   // We have an error here mate!
+
+   *sOutput = "";
+
+   return 0;
 }
 
 int cCurl::SetCookieFile(char *filename)

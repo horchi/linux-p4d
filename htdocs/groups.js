@@ -53,9 +53,9 @@ function initGroupSetup(groups)
 
       // calc container size
 
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - 10);
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - getTotalHeightOf('footer') - sab - 10);
    };
 }
 

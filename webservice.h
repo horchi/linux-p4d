@@ -38,13 +38,13 @@ class cWebService
          evStoreUserConfig,
          evChangePasswd,
 
-         evCommand,
+         evCommand,            // for 'Setup -> Commands' page
          evGroups,
          evGroupConfig,
          evChartbookmarks,
          evStoreChartbookmarks,
          evSyslog,
-         evSystem,
+         evSystem,             // misc system commands
          evForceRefresh,
          evStoreDashboards,
          evAlerts,
@@ -52,7 +52,7 @@ class cWebService
          evImageConfig,
          evSchema,
          evStoreSchema,
-         evStoreCalibration,
+         evStoreSensorSetup,
          evLmcAction,
 
          evErrors,

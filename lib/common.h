@@ -53,7 +53,7 @@
 
 class MemoryStruct;
 
-typedef unsigned char byte;
+typedef uint8_t byte;
 typedef unsigned short word;
 typedef short sword;
 typedef unsigned int dword;
@@ -64,6 +64,8 @@ typedef unsigned int dword;
 
 inline long min(long a, long b) { return a < b ? a : b; }
 
+#define naf -1.0
+
 enum Misc
 {
    success = 0,
@@ -72,7 +74,9 @@ enum Misc
    na      = -1,
    ignore  = -2,
    all     = -3,
-   abrt     = -4,
+   abrt    = -4,
+   cont    = -5,
+
    yes     = 1,
    on      = 1,
    off     = 0,
@@ -94,30 +98,33 @@ enum Misc
 
 enum Eloquence
 {
-   eloInfo           = 0x00001,
-   eloDetail         = 0x00002,
-   eloDebug          = 0x00004,
-   eloDebug2         = 0x00008,
-   eloWebSock        = 0x00010,
-   eloDebugWebSock   = 0x00020,
-   eloMqtt           = 0x00040,
-   eloDb             = 0x00080,
-   eloDebugDb        = 0x00100,
+   eloInfo           = 0x000001,
+   eloDetail         = 0x000002,
+   eloDebug          = 0x000004,
+   eloDebug2         = 0x000008,
+   eloWebSock        = 0x000010,
+   eloDebugWebSock   = 0x000020,
+   eloMqtt           = 0x000040,
+   eloDb             = 0x000080,
+   eloDebugDb        = 0x000100,
 
-   eloNodeRed        = 0x00200,   // node-red MQTT topics
-   eloDeconz         = 0x00400,
-   eloDebugDeconz    = 0x00800,
-   eloWeather        = 0x01000,
+   eloNodeRed        = 0x000200,   // node-red MQTT topics
+   eloDeconz         = 0x000400,
+   eloDebugDeconz    = 0x000800,
+   eloWeather        = 0x001000,
 
-   eloHomeMatic      = 0x02000,
-   eloDebugHomeMatic = 0x04000,
-   eloLua            = 0x08000,
-   eloGroWatt        = 0x10000,
+   eloHomeMatic      = 0x002000,
+   eloDebugHomeMatic = 0x004000,
+   eloLua            = 0x008000,
+   eloGroWatt        = 0x010000,
 
-   eloLmc            = 0x20000,
-   eloDebugLmc       = 0x40000,
+   eloLmc            = 0x020000,
+   eloDebugLmc       = 0x040000,
 
-   eloAlways         = 0x00000
+   eloDebugWiringPi  = 0x080000,
+   eloScript         = 0x100000,
+
+   eloAlways         = 0x000000
 };
 
 class Elo
@@ -353,10 +360,40 @@ class cMyMutexLock
 };
 
 //***************************************************************************
+// Strin Extensions
+//***************************************************************************
+
+namespace horchi
+{
+   std::string to_string(double d, size_t precision = 2, bool asHex = false);
+}
+
+class myString : public std::string
+{
+   public:
+
+      myString() : std::string() { }
+      myString(const std::string& s) : std::string(s) {}
+      myString(const std::string& s, std::size_t n) : std::string(s, n) {}
+      myString(const char *s, std::size_t n) : std::string(s, n) {}
+      myString(const char *s) : std::string(s) {}
+      myString(std::size_t n, char c) : std::string (n, c) {}
+      template <class InputIterator>
+      myString(InputIterator first, InputIterator last) : std::string(first,last) {}
+
+#if __cplusplus < 202002L
+      bool starts_with(const std::string& start) const
+      {
+         return substr(0, start.length()) == start;
+      }
+#endif
+};
+
+//***************************************************************************
 // Tools
 //***************************************************************************
 
-std::string executeCommand(const char* cmd);
+std::string __attribute__ ((format(printf, 1, 2))) executeCommand(const char* format, ...);
 
 #ifdef USEUUID
   const char* getUniqueId();
@@ -367,6 +404,7 @@ const char* bin2string(word n);
 const char* bin2string(byte n);
 const char* bytesPretty(double bytes, int precision = 0);
 double usNow();
+bool isDST();
 int l2hhmm(time_t t);
 time_t midnightOf(time_t t);
 const char* toWeekdayName(uint day);
@@ -400,7 +438,7 @@ const char* toElapsed(int seconds, char* buf);
 std::vector<std::string> split(const std::string& str, char delim, std::vector<std::string>* strings = nullptr);
 std::string getStringBetween(std::string str, const char* begin, const char* end);
 std::string getStringBefore(std::string str, const char* begin);
-int fileExists(const char* path);
+bool fileExists(const char* path);
 const char* suffixOf(const char* path);
 int createLink(const char* link, const char* dest, int force);
 int isLink(const char* path);
@@ -410,7 +448,7 @@ int isZero(const char* str);
 int removeFile(const char* filename);
 int chkDir(const char* path);
 int loadFromFile(const char* infile, MemoryStruct* data);
-int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true);
+int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF = true, size_t maxLines = 0, const char* expression = nullptr, bool invert = false);
 int loadTailLinesFromFile(char const* filename, int count, std::vector<std::string>& lines);
 int downloadFile(const char* url, MemoryStruct* data, int timeout = 30, const char* httpproxy = 0);
 int storeToFile(const char* filename, const char* data, int size = 0);
@@ -447,6 +485,8 @@ const char* getFirstIp();
   int createMd5OfFile(const char* path, const char* name, md5* md5);
 #endif
 
+std::string getBacktrace(size_t steps);
+
 //***************************************************************************
 //
 //***************************************************************************
@@ -482,6 +522,7 @@ class cTimeMs
 
       cTimeMs(int Ms = 0);
       static uint64_t Now();
+      static uint64_t now() { return Now(); }
       void Set(int Ms = 0);
       bool TimedOut();
       uint64_t Elapsed();
@@ -700,4 +741,16 @@ class Sem
       int key {0};
       int id {0};
       bool locked {false};
+};
+
+class SemLock
+{
+   public:
+
+      SemLock(Sem* aSem) : sem(aSem) { sem->p(); }
+      ~SemLock() { sem->v(); }
+
+   private:
+
+      Sem* sem {};
 };

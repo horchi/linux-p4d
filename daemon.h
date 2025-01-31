@@ -1,15 +1,19 @@
-//***************************************************************************
+ //***************************************************************************
 // Automation Control
 // File daemon.h
 // This code is distributed under the terms and conditions of the
 // GNU GENERAL PUBLIC LICENSE. See the file LICENSE for details.
-// Date 04.11.2010 - 01.12.2021  Jörg Wendel
+// Date 2010-2024 Jörg Wendel
 //***************************************************************************
 
 #pragma once
 
 #include <queue>
 #include <jansson.h>
+
+#ifndef _NO_RASPBERRY_PI_
+#  include <wiringPi.h>
+#endif
 
 #include "lib/common.h"
 #include "lib/db.h"
@@ -43,9 +47,9 @@ class Daemon : public cWebInterface
       {
          //               1         3.3 V
          //               2         5 V
-         pinGpio02     =  3,     // GPIO2 (SDA)
+         pinGpio02     =  3,     // GPIO2 (I²C 1 SDA)
          //               4         5 V
-         pinGpio03     =  5,     // GPIO3 (SCL)
+         pinGpio03     =  5,     // GPIO3 (I²C 1 SCL)
          //               6         GND
          pinGpio04     =  7,     // GPIO4 (W1)
          pinGpio14     =  8,     // GPIO14 (TX)
@@ -67,8 +71,8 @@ class Daemon : public cWebInterface
          pinGpio08     = 24,     // GPIO8 (SPI)
          //              25         GND
          pinGpio07     = 26,     // GPIO7 (ID EEPROM)
-         pinIdSd       = 27,     // ID_SD
-         pinIdSc       = 28,     // ID_SC
+         pinIdSd       = 27,     // ID_SD  (I²C 2 SDA)
+         pinIdSc       = 28,     // ID_SC  (I²C 2 SCL)
          pinGpio05     = 29,     // GPIO5
          //              30         GND
          pinGpio06     = 31,     // GPIO6
@@ -77,17 +81,50 @@ class Daemon : public cWebInterface
          //              34         GND
          pinGpio19     = 35,     // GPIO19
          pinGpio16     = 36,     // GPIO16
-         pinGpio26     = 37,     // GPIO26
-         pinGpio20     = 38,     // GPIO20
+         pinGpio26     = 37,     // GPIO26  !!! at Odroid 'ADC.AIN.3'
+         pinGpio20     = 38,     // GPIO20  !!! at Odroid 'REF 1.8V'
          //              39         GND
-         pinGpio21     = 40,     // GPIO21
+         pinGpio21     = 40,     // GPIO21  !!! at Odroid 'ADC.AIN.2'
 
          // aliases
 
-         pinW1       = pinGpio04,
-         pinSerialTx = pinGpio14,
-         pinSerialRx = pinGpio15,
-         pinW1Power  = pinGpio10
+         pinW1           = pinGpio04,
+         pinSerialTx     = pinGpio14,
+         pinSerialRx     = pinGpio15,
+         pinW1Power      = pinGpio10,
+
+         pinMcpIrq       = pinGpio16,  // reserved for i2cmqtt !
+
+         // aliases for user in/out
+
+         pinUserOut1     = pinGpio23,
+         pinUserOut2     = pinGpio24,
+         pinUserOut3     = pinGpio11,
+         pinUserOut4     = pinGpio09,
+         pinUserOut5     = pinGpio05,
+         pinUserOut6     = pinGpio06,
+         pinUserOut7     = pinGpio07,
+
+#ifndef _POOL
+         pinUserOut8     = pinGpio25,
+         pinUserOut9     = pinGpio19,
+#endif
+#ifndef MODEL_ODROID_N2
+         pinUserOut10    = pinGpio20,
+         pinUserOut11    = pinGpio21,
+         pinUserOut12    = pinGpio26,
+#endif // MODEL_ODROID_N2
+
+         pinUserInput1   = pinGpio12,
+         pinUserInput2   = pinGpio13,
+         pinUserInput3   = pinGpio08,  // interrupt don't work! (at least on ODROID)
+
+#ifndef _POOL
+         pinUserInput4   = pinGpio17,
+         pinUserInput5   = pinGpio18,
+         pinUserInput6   = pinGpio27,
+         pinUserInput7   = pinGpio22,
+#endif
       };
 
       enum SensorOptions
@@ -111,27 +148,28 @@ class Daemon : public cWebInterface
       static void downF(int aSignal) { shutdown = true; }
 
       int addValueFact(int addr, const char* type, int factor, const char* name, const char* unit = "",
-                       const char* title = nullptr, int rights = 0, const char* choices = nullptr, SensorOptions options = soNone);
+                       const char* title = nullptr, int rights = urNone, const char* choices = nullptr, SensorOptions options = soNone, const char* parameter = nullptr);
 
    protected:
 
       enum WidgetType
       {
          wtUnknown = -1,
-         wtSymbol  = 0,  // == 0
-         wtChart,        // == 1
-         wtText,         // == 2
-         wtValue,        // == 3
-         wtGauge,        // == 4
-         wtMeter,        // == 5
-         wtMeterLevel,   // == 6
-         wtPlainText,    // == 7  without title
-         wtChoice,       // == 8  option choice
-         wtSymbolValue,  // == 9
-         wtSpace,        // == 10
-         wtTime,         // == 11  // dummy to display current time at WEBIF
-         wtSymbolText,   // == 12
-         wtChartBar,     // == 13
+         wtSymbol  = 0,   // == 0
+         wtChart,         // == 1
+         wtText,          // == 2
+         wtValue,         // == 3
+         wtGauge,         // == 4
+         wtMeter,         // == 5
+         wtMeterLevel,    // == 6
+         wtPlainText,     // == 7  without title
+         wtChoice,        // == 8  option choice
+         wtSymbolValue,   // == 9
+         wtSpace,         // == 10
+         wtTime,          // == 11  // dummy to display current time at WEBIF
+         wtSymbolText,    // == 12
+         wtChartBar,      // == 13
+         wtSpecialSymbol, // == 14
          wtCount
       };
 
@@ -163,11 +201,21 @@ class Daemon : public cWebInterface
          dirClose = 2
       };
 
+      enum Pull
+      {
+         pullNone,  // 0
+         pullUp,    // 1
+         pullDown   // 2
+      };
+
       struct SensorData        // Sensor Data
       {
          bool record {false};
+         bool active {false};
          std::string kind {"value"};       // { value | status | text | trigger }
+         uint64_t lastInterruptMs {0};
          time_t last {0};
+         time_t changedAt {0};
          double value {0.0};
          bool working {false};             // actually working/moving (eg for blinds or script running)
          Direction lastDir {dirOpen};
@@ -176,10 +224,10 @@ class Daemon : public cWebInterface
          std::string image;
          bool disabled {false};
          bool valid {false};               // set if the value, text or state is valid
-         // time_t next {0};                  // calculated next switch time
          int battery {na};
-         int hue;                          // 0-360° hue
-         int sat;                          // 0-100% saturation
+         std::string color;
+         int hue {0};                      // 0-360° hue
+         int sat {0};                      // 0-100% saturation
 
          // fact
 
@@ -192,17 +240,26 @@ class Daemon : public cWebInterface
          int rights {cWebService::urView};
          int group {0};
 
-         // 'DO' specials
+         // specials
 
-         bool invertDO {true};
+         bool invert {false};
+         Pull pull {pullUp};
+         bool impulse {false};      // change output only for a short impulse
+         bool interrupt {false};
+         bool interruptSet {false};
+         std::string script;
+         std::string parameter;
+         std::string choices;
          OutputMode mode {omAuto};
-         uint opt {ooUser};
+         uint outputModes {ooUser};
+         std::string feedbackInType;  // feedback input for impuls out
+         uint feedbackInAddress {0};  // feedback input for impuls out
       };
 
       struct Range
       {
-         uint from;
-         uint to;
+         uint from {};
+         uint to {};
          bool inRange(uint t) const {
             if (from < to)
                return t >= from && t <= to;
@@ -277,9 +334,12 @@ class Daemon : public cWebInterface
       virtual int readConfiguration(bool initial);
       virtual int applyConfigurationSpecials() { return done; }
 
-      int initSensorByFact(std::string type, uint address);
-      int initOutput(uint pin, int opt, OutputMode mode, const char* name, uint rights = urControl);
+      int initSensorByFact(myString type, uint address);
+      int initOutput(uint pin, int outputModes, OutputMode mode, const char* name, uint rights = urControl);
       int initInput(uint pin, const char* name);
+      int cfgOutput(myString type, uint pin, json_t* jCal = nullptr);
+      int cfgInput(myString type, uint pin, json_t* jCal = nullptr);
+
       int initScripts();
 
       void doSleep(int t);
@@ -288,6 +348,7 @@ class Daemon : public cWebInterface
       int meanwhile();
       virtual int atMeanwhile() { return done; }
 
+      int updateInputs(bool check = true);
       virtual int updateSensors() { return done; }
       int storeSamples();
       void updateScriptSensors();
@@ -299,9 +360,8 @@ class Daemon : public cWebInterface
       int add2AlertMail(cDbRow* alertRow, const char* title, double value, const char* unit);
       int sendAlertMail(const char* to);
 
-      virtual int process();                               // called each 'interval'
+      virtual int process(bool force = false);
       virtual int performJobs() { return done; }           // called every loop (1 second)
-      // int performWebSocketPing();
       int dispatchClientRequest();
       virtual int dispatchSpecialRequest(Event event, json_t* oObject, long client) { return ignore; }
       virtual int dispatchMqttHaCommandRequest(json_t* jData, const char* topic);
@@ -316,6 +376,7 @@ class Daemon : public cWebInterface
       bool checkRights(long client, Event event, json_t* oObject);
       virtual bool onCheckRights(long client, Event event, uint rights) { return false; }
       int callScript(int addr, const char* command);
+      int switchVictron(const char* type, int address, const char* value);
       bool isInTimeRange(const std::vector<Range>* ranges, time_t t);
 
       int updateWeather();
@@ -323,7 +384,7 @@ class Daemon : public cWebInterface
 
       int store(time_t now, const SensorData* sensor);
 
-      cDbRow* valueFactRowOf(const char* type, uint addr);
+      cDbRow* valueFactRowOf(std::string type, uint addr);
       SensorData* getSensor(const char* type, int addr);
       void setSpecialValue(uint addr, double value, const std::string& text = "");
 
@@ -358,8 +419,11 @@ class Daemon : public cWebInterface
 
       bool doShutDown() { return shutdown; }
 
+      void publishVictronInit(const char* type);
+      void publishI2CSensorConfig(const char* type, uint pin, json_t* jParameters);
+      void publishPin(const char* type, uint pin);
       void gpioWrite(uint pin, bool state, bool store = true);
-      bool gpioRead(uint pin);
+      bool gpioRead(uint pin, bool check = false);
       virtual void logReport() { return ; }
 
       // web
@@ -378,6 +442,9 @@ class Daemon : public cWebInterface
       int performPageChange(json_t* oObject, long client);
       int performToggleIo(json_t* oObject, long client);
       int performSystem(json_t* oObject, long client);
+      int performDatabaseStatistic(json_t* oObject, long client);
+      int performWifi(json_t* oObject, long client);
+      int performWifiCommand(json_t* oObject, long client);
       int performSyslog(json_t* oObject, long client);
       int performConfigDetails(long client);
       int performGroups(long client);
@@ -402,10 +469,10 @@ class Daemon : public cWebInterface
       int performSchema(json_t* oObject, long client);
       int storeSchema(json_t* oObject, long client);
       int deleteValueFact(const char* type, long address);
-      int storeCalibration(json_t* oObject, long client);
-      int storeCvCalibration(json_t* oObject, long client);
-      int storeAiCalibration(json_t* oObject, long client);
-      int storeDoCalibration(json_t* oObject, long client);
+      int storeSensorSetup(json_t* oObject, long client);
+      int storeCvSettings(json_t* oObject, long client);
+      int storeAiSettings(json_t* oObject, long client);
+      int storeIoSettings(json_t* oObject, long client);
       int performLmcAction(json_t* oObject, long client);
       virtual int performCommand(json_t* obj, long client);
       virtual const char* getTextImage(const char* key, const char* text) { return nullptr; }
@@ -421,15 +488,18 @@ class Daemon : public cWebInterface
       int dashboards2Json(json_t* obj);
       int groups2Json(json_t* obj);
       virtual int commands2Json(json_t* obj);
+		int syslogs2Json(json_t* obj);
       int daemonState2Json(json_t* obj);
       int sensor2Json(json_t* obj, const char* type, uint address);
+      int systemServices2Json(json_t* obj);
       int images2Json(json_t* obj);
-      void pin2Json(json_t* ojData, int pin);
+      void pin2Json(json_t* ojData, const char* type, int pin);
       void publishSpecialValue(int addr);
       bool webFileExists(const char* file, const char* base = nullptr);
 
       int lmcTrack2Json(json_t* obj, TrackInfo* track);
       int lmcPlayerState2Json(json_t* obj);
+      int lmcPlayers2Json(json_t* obj);
       int lmcPlaylist2Json(json_t* obj);
       int lmcMainMenu2Json(json_t* obj);
 
@@ -444,7 +514,7 @@ class Daemon : public cWebInterface
 
       // LMC
 
-      int lmcInit();
+      int lmcInit(bool force = false);
       int lmcExit();
       int lmcUpdates(long client = 0);
       int performLmcUpdates();
@@ -453,7 +523,7 @@ class Daemon : public cWebInterface
 
       int dispatchArduinoMsg(const char* message);
       int initArduino();
-      void updateAnalogInput(const char* id, double value, time_t stamp, const char* unit);
+      int updateAnalogInput(uint addr, const char* type, double value, time_t stamp, const char* unit);
 
       // W1
 
@@ -475,7 +545,6 @@ class Daemon : public cWebInterface
       cDbTable* tableValueFacts {};
       cDbTable* tableValueTypes {};
       cDbTable* tableConfig {};
-      cDbTable* tableScripts {};
       cDbTable* tableSensorAlert {};
       cDbTable* tableUsers {};
       cDbTable* tableGroups {};
@@ -489,6 +558,8 @@ class Daemon : public cWebInterface
       cDbStatement* selectAllValueTypes {};
       cDbStatement* selectActiveValueFacts {};
       cDbStatement* selectValueFactsByType {};
+      cDbStatement* selectMaxValueFactsByType {};
+      cDbStatement* selectValueFactsByTypeAndName {};
       cDbStatement* selectAllValueFacts {};
       cDbStatement* selectAllConfig {};
       cDbStatement* selectAllUser {};
@@ -498,8 +569,6 @@ class Daemon : public cWebInterface
       cDbStatement* selectSamplesRange360 {};           // for chart
       cDbStatement* selectSamplesRangeMonth {};         // for chart
       cDbStatement* selectSamplesRangeMonthOfDayMax {}; // for chart
-      cDbStatement* selectScriptByPath {};
-      cDbStatement* selectScripts {};
       cDbStatement* selectSensorAlerts {};
       cDbStatement* selectAllSensorAlerts {};
       cDbStatement* selectSampleInRange {};        // for alert check
@@ -562,6 +631,7 @@ class Daemon : public cWebInterface
       };
 
       char* mqttUrl {};
+      char* sensorTopics {};
       char* mqttUser {};
       char* mqttPassword {};
 
@@ -586,13 +656,17 @@ class Daemon : public cWebInterface
       // config
 
       char* instanceName {};
+      int interval {60};
       double latitude {50.30};
       double longitude {8.79};
       char* openWeatherApiKey {};
-      int interval {60};
+      char* windyAppSpotID {};
+      int weatherInterval {15};           // minutes
       time_t lastStore {0};
       int arduinoInterval {10};
       char* arduinoTopic {};
+      std::string mqttTopicI2C;
+      std::string mqttTopicVictron;
 
       int webPort {61109};
       char* webUrl {};
@@ -607,6 +681,7 @@ class Daemon : public cWebInterface
       char* errorMailTo {};
       std::string htmlHeader;
 
+      bool triggerProcess {false};
       LmcCom* lmc {};
 
       Deconz deconz;
@@ -627,7 +702,7 @@ class Daemon : public cWebInterface
          double round {20.0};                // e.g. 50.0 -> 0.02; 20.0 -> 0.05; 10.0 -> 0.1;
       };
 
-      std::map<int,AiSensorConfig> aiSensors;
+      std::map<std::string,std::map<int,AiSensorConfig>> aiSensorConfig;
       std::map<std::string,std::map<int,SensorData>> sensors;
 
       virtual std::list<ConfigItemDef>* getConfiguration() = 0;
@@ -650,10 +725,12 @@ class Daemon : public cWebInterface
       };
 
       int executeCommandAsync(uint address, const char* cmd);
-      static void* cmdThread(void* user);
       std::map<uint,ThreadControl> commandThreads;
 
       // statics
+
+      static void* cmdThread(void* user);
+      static void ioInterrupt();
 
       static bool shutdown;
 };

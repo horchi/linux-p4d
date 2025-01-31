@@ -374,7 +374,7 @@ int P4d::atMeanwhile()
 // IO Interrupt Handler
 //***************************************************************************
 
-void ioInterrupt()
+void Daemon::ioInterrupt()
 {
 }
 
@@ -843,7 +843,7 @@ void P4d::afterUpdate()
 // Process
 //***************************************************************************
 
-int P4d::process()
+int P4d::process(bool force)
 {
    return success;
 }

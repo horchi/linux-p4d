@@ -1,7 +1,9 @@
 [Unit]
 
 Description = <CLASS> Control Deamon
-After = network.target <AFTER>
+# Wants = network-online.target
+After = network-online.target <AFTER>
+
 StartLimitInterval = 200
 StartLimitBurst = 5
 

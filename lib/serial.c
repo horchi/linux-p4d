@@ -14,6 +14,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+
 #include "serial.h"
 
 //***************************************************************************
@@ -112,7 +116,7 @@ int Serial::close()
 
    if (fdDevice)
    {
-      tell(eloDetail, "Closing io device");
+      tell(eloAlways, "Closing io device");
 
       flush();
 
@@ -151,7 +155,7 @@ int Serial::reopen(const char* dev)
 
 int Serial::look(byte& b, int timeoutMs)
 {
-   int res;
+   int res {0};
    b = 0;
 
    if (!fdDevice)
@@ -177,7 +181,7 @@ int Serial::look(byte& b, int timeoutMs)
 }
 
 //***************************************************************************
-// Send Command
+// Write
 //***************************************************************************
 
 int Serial::write(void* line, int size)
@@ -196,6 +200,19 @@ int Serial::write(void* line, int size)
 
    if (::write(fdDevice, line, size) != size)
       return fail;
+
+   if (eloquence & eloDebug && size < 255)
+   {
+      char buffer[1000];
+
+      for (int i = 0; i < size; ++i)
+         if (((char*)line)[i] != '\n')
+            buffer[i] = ((char*)line)[i];
+         else
+            buffer[i] = '#';
+
+      tell(eloAlways, "-> [%.*s]", size, buffer);
+   }
 
    return success;
 }

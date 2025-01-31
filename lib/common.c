@@ -36,9 +36,9 @@
   cMutex logMutex;
 #endif
 
-Eloquence eloquence {eloAlways};
+Eloquence eloquence {eloInfo};
 Eloquence argEloquence {eloAlways};
-bool logstdout {false};
+bool logstdout {true};
 bool logstamp {false};
 
 //***************************************************************************
@@ -69,6 +69,9 @@ const char* Elo::eloquences[] =
 
    "Lmc",
    "DebugLmc",
+
+   "DebugWiringPi",
+   "Script",
 
    nullptr
 };
@@ -103,8 +106,8 @@ void tell(Eloquence elo, const char* format, ...)
    if (elo && !(eloquence & elo))
       return ;
 
-   const int sizeBuffer = 100000;
-   char t[sizeBuffer+100]; *t = 0;
+   const int sizeBuffer {100000};
+   char t[sizeBuffer+100] {};
    va_list ap;
 
 #ifdef VDR_PLUGIN
@@ -158,20 +161,63 @@ void tell(Eloquence elo, const char* format, ...)
 }
 
 //***************************************************************************
+// std::sting Extensions
+//***************************************************************************
+
+#include <iomanip>
+
+namespace horchi
+{
+   std::string to_string(double d, size_t precision, bool asHex)
+   {
+      std::ostringstream stm;
+      if (!precision && asHex)
+         stm << std::hex << (int)d;
+      else
+         stm << std::setprecision(precision) << d;
+
+      return stm.str();
+   }
+}
+
+//***************************************************************************
 // Execute Command
 //***************************************************************************
 
-std::string executeCommand(const char* cmd)
+std::string executeCommand(const char* format, ...)
 {
-   char buffer[128] {'\0'};
-   std::string result {""};
+   va_list ap;
+   size_t size {0};
+   char* cmd {};
 
+   va_start(ap, format);
+   int len = vsnprintf(cmd, size, format, ap);
+   va_end(ap);
+
+   if (len <= 0)
+   {
+      tell(eloAlways, "Error: Failed to prepare command '%s'", format);
+      return "command failed";
+   }
+
+   size = len + 1;
+   cmd = (char*)malloc(size);
+   va_start(ap, format);
+   vsnprintf(cmd, size, format, ap);
+   va_end(ap);
+
+   tell(eloDebug, "Debug: Calling '%s' ..", cmd);
    FILE* pipe = popen(cmd, "r");
+   free(cmd);
+
+   char buffer[128] {};
+   std::string result;
 
    while (fgets(buffer, sizeof(buffer), pipe))
       result += buffer;
 
    pclose(pipe);
+   tell(eloDebug, "Debug: .. done");
 
    return result;
 }
@@ -213,11 +259,13 @@ double usNow()
 
 const char* bin2string(word n)
 {
-   static char bin[17];
+   static char bin[30];
+
+   int p {0};
 
    for (int x = 0; x < 16; x++)
    {
-      bin[x] = n & 0x8000 ? '1' : '0';
+      bin[p++] = n & 0x8000 ? '1' : '0';
       n <<= 1;
    }
 
@@ -228,15 +276,18 @@ const char* bin2string(word n)
 
 const char* bin2string(byte n)
 {
-   static char bin[9];
+   static char bin[20];
+
+   int p {0};
 
    for (int x = 0; x < 8; x++)
    {
-      bin[x] = n & 0x80 ? '1' : '0';
+      if (x == 4) bin[p++] = ' ';
+      bin[p++] = n & 0x80 ? '1' : '0';
       n <<= 1;
    }
 
-   bin[8] = '\0';
+   bin[p] = '\0';
 
    return bin;
 }
@@ -293,6 +344,22 @@ const char* bytesPretty(double bytes, int precision)
    sprintf(res, "%.*f %s", precision, bytes, unit);
 
    return res;
+}
+
+//***************************************************************************
+// Is DST
+//***************************************************************************
+
+bool isDST()
+{
+   struct tm tm;
+   time_t t = time(0);
+
+   localtime_r(&t, &tm);
+   tm.tm_isdst = -1;  // force DST auto detect
+   mktime(&tm);
+
+   return tm.tm_isdst;
 }
 
 //***************************************************************************
@@ -857,7 +924,7 @@ std::vector<std::string> split(const std::string& str, char delim, std::vector<s
    if (!strings)
       strings = &_strings;
 
-   size_t start;
+   size_t start {0};
    size_t end {0};
 
    while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
@@ -993,7 +1060,7 @@ const char* suffixOf(const char* path)
    return "";
 }
 
-int fileExists(const char* path)
+bool fileExists(const char* path)
 {
    return access(path, F_OK) == 0;
 }
@@ -1192,7 +1259,7 @@ int isZero(const char* str)
 // Load Lines
 //***************************************************************************
 
-int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF)
+int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool removeLF, size_t maxLines, const char* expression, bool invert)
 {
    FILE* fp;
 
@@ -1208,16 +1275,27 @@ int loadLinesFromFile(const char* infile, std::vector<std::string>& lines, bool 
       return fail;
    }
 
-   char* line {nullptr};
+   char* line {};
    size_t len {0};
 
    while (getline(&line, &len, fp) != -1)
    {
+		if (!isEmpty(expression))
+		{
+			if (!invert && rep(line, expression) != success)
+				continue;
+			if (invert && rep(line, expression) == success)
+				continue;
+		}
+
       if (removeLF)
          line[strlen(line)-1] = 0;
 
       lines.push_back(line);
       line[0] = '\0';
+
+		if (maxLines && lines.size() >= maxLines)
+			break;
    }
 
    fclose(fp);
@@ -1976,3 +2054,28 @@ const char* getUniqueId()
    return uuid;
 }
 #endif // USEUUID
+
+
+//***************************************************************************
+// Get Backtrace
+//***************************************************************************
+
+#include <execinfo.h>
+
+std::string getBacktrace(size_t steps)
+{
+   std::string buffer;
+
+   void** array = new void*[steps];
+   size_t size = backtrace(array, steps);
+   char** strings = backtrace_symbols(array, size);
+
+   // buffer.appendf("System::backtrace() returned (%d) addresses, if symbols missing link with -rdynamic\n", (int)size);
+
+   for (size_t i = 0; i < size; i++)
+      buffer += std::string(strings[i]) + "\n";
+
+   free(strings);
+
+   return buffer;
+}

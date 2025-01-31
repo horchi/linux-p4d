@@ -1,6 +1,9 @@
 
 include ../Make.config
 
+linstall:
+	make install
+
 install:
 	if ! test -L $(WEBDEST); then \
 		if ! test -d $(WEBDEST); then \

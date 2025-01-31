@@ -137,8 +137,6 @@ int main(int argc, char** argv)
    bool _stdoutOnInit {false};
    Eloquence _eloquence {eloAlways};
 
-   logstdout = true;
-
    // Usage ..
 
    if (argc > 1 && (argv[1][0] == '?' || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
@@ -185,12 +183,8 @@ int main(int argc, char** argv)
          return 1;
       }
 
-      // exit parent
-
       if (pid != 0)
          return 0;
-
-      // i'am the child!
    }
 
    // int AFTER fork !!!

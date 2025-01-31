@@ -22,13 +22,14 @@ GIT_REV      = $(shell git describe --always 2>/dev/null)
 
 # object files
 
-LOBJS        = lib/db.o lib/dbdict.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o lib/lua.o lib/tcpchannel.o
+LOBJS        = lib/db.o lib/dbdict.o lib/systemdctl.o lib/common.o lib/serial.o lib/curl.o lib/thread.o lib/json.o lib/lua.o lib/tcpchannel.o
 MQTTOBJS     = lib/mqtt.o lib/mqtt_c.o lib/mqtt_pal.o
 OBJS         = $(MQTTOBJS) $(LOBJS) main.o daemon.o wsactions.o hass.o websock.o webservice.o deconz.o lmc.o lmccom.o lmctag.o
 OBJS        += growatt.o
 
 CFLAGS      += $(shell $(SQLCFG) --include)
 OBJS        += specific.o gpio.o
+
 W1OBJS       = w1.o gpio.o lib/common.o lib/thread.o $(MQTTOBJS)
 OBJS        += p4io.o service.o
 CHARTOBJS    = $(LOBJS) chart.o
@@ -110,8 +111,7 @@ install-config:
 	   chmod a+rx $(CONFDEST); \
 	fi
 	install --mode=755 -D ./configs/sysctl $(CONFDEST)/scripts.d
-	install --mode=755 -D ./configs/example_switch.sh $(CONFDEST)/scripts.d
-	install --mode=755 -D ./configs/example_sensor.sh $(CONFDEST)/scripts.d
+	install --mode=755 -D ./configs/*.sh $(CONFDEST)/scripts.d
 	if ! test -f $(DESTDIR)/etc/msmtprc; then \
 	   install --mode=644 -D ./configs/msmtprc $(DESTDIR)/etc/; \
 	fi
@@ -137,6 +137,9 @@ install-scripts:
 	for f in ./scripts/*.sh; do \
 		cp -v "$$f" $(BINDEST)/`basename "$$f"`; \
 	done
+	if ! test -f $(BINDEST)/fwpn; then \
+	   cp  ./scripts/fwpn $(DESTDIR)/; \
+	fi
 
 iw: install-web
 
@@ -176,7 +179,7 @@ activate: install
 #	tail -f /var/log/$(TARGET).log
 
 cppchk:
-	cppcheck --enable=all $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --language=c++ --quiet --force *.c; \
+	cppcheck --enable=all $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --quiet --force --std=c++20 *.c; \
 
 upload:
 	avrdude -q -V -p atmega328p -D -c arduino -b 57600 -P $(AVR_DEVICE) -U flash:w:arduino/build-nano-atmega328/ioctrl.hex:i

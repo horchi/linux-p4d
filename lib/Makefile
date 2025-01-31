@@ -57,6 +57,12 @@ cppchk:
 	@echo Compile "$(*F)" ...
 	$(doCompile) $(*F).c -o $@
 
+sdclient: sdclient.c
+	g++ -std=c++11 -ggdb sdclient.c common.o systemdctl.c $(BASELIBS) -lrt -lcrypto -lpthread -luuid -lz  `pkg-config --cflags --libs libsystemd` -o $@
+
+blescan: blescan.c
+	g++ -std=c++11 -ggdb blescan.c common.o $(BASELIBS) -lbluetooth -lrt -lcrypto -lpthread -luuid -lz -o $@
+
 #--------------------------------------------------------
 # dependencies
 #--------------------------------------------------------

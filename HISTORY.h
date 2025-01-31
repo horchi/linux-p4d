@@ -5,9 +5,9 @@
  *
  */
 
-#define _VERSION     "0.10.3"
+#define _VERSION     "0.10.4"
 
-#define VERSION_DATE "25.11.2024"
+#define VERSION_DATE "31.01.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,9 @@
 
 /*
  * ------------------------------------
+
+2025-01-31:  version 0.10.4
+  - change:  Updated code base (merged with horchi:homectld)
 
 2024-11-25:  version 0.10.3
   - bugfix:  Fixed writing of change topic
@@ -29,7 +32,7 @@
   - added:   state-shfire.gif
 
 2024-01-11:  version 0.10.0
-  - change:  Updated code base (merged with horchi:homectrld)
+  - change:  Updated code base (merged with horchi:homectld)
 
 2024-01-11:  version 0.9.57
   - bugfix:  Fixed parget for float values

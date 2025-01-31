@@ -44,7 +44,7 @@ json_t* jsonLoad(const char* data)
 
    if (!jData)
    {
-      tell(eloAlways, "Error: Ignoring invalid json in '%s'", data);
+      tell(eloAlways, "Error: Ignoring invalid json in '%s' [%s]", data, getBacktrace(5).c_str());
       tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
            error.text, error.source, error.line, error.column, error.position);
       return nullptr;

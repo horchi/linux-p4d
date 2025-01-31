@@ -176,7 +176,7 @@ window.storePhCal = function()
       title: "Kalibrierwerte speichern?",
       buttons: {
          'Speichern': function () {
-            console.log("storing calibration values");
+            console.log("storing calibration settings");
             socket.send({ "event" : "phsetcal", "object" :
                           { "currentPhA"  : ph1,
                             "currentCalA" : cal1,
