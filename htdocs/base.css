@@ -386,16 +386,6 @@ button:focus {
     background-color: darkslategray;
 }
 
-.buttonHighlighted
-{
-    background-color: darkblue;
-    color: var(--buttonFont);
-    width: 300px;
-    height: 40px;
-    margin: 8px;
-    box-shadow: 1px 1px 5px 1px var(--shadow);
-}
-
 .seperatorFold
 {
     background-color: slategray;
@@ -702,13 +692,6 @@ span > select
     display: inline-table;
     text-align: left;
     height: 24px;
-}
-
-.inputTableConfig
-{
-    /* background-color: var(--light1); */
-    background: linear-gradient(to bottom right, #00000096, black); /* Standard syntax (must be last) */
-    padding: 5px;
 }
 
 .content
