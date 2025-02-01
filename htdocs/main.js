@@ -13,6 +13,7 @@ var pingTimeoutMs = 4000;
 var colorStyle = null;
 var isDaytime = false;
 var daytimeCalcAt = null;
+var schemaEditActive = false;
 
 var onSmalDevice = false;
 var isActive = null;
@@ -726,9 +727,9 @@ function prepareMenu()
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
          html += "<div class=\"confirmDiv\">";
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:hidden;\" onclick=\"schemaAddItem()\">&#10010;</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"makeResizableDiv\" title=\"Leitung hinzufügen\" style=\"visibility:hidden;\" onclick=\"makeResizableDiv()\">Leitung hinzufügen</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:hidden;\" onclick=\"schemaStore()\">Speichern</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaAddItem()\">&#10010;</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"makeResizableDiv\" title=\"Leitung hinzufügen\" style=\"visibility::" + (schemaEditActive ? '':'hidden')  + ";\" onclick=\"makeResizableDiv()\">Leitung hinzufügen</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaStore()\">Speichern</button>";
          html += "</div>";
       }
    }

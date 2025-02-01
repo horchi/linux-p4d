@@ -10,7 +10,6 @@
 
 var oTop = 0;
 var oLeft = 0;
-var modeEdit = false;
 var lastSchemadata = null;
 var properties = [ "top", "left", "color", "font-size", "color", "background-color", "border", "border-radius", "z-index"];
 var schemaRoot = null;
@@ -77,7 +76,7 @@ function initSchema(schemaData)
    image.setAttribute("src", "img/schema/schema-" + config.schema + ".png");
    image.setAttribute("draggable", "false");
 
-   if (modeEdit) {
+   if (schemaEditActive) {
       image.setAttribute("ondrop", "dropSValue(event)");
       image.setAttribute("ondragover", "allowDropSValue(event)");
    }
@@ -107,15 +106,15 @@ function initSchemaElement(item, tabindex)
    div.setAttribute('data-type', item.type);
    div.setAttribute('data-address', ((item.address)>>>0).toString(10));
    setAttributeStyleFrom(div, item.properties);
-   div.style.visibility = (modeEdit || item.state == 'A') ? "visible" : "hidden";
-   div.style.cursor = modeEdit ? "move" : "default";
+   div.style.visibility = (schemaEditActive || item.state == 'A') ? "visible" : "hidden";
+   div.style.cursor = schemaEditActive ? "move" : "default";
 
-   if (modeEdit) {
+   if (schemaEditActive) {
       div.setAttribute("onclick", 'editSchemaValue("' + item.type + '", ' + item.address + ')');
       div.setAttribute('tabindex', tabindex);
    }
 
-   if (modeEdit) {
+   if (schemaEditActive) {
       div.setAttribute("draggable", true);
       div.setAttribute("ondragstart", 'dragSValue(event,"' + item.type + ((item.address)>>>0).toString(10) + '")');
 
@@ -230,16 +229,15 @@ function updateSchema()
 
 function schemaEditModeToggle()
 {
-   modeEdit = !modeEdit;
+   schemaEditActive = !schemaEditActive;
    initSchema(lastSchemadata, schemaRoot);
    updateSchema();
 
+   document.getElementById("buttonSchemaStore").style.visibility = schemaEditActive ? 'visible' : 'hidden';
+   document.getElementById("buttonSchemaAddItem").style.visibility = schemaEditActive ? 'visible' : 'hidden';
+   document.getElementById("makeResizableDiv").style.visibility = schemaEditActive ? 'visible' : 'hidden';
 
-   document.getElementById("buttonSchemaStore").style.visibility = modeEdit ? 'visible' : 'hidden';
-   document.getElementById("buttonSchemaAddItem").style.visibility = modeEdit ? 'visible' : 'hidden';
-   document.getElementById("makeResizableDiv").style.visibility = modeEdit ? 'visible' : 'hidden';
-
-   if (modeEdit == false)
+   if (!schemaEditActive)
       document.getElementById('resizers').display == "none"; //hide Resizer
 
    activateResizer();
