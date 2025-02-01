@@ -80,10 +80,6 @@ function getItem(id)
    if (idPar.length == 2) {
       for (var key in allSensors) {
          if (idPar[0] == allSensors[key].type && parseInt(idPar[1]) == allSensors[key].address) {
-
-            if (parseInt(idPar[1]) == 0x1f)
-               console.log("Debug key", key, 'value', allSensors[key]);
-
             return allSensors[key];
          }
       }
