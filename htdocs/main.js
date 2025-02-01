@@ -728,7 +728,7 @@ function prepareMenu()
          html += "<div class=\"confirmDiv\">";
          html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaAddItem()\">&#10010;</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"makeResizableDiv\" title=\"Leitung hinzufügen\" style=\"visibility::" + (schemaEditActive ? '':'hidden')  + ";\" onclick=\"makeResizableDiv()\">Leitung hinzufügen</button>";
+         html += "  <button class=\"rounded-border buttonOptions\" id=\"makeResizableDiv\" title=\"Leitung hinzufügen\" style=\"visibility:" + (schemaEditActive ? '':'hidden')  + ";\" onclick=\"makeResizableDiv()\">Leitung hinzufügen</button>";
          html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaStore()\">Speichern</button>";
          html += "</div>";
       }
