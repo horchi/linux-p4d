@@ -12,7 +12,51 @@ var oTop = 0;
 var oLeft = 0;
 var lastSchemadata = null;
 var properties = [ "top", "left", "color", "font-size", "color", "background-color", "border", "border-radius", "z-index"];
-var schemaRoot = null;
+// var schemaRoot = null;
+
+function initSchema(schemaData)
+{
+   // console.log(JSON.stringify(schemaData, undefined, 4));
+
+   lastSchemadata = schemaData;
+
+   $('#container').removeClass('hidden');
+
+   $('#container').empty()
+      .append($('<div></div>')
+              .attr('id', 'schemaContainer')
+              .addClass('rounded-border schemaBox')
+              .append($('<img></img>')
+                      .attr('src', 'img/schema/schema-' + config.schema + '.png')
+                      .attr('draggable', false)
+                      .on('drop', function(event) {dropSValue(event);})
+                      .on('dragover', function(event) {allowDropSValue(event);}))
+             );
+
+
+//   schemaRoot = document.getElementById("schemaContainer");
+//    var image = document.createElement("img");
+//   image.setAttribute("src", "img/schema/schema-" + config.schema + ".png");
+//   image.setAttribute("draggable", "false");
+
+//   if (schemaEditActive) {
+//      image.setAttribute("ondrop", "dropSValue(event)");
+//      image.setAttribute("ondragover", "allowDropSValue(event)");
+//   }
+//   schemaRoot.appendChild(image);
+
+   for (var i = 0; i < schemaData.length; i++) {
+      if (!lastSchemadata[i].deleted)
+         initSchemaElement(schemaData[i], i);
+   }
+
+   updateSchema();
+
+   $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
+   window.onresize = function() {
+      $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
+   };
+}
 
 function getSchemDef(id)
 {
@@ -59,41 +103,6 @@ function getItem(id)
    }
 
    return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
-}
-
-function initSchema(schemaData)
-{
-   // console.log(JSON.stringify(schemaData, undefined, 4));
-
-   lastSchemadata = schemaData;
-
-   $('#container').removeClass('hidden');
-
-   document.getElementById("container").innerHTML = '<div id="schemaContainer" class="rounded-border schemaBox">';
-   schemaRoot = document.getElementById("schemaContainer");
-
-   var image = document.createElement("img");
-   image.setAttribute("src", "img/schema/schema-" + config.schema + ".png");
-   image.setAttribute("draggable", "false");
-
-   if (schemaEditActive) {
-      image.setAttribute("ondrop", "dropSValue(event)");
-      image.setAttribute("ondragover", "allowDropSValue(event)");
-   }
-
-   schemaRoot.appendChild(image);
-
-   for (var i = 0; i < schemaData.length; i++) {
-      if (!lastSchemadata[i].deleted)
-         initSchemaElement(schemaData[i], i);
-   }
-
-   updateSchema();
-
-   $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
-   window.onresize = function() {
-      $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
-   };
 }
 
 function initSchemaElement(item, tabindex)
@@ -147,7 +156,7 @@ function initSchemaElement(item, tabindex)
       });
    }
 
-   schemaRoot.appendChild(div);
+   $('#schemaContainer').append($(div));
 }
 
 function updateSchema()
@@ -230,7 +239,7 @@ function updateSchema()
 function schemaEditModeToggle()
 {
    schemaEditActive = !schemaEditActive;
-   initSchema(lastSchemadata, schemaRoot);
+   initSchema(lastSchemadata);
    updateSchema();
 
    document.getElementById("buttonSchemaStore").style.visibility = schemaEditActive ? 'visible' : 'hidden';
@@ -250,7 +259,7 @@ function schemaStore()
 
 function activateResizer()
 {
-    $(schemaRoot).append($('<div></div>')
+    $('#schemaContainer').append($('<div></div>')
                         .addClass('resizable')
                         .attr('id', 'newLine')
                         .append($('<div></div>')
@@ -471,14 +480,14 @@ function editSchemaValue(type, address, newUC)
 
       form += ' <div style="display:flex;margin:4px;text-align:left;">' +
          '  <span id="labelUsrText" style="width:120px;">xxx:</span>' +
-         '  <span style="width:-webkit-fill-available;">' +
+         '  <span style="width:-webkit-fill-available;width:-moz-available;">' +
          '    <textarea id="usrText" style="width:inherit;height:22px;resize:vertical;">' + (schemaDef.usrtext || "") + '    </textarea>' +
          '  </span>' +
          '</div>';
 
       form += ' <div style="display:flex;margin:4px;text-align:left;">' +
          '  <span id="labelFunction" style="width:120px;">Funktion:</span>' +
-         '  <span style="width:-webkit-fill-available;">' +
+         '  <span style="width:-webkit-fill-available;width:-moz-available;">' +
          '    <textarea id="function" style="width:inherit;height:120px;resize:vertical;font-family:monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea>' +
          '  </span>' +
          '</div>';
@@ -627,7 +636,7 @@ function editSchemaValue(type, address, newUC)
 
       schemaDef.fct = $('#function').val();
 
-      setAttributeStyleFrom(schemaRoot.querySelector(id), schemaDef.properties);
+      setAttributeStyleFrom($('#schemaContainer')[0], schemaDef.properties);
       updateSchema()
 
       return 0;  // success
