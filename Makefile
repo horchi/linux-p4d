@@ -32,12 +32,11 @@ OBJS        += specific.o gpio.o
 
 W1OBJS       = w1.o gpio.o lib/common.o lib/thread.o $(MQTTOBJS)
 OBJS        += p4io.o service.o
-CHARTOBJS    = $(LOBJS) chart.o
 CMDOBJS      = p4cmd.o p4io.o lib/serial.o service.o lib/common.o
 
 # main taget
 
-all: $(TARGET) $(W1TARGET) $(CMDTARGET) $(CHARTTARGET)
+all: $(TARGET) $(W1TARGET) $(CMDTARGET)
 
 # auto dependencies
 
@@ -62,9 +61,6 @@ $(TARGET) : $(OBJS)
 
 $(W1TARGET): $(W1OBJS)
 	$(doLink) $(W1OBJS) $(LIBS) -o $@
-
-$(CHARTTARGET): $(CHARTOBJS)
-	$(doLink) $(CHARTOBJS) $(LIBS) -o $@
 
 $(CMDTARGET) : $(CMDOBJS)
 	$(doLink) $(CMDOBJS) $(LIBS) -o $@
@@ -157,7 +153,7 @@ dist: clean
 
 clean:
 	rm -f */*.o *.o core* *~ */*~ lib/t *.jpg $(DEPFILE)
-	rm -f $(TARGET) $(ARCHIVE).tgz $(CHARTTARGET) $(CMDTARGET)
+	rm -f $(TARGET) $(ARCHIVE).tgz $(CMDTARGET)
 	rm -f $(W1TARGET) com2
 
 build: clean all
