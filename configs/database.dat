@@ -30,7 +30,6 @@ Table valuefacts
    RECORD               ""          record               Ascii        1 Data,
    UNIT                 ""          unit                 Ascii        5 Data,
    OPTIONS              ""          options              Int         10 Data,
-   INVERT               ""          invert               Ascii        1 Data,
    FACTOR               ""          factor               Int          4 Data,
    NAME                 ""          name                 Ascii      100 Data,
    TITLE                ""          title                Ascii      100 Data,

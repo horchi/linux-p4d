@@ -1,0 +1,24 @@
+
+# Options
+#     -l <eloquence>   set eloquence (bitmask)
+#     -t               log to terminal
+#     -s               show and exit
+#     -S               scan i2c bus and exit
+#     -i <interval>    interval seconds (default 60)
+#     -u <url>         MQTT url
+#     -T <topic>       MQTT topic
+#     -                 <topic>/out - produce to
+#     -                 <topic>/in  - read from
+#     -d <device>      i2c device (defaults to /dev/i2c-0)
+#     --ads <address>  ADS1115  address (0x48, defaults to -1/off)
+#     --mcp <address>  MCP23017 address (0x20-0x27, defaults to -1/off)
+#     --dht <config>   DHT20 config (defaults to -1/off)
+#        where <config>:
+#            <tuple>,<tuple>[,<tuple>,...]
+#            where <tuple>
+#               tca:<tca-address>:<tca-channel>:<dht-address>
+#            or
+#               <dht-address>
+#   note: tca is a TCA9548A i2c bus multiplexer
+
+I2CMQTT_OPTS="-u tcp://localhost:1883 -i 10 -l 0x02 --ads 0x48 --mcp 0x27,0x26 --dht tca:0x70:0:0x38,tca:0x70:1:0x38"

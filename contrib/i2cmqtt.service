@@ -1,0 +1,18 @@
+[Unit]
+
+Description = I2C to MQTT service
+After = network.target
+StartLimitInterval = 200
+StartLimitBurst = 5
+
+[Service]
+
+EnvironmentFile=-/etc/default/i2cmqtt
+Type = forking
+ExecStart = /usr/local/bin/i2cmqtt $I2CMQTT_OPTS
+Restart = always
+RestartSec = 30
+
+[Install]
+
+WantedBy = multi-user.target

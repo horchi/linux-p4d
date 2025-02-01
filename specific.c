@@ -398,6 +398,7 @@ int P4d::applyConfigurationSpecials()
 int P4d::updateSensors()
 {
    Daemon::updateSensors();
+   LogDuration ld("P4d::updateSensors", eloLoopTimings);
 
    time_t now {time(0)};
    sem->p();
@@ -620,6 +621,8 @@ int P4d::updateState()
 
    int status;
    time_t now;
+
+   // LogDuration ld("P4d::updateState", eloLoopTimings);
 
    // get state
 
@@ -1136,6 +1139,8 @@ int P4d::updateErrors()
    time_t timeOne {0};
    cTimeMs timeMs;
 
+   LogDuration ld("P4d::updateErrors (as part of afterUpdate)", eloLoopTimings);
+
    cDbStatement* select = new cDbStatement(tableErrors);
    select->build("select ");
    select->bindAllOut();
@@ -1302,6 +1307,8 @@ int P4d::calcStateDuration()
    int thisState = {-1};
    std::string text {""};
    std::string kStates {""};
+
+   LogDuration ld("P4d::calcStateDuration (as part of afterUpdate)", eloLoopTimings);
 
    for (auto& s : stateDurations)
    {

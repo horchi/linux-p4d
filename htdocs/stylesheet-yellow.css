@@ -6,6 +6,9 @@
 
 :root
 {
+    --widgetWidthBase: 110;
+    --widgetHeightBase: 110;
+
     /* colors */
 
     --menu: #ececb8;
@@ -35,6 +38,7 @@
     --edit: #f9f9ef;
     --editadd: #fffcab;
 
+    --peakColor: #ff5757;
     --background: #000000d1;
     --shadow: black;
 
@@ -53,6 +57,16 @@
 
     --scaleText: white;
     --scale: #ccc;
+}
+
+@media only screen and (max-width: 500px)
+{
+    :root { --containerPadding: 5px; }
+}
+
+@media only screen and (max-width:900px)
+{
+    :root { --widgetWidthBase: 90; --widgetHeightBase:80; }
 }
 
 Body

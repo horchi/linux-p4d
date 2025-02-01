@@ -5,9 +5,9 @@
  *
  */
 
-#define _VERSION     "0.10.4"
+#define _VERSION     "0.10.5"
 
-#define VERSION_DATE "31.01.2025"
+#define VERSION_DATE "01.02.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,10 @@
 
 /*
  * ------------------------------------
+
+2025-02-01:  version 0.10.5
+  - added:   Duration logging for main loop parts
+  - change:  even more merge with horchi:homectld
 
 2025-01-31:  version 0.10.4
   - change:  Updated code base (merged with horchi:homectld)

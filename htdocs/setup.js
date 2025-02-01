@@ -122,11 +122,11 @@ function initConfig(configdetails)
          break;
 
       case 4:     // ctRange
-         {
+      {
          $(itemsDiv).append(rangeDiv = $('<span></span>')
                        .css('display', 'inline-grid'));
          function appendRangeTuple(index, name, range, description = '')
-            {
+         {
             var aRange = range.split("-");
 
             $(rangeDiv)

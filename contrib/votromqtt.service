@@ -1,0 +1,17 @@
+[Unit]
+
+Description = VOTRO to MQTT service
+After = network.target
+StartLimitInterval = 200
+StartLimitBurst = 5
+
+[Service]
+EnvironmentFile=-/etc/default/votromqtt
+Type = forking
+ExecStart = <BINDEST>/votromqtt $VOTROMQTT_OPTS
+Restart = always
+RestartSec = 30
+
+[Install]
+
+WantedBy = multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+
+Description = BMS to MQTT service
+After = network.target
+StartLimitInterval = 200
+StartLimitBurst = 5
+
+[Service]
+EnvironmentFile=-/etc/default/bmsmqtt
+Type = forking
+ExecStart = <BINDEST>/bmsmqtt $BMSMQTT_OPTS
+Restart = always
+RestartSec = 30
+
+[Install]
+
+WantedBy = multi-user.target

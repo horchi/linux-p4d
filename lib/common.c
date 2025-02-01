@@ -73,6 +73,8 @@ const char* Elo::eloquences[] =
    "DebugWiringPi",
    "Script",
 
+   "LoopTimings",
+
    nullptr
 };
 

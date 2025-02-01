@@ -1,9 +1,0 @@
-
-
-- Nach dem ersten Start dauert es lange bis es läuft weil da die Tabellen angepasst werden.
-   Das dauert je nachdem wie viele Daten sich in der samples Tabelle schon angesammelt haben
-   (hier ~15 Minuten mit super schneller Datenbank auf 8 Kern Host)
-   Währen dessen (siehe log) nicht beenden. In der Zzeit ist der p4d/das Web Interface NICHT ansprechbar.
-
-- Die Sensoren welche nicht nur angezeigt sondern auch aufgezeichnet werden sollen im IO Setup das 'Aufzeichnen' aktivieren.
-   Also die für welche weiterhin die Daten historisch aufgehoben werden sollen (Charts verfügbar sein sollen)

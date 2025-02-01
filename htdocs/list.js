@@ -67,7 +67,7 @@ function initList()
 
    if (daemonState.state != null && daemonState.state == 0)
    {
-      html =  '<div id="aStateOk"><span style="text-align: center;">Heating Control ONLINE</span></div>';
+      html =  '<div id="aStateOk"><span style="text-align: center;">' + config.instanceName + ' ONLINE</span></div>';
       html +=  '<br/>\n';
       html +=  '<div style="display:flex;"><span style="width:30%;display:inline-block;">Läuft seit:</span><span display="inline-block">' + daemonState.runningsince + '</span></div>\n';
       html +=  '<div style="display:flex;"><span style="width:30%;display:inline-block;">Version:</span> <span display="inline-block">' + daemonState.version + '</span></div>\n';
@@ -75,7 +75,7 @@ function initList()
    }
    else
    {
-      html = '<div id="aStateFail">ACHTUNG:<br/>Heating Control OFFLINE</div>\n';
+      html = '<div id="aStateFail">ACHTUNG:<br/>' + config.instanceName + ' OFFLINE</div>\n';
    }
 
    rootStateP4.innerHTML = html;

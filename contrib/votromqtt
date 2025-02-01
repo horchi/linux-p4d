@@ -1,0 +1,13 @@
+
+# Options
+#      -d <device>       serial device file (defaults to /dev/ttyVotro)
+#      -l <eloquence>    set eloquence
+#      -t                log to terminal
+#      -i <interval>     interval [s] (default 60)
+#      -u <url>          MQTT url (default tcp://localhost:1883)
+#      -T <topic>        MQTT topic (default homectld2mqtt/votro)
+#      -n                Don't fork in background
+#      -s <device-addr>        [<parameter-id>] show and exit
+#      -D <parameter-id> detect devices
+
+VOTROMQTT_OPTS="-u tcp://localhost:1883 -d /dev/ttyVotro -i 15 -l 1"

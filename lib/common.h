@@ -123,6 +123,7 @@ enum Eloquence
 
    eloDebugWiringPi  = 0x080000,
    eloScript         = 0x100000,
+   eloLoopTimings    = 0x200000,
 
    eloAlways         = 0x000000
 };
@@ -584,7 +585,7 @@ class char_smart
 
    private:
 
-      char* p {nullptr};
+      char* p {};
 };
 
 //***************************************************************************
@@ -599,6 +600,7 @@ class LogDuration
       ~LogDuration();
 
       void show(const char* label = "");
+      uint64_t getDuration() { return cMyTimeMs::Now() - durationStart; }
 
    protected:
 

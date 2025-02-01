@@ -1,1 +1,14 @@
-W1MQTT_OPTS="-u tcp://localhost:1883"
+
+#  Options
+#     -u <url>        MQTT url
+#     -T <topic>      MQTT topic
+#     -c <count>      <count> of expected W1 sensors (optional)
+#                      if not <count> sensors present and <power pin> is configured
+#                      power line will be reset once per interval (optional)
+#     -p <GPIO pin>   physical number of GPIO pin of W1 power supply (optional)
+#     -l <eloquence>  set eloquence
+#     -n              don't demonize (optional)
+#     -t              log to terminal (optional)
+#     -v              show version
+
+W1MQTT_OPTS="-u tcp://localhost:1883 -l 1"

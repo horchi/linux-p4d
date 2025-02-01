@@ -2022,23 +2022,70 @@ int Daemon::loop()
          continue;
 
       nextRefreshAt = time(0) + interval;
+      uint64_t loopDuration {0};
 
-      // aggregate
+      {
+         LogDuration ld("loop total", eloLoopTimings);
 
-      if (aggregateHistory && nextAggregateAt <= time(0))
-         aggregate();
+         // aggregate
 
-      // main work in 'interval'
+         if (aggregateHistory && nextAggregateAt <= time(0))
+         {
+            LogDuration ld("aggregate", eloLoopTimings);
+            aggregate();
+         }
 
-      updateInputs(false);
-      updateWeather();
-      updateSensors();  // update some sensors for wich we get no trigger
+         // main work in 'interval'
 
-      performData(0L);
-      updateScriptSensors();
-      process(true /*force*/);
-      storeSamples();
-      afterUpdate();
+         {
+            LogDuration ld("updateInputs", eloLoopTimings);
+            updateInputs(false);
+         }
+
+         {
+            LogDuration ld("updateWeather", eloLoopTimings);
+            updateWeather();
+         }
+
+         {
+            LogDuration ld("updateSensors", eloLoopTimings);
+            updateSensors();  // update some sensors for wich we get no trigger
+         }
+
+         performData(0L);
+
+         {
+            LogDuration ld("updateScriptSensors", eloLoopTimings);
+            updateScriptSensors();
+         }
+
+         {
+            LogDuration ld("process", eloLoopTimings);
+            process(true /*force*/);
+         }
+
+         {
+            LogDuration ld("storeSamples", eloLoopTimings);
+            storeSamples();
+         }
+
+         {
+            LogDuration ld("updateInputs", eloLoopTimings);
+            storeSamples();
+         }
+
+         {
+            LogDuration ld("afterUpdate", eloLoopTimings);
+            afterUpdate();
+         }
+
+         loopDuration = ld.getDuration();
+      }
+
+      if (loopDuration > (uint)(interval*1000))
+         tell(eloAlways, "Warning: The duration of the main loop takes %jxms longer than the configured "
+              "interval of %d seconds, as a result, the web interface responds slowly or not at all.",
+              loopDuration, interval);
 
       initialRun = false;
    }
@@ -2143,7 +2190,7 @@ int Daemon::store(time_t now, const SensorData* sensor)
 
    if (sensor->last <= lastStore)
    {
-      tell(eloDetail, "Info: No update for '%s:0x%02x' (%s) until last store, skipping store (%s / %s)",
+      tell(eloDebug, "Debug: No update for '%s:0x%02x' (%s) until last store, skipping store (%s / %s)",
            sensor->type.c_str(), sensor->address, sensor->name.c_str(), l2pTime(sensor->last).c_str(), l2pTime(lastStore).c_str());
       return ignore;
    }
@@ -2836,7 +2883,9 @@ int Daemon::aggregate()
    char* stmt {};
    time_t history = time(0) - (aggregateHistory * tmeSecondsPerDay);
    int aggCount {0};
+   int status {fail};
 
+   tell(eloAlways, "Starting aggregation ..");
    asprintf(&stmt,
             "replace into samples "
             "  select address, type, 'A' as aggregate, "
@@ -2865,18 +2914,13 @@ int Daemon::aggregate()
 
       asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%ld)", history);
 
-      if (tableSamples->deleteWhere("%s", stmt) == success)
-      {
-         tell(eloAlways, "Aggregation with interval of %d minutes done; "
-              "Created %d aggregation rows", aggregateInterval, aggCount);
-      }
+      if ((status = tableSamples->deleteWhere("%s", stmt)) == success)
+         tell(eloAlways, "Aggregation with interval of %d minutes done; Created %d aggregation rows", aggregateInterval, aggCount);
    }
 
    free(stmt);
-
-   // schedule even in case of error!
-
-   scheduleAggregate();
+   tell(eloAlways, ".. aggregation %s", status == success ? "done" : "failed");
+   scheduleAggregate();      // schedule next aggregation even in case of error!
 
    return success;
 }

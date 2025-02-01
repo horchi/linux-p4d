@@ -1,0 +1,20 @@
+
+# Query vendor id and product id, example:
+#  #> udevadm info /dev/ttyUSB0 | egrep -i "(_ID|ID_SERIAL_SHORT)"
+#   E: ID_VENDOR_ID=0403
+#   E: ID_MODEL_ID=6001
+#
+# where ID_MODEL_ID is idProduct and ID_VENDOR_ID is idVendor
+#  if vendor and model are identical you can use the ID_SERIAL_SHORT
+#
+# Copy this as template to /etc/udev/rules.d/, adjust youre IDs
+# and reload:
+#  #> udevadm control --reload-rules && udevadm trigger
+#
+
+# some examples
+
+#KERNEL=="ttyUSB[0-9]", ATTRS{idProduct}=="6001", ATTRS{idVendor}=="0403", ENV{ID_SERIAL_SHORT}=="A50285BI", SYMLINK+="ttyBms"
+#KERNEL=="ttyUSB[0-9]", ATTRS{idProduct}=="6001", ATTRS{idVendor}=="0403", ENV{ID_SERIAL_SHORT}=="A5XK3RJT", SYMLINK+="ttyVotro"
+#KERNEL=="ttyUSB[0-9]", ATTRS{idProduct}=="6015", ATTRS{idVendor}=="0403", ENV{ID_SERIAL_SHORT}=="VE7DMKUF", SYMLINK+="ttyVictron"
+#KERNEL=="ttyUSB[0-9]", ATTRS{idProduct}=="ea60", ATTRS{idVendor}=="10c4", SYMLINK+="ttyVotro"

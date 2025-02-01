@@ -1,2 +1,0 @@
-lib/curl.c:235:41: warning: ‘CURLFORM_COPYNAME’ is deprecated: since 7.56.0. Use curl_mime_name() [-Wdeprecated-declarations]
-lib/curl.c:235:75: warning: ‘CURLFORM_COPYCONTENTS’ is deprecated: since 7.56.0. Use curl_mime_data() [-Wdeprecated-declarations]
