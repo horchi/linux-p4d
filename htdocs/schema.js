@@ -47,9 +47,11 @@ function getItem(id)
 {
    var idPar = id.split(':');
 
-   for (var key in allSensors) {
-      if (idPar.length == 2 && idPar[0] == allSensors[key].type && idPar[1] == allSensors[key].address)
-         return allSensors[key];
+   if (idPar.length == 2) {
+      for (var key in allSensors) {
+         if (idPar[0] == allSensors[key].type && idPar[1] == allSensors[key].address)
+            return allSensors[key];
+      }
    }
 
    return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
@@ -456,21 +458,32 @@ function editSchemaValue(type, address, newUC)
       ' </div>';
       }
    if (!isCN){
-   form +=
-      ' <div id="imgSize" style="display:flex;margin:4px;text-align:left;">' +
-      '  <span style="align-self:center;width:120px;">Bild Breite:</span><span><input id="imgWidth" style="width:60px;" type="number" value="' + schemaDef.width + '"/></span>' +
-      '  <span style="align-self:center;width:120px;text-align:right;">Bild Höhe: </span><span><input id="imgHeight" style="width:60px;" type="number" value="' + schemaDef.height + '"/></span>' +
-      ' </div>';
+      form +=
+         ' <div id="imgSize" style="display:flex;margin:4px;text-align:left;">' +
+         '  <span style="align-self:center;width:120px;">Bild Breite:</span><span><input id="imgWidth" style="width:60px;" type="number" value="' + schemaDef.width + '"/></span>' +
+         '  <span style="align-self:center;width:120px;text-align:right;">Bild Höhe: </span><span><input id="imgHeight" style="width:60px;" type="number" value="' + schemaDef.height + '"/></span>' +
+         ' </div>';
 
-   form += ' <div id="imgInfo" style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">Um das vom p4d gelieferte Bild zu verwenden (' + (item != null ? item.image : "") + ') Funktion und URL leer lassen!</span></div>';
+      form += ' <div id="imgInfo" style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">Um das vom p4d gelieferte Bild zu verwenden (' + (item != null ? item.image : "") + ') Funktion und URL leer lassen!</span></div>';
 
-   form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelUsrText" style="width:120px;">xxx:</span><span style="width:-webkit-fill-available;"><textarea id="usrText" style="width:inherit;height:inherit;">' + (schemaDef.usrtext || "") + '</textarea></span></div>';
-   form += ' <div style="display:flex;margin:4px;text-align:left;"><span id="labelFunction" style="width:120px;">Funktion:</span><span style="width:-webkit-fill-available;height:95px;"><textarea id="function" style="width:inherit;height:inherit;font-family: monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea></span></div>';
+      form += ' <div style="display:flex;margin:4px;text-align:left;">' +
+         '  <span id="labelUsrText" style="width:120px;">xxx:</span>' +
+         '  <span style="width:-webkit-fill-available;">' +
+         '    <textarea id="usrText" style="width:inherit;height:22px;resize:vertical;">' + (schemaDef.usrtext || "") + '    </textarea>' +
+         '  </span>' +
+         '</div>';
+
+      form += ' <div style="display:flex;margin:4px;text-align:left;">' +
+         '  <span id="labelFunction" style="width:120px;">Funktion:</span>' +
+         '  <span style="width:-webkit-fill-available;">' +
+         '    <textarea id="function" style="width:inherit;height:120px;resize:vertical;font-family:monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea>' +
+         '  </span>' +
+         '</div>';
    }
    if (!isCN)
    {
    if (!isUC)
-      form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Auf die Daten des Elements kann über item.value, item.unit und item.text zugegriffen werden. Anderer Elemente erhält man mit getItem(id)</span></div>';
+      form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Auf die Daten des Elements kann über item.value, item.unit und item.text zugegriffen werden. Andere Elemente erhält man mit getItem(id)</span></div>';
    else
       form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Elemente erhält man mit getItem(id)</span></div>';
    }
