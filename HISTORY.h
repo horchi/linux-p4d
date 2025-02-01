@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.10.5"
+#define _VERSION     "0.10.6"
 
 #define VERSION_DATE "01.02.2025"
 
@@ -17,6 +17,9 @@
 
 /*
  * ------------------------------------
+
+ 2025-02-01:  version 0.10.6
+  - bugfix:   Fixed name clash of DI sensors
 
 2025-02-01:  version 0.10.5
   - added:   Duration logging for main loop parts

@@ -53,6 +53,8 @@ class P4d : public Daemon, public FroelingService
       void afterUpdate() override;
       int updateErrors();
       int doLoop() override;
+      // with P4d we did not have 'DI' from Raspi (type name chash of 'DI')
+      int updateInputs(bool check = true) override { return done; }
       int updateState();
       void scheduleTimeSyncIn(int offset = 0);
       int sendErrorMail();

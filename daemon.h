@@ -348,7 +348,7 @@ class Daemon : public cWebInterface
       int meanwhile();
       virtual int atMeanwhile() { return done; }
 
-      int updateInputs(bool check = true);
+      virtual int updateInputs(bool check = true);
       virtual int updateSensors() { return done; }
       int storeSamples();
       void updateScriptSensors();

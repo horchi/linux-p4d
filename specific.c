@@ -498,7 +498,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
+            {
+               sensors[sensor->type][sensor->address].kind = "status";
                sensors[sensor->type][sensor->address].state = v.state;
+            }
 
             sensors[sensor->type][sensor->address].valid = true;
             sensors[sensor->type][sensor->address].last = now;
