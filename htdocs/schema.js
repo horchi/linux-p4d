@@ -12,7 +12,6 @@ var oTop = 0;
 var oLeft = 0;
 var lastSchemadata = null;
 var properties = [ "top", "left", "color", "font-size", "color", "background-color", "border", "border-radius", "z-index"];
-// var schemaRoot = null;
 
 function initSchema(schemaData)
 {
@@ -32,18 +31,6 @@ function initSchema(schemaData)
                       .on('drop', function(event) {dropSValue(event);})
                       .on('dragover', function(event) {allowDropSValue(event);}))
              );
-
-
-//   schemaRoot = document.getElementById("schemaContainer");
-//    var image = document.createElement("img");
-//   image.setAttribute("src", "img/schema/schema-" + config.schema + ".png");
-//   image.setAttribute("draggable", "false");
-
-//   if (schemaEditActive) {
-//      image.setAttribute("ondrop", "dropSValue(event)");
-//      image.setAttribute("ondragover", "allowDropSValue(event)");
-//   }
-//   schemaRoot.appendChild(image);
 
    for (var i = 0; i < schemaData.length; i++) {
       if (!lastSchemadata[i].deleted)
