@@ -481,13 +481,69 @@ function editSchemaValue(type, address, newUC)
    let isCN = schemaDef.type == "CN";
    let item = allSensors[key];
 
+/*
+   let form = $('<div></div>')
+       .attr('id', 'settingsForm')
+       .css('display','grid')
+       .css('min-width','650px')
+       .css('max-width','750px')
+       .append($('<div></div>')
+               .css('display','flex')
+               .css('margin','4px')
+               .css('text-align','left')
+               .append($('<span></span>')
+                       .css('align-self','center')
+                       .css('width','120px')
+                       .html('Einblenden'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'showIt')
+                               .attr('type', 'checkbox')
+                               .css('width','auto')
+                               .attr('checked', schemaDef.state == 'A' ? 'checked' : ''))
+                       .append($('<label></label>')
+                               .attr('for', 'showIt'))))
+
+       .append($('<div></div>')
+               .css('display','flex')
+               .css('margin','4px')
+               .css('text-align','left')
+               .append($('<span></span>')
+                       .css('width','120px')
+                       .html('Farbe'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'colorFg')
+                               .attr('type', 'text')
+                               .css('width','auto')
+                               .val(schemaDef.properties["color"] || "white")))
+               .append($('<span></span>')
+                       .css('align-self','center')
+                       .css('text-align','left')
+                       .css('width','120px')
+                       .html('Hintergrund'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'colorBg')
+                               .attr('type', 'text')
+                               .css('width','auto')
+                               .val(schemaDef.properties["background-color"] || "transparent")))
+*/
+
+
+
+
+
    let form =
        '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
-	    '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
-       '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
+	    '   <span style="width:120px;">Farbe:</span> <span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
+       '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span> <span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
        ' </div>' +
+
+
+
        ' <div style="display:flex;margin:4px;text-align:left;">' +
        '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/><label for="showBorder"></label></span></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Radius: </span><span><input id="borderRadius" style="width:60px;" type="text" value="' + (schemaDef.properties["border-radius"] || "3px") + '"/></span>' +
