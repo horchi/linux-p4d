@@ -19,9 +19,8 @@ function initSchema(schemaData)
 
    lastSchemadata = schemaData;
 
-   $('#container').removeClass('hidden');
-
    $('#container').empty()
+      .removeClass('hidden')
       .append($('<div></div>')
               .attr('id', 'schemaContainer')
               .addClass('rounded-border schemaBox')
@@ -35,10 +34,10 @@ function initSchema(schemaData)
                       .attr('src', 'img/schema/schema-' + config.schema + '.png')
                       .attr('draggable', false)
                       .on('drop', function(event) { dropSValue(event); })
-                      .on('dragover', function(event) { allowDropSValue(event); }))
+                      .on('dragover', function(event) { return false; }))
              );
 
-   for (var i = 0; i < schemaData.length; i++) {
+   for (let i = 0; i < schemaData.length; i++) {
       if (!lastSchemadata[i].deleted)
          initSchemaElement(schemaData[i], i);
    }
@@ -51,9 +50,23 @@ function initSchema(schemaData)
    };
 }
 
+function dropSValue(event)
+{
+   event.preventDefault();
+   let id = '#' + event.originalEvent.dataTransfer.getData('id');
+   let schemaDef = getSchemDef(event.originalEvent.dataTransfer.getData('id'));
+
+   console.log("drop", id, 'at', (event.offsetX - oLeft)  + 'px', (event.offsetY - oTop)  + 'px');
+
+   schemaDef.properties["top"] = (event.offsetY - oTop)  + 'px';
+   schemaDef.properties["left"] = (event.offsetX - oLeft)  + 'px';
+   $(id).css({'top'  : (event.offsetY - oTop)  + 'px'});
+   $(id).css({'left' : (event.offsetX - oLeft) + 'px'});
+}
+
 function schemaContextMenu(event)
 {
-   var form = $('<div></div>')
+   let form = $('<div></div>')
        .attr('id', 'caseMenu')
        .append($('<div></div>')
                .addClass('dialog-content')
@@ -61,18 +74,15 @@ function schemaContextMenu(event)
                        .css('display', 'grid')
                        .css('grid-gap', '4px')
                        .append($('<button></button>')
-                               .attr('id', 'schemaAddItem')
                                .addClass('rounded-border button1')
                                .html('&#10010')
                                .click(function() { buttonSchemaAddItem(); }))
                        .append($('<button></button>')
-                               .attr('id', 'makeResizableDiv')
                                .attr('title', 'add user defines value')
                                .addClass('rounded-border button1')
                                .html('Leitung hinzufügen')
                                .click(function() { makeResizableDiv(); }))
                        .append($('<button></button>')
-                               .attr('id', 'buttonSchemaStore')
                                .addClass('rounded-border button1')
                                .html('Speichern')
                                .click(function() { schemaStore(); })
@@ -104,9 +114,6 @@ function schemaContextMenu(event)
 function setupSchema()
 {
    $("#burgerPopup").dialog("close");
-   $('#buttonSchemaStore').css('visibility', schemaEditActive ? 'visible' : 'hidden');
-   $('#buttonSchemaAddItem').css('visibility', schemaEditActive ? 'visible' : 'hidden');
-   $('#makeResizableDiv').css('visibility', schemaEditActive ? 'visible' : 'hidden');
 
    schemaEditActive = !schemaEditActive;
    initSchema(lastSchemadata);
@@ -120,7 +127,7 @@ function setupSchema()
 
 function getSchemDef(id)
 {
-   for (var i = 0; i < lastSchemadata.length; i++) {
+   for (let i = 0; i < lastSchemadata.length; i++) {
       if (lastSchemadata[i].type + ((lastSchemadata[i].address)>>>0).toString(10) == id)
          return lastSchemadata[i];
    }
@@ -130,7 +137,7 @@ function getSchemDef(id)
 
 function getItemDef(key)
 {
-   for (var i = 0; i < lastSchemadata.length; i++) {
+   for (let i = 0; i < lastSchemadata.length; i++) {
       if (lastSchemadata[i].type + ':0x' + ((lastSchemadata[i].address)>>>0).toString(16).toUpperCase() == key)
          return lastSchemadata[i];
    }
@@ -140,7 +147,7 @@ function getItemDef(key)
 
 function getItemById(id)
 {
-   for (var key in allSensors) {
+   for (let key in allSensors) {
       if (allSensors[key].type + ((allSensors[key].address)>>>0).toString(10) == id)
          return allSensors[key];
    }
@@ -148,10 +155,10 @@ function getItemById(id)
 
 function getItem(id)
 {
-   var idPar = id.split(':');
+   let idPar = id.split(':');
 
    if (idPar.length == 2) {
-      for (var key in allSensors) {
+      for (let key in allSensors) {
          if (idPar[0] == allSensors[key].type && parseInt(idPar[1]) == allSensors[key].address) {
             return allSensors[key];
          }
@@ -163,56 +170,51 @@ function getItem(id)
 
 function initSchemaElement(item, tabindex)
 {
-   var id = item.type + (item.address >>> 0).toString(10);
-   var div = document.createElement("div");
+   let id = item.type + (item.address >>> 0).toString(10);
 
-   div.classList.add("schemaDiv");
-   div.setAttribute("id", id);
-   div.setAttribute('data-type', item.type);
-   div.setAttribute('data-address', ((item.address)>>>0).toString(10));
-   setAttributeStyleFrom(div, item.properties);
-   div.style.visibility = (schemaEditActive || item.state == 'A') ? "visible" : "hidden";
-   div.style.cursor = schemaEditActive ? "move" : "default";
+   $('#schemaContainer')
+      .append($('<div></div>')
+              .attr('id', id)
+              .attr('tabindex', tabindex)
+              .addClass('schemaDiv')
+              .css('visibility', schemaEditActive  || item.state == 'A' ? 'visible' : 'hidden')
+              .css('cursor', schemaEditActive ? 'move' : 'default')
+              .data('type', item.type)
+              .data('address', (item.address >>> 0).toString(10))
+             );
+
+   setAttributeStyleByProperties($('#' + id)[0], item.properties);
 
    if (schemaEditActive) {
-      div.setAttribute("onclick", 'editSchemaValue("' + item.type + '", ' + item.address + ')');
-      div.setAttribute('tabindex', tabindex);
-   }
-
-   if (schemaEditActive) {
-      div.setAttribute("draggable", true);
-      div.setAttribute("ondragstart", 'dragSValue(event,"' + item.type + ((item.address)>>>0).toString(10) + '")');
-
-      div.addEventListener('mousedown', event => {
+      $('#' + id).click(function() { editSchemaValue(item.type, item.address); });
+      $('#' + id).attr('draggable', true);
+      $('#' + id).on('dragstart', function(event) {
+         event.originalEvent.dataTransfer.setData('id', item.type + (item.address >>> 0).toString(10));
+      });
+      $('#' + id).on('mousedown', function(event) {
          oTop = event.offsetY;
          oLeft = event.offsetX;
       });
 
-      div.addEventListener("keydown", event => {
-         // console.log(" keyCode: " + event.keyCode + " ctrlKey: " + event.ctrlKey);
-         var ele = event.currentTarget;
-         var top = parseInt(ele.style.top);
-         var left = parseInt(ele.style.left);
-         var id = ele.id; //.substr(3);
-         var schemaDef = getSchemDef(id);
-         var pixel = event.ctrlKey ? 10 : 1;
+      $('#' + id).on('keydown', function(event) {
+         let top = parseInt($(this).css('top'));
+         let left = parseInt($(this).css('left'));
+         let pixel = event.ctrlKey ? 10 : 1;
 
-         switch (event.keyCode)
-         {
+         switch (event.keyCode) {
             case 37: left -= pixel; break;
             case 38: top  -= pixel; break;
             case 39: left += pixel; break;
             case 40: top  += pixel; break;
          }
 
+         let schemaDef = getSchemDef($(this).attr('id'));
          schemaDef.properties["top"] = top + 'px';
          schemaDef.properties["left"] = left + 'px';
-         ele.style.top = top + 'px';
-         ele.style.left = left + 'px';
+         $(this).css('top', top + 'px');
+         $(this).css('left', left + 'px');
       });
    }
-
-   $('#schemaContainer').append($(div));
 }
 
 function updateSchema()
@@ -220,12 +222,12 @@ function updateSchema()
    if (!lastSchemadata)
       return;
 
-   for (var i = 0; i < lastSchemadata.length; i++) {
-      var schemaDef = lastSchemadata[i];
-      var id = schemaDef.type + (schemaDef.address >>> 0).toString(10);
+   for (let i = 0; i < lastSchemadata.length; i++) {
+      let schemaDef = lastSchemadata[i];
+      let id = schemaDef.type + (schemaDef.address >>> 0).toString(10);
       var item = getItemById(id);
-      var key = toKey(schemaDef.type, schemaDef.address);
-      var fact = valueFacts[key];
+      let key = toKey(schemaDef.type, schemaDef.address);
+      let fact = valueFacts[key];
 
       if (!schemaDef)
          continue;
@@ -237,9 +239,9 @@ function updateSchema()
          console.log("no item for", id, key);
 
       $("#"+id).data('last', item ? item.last : '');
-      console.log(item);
+      // console.log(item);
 
-      var theText = '';
+      let theText = '';
 
       if (schemaDef.fct != null && schemaDef.fct != '') {
          try {
@@ -254,7 +256,7 @@ function updateSchema()
       else if (schemaDef.usrtext != null)
          theText += schemaDef.usrtext;
 
-      var html = '';
+      let html = '';
 
       if (schemaDef.showtitle && item != null && item.title != null)
          html += item.title + ":&nbsp;";
@@ -266,7 +268,7 @@ function updateSchema()
             console.log("Missing item for " + JSON.stringify(schemaDef, undefined, 4));
 
          if (theText != '') {
-            var style = 'width:' + (schemaDef.width ? schemaDef.width : 40) + 'px;';
+            let style = 'width:' + (schemaDef.width ? schemaDef.width : 40) + 'px;';
             if (schemaDef.height)
                style = 'height:' + schemaDef.height + 'px';
 
@@ -292,7 +294,7 @@ function updateSchema()
 
       $("#"+id).html(html == "" ? "&nbsp;" : html);
 
-      var title = "";
+      let title = "";
 
       if (schemaDef.type == "UC")
          title = "User Constant";
@@ -405,9 +407,9 @@ function activateResizer()
 
 function schemaAddItem()
 {
-   var addr = 0;
+   let addr = 0;
 
-   for (var i = 0; i < lastSchemadata.length; i++) {
+   for (let i = 0; i < lastSchemadata.length; i++) {
       if (lastSchemadata[i].type == "UC" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
          addr++;
    }
@@ -427,10 +429,10 @@ function schemaAddItem()
 
 function makeResizableDiv(div)
 {
-   var addr = 0;
+   let addr = 0;
 
    if (lastSchemadata) {
-      for (var i = 0; i < lastSchemadata.length; i++) {
+      for (let i = 0; i < lastSchemadata.length; i++) {
          if (lastSchemadata[i].type == "CN" && ((lastSchemadata[i].address)>>>0).toString(10) == addr)
             addr++;
       }
@@ -456,11 +458,11 @@ function makeResizableDiv(div)
    // editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
 
-function setAttributeStyleFrom(element, json)
+function setAttributeStyleByProperties(element, json)
 {
-   var styles = "";
+   let styles = "";
 
-   for (var key in json)
+   for (let key in json)
       styles += key + ":" + json[key] + ";";
 
    element.setAttribute("style", styles);
@@ -471,19 +473,19 @@ function editSchemaValue(type, address, newUC)
 {
    // console.log("editSchemaValue of id: " + id);
 
-   var key = toKey(type, address);
-   var id = type + ((address)>>>0).toString(10);
+   let key = toKey(type, address);
+   let id = type + ((address)>>>0).toString(10);
 
-   var schemaDef = getSchemDef(id);
-   var isUC = schemaDef.type == "UC";
-   var isCN = schemaDef.type == "CN";
-   var item = allSensors[key];
+   let schemaDef = getSchemDef(id);
+   let isUC = schemaDef.type == "UC";
+   let isCN = schemaDef.type == "CN";
+   let item = allSensors[key];
 
-   var form =
+   let form =
        '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
        ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
-	   '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
+	    '   <span style="width:120px;">Farbe:</span><span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
        '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span><span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
        ' </div>' +
        ' <div style="display:flex;margin:4px;text-align:left;">' +
@@ -552,13 +554,22 @@ function editSchemaValue(type, address, newUC)
    }
    form += '</div></form>';
 
-   var title = isUC ? "User Constant" : ((item != null && item.title) || "");
-   var title = isCN ? "Connection" : ((item != null && item.title) || "");
+   let title = isUC ? "User Constant" : ((item != null && item.title) || "");
+   title = isCN ? "Connection" : title;
 
-   var buttons = {
+   let buttons = {
       'Ok': function () {
          if (apply("#"+id) == 0)
             $(this).dialog('close');
+      },
+      'Check': function () {
+         try {
+            eval($('#function').val());
+            showInfoDialog({ 'message' : 'function valid', 'status': 0 });
+         }
+         catch (err) {
+            showInfoDialog({ 'message' : "Fehler in JS Funktion: '" + err.message + ", " + $('#function').val() + "'", 'status': -1 });
+         }
       },
       'Abbrechen': function () {
          if (newUC)
@@ -645,7 +656,7 @@ function editSchemaValue(type, address, newUC)
    }
 
    function deleteUC(id) {
-      for (var i = 0; i < lastSchemadata.length; i++) {
+      for (let i = 0; i < lastSchemadata.length; i++) {
          if (lastSchemadata[i].type + ((lastSchemadata[i].address)>>>0).toString(10) == id) {
             lastSchemadata[i].deleted = true;
             $("#" + id).remove();
@@ -671,7 +682,7 @@ function editSchemaValue(type, address, newUC)
       schemaDef.state = $('#showIt').is(":checked") ? "A": "D";
 
       try {
-         var result = eval($('#function').val());
+         eval($('#function').val());
       }
       catch (err) {
          showInfoDialog({'message' : "Fehler in JS Funktion: '" + err.message + ", " + $('#function').val() + "'", 'status': -1});
@@ -679,32 +690,9 @@ function editSchemaValue(type, address, newUC)
       }
 
       schemaDef.fct = $('#function').val();
-
-      setAttributeStyleFrom($('#schemaContainer')[0], schemaDef.properties);
+      setAttributeStyleByProperties($(id)[0], schemaDef.properties);
       updateSchema()
 
       return 0;
    }
-}
-
-function dragSValue(ev, id)
-{
-   ev.dataTransfer.setData("id", id);
-}
-
-function allowDropSValue(ev)
-{
-   ev.preventDefault();
-}
-
-function dropSValue(ev)
-{
-   ev.preventDefault();
-   var id = "#" + ev.dataTransfer.getData("id");
-   var schemaDef = getSchemDef(ev.dataTransfer.getData("id"));
-
-   schemaDef.properties["top"] = (ev.offsetY - oTop)  + 'px';
-   schemaDef.properties["left"] = (ev.offsetX - oLeft)  + 'px';
-   $(id).css({'top'  : (ev.offsetY - oTop)  + 'px'});
-   $(id).css({'left' : (ev.offsetX - oLeft) + 'px'});
 }

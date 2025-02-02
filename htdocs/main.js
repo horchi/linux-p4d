@@ -749,7 +749,7 @@ function menuBurger()
    if (currentPage == 'dashboard' && localStorage.getItem(storagePrefix + 'Rights') & 0x10)
       form += '  <br/><div><button style="width:120px;margin:2px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupDashboard()">' + (setupMode ? ' Stop Setup' : ' Setup Dashboard') + '</button></div>';
 
-   if (currentPage == 'schema' && localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10)
+   if (currentPage == 'schema' && (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10))
       form += '  <br/><div><button style="width:120px;margin:2px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupSchema()">' + (schemaEditActive ? ' Stop Setup' : ' Setup Schema') + '</button></div>';
 
    form += '</div>';
@@ -783,6 +783,7 @@ function mainMenuSel(what, action = null)
    currentPage = what;
    console.log("switch to " + currentPage);
    hideAllContainer();
+   schemaEditActive = false;
 
    if (currentPage != lastPage && (currentPage == "vdr" || lastPage == "vdr")) {
       console.log("closing socket " + socket.protocol);
