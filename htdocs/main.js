@@ -725,17 +725,6 @@ function prepareMenu()
       html += '<div id="confirm" class="confirmDiv"/>';
    }
 
-   if (currentPage == "schema") {
-      if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
-         html += "<div class=\"confirmDiv\">";
-         html += "  <button class=\"rounded-border buttonOptions\" onclick=\"schemaEditModeToggle()\">Anpassen</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaAddItem\" title=\"Konstante (Text) hinzufügen\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaAddItem()\">&#10010;</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"makeResizableDiv\" title=\"Leitung hinzufügen\" style=\"visibility:" + (schemaEditActive ? '':'hidden')  + ";\" onclick=\"makeResizableDiv()\">Leitung hinzufügen</button>";
-         html += "  <button class=\"rounded-border buttonOptions\" id=\"buttonSchemaStore\" style=\"visibility:" + (schemaEditActive ? '':'hidden') + ";\" onclick=\"schemaStore()\">Speichern</button>";
-         html += "</div>";
-      }
-   }
-
    $("#navMenu").html(html);
 
    // let msg = "DEBUG: Browser: '" + $.browser.name + "' : '" + $.browser.versionNumber + "' : '" + $.browser.version + "'";
@@ -759,6 +748,9 @@ function menuBurger()
 
    if (currentPage == 'dashboard' && localStorage.getItem(storagePrefix + 'Rights') & 0x10)
       form += '  <br/><div><button style="width:120px;margin:2px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupDashboard()">' + (setupMode ? ' Stop Setup' : ' Setup Dashboard') + '</button></div>';
+
+   if (currentPage == 'schema' && localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10)
+      form += '  <br/><div><button style="width:120px;margin:2px;color" class="rounded-border button1 mdi mdi-lead-pencil" onclick=" setupSchema()">' + (schemaEditActive ? ' Stop Setup' : ' Setup Schema') + '</button></div>';
 
    form += '</div>';
 

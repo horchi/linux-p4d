@@ -25,11 +25,17 @@ function initSchema(schemaData)
       .append($('<div></div>')
               .attr('id', 'schemaContainer')
               .addClass('rounded-border schemaBox')
+              .on('contextmenu', function(event) {
+                 if (schemaEditActive) {
+                    schemaContextMenu(event);
+                    return false;
+                 }
+              })
               .append($('<img></img>')
                       .attr('src', 'img/schema/schema-' + config.schema + '.png')
                       .attr('draggable', false)
-                      .on('drop', function(event) {dropSValue(event);})
-                      .on('dragover', function(event) {allowDropSValue(event);}))
+                      .on('drop', function(event) { dropSValue(event); })
+                      .on('dragover', function(event) { allowDropSValue(event); }))
              );
 
    for (var i = 0; i < schemaData.length; i++) {
@@ -43,6 +49,73 @@ function initSchema(schemaData)
    window.onresize = function() {
       $("#container").height($(window).height() - getTotalHeightOf('menu') - 8);
    };
+}
+
+function schemaContextMenu(event)
+{
+   var form = $('<div></div>')
+       .attr('id', 'caseMenu')
+       .append($('<div></div>')
+               .addClass('dialog-content')
+               .append($('<div></div>')
+                       .css('display', 'grid')
+                       .css('grid-gap', '4px')
+                       .append($('<button></button>')
+                               .attr('id', 'schemaAddItem')
+                               .addClass('rounded-border button1')
+                               .html('&#10010')
+                               .click(function() { buttonSchemaAddItem(); }))
+                       .append($('<button></button>')
+                               .attr('id', 'makeResizableDiv')
+                               .attr('title', 'add user defines value')
+                               .addClass('rounded-border button1')
+                               .html('Leitung hinzufügen')
+                               .click(function() { makeResizableDiv(); }))
+                       .append($('<button></button>')
+                               .attr('id', 'buttonSchemaStore')
+                               .addClass('rounded-border button1')
+                               .html('Speichern')
+                               .click(function() { schemaStore(); })
+                              )));
+
+   form.dialog({
+      modal: true,
+      position: { my: "left top", at: "center", of: event },
+      width: "250px",
+      dialogClass: "no-titlebar",
+		modal: true,
+      minHeight: "0px",
+      resizable: false,
+		closeOnEscape: true,
+      hide: "fade",
+      open: function() {
+         $("body").click(function() {
+            $("#caseMenu").dialog("close");
+         });
+      },
+      close: function() {
+         $("body").off("click");
+         $(this).dialog('destroy').remove();
+      }
+   });
+
+}
+
+function setupSchema()
+{
+   $("#burgerPopup").dialog("close");
+   $('#buttonSchemaStore').css('visibility', schemaEditActive ? 'visible' : 'hidden');
+   $('#buttonSchemaAddItem').css('visibility', schemaEditActive ? 'visible' : 'hidden');
+   $('#makeResizableDiv').css('visibility', schemaEditActive ? 'visible' : 'hidden');
+
+   schemaEditActive = !schemaEditActive;
+   initSchema(lastSchemadata);
+   updateSchema();
+
+   // if (!schemaEditActive)
+   // ?? document.getElementById('resizers').display == "none"; // hide Resizer
+
+   activateResizer();
 }
 
 function getSchemDef(id)
@@ -90,7 +163,7 @@ function getItem(id)
 
 function initSchemaElement(item, tabindex)
 {
-   var id = item.type + ((item.address)>>>0).toString(10);
+   var id = item.type + (item.address >>> 0).toString(10);
    var div = document.createElement("div");
 
    div.classList.add("schemaDiv");
@@ -144,43 +217,55 @@ function initSchemaElement(item, tabindex)
 
 function updateSchema()
 {
+   if (!lastSchemadata)
+      return;
+
    for (var i = 0; i < lastSchemadata.length; i++) {
       var schemaDef = lastSchemadata[i];
-      var id = schemaDef.type + ((schemaDef.address)>>>0).toString(10);
+      var id = schemaDef.type + (schemaDef.address >>> 0).toString(10);
       var item = getItemById(id);
       var key = toKey(schemaDef.type, schemaDef.address);
       var fact = valueFacts[key];
 
-      if (schemaDef == null)
+      if (!schemaDef)
          continue;
 
-      var theText = "";
+      if (item && $("#"+id).data('last') == item.last)
+         continue;
 
-      if (schemaDef.fct != null && schemaDef.fct != "") {
+      if (!item)
+         console.log("no item for", id, key);
+
+      $("#"+id).data('last', item ? item.last : '');
+      console.log(item);
+
+      var theText = '';
+
+      if (schemaDef.fct != null && schemaDef.fct != '') {
          try {
             theText += eval(schemaDef.fct);
          }
          catch (err) {
             showInfoDialog({'message' : "Fehler in JS Funktion: '" + err.message + ", " + schemaDef.fct + "'", 'status': -1});
-            schemaDef.fct = "";  // delete the buggy function
+            schemaDef.fct = "";  // delete buggy function
          }
          // console.log("result of '" + schemaDef.fct + "' is " + result);
       }
       else if (schemaDef.usrtext != null)
          theText += schemaDef.usrtext;
 
-      var html = "";
+      var html = '';
 
       if (schemaDef.showtitle && item != null && item.title != null)
          html += item.title + ":&nbsp;";
 
       if (schemaDef.kind == 2) {
-         if (theText == "" && item != null)
+         if (theText == '' && item != null)
             theText = item.image;
          else if (item == null)
             console.log("Missing item for " + JSON.stringify(schemaDef, undefined, 4));
 
-         if (theText != "") {
+         if (theText != '') {
             var style = 'width:' + (schemaDef.width ? schemaDef.width : 40) + 'px;';
             if (schemaDef.height)
                style = 'height:' + schemaDef.height + 'px';
@@ -192,11 +277,11 @@ function updateSchema()
          html += theText;
       }
 
-      if ((schemaDef.fct == null || schemaDef.fct == "") && item != null) {
+      if ((schemaDef.fct == null || schemaDef.fct == '') && item != null) {
          if (schemaDef.kind == 0)
             html += item.value;
          else if (schemaDef.kind == 1)
-            html += item.text || "";
+            html += item.text || '';
 
          html += schemaDef.showunit ? fact.unit || "" : "";
       }
@@ -208,31 +293,16 @@ function updateSchema()
       $("#"+id).html(html == "" ? "&nbsp;" : html);
 
       var title = "";
+
       if (schemaDef.type == "UC")
          title = "User Constant";
-      if (schemaDef.type == "CN")
+      else if (schemaDef.type == "CN")
          title = "Leitung";
       else if (item != null)
          title = item.title;
 
       $("#"+id).attr("title", title + " (" + schemaDef.type + ":" + ((schemaDef.address)>>>0).toString(10) + ")");
    }
-}
-
-function schemaEditModeToggle()
-{
-   schemaEditActive = !schemaEditActive;
-   initSchema(lastSchemadata);
-   updateSchema();
-
-   document.getElementById("buttonSchemaStore").style.visibility = schemaEditActive ? 'visible' : 'hidden';
-   document.getElementById("buttonSchemaAddItem").style.visibility = schemaEditActive ? 'visible' : 'hidden';
-   document.getElementById("makeResizableDiv").style.visibility = schemaEditActive ? 'visible' : 'hidden';
-
-   if (!schemaEditActive)
-      document.getElementById('resizers').display == "none"; //hide Resizer
-
-   activateResizer();
 }
 
 function schemaStore()
@@ -242,98 +312,96 @@ function schemaStore()
 
 function activateResizer()
 {
-    $('#schemaContainer').append($('<div></div>')
-                        .addClass('resizable')
-                        .attr('id', 'newLine')
-                        .append($('<div></div>')
-                                .addClass('resizers')
+   $('#schemaContainer').append($('<div></div>')
+                                .addClass('resizable')
+                                .attr('id', 'newLine')
                                 .append($('<div></div>')
-                                        .addClass('resizer top-left'))
-                                .append($('<div></div>')
-                                        .addClass('resizer top-right'))
-                                .append($('<div></div>')
-                                        .addClass('resizer bottom-left'))
-                                .append($('<div></div>')
-                                        .addClass('resizer bottom-right'))
-                               ));
+                                        .addClass('resizers')
+                                        .append($('<div></div>')
+                                                .addClass('resizer top-left'))
+                                        .append($('<div></div>')
+                                                .addClass('resizer top-right'))
+                                        .append($('<div></div>')
+                                                .addClass('resizer bottom-left'))
+                                        .append($('<div></div>')
+                                                .addClass('resizer bottom-right'))
+                                       ));
 
-  const element = document.querySelector('#newLine');
-  const resizers = element.querySelectorAll('.resizer')
-  const minimum_size = 10;
-  let original_width = 0;
-  let original_height = 0;
-  let original_x = 0;
-  let original_y = 0;
-  let original_mouse_x = 0;
-  let original_mouse_y = 0;
-  for (let i = 0;i < resizers.length; i++) {
-    const currentResizer = resizers[i];
-    currentResizer.addEventListener('mousedown', function(e) {
-      e.preventDefault()
-      original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
-      original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
-      original_x = element.getBoundingClientRect().left;
-      original_y = element.getBoundingClientRect().top;
-      original_mouse_x = e.pageX;
-      original_mouse_y = e.pageY;
-      window.addEventListener('mousemove', resize)
-      window.addEventListener('mouseup', stopResize)
-    })
+   const element = document.querySelector('#newLine');
+   const resizers = element.querySelectorAll('.resizer')
+   const minimum_size = 10;
+   let original_width = 0;
+   let original_height = 0;
+   let original_x = 0;
+   let original_y = 0;
+   let original_mouse_x = 0;
+   let original_mouse_y = 0;
+   for (let i = 0;i < resizers.length; i++) {
+      const currentResizer = resizers[i];
+      currentResizer.addEventListener('mousedown', function(e) {
+         e.preventDefault()
+         original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
+         original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
+         original_x = element.getBoundingClientRect().left;
+         original_y = element.getBoundingClientRect().top;
+         original_mouse_x = e.pageX;
+         original_mouse_y = e.pageY;
+         window.addEventListener('mousemove', resize)
+         window.addEventListener('mouseup', stopResize)
+      })
 
-    function resize(e) {
-      if (currentResizer.classList.contains('bottom-right')) {
-        const width = original_width + (e.pageX - original_mouse_x);
-        const height = original_height + (e.pageY - original_mouse_y)
-        if (width > minimum_size) {
-          element.style.width = width + 'px'
-        }
-        if (height > minimum_size) {
-          element.style.height = height + 'px'
-        }
+      function resize(e) {
+         if (currentResizer.classList.contains('bottom-right')) {
+            const width = original_width + (e.pageX - original_mouse_x);
+            const height = original_height + (e.pageY - original_mouse_y)
+            if (width > minimum_size) {
+               element.style.width = width + 'px'
+            }
+            if (height > minimum_size) {
+               element.style.height = height + 'px'
+            }
+         }
+         else if (currentResizer.classList.contains('bottom-left')) {
+            const height = original_height + (e.pageY - original_mouse_y)
+            const width = original_width - (e.pageX - original_mouse_x)
+            if (height > minimum_size) {
+               element.style.height = height + 'px'
+            }
+            if (width > minimum_size) {
+               element.style.width = width + 'px'
+               element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
+            }
+         }
+         else if (currentResizer.classList.contains('top-right')) {
+            const width = original_width + (e.pageX - original_mouse_x)
+            const height = original_height - (e.pageY - original_mouse_y)
+            if (width > minimum_size) {
+               element.style.width = width + 'px'
+            }
+            if (height > minimum_size) {
+               element.style.height = height + 'px'
+               element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
+            }
+         }
+         else if (currentResizer.classList.contains('top-left')){
+            const width = original_width - (e.pageX - original_mouse_x)
+            const height = original_height - (e.pageY - original_mouse_y)
+            if (width > minimum_size) {
+               element.style.width = width + 'px'
+               element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
+            }
+            if (height > minimum_size) {
+               element.style.height = height + 'px'
+               element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
+            }
+         }
       }
-      else if (currentResizer.classList.contains('bottom-left')) {
-        const height = original_height + (e.pageY - original_mouse_y)
-        const width = original_width - (e.pageX - original_mouse_x)
-        if (height > minimum_size) {
-          element.style.height = height + 'px'
-        }
-        if (width > minimum_size) {
-          element.style.width = width + 'px'
-          element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
-        }
-      }
-      else if (currentResizer.classList.contains('top-right')) {
-        const width = original_width + (e.pageX - original_mouse_x)
-        const height = original_height - (e.pageY - original_mouse_y)
-        if (width > minimum_size) {
-          element.style.width = width + 'px'
-        }
-        if (height > minimum_size) {
-          element.style.height = height + 'px'
-          element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
-        }
-      }
-      else if (currentResizer.classList.contains('top-left')){
-        const width = original_width - (e.pageX - original_mouse_x)
-        const height = original_height - (e.pageY - original_mouse_y)
-        if (width > minimum_size) {
-          element.style.width = width + 'px'
-          element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
-        }
-        if (height > minimum_size) {
-          element.style.height = height + 'px'
-          element.style.top = original_y + (e.pageY - original_mouse_y-83.39) + 'px'
-        }
-      }
-    }
 
-    function stopResize() {
-      window.removeEventListener('mousemove', resize)
-    }
-  }
+      function stopResize() {
+         window.removeEventListener('mousemove', resize)
+      }
+   }
 }
-
-// makeResizableDiv('.resizable')
 
 function schemaAddItem()
 {
@@ -385,7 +453,7 @@ function makeResizableDiv(div)
 
    lastSchemadata[lastSchemadata.length] = schemaDef;
    initSchemaElement(schemaDef, lastSchemadata.length);
-   //editSchemaValue(schemaDef.type, schemaDef.address, true);
+   // editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
 
 function setAttributeStyleFrom(element, json)
@@ -442,7 +510,7 @@ function editSchemaValue(type, address, newUC)
       '  <span style="">oben->unten</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(5)" value="5" type="radio" name="kind" ' + (schemaDef.kind == 5 ? "checked" : "") + '/></span>' +
       '  <span style="">unten->oben</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(6)" value="6" type="radio" name="kind" ' + (schemaDef.kind == 6 ? "checked" : "") + '/></span>' +
       ' </div>';
- }
+   }
    else{
    form +=
       ' <div style="display:flex;margin:4px;text-align:left;">' +
@@ -547,39 +615,32 @@ function editSchemaValue(type, address, newUC)
    window.selectKindClick = function(kind) { selectKind(kind); }
 
    function selectKind(kind) {
-      console.log("kind: " + kind);
+      console.log("kind", kind);
       switch (kind) {
         case 0:
            $('#labelUsrText').html(isUC ? "Text:" : "Zusatz Text:");
            $('#labelFunction').html("Funktion:");
-           $('#imgSize').css({'visibility' : "hidden"});
-           $('#imgInfo').css({'visibility' : "hidden"});
+           $('#imgSize').css('visibility', 'hidden');
+           $('#imgInfo').css('visibility', 'hidden');
            break;
         case 1:
            $('#labelUsrText').html(isUC ? "Text:" : "Zusatz Text:");
            $('#labelFunction').html("Funktion:");
-           $('#imgSize').css({'visibility' : "hidden"});
-           $('#imgInfo').css({'visibility' : "hidden"});
+           $('#imgSize').css('visibility', 'hidden');
+           $('#imgInfo').css('visibility', 'hidden');
            break;
         case 2:
            $('#labelUsrText').html("Image URL:");
            $('#labelFunction').html("Funktion Image URL:");
-           $('#imgSize').css({'visibility' : "visible"});
-           $('#imgInfo').css({'visibility' : "visible"});
+           $('#imgSize').css('visibility', 'visible');
+           $('#imgInfo').css('visibility', 'visible');
            break;
         case 3:
-          // $('#labelUsrText').html("Image URL:");
-          // $('#labelFunction').html("Funktion Image URL:");
-          // $('#imgSize').css({'visibility' : "visible"});
-          // $('#imgInfo').css({'visibility' : "visible"});
-           break;
-        case 4:
-           break;
-        case 5:
-           break;
-        case 6:
-           break;
 
+         break;
+        case 4: break;
+        case 5: break;
+        case 6: break;
       }
    }
 
@@ -587,7 +648,7 @@ function editSchemaValue(type, address, newUC)
       for (var i = 0; i < lastSchemadata.length; i++) {
          if (lastSchemadata[i].type + ((lastSchemadata[i].address)>>>0).toString(10) == id) {
             lastSchemadata[i].deleted = true;
-            $("#"+id).remove();
+            $("#" + id).remove();
             return 0;
          }
       }
@@ -614,7 +675,7 @@ function editSchemaValue(type, address, newUC)
       }
       catch (err) {
          showInfoDialog({'message' : "Fehler in JS Funktion: '" + err.message + ", " + $('#function').val() + "'", 'status': -1});
-         return -1;  // fail
+         return -1;
       }
 
       schemaDef.fct = $('#function').val();
@@ -622,7 +683,7 @@ function editSchemaValue(type, address, newUC)
       setAttributeStyleFrom($('#schemaContainer')[0], schemaDef.properties);
       updateSchema()
 
-      return 0;  // success
+      return 0;
    }
 }
 
@@ -644,8 +705,6 @@ function dropSValue(ev)
 
    schemaDef.properties["top"] = (ev.offsetY - oTop)  + 'px';
    schemaDef.properties["left"] = (ev.offsetX - oLeft)  + 'px';
-   //schemaDef.properties['width'] = element.style.width + 'px';
-   //schemaDef.properties['height'] = element.style.height + 'px';
    $(id).css({'top'  : (ev.offsetY - oTop)  + 'px'});
    $(id).css({'left' : (ev.offsetX - oLeft) + 'px'});
 }
