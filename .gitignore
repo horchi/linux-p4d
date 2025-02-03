@@ -11,17 +11,19 @@ core
 Make.user
 
 mqt
-w1mqtt
-womod
-poold
-poolai
 p4d
 p4
-homectld
 
 build-nano-atmega328
 dbchart
 .dependencies
-bmsmqtt
 htdocs/stylesheet.css.save
+
+/bmsmqtt
+/w1mqtt
+/homectld
+/i2cmqtt
+/victronmqtt
+/blescan
+/votromqtt
 victronmqtt

@@ -4351,7 +4351,7 @@ bool Daemon::gpioRead(uint pin, bool check)
    if (sensors["DI"][pin].invert)
       state = !state;
 
-   tell(eloAlways, "GPIO read - pin %d %d / %d", pin, sensors["DI"][pin].state, state);
+   // tell(eloAlways, "Pin %d %d / %d", pin, sensors["DI"][pin].state, state);
 
    if (check && sensors["DI"][pin].state == state)
       return state;

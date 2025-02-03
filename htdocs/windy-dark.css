@@ -1,0 +1,133 @@
+#windywidgetmain {
+    background-color: var(--widgetBackground);
+}
+
+#windywidgetheader,
+#windyWidgetDiv table,
+div[data-windywidget="forecast"] table,
+#windyWidgetDiv tr,
+div[data-windywidget="forecast"] tr
+{
+    background-color: var(--widgetBackground);
+}
+
+#windywidgetdates td {
+    color: #7d7d7d;
+}
+
+.windywidgetdateDay {
+    color: #c0c0c0;
+}
+
+#windywidgetslider {
+    border: 1px solid var(--widgetBackground);
+    margin-bottom: 19px;
+}
+
+#windywidgetslider div {
+    border: 2px solid #fff;
+}
+
+#windywidgettable td {
+    border: 0px solid rgba(0, 0, 0, 0) /* #2e4e60 */;
+}
+
+#windywidgetlegend td {
+    border-right: 1px solid rgba(150, 150, 150, 0.4);
+}
+
+#windywidgetlegend td, #windywidgetlegend td a {
+    color: #bbb;
+}
+
+#windywidgettable td.windywidgetdayEnds {
+    border-right: 1px solid rgba(150, 150, 150, 0.2) !important;
+}
+
+#windywidgettable .windywidgetdays td {
+    color: #fff;
+}
+
+#windywidgettable .windywidgethours td {
+    border-color: #bbb;
+    color: #7d7d7d;
+}
+
+#windywidgettable tr.windywidgetwindDirection {
+    height: 25px;
+}
+
+#windywidgettable .windywidgetwindDirection td, #windywidgetlegend .windywidgetwindDirection td {
+    color: #bbb;
+}
+
+#windywidgettable .windywidgetwindSpeed td,
+#windywidgettable .windywidgetwindGust td,
+#windywidgettable .windywidgetairTemp td,
+#windywidgettable .windywidgetairPres td {
+    border-bottom: 1px solid var(--widgetBackground);
+}
+
+#windywidgetlegend .windywidgetwindSpeed td div,
+#windywidgetlegend .windywidgetwindGust td div {
+    text-align: right;
+}
+
+.windywidgetwindSpeed td {
+    color: #384032;
+}
+
+#windywidgettable .windywidgetwindGust td {
+    color: #384032;
+}
+
+#windywidgettable .windywidgetairTemp td,
+#windywidgettable .windywidgetairPres td {
+    color: #1c2517;
+}
+
+#windywidgettable .windywidgetclouds td {
+    color: #4c5537;
+}
+
+#windywidgettable .windywidgetprecipitation td {
+    color: #99A;
+}
+
+.windywidgetpoweredBy {
+    color: #AAAAAA;
+}
+
+.windywidgetpoweredByLink {
+    color: #83a6f8;
+}
+
+.windywidgetpoweredByLink:hover
+{
+    color: #CCCCCC;
+}
+
+.windywidgetpoweredByLink:visited {
+    color: #83a6f8;
+}
+
+.windywidgettimezone {
+    color: #999999;
+}
+
+.windywidgetheaderText {
+    color: #555555;
+}
+
+.windywidgetfavoriteCount {
+    color: #a9acaf;
+}
+
+#windywidgetnight {
+    background-color: #203747;
+}
+
+#windywidgettable .windywidgetwaves td {
+    background: linear-gradient(#1e5a85,#1e5a85) no-repeat bottom;
+    color: #ccc;
+}

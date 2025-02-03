@@ -1,0 +1,12 @@
+
+# Options
+#     -d <device>     serial device file (defaults to /dev/ttyBms)
+#     -l <eloquence>  set eloquence
+#     -t              log to terminal
+#     -s              show and exit
+#     -i <interval>   interval [s] (default 60)
+#     -u <url>        MQTT url (default tcp://localhost:1883)
+#     -T <topic>      MQTT topic (default homectld2mqtt/bms)
+#     -n              Don't fork in background
+
+BMSMQTT_OPTS="-u tcp://localhost:1883 -d /dev/ttyBms -i 30 -l 1"
