@@ -1344,6 +1344,55 @@ table.tableMultiCol td
 }
 
 /* ----------------------- */
+/* Schema Settings Dialog */
+
+.schemaSettingsForm
+{
+    display: grid;
+    max-width_ 650px;
+    min-width: 750;
+}
+
+.schemaSettingsForm > div
+{
+    display: flex;
+    margin: 4px;
+    text-align: left;
+}
+
+.schemaSettingsForm > div > span:nth-child(2)
+{
+    width: -webkit-fill-available;
+    width: -moz-available;
+}
+
+.schemaSettingsForm > div > span:nth-child(1)
+{
+    min-width: 120px;
+    align-self: center;
+}
+
+.schemaSettingsForm > div > span > input
+{
+    width: auto;
+}
+
+.schemaSettingsForm > div > span > textarea
+{
+    width: inherit;
+    height: 22px;
+    resize: vertical;
+    font-family: monospace;
+}
+
+.schemaSettingsForm > div > span > span > input[type='radio']
+{
+    margin-right: 20px;
+    margin-left:7px;
+    width:auto;
+}
+
+/* ----------------------- */
 /* Settings Dialog */
 
 .settingsDialogContent

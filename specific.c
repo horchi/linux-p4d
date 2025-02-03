@@ -726,6 +726,14 @@ int P4d::sendStateMail()
       {
          const SensorData* sensor = &sensorIt.second;
 
+         if (!sensor->title.length())
+         {
+            tell(eloAlways, "Skip Mail for: '%s:0x%02x' ('%s') '%s' %s %s",
+                 sensor->type.c_str(), sensor->address, typeSensorsIt.first.c_str(),
+                 sensor->name.c_str(), sensor->kind.c_str(), sensor->unit.c_str());
+            continue;
+         }
+
          if (sensor->type == "WEA")
             continue;
 
@@ -779,7 +787,6 @@ int P4d::sendStateMail()
 
    int result = sendMail(stateMailTo, subject.c_str(), html, "text/html");
    free(html);
-   mailBodyHtml = "";
 
    return result;
 }

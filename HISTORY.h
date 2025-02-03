@@ -5,9 +5,9 @@
  *
  */
 
-#define _VERSION     "0.10.6"
+#define _VERSION     "0.10.7"
 
-#define VERSION_DATE "01.02.2025"
+#define VERSION_DATE "02.02.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -18,8 +18,11 @@
 /*
  * ------------------------------------
 
- 2025-02-01:  version 0.10.6
-  - bugfix:   Fixed name clash of DI sensors
+2025-02-02:  version 0.10.7
+  - change:  Finished javascript style redesign of schema page
+
+2025-02-01:  version 0.10.6
+  - bugfix:  Fixed name clash of DI sensors
 
 2025-02-01:  version 0.10.5
   - added:   Duration logging for main loop parts

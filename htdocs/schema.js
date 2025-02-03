@@ -16,7 +16,6 @@ var properties = [ "top", "left", "color", "font-size", "color", "background-col
 function initSchema(schemaData)
 {
    // console.log(JSON.stringify(schemaData, undefined, 4));
-
    lastSchemadata = schemaData;
 
    $('#container').empty()
@@ -177,13 +176,14 @@ function initSchemaElement(item, tabindex)
               .attr('id', id)
               .attr('tabindex', tabindex)
               .addClass('schemaDiv')
-              .css('visibility', schemaEditActive  || item.state == 'A' ? 'visible' : 'hidden')
+              .css('visibility', schemaEditActive || item.state == 'A' ? 'visible' : 'hidden')
               .css('cursor', schemaEditActive ? 'move' : 'default')
+              .css('position', 'absolute')
               .data('type', item.type)
               .data('address', (item.address >>> 0).toString(10))
              );
 
-   setAttributeStyleByProperties($('#' + id)[0], item.properties);
+   setAttributeStyleByProperties('#'+id, item.properties);
 
    if (schemaEditActive) {
       $('#' + id).click(function() { editSchemaValue(item.type, item.address); });
@@ -191,6 +191,7 @@ function initSchemaElement(item, tabindex)
       $('#' + id).on('dragstart', function(event) {
          event.originalEvent.dataTransfer.setData('id', item.type + (item.address >>> 0).toString(10));
       });
+
       $('#' + id).on('mousedown', function(event) {
          oTop = event.offsetY;
          oLeft = event.offsetX;
@@ -239,7 +240,6 @@ function updateSchema()
          console.log("no item for", id, key);
 
       $("#"+id).data('last', item ? item.last : '');
-      // console.log(item);
 
       let theText = '';
 
@@ -301,9 +301,9 @@ function updateSchema()
       else if (schemaDef.type == "CN")
          title = "Leitung";
       else if (item != null)
-         title = item.title;
+         title = item.title || '';
 
-      $("#"+id).attr("title", title + " (" + schemaDef.type + ":" + ((schemaDef.address)>>>0).toString(10) + ")");
+      $("#"+id).attr("title", title + " " + schemaDef.type + ":0x" + ((schemaDef.address)>>>0).toString(16));
    }
 }
 
@@ -458,15 +458,10 @@ function makeResizableDiv(div)
    // editSchemaValue(schemaDef.type, schemaDef.address, true);
 }
 
-function setAttributeStyleByProperties(element, json)
+function setAttributeStyleByProperties(id, json)
 {
-   let styles = "";
-
    for (let key in json)
-      styles += key + ":" + json[key] + ";";
-
-   element.setAttribute("style", styles);
-   element.style.position = "absolute";
+      $(id).css(key, json[key]);
 }
 
 function editSchemaValue(type, address, newUC)
@@ -481,134 +476,249 @@ function editSchemaValue(type, address, newUC)
    let isCN = schemaDef.type == "CN";
    let item = allSensors[key];
 
-/*
    let form = $('<div></div>')
        .attr('id', 'settingsForm')
-       .css('display','grid')
-       .css('min-width','650px')
-       .css('max-width','750px')
+       .addClass('schemaSettingsForm')
+
        .append($('<div></div>')
-               .css('display','flex')
-               .css('margin','4px')
-               .css('text-align','left')
                .append($('<span></span>')
-                       .css('align-self','center')
-                       .css('width','120px')
                        .html('Einblenden'))
                .append($('<span></span>')
                        .append($('<input></input>')
                                .attr('id', 'showIt')
                                .attr('type', 'checkbox')
-                               .css('width','auto')
-                               .attr('checked', schemaDef.state == 'A' ? 'checked' : ''))
+                               .attr('checked', schemaDef.state == 'A'))
                        .append($('<label></label>')
                                .attr('for', 'showIt'))))
 
        .append($('<div></div>')
-               .css('display','flex')
-               .css('margin','4px')
-               .css('text-align','left')
                .append($('<span></span>')
-                       .css('width','120px')
                        .html('Farbe'))
                .append($('<span></span>')
                        .append($('<input></input>')
                                .attr('id', 'colorFg')
                                .attr('type', 'text')
-                               .css('width','auto')
-                               .val(schemaDef.properties["color"] || "white")))
+                               .val(schemaDef.properties["color"] || "white"))))
+       .append($('<div></div>')
                .append($('<span></span>')
-                       .css('align-self','center')
-                       .css('text-align','left')
-                       .css('width','120px')
                        .html('Hintergrund'))
                .append($('<span></span>')
                        .append($('<input></input>')
                                .attr('id', 'colorBg')
                                .attr('type', 'text')
-                               .css('width','auto')
-                               .val(schemaDef.properties["background-color"] || "transparent")))
-*/
+                               .val(schemaDef.properties["background-color"] || "transparent"))))
+
+       .append($('<div></div>')
+               .append($('<span></span>')
+                       .html('Rahmen'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'showBorder')
+                               .attr('type', 'checkbox')
+                               .val(schemaDef.properties['border'] != 'none')
+                               .append($('<label></label>')
+                                       .attr('for', 'showBorder')))))
+
+       .append($('<div></div>')
+               .append($('<span></span>')
+                       .html('Radius'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'borderRadius')
+                               .attr('type', 'text')
+                               .val(schemaDef.properties["border-radius"] || "3px"))));
 
 
-
-
-
-   let form =
-       '<form><div id="settingsForm" style="display:grid;min-width:650px;max-width:750px;">' +
-       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einblenden:</span><span><input id="showIt" style="width:auto;" type="checkbox"' + (schemaDef.state == "A" ? "checked" : "") + '/><label for="showIt"></label></span></div>' +
-       ' <div style="display:flex;margin:4px;text-align:left;">' +
-	    '   <span style="width:120px;">Farbe:</span> <span><input id="colorFg" type="text" value="' + (schemaDef.properties["color"] || "white") + '"/></span>' +
-       '   <span style="align-self:center;width:120px;text-align:right;">Hintergrund: </span> <span><input id="colorBg" type="text" value="' + (schemaDef.properties["background-color"] || "transparent") + '"/></span>' +
-       ' </div>' +
-
-
-
-       ' <div style="display:flex;margin:4px;text-align:left;">' +
-       '   <span style="align-self:center;width:120px;">Rahmen:</span><span><input id="showBorder" style="width:auto;" type="checkbox"' + (schemaDef.properties["border"] != "none" ? "checked" : "") + '/><label for="showBorder"></label></span></span>' +
-       '   <span style="align-self:center;width:120px;text-align:right;">Radius: </span><span><input id="borderRadius" style="width:60px;" type="text" value="' + (schemaDef.properties["border-radius"] || "3px") + '"/></span>' +
-       ' </div>';
-   if (!isCN){
-      form +=
-       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Schriftgröße:</span><span><input id="fontSize" style="width:inherit;" type="text" value="' + (schemaDef.properties["font-size"] || "16px") + '"/></span></div>' ;
+   if (!isCN) {
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .html('Schriftgröße'))
+                  .append($('<span></span>')
+                          .append($('<input></input>')
+                                  .attr('id', 'fontSize')
+                                  .attr('type', 'text')
+                                  .val(schemaDef.properties["font-size"] || "16px"))));
    }
-      form +=
-       ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Layer:</span><span><input id="zIndex" style="width:inherit;" type="number" step="1" value="' + (schemaDef.properties["z-index"] || "100") + '"/></span></div>';
+
+   form.append($('<div></div>')
+               .append($('<span></span>')
+                       .html('Layer'))
+               .append($('<span></span>')
+                       .append($('<input></input>')
+                               .attr('id', 'zIndex')
+                               .attr('type', 'number')
+                               .attr('step', 1)
+                               .val(schemaDef.properties["z-index"] || "100"))));
+
    if (!isUC && !isCN) {
-      form +=
-         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Bezeichnung:</span><span><input id="showTitle" style="width:auto;" type="checkbox"' + (schemaDef.showtitle ? "checked" : "") + '/></span><label for="showTitle"></label></span></div>' +
-         ' <div style="display:flex;margin:4px;text-align:left;"><span style="align-self:center;width:120px;">Einheit:</span><span><input id="showUnit" style="width:auto;" type="checkbox"' + (schemaDef.showunit ? "checked" : "") + '/><label for="showUnit"></label></span></span></div>';
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .html('Bezeichnung'))
+                  .append($('<span></span>')
+                          .append($('<input></input>')
+                                  .attr('id', 'showTitle')
+                                  .attr('type', 'checkbox')
+                                  .attr('checked', schemaDef.showtitle))
+                          .append($('<label></label>')
+                                  .attr('for', 'showIt'))))
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .html('Einheit'))
+                  .append($('<span></span>')
+                          .append($('<input></input>')
+                                  .attr('id', 'showUnit')
+                                  .attr('type', 'checkbox')
+                                  .attr('checked', schemaDef.showunit))
+                          .append($('<label></label>')
+                                  .attr('for', 'showIt'))));
    }
-   if (isCN){
-   form +=
-      ' <div style="display:flex;margin:4px;text-align:left;">' +
-      '  <span style="width:120px;">Type:</span>' +
-      '  <span style="">links->rechts</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(3)" value="3" type="radio" name="kind" ' + (schemaDef.kind == 3 ? "checked" : "") + '/></span>' +
-      '  <span style="">rechts->links</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(4)" value="4" type="radio" name="kind" ' + (schemaDef.kind == 4 ? "checked" : "") + '/></span>' +
-      '  <span style="">oben->unten</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(5)" value="5" type="radio" name="kind" ' + (schemaDef.kind == 5 ? "checked" : "") + '/></span>' +
-      '  <span style="">unten->oben</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(6)" value="6" type="radio" name="kind" ' + (schemaDef.kind == 6 ? "checked" : "") + '/></span>' +
-      ' </div>';
+
+   if (isCN) {
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .html('Type'))
+                  .append($('<span></span>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .html('links->rechts'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 3)
+                                          .val(3)
+                                          .click(function() { selectKind(3); })))
+
+                          .append($('<span></span>')
+                                  .html('Type'))
+                          .append($('<span></span>')
+                                  .html('rechts->links'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 4)
+                                          .val(4)
+                                          .click(function() { selectKind(4); })))
+
+                          .append($('<span></span>')
+                                  .html('Type'))
+                          .append($('<span></span>')
+                                  .html('oben-unten'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 5)
+                                          .val(5)
+                                          .click(function() { selectKind(5); })))
+
+                          .append($('<span></span>')
+                                  .html('Type'))
+                          .append($('<span></span>')
+                                  .html('unten->oben'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 6)
+                                          .val(6)
+                                          .click(function() { selectKind(6); }))))
+                 );
    }
-   else{
-   form +=
-      ' <div style="display:flex;margin:4px;text-align:left;">' +
-      '  <span style="width:120px;">Type:</span>' +
-      '  <span style="">Wert:</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(0)" value="0" type="radio" name="kind" ' + (schemaDef.kind == 0 ? "checked" : "") + '/></span>' +
-      '  <span style="">Text:</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(1)" value="1" type="radio" name="kind" ' + (schemaDef.kind == 1 ? "checked" : "") + '/></span>' +
-      '  <span style="">Bild:</span> <span><input style="margin-right:20px;margin-left:7px;width:auto;" onclick="selectKindClick(2)" value="2" type="radio" name="kind" ' + (schemaDef.kind == 2 ? "checked" : "") + '/></span>' +
-      ' </div>';
-      }
-   if (!isCN){
-      form +=
-         ' <div id="imgSize" style="display:flex;margin:4px;text-align:left;">' +
-         '  <span style="align-self:center;width:120px;">Bild Breite:</span><span><input id="imgWidth" style="width:60px;" type="number" value="' + schemaDef.width + '"/></span>' +
-         '  <span style="align-self:center;width:120px;text-align:right;">Bild Höhe: </span><span><input id="imgHeight" style="width:60px;" type="number" value="' + schemaDef.height + '"/></span>' +
-         ' </div>';
+   else {
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .html('Type'))
+                  .append($('<span></span>')
+                          .css('display', 'flex')
+                          .append($('<span></span>')
+                                  .html('Wert'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 0)
+                                          .val(0)
+                                          .click(function() { selectKind(0); })))
+                          .append($('<span></span>')
+                                  .html('Type'))
+                          .append($('<span></span>')
+                                  .html('Text'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 1)
+                                          .val(1)
+                                          .click(function() { selectKind(1); })))
+                          .append($('<span></span>')
+                                  .html('Bild'))
+                          .append($('<span></span>')
+                                  .html('Wert'))
+                          .append($('<span></span>')
+                                  .append($('<input></input>')
+                                          .attr('type', 'radio')
+                                          .attr('name', 'kind')
+                                          .attr('checked', schemaDef.kind == 2)
+                                          .val(2)
+                                          .click(function() { selectKind(2); }))))
+                 );
+   }
 
-      form += ' <div id="imgInfo" style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">Um das vom p4d gelieferte Bild zu verwenden (' + (item != null ? item.image : "") + ') Funktion und URL leer lassen!</span></div>';
+   if (!isCN) {
+      form.append($('<div></div>')
+                  .attr('id', 'imgSize')
+                  .append($('<span></span>')
+                          .html('Bild Breite'))
+                  .append($('<span></span>')
+                          .append($('<input></input>')
+                                  .attr('id', 'imgWidth')
+                                  .attr('type', 'number')
+                                  .val(schemaDef.width))))
+         .append($('<div></div>')
+                 .append($('<span></span>')
+                         .html('Bild Höhe'))
+                 .append($('<span></span>')
+                         .append($('<input></input>')
+                                 .attr('id', 'imgHeight')
+                                 .attr('type', 'number')
+                                 .val(schemaDef.height))))
 
-      form += ' <div style="display:flex;margin:4px;text-align:left;">' +
-         '  <span id="labelUsrText" style="width:120px;">xxx:</span>' +
-         '  <span style="width:-webkit-fill-available;width:-moz-available;">' +
-         '    <textarea id="usrText" style="width:inherit;height:22px;resize:vertical;">' + (schemaDef.usrtext || "") + '    </textarea>' +
-         '  </span>' +
-         '</div>';
+         .append($('<div></div>')
+                 .attr('id', 'imgInfo')
+                 .append($('<span></span>')
+                         .css('font-size', 'smaller')
+                         .css('width', 'auto')
+                         .html('Um das vom p4d gelieferte Bild zu verwenden (' + (item ? item.image : '') + ') Funktion und URL leer lassen!')))
 
-      form += ' <div style="display:flex;margin:4px;text-align:left;">' +
-         '  <span id="labelFunction" style="width:120px;">Funktion:</span>' +
-         '  <span style="width:-webkit-fill-available;width:-moz-available;">' +
-         '    <textarea id="function" style="width:inherit;height:120px;resize:vertical;font-family:monospace;">' + (schemaDef.fct != null ? schemaDef.fct : "") + '</textarea>' +
-         '  </span>' +
-         '</div>';
+         .append($('<div></div>')
+                 .append($('<span></span>')
+                         .attr('id', 'labelFunction'))
+                 .append($('<span></span>')
+                         .append($('<textarea></textarea>')
+                                 .attr('id', 'usrText')
+                                 .html(schemaDef.usrtext || ''))))
+
+         .append($('<div></div>')
+                 .append($('<span></span>')
+                         .attr('id', 'labelUsrText'))
+                 .append($('<span></span>')
+                         .append($('<textarea></textarea>')
+                                 .attr('id', 'function')
+                                 .css('height', '120px')
+                                 .html(schemaDef.fct || ''))));
    }
    if (!isCN)
    {
-   if (!isUC)
-      form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Auf die Daten des Elements kann über item.value, item.unit und item.text zugegriffen werden. Andere Elemente erhält man mit getItem(id)</span></div>';
-   else
-      form += ' <div style="display:flex;margin:4px;text-align:left;"></span><span style="font-size: smaller;">JavaScript Funktion zum berechnen des angezeigten Wertes. Elemente erhält man mit getItem(id)</span></div>';
+      form.append($('<div></div>')
+                  .append($('<span></span>')
+                          .css('font-size', 'smaller')
+                          .css('width', 'auto')
+                          .html('JavaScript Funktion zum berechnen des angezeigten Wertes. Auf die Daten des Elements kann über item.value, item.unit und item.text zugegriffen werden. Andere Elemente erhält man mit getItem(id)')));
+
+      // JavaScript Funktion zum berechnen des angezeigten Wertes. Elemente erhält man mit getItem(id)
    }
-   form += '</div></form>';
 
    let title = isUC ? "User Constant" : ((item != null && item.title) || "");
    title = isCN ? "Connection" : title;
@@ -643,15 +753,15 @@ function editSchemaValue(type, address, newUC)
 
    $(form).dialog({
       modal: true,
-      title: title + " (" + schemaDef.type + ":0x" + ((schemaDef.address)>>>0).toString(16) + ")",
-      width: "auto",
+      title: title + " " + schemaDef.type + ":0x" + ((schemaDef.address)>>>0).toString(16),
+      width: "50%",
       buttons: buttons,
       open: function() {
          $('#colorFg').spectrum({
             type : "color",
             showPalette: true,
             showSelectionPalette: true,
-            palette: [ ],
+            palette: [],
             localStorageKey: "homectrl",
             togglePaletteOnly: false,
             appendTo: '#settingsForm',
@@ -664,7 +774,7 @@ function editSchemaValue(type, address, newUC)
             type : "color",
             showPalette: true,
             showSelectionPalette: true,
-            palette: [ ],
+            palette: [],
             localStorageKey: "homectrl",
             togglePaletteOnly: false,
             appendTo: '#settingsForm',
@@ -679,35 +789,27 @@ function editSchemaValue(type, address, newUC)
       close: function() { $(this).dialog('destroy').remove(); }
    });
 
-   window.selectKindClick = function(kind) { selectKind(kind); }
-
    function selectKind(kind) {
       console.log("kind", kind);
       switch (kind) {
         case 0:
            $('#labelUsrText').html(isUC ? "Text:" : "Zusatz Text:");
            $('#labelFunction').html("Funktion:");
-           $('#imgSize').css('visibility', 'hidden');
-           $('#imgInfo').css('visibility', 'hidden');
+           $('#imgSize').css('display', 'none');
+           $('#imgInfo').css('display', 'none');
            break;
         case 1:
            $('#labelUsrText').html(isUC ? "Text:" : "Zusatz Text:");
            $('#labelFunction').html("Funktion:");
-           $('#imgSize').css('visibility', 'hidden');
-           $('#imgInfo').css('visibility', 'hidden');
+           $('#imgSize').css('display', 'none');
+           $('#imgInfo').css('diese', 'none');
            break;
         case 2:
            $('#labelUsrText').html("Image URL:");
            $('#labelFunction').html("Funktion Image URL:");
-           $('#imgSize').css('visibility', 'visible');
-           $('#imgInfo').css('visibility', 'visible');
+           $('#imgSize').css('display', 'flex');
+           $('#imgInfo').css('display', 'flex');
            break;
-        case 3:
-
-         break;
-        case 4: break;
-        case 5: break;
-        case 6: break;
       }
    }
 
@@ -746,7 +848,7 @@ function editSchemaValue(type, address, newUC)
       }
 
       schemaDef.fct = $('#function').val();
-      setAttributeStyleByProperties($(id)[0], schemaDef.properties);
+      setAttributeStyleByProperties(id, schemaDef.properties);
       updateSchema()
 
       return 0;
