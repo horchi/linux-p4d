@@ -458,7 +458,7 @@ function dispatchMessage(message)
          initList();
    }
    else if (event == "update" || event == "all") {
-      console.log("update " + JSON.stringify(jMessage.object, undefined, 4));
+      // console.log("update " + JSON.stringify(jMessage.object, undefined, 4));
       if (event == "all") {
          allSensors = jMessage.object;
       }
