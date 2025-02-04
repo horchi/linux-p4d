@@ -439,7 +439,10 @@ int P4d::updateSensors()
             double theValue = stateDurations[sensor->address] / 60;
 
             if (sensors[sensor->type][sensor->address].value != theValue)
+            {
                sensors[sensor->type][sensor->address].value = theValue;
+               sensors[sensor->type][sensor->address].changedAt = now;
+            }
 
             sensors[sensor->type][sensor->address].valid = true;
             sensors[sensor->type][sensor->address].last = now;
@@ -482,7 +485,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
+            {
                sensors[sensor->type][sensor->address].state = v.state;
+               sensors[sensor->type][sensor->address].changedAt = now;
+            }
 
             sensors[sensor->type][sensor->address].valid = true;
             sensors[sensor->type][sensor->address].last = now;
@@ -501,6 +507,7 @@ int P4d::updateSensors()
             {
                sensors[sensor->type][sensor->address].kind = "status";
                sensors[sensor->type][sensor->address].state = v.state;
+               sensors[sensor->type][sensor->address].changedAt = now;
             }
 
             sensors[sensor->type][sensor->address].valid = true;
@@ -517,8 +524,10 @@ int P4d::updateSensors()
             }
 
             if (sensors[sensor->type][sensor->address].state != (bool)v.state)
+            {
                sensors[sensor->type][sensor->address].value = v.state;
-
+               sensors[sensor->type][sensor->address].changedAt = now;
+            }
             sensors[sensor->type][sensor->address].valid = true;
             sensors[sensor->type][sensor->address].last = now;
          }
@@ -540,6 +549,7 @@ int P4d::updateSensors()
             {
                sensors[sensor->type][sensor->address].kind = "value";
                sensors[sensor->type][sensor->address].value = theValue;
+               sensors[sensor->type][sensor->address].changedAt = now;
             }
 
             sensors[sensor->type][sensor->address].valid = true;

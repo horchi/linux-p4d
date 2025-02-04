@@ -2637,6 +2637,7 @@ int Daemon::sensor2Json(json_t* obj, const char* type, uint address)
    json_object_set_new(obj, "type", json_string(type));
    json_object_set_new(obj, "working", json_boolean(sensors[type][address].working));
    json_object_set_new(obj, "last", json_integer(sensors[type][address].last));
+   json_object_set_new(obj, "changedAt", json_integer(sensors[type][address].changedAt));
 
    // optional peak
 

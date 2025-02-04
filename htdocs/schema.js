@@ -233,13 +233,13 @@ function updateSchema()
       if (!schemaDef)
          continue;
 
-      if (item && $("#"+id).data('last') == item.last)
+      if (item && $("#"+id).data('changedAt') == item.changedAt)
          continue;
 
       if (!item)
          console.log("no item for", id, key);
 
-      $("#"+id).data('last', item ? item.last : '');
+      $("#"+id).data('changedAt', item ? item.changedAt : '');
 
       let theText = '';
 
