@@ -95,7 +95,8 @@ button:focus {
     margin-left: 8px;
 }
 
-.burgerMenu > div {
+.burgerMenu > div
+{
     height: 2px;
     margin: 4px;
     background-color: white;
@@ -109,7 +110,8 @@ button:focus {
     margin-left: 8px;
 }
 
-.burgerMenuInline > div {
+.burgerMenuInline > div
+{
     height: 1px;
     margin: 4px;
     background-color: white;
@@ -1285,8 +1287,8 @@ table.tableMultiCol td
     background: linear-gradient(to bottom right, #00000096, black);
     padding: var(--containerPadding);
     display: table;
-    width: 92%;
-    margin: 3%;
+    /*width: 92%;*/
+    margin: 2%;
 }
 
 .inputTableConfig > div

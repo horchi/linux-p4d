@@ -12,6 +12,16 @@ function initGroupSetup(groups)
 {
    // console.log(JSON.stringify(groups, undefined, 4));
 
+   if (!$('#confirmDiv').length)
+      $("#navMenu")
+      .append($('<div></div>')
+              .attr('id', 'confirmDiv')
+              .addClass('confirmDiv')
+              .append($('<button></button>')
+                      .addClass('rounded-border buttonOptions')
+                      .html('Speichern')
+                      .click(function() { storeGroups(); })))
+
    $('#container').removeClass('hidden');
    document.getElementById("container").innerHTML =
       '<div class="rounded-border seperatorFold">Baugruppen</div>' +
