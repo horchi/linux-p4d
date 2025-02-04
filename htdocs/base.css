@@ -12,6 +12,11 @@ button:focus {
   overflow-y: auto;
 }
 
+.content
+{
+    display: flex;
+}
+
 .slider
 {
     display: none;
