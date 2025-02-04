@@ -14,8 +14,9 @@ function initAlerts(alerts)
    var root = document.getElementById("container");
    root.innerHTML = '<div class="rounded-border seperatorFold">Sensor Alerts</div>';
 
-   if (!$('#confirmDiv').length)
-      $("#navMenu")
+   prepareSetupMenu();
+
+   $("#navMenu")
       .append($('<div></div>')
               .attr('id', 'confirmDiv')
               .addClass('confirmDiv')

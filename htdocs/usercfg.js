@@ -23,6 +23,8 @@ function initUserConfig(users)
 {
    $('#container').removeClass('hidden');
 
+   prepareSetupMenu();
+
    document.getElementById("container").innerHTML =
       '<div id="userContainer" class="rounded-border inputTableConfig">' +
       '<table class="tableMultiCol">' +

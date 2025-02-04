@@ -47,7 +47,7 @@ button:focus {
 
 .navMenu
 {
-    padding: var(--containerPadding);
+    /*padding: var(--containerPadding);*/
 }
 
 .menu
@@ -228,6 +228,32 @@ button:focus {
 .button-group-spacing
 {
     height: 16px;
+}
+
+.tabButton
+{
+    cursor: pointer;
+    background-color: var(--menu);
+    color: var(--buttonFont);
+    fill: var(--buttonFont);
+    opacity: 0.6;
+    margin-top: 6px;
+    display: inline-block;
+    padding: 6px 12px;
+    margin-top: 5px;
+    text-decoration: none;
+    transition: 0.5s;
+}
+
+.tabButton:hover
+{
+    opacity: 0.8;
+}
+
+.tabButton.active
+{
+    opacity: 1.0;
+    font-weight: bold;
 }
 
 .button1
@@ -696,10 +722,9 @@ span > select
     height: 24px;
 }
 
-.content
-{
+/*.content {
     display: flex;
-}
+}*/
 
 .controlContainer
 {

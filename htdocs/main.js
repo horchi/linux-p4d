@@ -646,14 +646,15 @@ function addSetupMenuButton(title, page, action = null)
 
 }
 
-function addMainMenuButton(title, page, condition = true)
+function addMainMenuButton(title, page, condition = true, sclass = '')
 {
    if (!condition)
       return;
 
    $("#mainMenu")
       .append($('<button></button>')
-              .addClass('rounded-border button1')
+              .attr('id', 'mainmenu_' + page)
+              .addClass('rounded-border tabButton ' + sclass)
               .html(title)
               .click(function() { mainMenuSel(page); }));
 }
@@ -674,7 +675,7 @@ function prepareMenu()
       .append($('<div></div>')
               .attr('id', 'mainMenu'));
 
-   addMainMenuButton('Dash', 'dashboard');
+   addMainMenuButton('Dash', 'dashboard', true, 'active');
    addMainMenuButton('List', 'list', config.showList == '1');
    addMainMenuButton('Charts', 'chart');
    addMainMenuButton('Schema', 'schema', config.schema);
@@ -705,8 +706,14 @@ function prepareMenu()
                       .css('width', '22px')
                       .html('<svg><use xlink:href="#angle-down"></use></svg>')
                       .click(function() { toggleInfoDialog(); } )));
+}
 
+function prepareSetupMenu()
+{
    // sub menu for setup
+
+   $('#confirmDiv').remove();
+   $('#setupMenu').remove();
 
    if (['setup', 'iosetup', 'userdetails', 'groups', 'alerts', 'syslog', 'system', 'images', 'commands'].includes(currentPage)) {
       if (localStorage.getItem(storagePrefix + 'Rights') & 0x08 || localStorage.getItem(storagePrefix + 'Rights') & 0x10) {
@@ -783,6 +790,15 @@ function mainMenuSel(what, action = null)
    hideAllContainer();
    schemaEditActive = false;
 
+   prepareSetupMenu();
+
+   let children = document.getElementById('mainMenu').children;
+
+   for (let i = 0; i < children.length; i++)
+      children[i].className = children[i].className.replace(" active", "");
+
+   $('#mainmenu_' + what).addClass('active');
+
    if (currentPage != lastPage && (currentPage == "vdr" || lastPage == "vdr")) {
       console.log("closing socket " + socket.protocol);
       socket.close();
@@ -799,8 +815,6 @@ function mainMenuSel(what, action = null)
 
       connectWebSocket(url, protocol);
    }
-
-   prepareMenu();
 
    if (currentPage != "vdr")
       socket.send({ "event" : "pagechange", "object" : { "page"  : currentPage }});
@@ -915,6 +929,8 @@ function showSyslog(log)
    $('#controlContainer').removeClass('hidden');
    $('#container').removeClass('hidden');
 
+   prepareSetupMenu();
+
    $("#controlContainer")
       .empty()
       .append($('<div></div>')
@@ -990,6 +1006,8 @@ function showDatabaseStatistic(statistic)
    $('#container').removeClass('hidden');
    $('#container').html('<div id="systemContainer"></div>');
 
+   prepareSetupMenu();
+
    let html = '<div>';
 
    html += '  <div class="rounded-border seperatorFold">Tabellen</div>';
@@ -1030,6 +1048,8 @@ function showWifiList()
 
    $('#container').removeClass('hidden');
    $('#container').html('<div id="systemContainer"></div>');
+
+   prepareSetupMenu();
 
    let html = '<div>';
 
@@ -1122,6 +1142,8 @@ function showSystemServicesList()
 
    $('#container').removeClass('hidden');
    $('#container').html('<div id="systemContainer"></div>');
+
+   prepareSetupMenu();
 
    // systemServices.sort(function(a, b) {
    //    return b.unitFileState.localeCompare(a.unitFileState);

@@ -13,6 +13,8 @@ function initCommands()
    $('#container').removeClass('hidden');
    $('#container').html('');
 
+   prepareSetupMenu();
+
    $('#container').append($('<div></div>')
                           .attr('id', 'inputTableConfig')
                           .addClass('rounded-border inputTableConfig'));

@@ -12,8 +12,9 @@ function initGroupSetup(groups)
 {
    // console.log(JSON.stringify(groups, undefined, 4));
 
-   if (!$('#confirmDiv').length)
-      $("#navMenu")
+   prepareSetupMenu();
+
+   $("#navMenu")
       .append($('<div></div>')
               .attr('id', 'confirmDiv')
               .addClass('confirmDiv')

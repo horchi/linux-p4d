@@ -22,6 +22,8 @@ function initConfig(configdetails)
    $('#container').removeClass('hidden');
    $('#container').empty();
 
+   prepareSetupMenu();
+
    dlgTabs = ($('<div></div>')
               .addClass('tabButtons')
               .attr('id', 'setupTabs'));

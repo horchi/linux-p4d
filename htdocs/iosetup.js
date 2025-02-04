@@ -24,8 +24,10 @@ function initIoSetup()
    $('#controlContainer').removeClass('hidden');
    $('#container').removeClass('hidden');
 
+   prepareSetupMenu();
+
    if (activeSection == '')
-   activeSection = 'io' + valueTypes[0].title.replace(' ', '');
+      activeSection = 'io' + valueTypes[0].title.replace(' ', '');
 
    $("#controlContainer")
       .empty()
