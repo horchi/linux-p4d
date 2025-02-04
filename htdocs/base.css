@@ -836,7 +836,7 @@ div.redCircle
 
 div.greenCircle
 {
-    width: 20px;
+    width: 15px;
     height: 15px;
     border-radius: 8px;
     margin-left: 4px;
@@ -1241,8 +1241,8 @@ table.tableMultiCol td
     display: inline-flex;
     width: inherit;
     background-color: var(--menu);
-    margin-left: 3px;
-    margin-right: 3px;
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
 .setupTabs > span:nth-child(1)
