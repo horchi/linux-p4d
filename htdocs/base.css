@@ -1236,7 +1236,7 @@ table.tableMultiCol td
 /* ----------------------- */
 /* config page */
 
-.tabButtons
+.setupTabs
 {
     display: inline-flex;
     width: inherit;
@@ -1245,40 +1245,41 @@ table.tableMultiCol td
     margin-right: 3px;
 }
 
-.tabButtons > span:nth-child(1)
+.setupTabs > span:nth-child(1)
 {
     align-content: center;
     margin-left: 10px;
 }
 
-.tabButtons > span:nth-child(2)
+.setupTabs > span:nth-child(2)
 {
     display: flex;
     align-content: center;
     margin-right: 10px;
 }
 
-.tabButtons > span:nth-child(2) > button
+.setupTabs > span:nth-child(2) > button
 {
     cursor: pointer;
     background-color: transparent;
+    font-size: 0.9em;
     color: var(--fontColor);
     fill: var(--fontColor);
     opacity: 0.6;
     display: inline-block;
     padding: 4px 12px;
-    /* margin-top: 5px; */
+    margin-top: 5px;
     text-decoration: none;
     transition: 0.5s;
     border: none;
 }
 
-.tabButtons > span:nth-child(2) > button:hover
+.setupTabs > span:nth-child(2) > button:hover
 {
     opacity: 0.9;
 }
 
-.tabButtons > span:nth-child(2) > button.active
+.setupTabs > span:nth-child(2) > button.active
 {
     opacity: 1.0;
     font-weight: bold;

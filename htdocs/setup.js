@@ -25,7 +25,7 @@ function initConfig(configdetails)
    prepareSetupMenu();
 
    dlgTabs = ($('<div></div>')
-              .addClass('tabButtons')
+              .addClass('setupTabs')
               .attr('id', 'setupTabs'));
 
    $('#container').append(dlgTabs);
