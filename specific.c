@@ -453,6 +453,7 @@ int P4d::updateSensors()
 
             sensors[sensor->type][sensor->address].valid = true;
             sensors[sensor->type][sensor->address].last = now;
+            sensors[sensor->type][sensor->address].changedAt = now;
 
             if (sensor->address == udState)
             {
