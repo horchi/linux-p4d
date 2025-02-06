@@ -15,9 +15,10 @@ var setupCategory = '';
 // Base Setup
 // ----------------------------------------------------------------
 
-function initConfig(configdetails)
+function initConfig(configdetails = null)
 {
-   theConfigdetails = configdetails;
+   if (configdetails)
+      theConfigdetails = configdetails;
 
    $('#container').removeClass('hidden');
    $('#container').empty();
@@ -47,8 +48,8 @@ function initConfig(configdetails)
 
    let lastCat = '';
 
-   for (var i = 0; i < configdetails.length; i++) {
-      let item = configdetails[i];
+   for (var i = 0; i < theConfigdetails.length; i++) {
+      let item = theConfigdetails[i];
       let choiceSel = null;
 
       if (lastCat != item.category) {
@@ -230,7 +231,7 @@ function initConfig(configdetails)
    }
 
    $('input[id^="mselect_"]').each(function () {
-      var item = configdetails[$(this).data('index')];
+      var item = theConfigdetails[$(this).data('index')];
       $(this).autocomplete({
          source: item.options,
          multiselect: true});
@@ -313,7 +314,7 @@ function storeConfig()
          if (bits[i].checked)
             value += o + ','
       }
-      console.log("store bitmak: " + value);
+      // console.log("store bitmak: " + value);
       jsonObj[name] = value;
    }
 

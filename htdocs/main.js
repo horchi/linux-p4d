@@ -492,6 +492,8 @@ function dispatchMessage(message)
       }
       changeFavicon(config.instanceIcon);
       prepareMenu();
+      if (currentPage == 'setup')
+         initConfig();
    }
    else if (event == "configdetails" && currentPage == 'setup') {
       initConfig(jMessage.object)
@@ -663,7 +665,7 @@ function prepareMenu()
    }
 
    document.title = config.instanceName;
-   console.log("------ prepareMenu: " + currentPage);
+   console.log("---- prepareMenu: " + currentPage);
 
    $("#navMenu").empty()
       .append($('<div></div>')

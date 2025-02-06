@@ -63,7 +63,7 @@ function initList()
 
    // daemon state
 
-   var rootStateP4 = document.getElementById("stateContainerDaemon");
+   let rootState = document.getElementById("stateContainerDaemon");
 
    if (daemonState.state != null && daemonState.state == 0)
    {
@@ -78,7 +78,7 @@ function initList()
       html = '<div id="aStateFail">ACHTUNG:<br/>' + config.instanceName + ' OFFLINE</div>\n';
    }
 
-   rootStateP4.innerHTML = html;
+   rootState.innerHTML = html;
 
    // build page content
 

@@ -35,7 +35,6 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "interval",                  ctInteger, "60",           false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
    { "webPort",                   ctInteger, "1111",         false, "Daemon", "Port des Web Interfaces", "" },
-   { "eloquence",                 ctBitSelect, "1",          false, "Daemon", "Log Eloquence", "" },
 
    { "aggregateHistory",          ctInteger, "365",          false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
    { "aggregateInterval",         ctInteger, "15",           false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
@@ -52,6 +51,8 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    { "openWeatherApiKey",         ctString,  "",             false, "Daemon", "Openweathermap API Key", "" },
    { "toggleWeatherView",         ctBool,    "1",            false, "Daemon", "Toggle Weather Widget", "" },
+
+   { "eloquence",                 ctBitSelect, "1",          false, "Daemon", "Log Eloquence", "" },
 
    // web
 
