@@ -45,8 +45,8 @@ function initDashboard(update = false)
       $('#dashboardMenu').empty();
    }
 
-   if (!Object.keys(dashboards).length)
-      setupMode = true;
+   // if (!Object.keys(dashboards).length)
+   //    setupMode = true;
 
    if (setupMode) {
       $('#dashboardMenu').append($('<button></button>')

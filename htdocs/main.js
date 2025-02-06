@@ -1,7 +1,7 @@
 /*
  *  main.js
  *
- *  (c) 2020-2021 Jörg Wendel
+ *  (c) 2020-2025 Jörg Wendel
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -57,13 +57,7 @@ var kioskMode = null;    // 0 - with menu,    normal dash symbols, normal-widget
 							    // 3 - with menu,    big dash symbols,    normal-widget-height
 
 var heightFactor = null;
-
 var sab = 0;             // env(safe-area-inset-bottom)
-
-//  0 - with menu,    normal dash symbold, normal-widget-height
-//  1 - without menu, big dash symbold,    kiosk-widget-height
-//  2 - with menu,    big dash symbold,    kiosk-widget-height
-//  3 - with menu,    big dash symbold,    normal-widget-height
 
 $('document').ready(function() {
    daemonState.state = -1;
@@ -122,8 +116,9 @@ function onSocketConnect(protocol)
    }, 1*1000);
 
    onSmalDevice = window.matchMedia("(max-width: 740px)").matches;
-   console.log("onSmalDevice : " + onSmalDevice);
+   // console.log("onSmalDevice : " + onSmalDevice);
 
+   mainMenuSel(currentPage);
    sab = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sab"));
 }
 
@@ -508,7 +503,6 @@ function dispatchMessage(message)
       daemonState = jMessage.object;
 		let now = new Date();
 		daemonState.timeOffset = Math.round(now/1000 - daemonState.systime);
-      console.log("daemonState", daemonState);
 		// console.log("timeOffset", daemonState.timeOffset, "s");
 		updateFooter();
    }
@@ -646,7 +640,7 @@ function addSetupMenuButton(title, page, action = null)
 
 }
 
-function addMainMenuButton(title, page, condition = true, sclass = '')
+function addMainMenuButton(title, page, condition = true)
 {
    if (!condition)
       return;
@@ -654,7 +648,7 @@ function addMainMenuButton(title, page, condition = true, sclass = '')
    $("#mainMenu")
       .append($('<button></button>')
               .attr('id', 'mainmenu_' + page)
-              .addClass('rounded-border tabButton ' + sclass)
+              .addClass('rounded-border tabButton ' + (page == currentPage ? 'active' : ''))
               .html(title)
               .click(function() { mainMenuSel(page); }));
 }
@@ -669,13 +663,13 @@ function prepareMenu()
    }
 
    document.title = config.instanceName;
-   console.log("prepareMenu: " + currentPage);
+   console.log("------ prepareMenu: " + currentPage);
 
    $("#navMenu").empty()
       .append($('<div></div>')
               .attr('id', 'mainMenu'));
 
-   addMainMenuButton('Dash', 'dashboard', true, 'active');
+   addMainMenuButton('Dash', 'dashboard', true);
    addMainMenuButton('List', 'list', config.showList == '1');
    addMainMenuButton('Charts', 'chart');
    addMainMenuButton('Schema', 'schema', config.schema);
@@ -700,6 +694,7 @@ function prepareMenu()
                       .append($('<div></div>'))
                       .append($('<div></div>')))
               .append($('<button></button>')
+                      .attr('id', 'toggleMsgBtn')
                       .addClass('rounded-border tool-button-svg')
                       .attr('title', 'view messages')
                       .css('background-color', 'transparent')
@@ -786,18 +781,21 @@ function mainMenuSel(what, action = null)
 
    let lastPage = currentPage;
    currentPage = what;
-   console.log("switch to " + currentPage);
    hideAllContainer();
    schemaEditActive = false;
 
    prepareSetupMenu();
 
-   let children = document.getElementById('mainMenu').children;
+   console.log("---- switch to " + currentPage);
 
-   for (let i = 0; i < children.length; i++)
-      children[i].className = children[i].className.replace(" active", "");
+   if (document.getElementById('mainMenu')) {
+      let children = document.getElementById('mainMenu').children;
 
-   $('#mainmenu_' + what).addClass('active');
+      for (let i = 0; i < children.length; i++)
+         children[i].className = children[i].className.replace(" active", "");
+
+      $('#mainmenu_' + currentPage).addClass('active');
+   }
 
    if (currentPage != lastPage && (currentPage == "vdr" || lastPage == "vdr")) {
       console.log("closing socket " + socket.protocol);
@@ -810,9 +808,9 @@ function mainMenuSel(what, action = null)
       if (currentPage == "vdr") {
          protocol = "osd2vdr";
          url = "ws://" + config.vdr;
-         console.log("connecting ", url);
       }
 
+      console.log("connecting ", url);
       connectWebSocket(url, protocol);
    }
 
@@ -899,7 +897,6 @@ function mainMenuSel(what, action = null)
 function setupDashboard()
 {
    $("#burgerPopup").dialog("close");
-
    setupMode = !setupMode;
    initDashboard();
 }
@@ -1343,7 +1340,7 @@ function prepareChartRequest(jRequest, sensors, start, range, id)
       jRequest["sensors"] = sensors;
    }
    else {
-      console.log("requesting chart for '" + start + "' range " + range);
+      // console.log("requesting chart for '" + start + "' range " + range);
       jRequest["start"] = start == 0 ? 0 : Math.floor(start.getTime()/1000);  // calc unix timestamp
       jRequest["range"] = range;
       jRequest["sensors"] = sensors;

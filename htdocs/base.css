@@ -98,6 +98,7 @@ button:focus {
     width: 42px;
     padding: 4px 4px !important;
     margin-left: 8px;
+    background-color: transparent !important;
 }
 
 .burgerMenu > div
@@ -242,10 +243,9 @@ button:focus {
     color: var(--buttonFont);
     fill: var(--buttonFont);
     opacity: 0.6;
-    margin-top: 6px;
     display: inline-block;
     padding: 6px 12px;
-    margin-top: 5px;
+    margin-top: 2px;
     text-decoration: none;
     transition: 0.5s;
 }
@@ -2276,6 +2276,7 @@ dialog::backdrop, #backdrop
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
     .button1                   { margin-right: 1px; }
+    .tabButton                 { padding: 6px 6px 0px 6px; }
 /*    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; } */
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 30%; }
@@ -2304,6 +2305,7 @@ dialog::backdrop, #backdrop
     .daemonState               { width: 88%; }
     .menu                      { padding: 0px; margin: 0px; }
     .button1                   { margin-right: 1px; }
+    .tabButton                 { padding: 6px 6px 0px 6px; }
 /*    .inputTableConfig > div:nth-child(odd) { background-color: #0000007d; }*/
     .inputTableConfig > div > span:nth-child(3) { width: 25%; }
     .inputTableConfig > div > span              { width: 90%; }

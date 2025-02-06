@@ -5,9 +5,9 @@
  *
  */
 
-#define _VERSION     "0.10.7"
+#define _VERSION     "0.11.0"
 
-#define VERSION_DATE "02.02.2025"
+#define VERSION_DATE "05.02.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -18,8 +18,8 @@
 /*
  * ------------------------------------
 
-2025-02-02:  version 0.10.7
-  - change:  Finished javascript style redesign of schema page
+2025-02-05:  version 0.11.0
+  - change:  Web interface imrovements and minor fixes
 
 2025-02-01:  version 0.10.6
   - bugfix:  Fixed name clash of DI sensors
