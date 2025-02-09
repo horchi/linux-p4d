@@ -88,7 +88,7 @@ function initConfig(configdetails = null)
                             .attr('id', 'input_' + item.name)
                             .attr('type', 'number')
                             .addClass('rounded-border inputNum')
-                            .val(item.value)));
+                            .val(config[item.name])));
          break;
 
       case 1:     // ctNumber (float)
@@ -99,7 +99,7 @@ function initConfig(configdetails = null)
                             .attr('type', 'number')
                             .attr('step', '0.1')
                             .addClass('rounded-border inputFloat')
-                            .val(parseFloat(item.value.replace(',', '.')))));
+                            .val(parseFloat(config[item.name].replace(',', '.')))));
          break;
 
       case 2:     // ctString
@@ -109,7 +109,7 @@ function initConfig(configdetails = null)
                             .attr('id', 'input_' + item.name)
                             .attr('type', 'search')
                             .addClass('rounded-border input')
-                            .val(item.value)));
+                            .val(config[item.name])));
          break;
 
       case 3:     // ctBool
@@ -119,7 +119,7 @@ function initConfig(configdetails = null)
                             .attr('id', 'checkbox_' + item.name)
                             .attr('type', 'checkbox')
                             .addClass('rounded-border input')
-                            .prop('checked', item.value == 1))
+                            .prop('checked', config[item.name] == 1))
                     .append($('<label></label>')
                             .prop('for', 'checkbox_' + item.name)));
          break;
@@ -151,8 +151,8 @@ function initConfig(configdetails = null)
 
          let n = 0;
 
-         if (item.value != '') {
-            var ranges = item.value.split(",");
+         if (config[item.name] != '') {
+            var ranges = config[item.name].split(",");
             for (n = 0; n < ranges.length; ++n)
                appendRangeTuple(n, item.name, ranges[n]);
          }
@@ -173,7 +173,7 @@ function initConfig(configdetails = null)
                $(choiceSel).append($('<option></option>')
                                    .val(item.options[o])
                                    .html(item.options[o])
-                                   .attr('selected', item.options[o] == item.value));
+                                   .attr('selected', item.options[o] == config[item.name]));
             }
          }
          break;
@@ -186,7 +186,7 @@ function initConfig(configdetails = null)
                             .attr('type', 'text')
                             .addClass('rounded-border input')
                             .data('index', i)
-                            .data('value', item.value)
+                            .data('value', config[item.name])
                             .prop('name', 'style')
                             .val('')
                            ));
@@ -198,7 +198,7 @@ function initConfig(configdetails = null)
             .append(bmGroup = $('<span></span>')
                     .attr('id', 'bmaskgroup_' + item.name));
 
-         var array = item.value.split(',');
+         var array = config[item.name].split(',');
 
          for (var o = 0; o < item.options.length; o++) {
             var checked = false;
@@ -225,7 +225,7 @@ function initConfig(configdetails = null)
                             .attr('id', 'input_' + item.name)
                             .attr('type', 'number')
                             .addClass('rounded-border input')
-                            .val(item.value)));
+                            .val(config[item.name])));
          break;
       }
    }
@@ -235,9 +235,8 @@ function initConfig(configdetails = null)
       $(this).autocomplete({
          source: item.options,
          multiselect: true});
-      if ($(this).data('value').trim() != "") {
+      if ($(this).data('value').trim() != '')
          setAutoCompleteValues($(this), $(this).data('value').trim().split(','));
-      }
    });
 
    $("#container").height($(window).height() - $("#menu").height() - getTotalHeightOf('footer') - sab - 8);

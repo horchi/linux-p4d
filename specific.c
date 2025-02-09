@@ -34,10 +34,10 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
 
    { "interval",                  ctInteger, "60",           false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
-   { "webPort",                   ctInteger, "1111",         false, "Daemon", "Port des Web Interfaces", "" },
 
-   { "aggregateHistory",          ctInteger, "365",          false, "Daemon", "Historie [Tage]", "history for aggregation in days (default 0 days -> aggegation turned OFF)" },
-   { "aggregateInterval",         ctInteger, "15",           false, "Daemon", " danach aggregieren über", "aggregation interval in minutes - 'one sample per interval will be build'" },
+   { "aggregateHistory",          ctInteger, "365",          false, "Daemon", "Historie [Tage]", "history for aggregation [days] (default 0 days -> aggegation turned OFF)" },
+   { "aggregateInterval",         ctInteger, "15",           false, "Daemon", "Aggregate Interval der historisierten Daten [m]", "aggregation interval in minutes - 'one sample per interval will be build'" },
+
    { "peakResetAt",               ctString,  "",             true,  "Daemon", "", "" },
 
    { "stateCheckInterval",        ctInteger, "10",           false, "Daemon", "Intervall der Status Prüfung", "Intervall der Status Prüfung [s]" },
@@ -56,6 +56,7 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // web
 
+   { "webPort",                   ctInteger, "1111",         false, "WEB Interface", "Port des Web Interfaces", "" },
    { "webSSL",                    ctBool,    "",             false, "WEB Interface", "Use SSL for WebInterface", "" },
    { "haUrl",                     ctString,  "",             false, "WEB Interface", "URL der Hausautomatisierung", "Zur Anzeige des Menüs als Link" },
 

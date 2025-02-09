@@ -108,7 +108,7 @@ apt install mosquitto
 systemctl start mosquitto
 systemctl enable mosquitto
 ```
-#### if you like to ceck mosquitto or use it from scripts install mosquitto client package
+#### if you like to ceck mosquitto topics or use it from scripts install mosquitto client package
 ```
 install mosquitto-clients
 ```
@@ -116,7 +116,7 @@ install mosquitto-clients
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential pkg-config libssl-dev libjansson-dev libcurl4-openssl-dev libmariadb-dev uuid-dev libcap-dev liblua5.3-dev libsystemd-dev
+apt install build-essential pkg-config libssl-dev libjansson-dev libcurl4-openssl-dev libmariadb-dev uuid-dev libcap-dev liblua5.3-dev libsystemd-dev jq bc
 ```
 
 ### get the p4d and build it
