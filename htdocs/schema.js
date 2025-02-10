@@ -66,7 +66,7 @@ function dropSValue(event)
 function schemaContextMenu(event)
 {
    let form = $('<div></div>')
-       .attr('id', 'caseMenu')
+       .attr('id', 'schemaContextMenu')
        .append($('<div></div>')
                .addClass('dialog-content')
                .append($('<div></div>')
@@ -75,16 +75,19 @@ function schemaContextMenu(event)
                        .append($('<button></button>')
                                .addClass('rounded-border button1')
                                .html('&#10010')
-                               .click(function() { buttonSchemaAddItem(); }))
+                               .click(function() { $("#schemaContextMenu").dialog('close');
+																	schemaAddItem(); }))
                        .append($('<button></button>')
                                .attr('title', 'add user defines value')
                                .addClass('rounded-border button1')
                                .html('Leitung hinzufügen')
-                               .click(function() { makeResizableDiv(); }))
+                               .click(function() { $("#schemaContextMenu").dialog('close');
+																	makeResizableDiv(); }))
                        .append($('<button></button>')
                                .addClass('rounded-border button1')
                                .html('Speichern')
-                               .click(function() { schemaStore(); })
+                               .click(function() { $("#schemaContextMenu").dialog('close');
+																	schemaStore(); })
                               )));
 
    form.dialog({
@@ -98,16 +101,13 @@ function schemaContextMenu(event)
 		closeOnEscape: true,
       hide: "fade",
       open: function() {
-         $("body").click(function() {
-            $("#caseMenu").dialog("close");
-         });
+			$('.ui-widget-overlay').bind('click', function()
+                                      { $("#schemaContextMenu").dialog('close'); });
       },
       close: function() {
-         $("body").off("click");
          $(this).dialog('destroy').remove();
       }
    });
-
 }
 
 function setupSchema()
