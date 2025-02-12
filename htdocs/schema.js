@@ -236,8 +236,8 @@ function updateSchema()
       if (item && $("#"+id).data('changedAt') == item.changedAt)
          continue;
 
-      if (!item)
-         console.log("no item for", id, key);
+      // if (!item)
+      //   console.log("no item for", id, key);
 
       $("#"+id).data('changedAt', item ? item.changedAt : '');
 
@@ -264,8 +264,8 @@ function updateSchema()
       if (schemaDef.kind == 2) {
          if (theText == '' && item != null)
             theText = item.image;
-         else if (item == null)
-            console.log("Missing item for " + JSON.stringify(schemaDef, undefined, 4));
+         // else if (item == null)
+         //    console.log("Missing item for " + JSON.stringify(schemaDef, undefined, 4));
 
          if (theText != '') {
             let style = 'width:' + (schemaDef.width ? schemaDef.width : 40) + 'px;';
@@ -790,7 +790,7 @@ function editSchemaValue(type, address, newUC)
    });
 
    function selectKind(kind) {
-      console.log("kind", kind);
+      // console.log("kind", kind);
       switch (kind) {
         case 0:
            $('#labelUsrText').html(isUC ? "Text:" : "Zusatz Text:");

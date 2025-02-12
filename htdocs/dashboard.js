@@ -1518,7 +1518,7 @@ function updateWidget(sensor, refresh, widget)
 
    if (widget.range > 2)
    {
-      console.log("widget.range", key, widget.range);
+      // console.log("widget.range", key, widget.range);
       sensor.valid = true;
    }
 
