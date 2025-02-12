@@ -9,7 +9,7 @@
  */
 
 var WebSocketClient = window.WebSocketClient
-var pingTimeoutMs = 4000;
+var pingTimeoutMs = 10000;
 var colorStyle = null;
 var isDaytime = false;
 var daytimeCalcAt = null;
@@ -521,7 +521,7 @@ function dispatchMessage(message)
       hideProgressDialog();
    }
    else if (event == "wifis") {
-      pingTimeoutMs = 4000;
+      pingTimeoutMs = 10000;
       wifis = jMessage.object;
       showWifiList();
       hideProgressDialog();
