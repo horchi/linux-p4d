@@ -27,3 +27,4 @@ htdocs/stylesheet.css.save
 /blescan
 /votromqtt
 victronmqtt
+lib/sdclient

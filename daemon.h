@@ -213,6 +213,7 @@ class Daemon : public cWebInterface
          bool record {false};
          bool active {false};
          std::string kind {"value"};       // { value | status | text | trigger }
+                                           //   value   state    text   state
          uint64_t lastInterruptMs {0};
          time_t last {0};                  // last info about value/state/..
          time_t changedAt {0};             // last change of value/state/..

@@ -2269,6 +2269,9 @@ int Daemon::process(bool force)
       const char* type = tableValueFacts->getStrValue("TYPE");
       uint address = tableValueFacts->getIntValue("ADDRESS");
 
+      if (sensors[type][address].mode != omAuto)
+         continue;
+
       std::string expression;
 
       if (tableValueFacts->hasValue("TYPE", "CV"))
@@ -2310,7 +2313,13 @@ int Daemon::process(bool force)
                }
                else
                {
+                  if (sensors[tuple[0].c_str()][matchAddr].kind == "status")
+                     expression = strReplace(what, sensors[tuple[0].c_str()][matchAddr].state ? "true" :  "false", expression);
+                  else if (sensors[tuple[0].c_str()][matchAddr].kind == "text")
+                     expression = strReplace(what, sensors[tuple[0].c_str()][matchAddr].text, expression);
+                  else
                   expression = strReplace(what, sensors[tuple[0].c_str()][matchAddr].value, expression, ".");
+
                   tell(eloDebug, "Debug: LUA: Replace %s:0x%x with '%f'", tuple[0].c_str(), matchAddr, sensors[tuple[0].c_str()][matchAddr].value);
                }
 

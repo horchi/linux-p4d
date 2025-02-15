@@ -2026,11 +2026,9 @@ table.tableMultiCol td
 
 .lmcWidget
 {
-    /* overflow: hidden; */
     margin: 2px;
     background-color: var(--widgetBackground);
     padding: 4px;
-    /*box-shadow: 1px 1px 1px 0px var(--shadow);*/
 }
 
 .lmcContainer
@@ -2186,18 +2184,16 @@ table.tableMultiCol td
 
 .lmcCover
 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-    overflow: hidden;
+    margin: 5%;
+    height: -webkit-fill-available;
+    height: -moz-available;
 }
 
 .lmcCover > img
 {
     height: 100%;
     width: 100%;
-    object-fit: fill;
+    object-fit: cover;
     border-radius: max(6px, min(14px, 7%)) !important;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 25px;
 }
