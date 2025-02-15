@@ -1444,7 +1444,7 @@ int Daemon::storeConfig(json_t* obj, long client)
 {
    const char* key {};
    json_t* jValue {};
-   int oldWebPort = webPort;
+   int oldWebPort {webPort};
    char* oldStyle {};
    int count {0};
 
@@ -1477,7 +1477,7 @@ int Daemon::storeConfig(json_t* obj, long client)
 
    readConfiguration(false);
 
-   json_t* oJson = json_object();
+   json_t* oJson {json_object()};
    config2Json(oJson);
    pushOutMessage(oJson, "config", client);
 

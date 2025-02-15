@@ -5,9 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.1"
-
-#define VERSION_DATE "09.02.2025"
+#define _VERSION     "0.11.2"
+#define VERSION_DATE "14.02.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-02-14:  version 0.11.2
+ - change:  Bookworm porting of debian package
 
 2025-02-09:  version 0.11.1
   - bugfix:  Fixed minor problem with store of configuration

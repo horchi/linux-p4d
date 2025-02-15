@@ -127,7 +127,6 @@ P4d::P4d()
 
 P4d::~P4d()
 {
-   free(stateMailAtStates);
    delete serial;
    delete request;
    delete sem;
@@ -810,19 +809,17 @@ int P4d::sendStateMail()
 
 int P4d::isMailState()
 {
-   int result = no;
-   char* mailStates = 0;
-
    if (isEmpty(stateMailAtStates))
       return yes;
 
-   mailStates = strdup(stateMailAtStates);
+   char* mailStates = strdup(stateMailAtStates);
+   bool result {false};
 
    for (const char* p = strtok(mailStates, ","); p; p = strtok(0, ","))
    {
       if (atoi(p) == currentState.state)
       {
-         result = yes;
+         result = true;
          break;
       }
    }

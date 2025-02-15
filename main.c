@@ -69,9 +69,9 @@ int readConfig()
    {
       char* p = strchr(line, '#');
 
-      if (p && (p-1 == line || *(p-1) != '\\'))
+      if (p && (p == line || *(p-1) != '\\'))
          *p = 0;
-      else if (p && p-1 != line && *(p-1) == '\\')
+      else if (p && p != line && *(p-1) == '\\')
       {
          std::string s = strReplace("\\#", "#", line);
          free(line);

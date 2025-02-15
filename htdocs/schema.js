@@ -560,7 +560,7 @@ function editSchemaValue(type, address, newUC)
                                   .attr('type', 'checkbox')
                                   .attr('checked', schemaDef.showtitle))
                           .append($('<label></label>')
-                                  .attr('for', 'showIt'))))
+                                  .attr('for', 'showTitle'))))
       form.append($('<div></div>')
                   .append($('<span></span>')
                           .html('Einheit'))
@@ -570,7 +570,7 @@ function editSchemaValue(type, address, newUC)
                                   .attr('type', 'checkbox')
                                   .attr('checked', schemaDef.showunit))
                           .append($('<label></label>')
-                                  .attr('for', 'showIt'))));
+                                  .attr('for', 'showUnit'))));
    }
 
    if (isCN) {

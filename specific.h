@@ -143,7 +143,5 @@ class P4d : public Daemon, public FroelingService
       int errorsPending {0};
       time_t nextTimeSyncAt {0};
 
-      // statics
-
       static std::list<ConfigItemDef> configuration;
 };

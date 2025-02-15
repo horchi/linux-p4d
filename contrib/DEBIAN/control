@@ -2,8 +2,8 @@ Package: p4d
 Version: <VERSION>
 Section: base
 Priority: optional
-Architecture: armhf
-Depends: libssl1.1, libjansson4, openssl, bsd-mailx, msmtp, msmtp-mta,
+Architecture: arm64
+Depends: rsyslog, libssl1.1, libjansson4, openssl, bsd-mailx, msmtp, msmtp-mta,
   libcurl4, mosquitto, mosquitto-clients, libmariadb-dev, mariadb-server, libuuid1, bc, jq
 Maintainer: Jörg Wendel <linux@jwendel.de>
 Description: p4 deamon
