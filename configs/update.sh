@@ -62,8 +62,8 @@ elif [[ "${COMMAND}" == "toggle" ]]; then
 		${LOGGER} "update.sh: git pull"
 		git pull >/dev/null 2>&1 | ${LOGGER}
 		${LOGGER} "update.sh: rebuild, will take up to minutes"
-		#make -s clean >/dev/null 2>&1 | ${LOGGER}
-		#make -j 3 >/dev/null 2>&1 | ${LOGGER}
+		make -s clean >/dev/null 2>&1 | ${LOGGER}
+		make -j 3 >/dev/null 2>&1 | ${LOGGER}
 		${LOGGER} "update.sh: install"
 		make linstall >/dev/null 2>&1 | ${LOGGER}
 		${LOGGER} "update.sh: restart"
