@@ -151,9 +151,12 @@ int P4d::init()
       tell(eloAlways, "Loaded (%zu) states [%s]", stateDurations.size(), knownStates);
    }
 
-   sem->p();
-   serial->open(ttyDevice);
-   sem->v();
+   if (!isEmpty(ttyDevice))
+   {
+      sem->p();
+      serial->open(ttyDevice);
+      sem->v();
+   }
 
    return status;
 }
@@ -401,6 +404,9 @@ int P4d::updateSensors()
    Daemon::updateSensors();
    LogDuration ld("P4d::updateSensors", eloLoopTimings);
 
+   if (isEmpty(ttyDevice))
+      return done;
+
    time_t now {time(0)};
    sem->p();
 
@@ -632,10 +638,12 @@ int P4d::doLoop()
 
 int P4d::updateState()
 {
-   static time_t nextReportAt = 0;
+   static time_t nextReportAt {0};
+   int status {success};
+   time_t now {};
 
-   int status;
-   time_t now;
+   if (isEmpty(ttyDevice))
+      return done;
 
    // LogDuration ld("P4d::updateState", eloLoopTimings);
 
