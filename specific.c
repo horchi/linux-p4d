@@ -121,7 +121,7 @@ P4d::P4d()
    webPort = 1111;
 
    sem = new Sem(0x3da00001);
-   serial = new Serial;
+   serial = new Serial(B57600);
    request = new P4Request(serial);
 }
 

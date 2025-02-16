@@ -93,7 +93,7 @@ void showUsage(const char* bin)
 
 int main(int argc, char** argv)
 {
-   Serial serial;
+   Serial serial(B57600);
    int status {success};
    byte b {0};
    word addr {Fs::addrUnknown};

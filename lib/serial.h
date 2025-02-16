@@ -8,7 +8,14 @@
 
 #pragma once
 
-#include <termios.h>
+#define _NEW_TERMIOS
+
+#ifndef _NEW_TERMIOS
+#  include <termios.h>
+#else
+#  include <sys/ioctl.h>
+#  include <asm/termbits.h>
+#endif
 
 #include "common.h"
 
@@ -29,7 +36,7 @@ class Serial
          wrnTimeout
       };
 
-      Serial(int aBaud = B57600);
+      Serial(int aBaud, int aCflags = 0);
       virtual ~Serial();
 
       // interface
@@ -46,10 +53,12 @@ class Serial
       virtual int readWord(word& v, int timeoutMs = 100);
       virtual int readSWord(sword& v, int timeoutMs = 100);
       virtual int write(void* line, int size = 0);
+      virtual int write(byte b);
 
       // settings
 
-      virtual void setBaud(int b)               { baud = b; }
+      virtual void setSpecialSpeed(int s)       { specialSpeed = s; }
+      // virtual void setBaud(int b)               { baud = b; }
       virtual void setTimeout(int timeout)      { readTimeout = timeout; }
       virtual void setWriteTimeout(int timeout) { writeTimeout = timeout; }
 
@@ -60,9 +69,11 @@ class Serial
       bool opened {false};
       int readTimeout {10};
       int writeTimeout {10};
-      int baud {B57600};
-      char deviceName[100] {'\0'};
+      int baud {0};
+      int specialSpeed {0};
+      int cflags {0};
+      char deviceName[100] {};
 
       int fdDevice {0};
-      struct termios oldtio;
+      // struct termios oldtio;
 };

@@ -7,8 +7,6 @@
 //***************************************************************************
 
 #include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,10 +22,11 @@
 // Object
 //***************************************************************************
 
-Serial::Serial(int aBaud)
-   : baud(aBaud)
+Serial::Serial(int aBaud, int aCflags)
+   : baud(aBaud),
+     cflags(aCflags)
 {
-   bzero(&oldtio, sizeof(oldtio));
+   // bzero(&oldtio, sizeof(oldtio));
 }
 
 Serial::~Serial()
@@ -41,8 +40,6 @@ Serial::~Serial()
 
 int Serial::open(const char* dev)
 {
-   struct termios newtio;
-
    if (!dev)
       dev = deviceName;
    else
@@ -69,21 +66,27 @@ int Serial::open(const char* dev)
       return fail;
    }
 
-   tell(eloDetail, "Opening '%s' succeeded!", deviceName);
+#ifndef _NEW_TERMIOS
 
-   // configure serial line with 8 data bits, no parity, 1 stop bit
-
-   tcgetattr(fdDevice, &oldtio);
+   struct termios newtio;
+   // tcgetattr(fdDevice, &oldtio);
    bzero(&newtio, sizeof(newtio));
 
-   /* BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
+   /* BAUDRATE: Set bps rate.
       CRTSCTS : output hardware flow control (only used if the cable has
                 all necessary lines. See sect. 7 of Serial-HOWTO)
       CS8     : 8n1 (8bit,no parity,1 stopbit)
       CLOCAL  : local connection, no modem control
       CREAD   : enable receiving characters  */
 
-   newtio.c_cflag = baud | CS8 | CLOCAL | CREAD;
+   if (cflags)
+   {
+      // tell(eloAlways, "c_cflag set to %d", cflags);
+      newtio.c_cflag = baud | cflags | CLOCAL | CREAD;
+   }
+   else
+      newtio.c_cflag = baud | CS8 | CLOCAL | CREAD;
+
    newtio.c_iflag = IGNPAR;  // don't set ICRNL !!
    newtio.c_oflag = 0;
    newtio.c_lflag = 0;       // ICANON - 'disable echo functionality  and don't
@@ -100,6 +103,55 @@ int Serial::open(const char* dev)
       return fail;
    }
 
+   tell(eloAlways, "Opening '%s' succeeded!", deviceName);
+
+#else
+
+   struct termios2 newtio;
+
+   int ret {success};
+   bzero(&newtio, sizeof(newtio));
+
+   if (!ret)
+   {
+      if (cflags)
+         newtio.c_cflag = cflags | CLOCAL | CREAD;
+      else
+         newtio.c_cflag = CS8 | CLOCAL | CREAD;
+
+      if (specialSpeed)
+      {
+         newtio.c_cflag |= BOTHER;
+         newtio.c_ispeed = specialSpeed;
+         newtio.c_ospeed = specialSpeed;
+      }
+      else
+      {
+         newtio.c_cflag |= baud;
+      }
+
+      newtio.c_iflag = IGNPAR;  // don't set ICRNL !!
+      newtio.c_oflag = 0;
+      newtio.c_lflag = 0;       // ICANON - 'disable echo functionality  and don't
+                                //           send signals to the calling prozess'
+
+      ret = ioctl(fdDevice, TCSETS2, &newtio);
+
+      if (ret)
+      {
+         tell(eloAlways, "Error: Failed to set io settings error was '%s'", strerror(errno));
+         close();
+         return fail;
+      }
+
+      if (specialSpeed)
+         tell(eloAlways, "Opening '%s' with %d baud succeeded!", deviceName, specialSpeed);
+      else
+         tell(eloAlways, "Opening '%s' succeeded!", deviceName);
+   }
+
+#endif
+
    flush();
    opened = yes;
 
@@ -112,17 +164,16 @@ int Serial::open(const char* dev)
 
 int Serial::close()
 {
-   // restore the old settings and close
-
    if (fdDevice)
    {
       tell(eloAlways, "Closing io device");
 
       flush();
 
-      tcsetattr(fdDevice, TCSANOW, &oldtio);
-      ::close(fdDevice);
+      // restore the old settings and close
+      // tcsetattr(fdDevice, TCSANOW, &oldtio);
 
+      ::close(fdDevice);
       fdDevice = 0;
    }
 
@@ -133,7 +184,12 @@ int Serial::close()
 
 int Serial::flush()
 {
-   tcflush(fdDevice, TCIFLUSH);
+   // tcflush(fdDevice, TCIFLUSH);
+
+   byte b {0};
+
+   while (look(b, 10) == success)
+      ;
 
    return done;
 }
@@ -218,6 +274,17 @@ int Serial::write(void* line, int size)
 }
 
 //***************************************************************************
+// Write Byte
+//***************************************************************************
+
+int Serial::write(byte b)
+{
+   char line[1];
+   line[0] = b;
+   return write(line, 1);
+}
+
+//***************************************************************************
 // Read
 //   returns
 //     -  count of read bytes on success
@@ -250,7 +317,7 @@ int Serial::read(void* buf, size_t count, uint timeoutMs)
       }
 
       if (!res)
-         usleep(2000);
+         usleep(500);
 
       nRead += res;
    };
