@@ -127,7 +127,7 @@ install-config:
 install-scripts:
 	@echo install scripts
 	if ! test -d $(BINDEST); then \
-		mkdir -p "$(BINDEST)" \
+		mkdir -p "$(BINDEST)"; \
 	   chmod a+rx $(BINDEST); \
 	fi
 	for f in ./scripts/*.sh; do \

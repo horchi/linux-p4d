@@ -209,8 +209,8 @@ function setRefreshTimer()
 
 function refresh()
 {
-   console.log("do refresh");
-   if (currentRequest != null) {
+   if (currentRequest) {
+      console.log("do refresh", JSON.stringify(currentRequest, undefined, 4));
       socket.send({ "event" : "chartdata", "object" : currentRequest });
       showProgressDialog();
    }

@@ -104,7 +104,7 @@ function schemaContextMenu(event)
       closeOnEscape: true,
       hide: "fade",
       open: function() {
-         $('.ui-widget-overlay').bind('click', function()b { $("#schemaContextMenu").dialog('close'); }); },
+         $('.ui-widget-overlay').bind('click', function() { $("#schemaContextMenu").dialog('close'); }); },
       close: function() {
          $(this).dialog('destroy').remove();
       }

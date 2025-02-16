@@ -52,9 +52,9 @@ var setupMode = false;
 var dashboardGroup = 0;
 var kioskBackTime = 0;
 var kioskMode = null;    // 0 - with menu,    normal dash symbols, normal-widget-height
-							    // 1 - without menu, big dash symbols,    kiosk-widget-height
-							    // 2 - with menu,    big dash symbols,    kiosk-widget-height
-							    // 3 - with menu,    big dash symbols,    normal-widget-height
+                         // 1 - without menu, big dash symbols,    kiosk-widget-height
+                         // 2 - with menu,    big dash symbols,    kiosk-widget-height
+                         // 3 - with menu,    big dash symbols,    normal-widget-height
 
 var heightFactor = null;
 var sab = 0;             // env(safe-area-inset-bottom)
@@ -193,7 +193,7 @@ function updateSocketState()
    // VDR did not support ping
 
    if (currentPage != "vdr") {
-		let now = new Date().getTime();
+      let now = new Date().getTime();
       if (lastPingAt + pingTimeoutMs <= now) {
          console.log("Warning: Reconnecting web socket due to timeout, last keep alive was ", now - lastPingAt, "ms ago");
          socket.reopen();
@@ -352,7 +352,7 @@ var progressDialog = null;
 async function hideProgressDialog()
 {
    if (progressDialog != null) {
-      console.log("hide progress");
+      // console.log("hide progress");
       progressDialog.dialog('destroy').remove();
       progressDialog = null;
    }
@@ -371,15 +371,15 @@ async function showProgressDialog()
    form.appendChild(div);
    div.className = "progress";
 
-   console.log("show progress");
+   // console.log("show progress");
 
    $(form).dialog({
       dialogClass: "no-titlebar rounded-border",
       width: "125px",
       title: "",
-		modal: true,
+      modal: true,
       resizable: false,
-		closeOnEscape: true,
+      closeOnEscape: true,
       minHeight: "0px",
       hide: "fade",
       open: function() {
@@ -435,7 +435,7 @@ function dispatchMessage(message)
    // if (event != "chartdata" && event != "ping")
    //    console.log("got event: " + event);
 
-	lastPingAt = new Date().getTime();
+   lastPingAt = new Date().getTime();
 
    if (event == "result") {
       hideProgressDialog();
@@ -504,10 +504,10 @@ function dispatchMessage(message)
    }
    else if (event == "daemonstate") {
       daemonState = jMessage.object;
-		let now = new Date();
-		daemonState.timeOffset = Math.round(now/1000 - daemonState.systime);
-		// console.log("timeOffset", daemonState.timeOffset, "s");
-		updateFooter();
+      let now = new Date();
+      daemonState.timeOffset = Math.round(now/1000 - daemonState.systime);
+      // console.log("timeOffset", daemonState.timeOffset, "s");
+      updateFooter();
    }
    else if (event == "widgettypes") {
       widgetTypes = jMessage.object;
@@ -762,9 +762,9 @@ function openMenuBurger()
       minHeight: "auto",
       width: "auto",
       dialogClass: "no-titlebar rounded-border",
-		modal: true,
+      modal: true,
       resizable: false,
-		closeOnEscape: true,
+      closeOnEscape: true,
       hide: "fade",
       open: function(event, ui) {
          $(event.target).parent().css('background-color', 'var(--light1)');
@@ -838,8 +838,8 @@ function mainMenuSel(what, action = null)
    else if (currentPage == "images")
       initImages();
    else if (currentPage == "syslog") {
-		updateSyslog();
-		return;
+      updateSyslog();
+      return;
    }
    else if (currentPage == "system") {
       event = "system";
@@ -944,7 +944,7 @@ function showSyslog(log)
               .css('margin-bottom', '8px')
               .on('input', function() { updateSyslog(); }))
 
-	   .append($('<div></div>')
+      .append($('<div></div>')
               .addClass('button-group-spacing'))
 
       .append($('<div></div>')
@@ -958,26 +958,26 @@ function showSyslog(log)
               .css('width', '-webkit-fill-available')
               .css('width', '-moz-available')
               .css('margin-bottom', '8px')
-				  .val(syslogFilter))
+              .val(syslogFilter))
               // .on('input', function() { updateSyslog(); }))
 
-	   .append($('<div></div>')
+      .append($('<div></div>')
               .addClass('button-group-spacing'))
 
-	   .append($('<div></div>')
+      .append($('<div></div>')
               .append($('<button></button>')
                       .addClass('rounded-border tool-button')
                       .html('Refresh')
                       .click(function() { updateSyslog(); })));
 
-	for (let i = 0; i < syslogs.length; ++i) {
-		$('#selectSyslog').append($('<option></option>')
-										  .attr('selected', syslogs[i].name == log.name)
-										  .html(syslogs[i].name));
-	}
+   for (let i = 0; i < syslogs.length; ++i) {
+      $('#selectSyslog').append($('<option></option>')
+                                .attr('selected', syslogs[i].name == log.name)
+                                .html(syslogs[i].name));
+   }
 
    $('#container').html('<div id="syslogContainer" class="setupContainer log"></div>');
-	$('#syslogContainer').css('width', 'fit-content');
+   $('#syslogContainer').css('width', 'fit-content');
 
    let root = document.getElementById("syslogContainer");
    root.innerHTML = log.lines.replace(/(?:\r\n|\r|\n)/g, '<br/>');
@@ -993,10 +993,10 @@ function showSyslog(log)
 
 function updateSyslog()
 {
-	syslogFilter = $('#syslogFilter').val();
-	showProgressDialog();
-	socket.send({ "event" : "syslog", "object" :
-					  { 'log' : $('#selectSyslog').val(), 'filter' : syslogFilter } });
+   syslogFilter = $('#syslogFilter').val();
+   showProgressDialog();
+   socket.send({ "event" : "syslog", "object" :
+                 { 'log' : $('#selectSyslog').val(), 'filter' : syslogFilter } });
 }
 
 function showDatabaseStatistic(statistic)
@@ -1238,9 +1238,9 @@ function systemServiceMenu(service)
       minHeight: "auto",
       width: "auto",
       dialogClass: "no-titlebar rounded-border",
-		modal: true,
+      modal: true,
       resizable: false,
-		closeOnEscape: true,
+      closeOnEscape: true,
       hide: "fade",
       open: function(event, ui) {
          $(event.target).parent().css('background-color', 'var(--light1)');
@@ -1761,22 +1761,22 @@ function trim()
 
 function alterColor(rgb, type, percent)
 {
-	rgb = rgb.replace('rgb(', '').replace(')', '').split(',');
+   rgb = rgb.replace('rgb(', '').replace(')', '').split(',');
 
-	let red = trim.call(rgb[0]);
-	let green = trim.call(rgb[1]);
-	let blue = trim.call(rgb[2]);
+   let red = trim.call(rgb[0]);
+   let green = trim.call(rgb[1]);
+   let blue = trim.call(rgb[2]);
 
-	if (type === "darken") {
-		red = parseInt(red * (100 - percent) / 100, 10);
-		green = parseInt(green * (100 - percent) / 100, 10);
-		blue = parseInt(blue * (100 - percent) / 100, 10);
-	}
+   if (type === "darken") {
+      red = parseInt(red * (100 - percent) / 100, 10);
+      green = parseInt(green * (100 - percent) / 100, 10);
+      blue = parseInt(blue * (100 - percent) / 100, 10);
+   }
    else {
-		red = parseInt(red * (100 + percent) / 100, 10);
-		green = parseInt(green * (100 + percent) / 100, 10);
-		blue = parseInt(blue * (100 + percent) / 100, 10);
-	}
+      red = parseInt(red * (100 + percent) / 100, 10);
+      green = parseInt(green * (100 + percent) / 100, 10);
+      blue = parseInt(blue * (100 + percent) / 100, 10);
+   }
 
-	return 'rgb(' + red + ', ' + green + ', ' + blue + ')';
+   return 'rgb(' + red + ', ' + green + ', ' + blue + ')';
 }
