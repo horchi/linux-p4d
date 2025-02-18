@@ -3820,6 +3820,31 @@ int Daemon::dispatchOther(const char* topic, const char* message)
       return fail;
    }
 
+   // check if we have a converter script
+
+   char* converter {};
+   asprintf(&converter, "%s/mqtt.d/%s.sh", confDir, strReplace("/", "_", topic).c_str());
+
+   if (fileExists(converter))
+   {
+      const char* url = strrchr(mqttUrl, '/');
+
+      if (url)
+         url++;
+      else
+         url = mqttUrl;
+
+      executeCommand("%s 'mqtt://%s/%s' '%s'", converter, url, TARGET "2mqtt/scripts", message);
+      tell(eloScript, ".. '%s' done", converter);
+      free(converter);
+
+      return done;
+   }
+
+   free(converter);
+
+   // tell(eloAlways, "dispatch (%s) '%s'", topic, message);
+
    time_t newTime {time(0)};
    std::string action = getStringFromJson(jData, "action", "update");
    myString type = getStringFromJson(jData, "type", "");

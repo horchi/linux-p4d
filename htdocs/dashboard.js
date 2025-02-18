@@ -31,13 +31,13 @@ function initDashboard(update = false)
       return;
    }
 
-	for (const gkey in dashboardGauges) {
-		if (dashboardGauges.hasOwnProperty(gkey)) {
-			dashboardGauges[gkey].destroy();
-		}
-	}
+   for (const gkey in dashboardGauges) {
+      if (dashboardGauges.hasOwnProperty(gkey)) {
+         dashboardGauges[gkey].destroy();
+      }
+   }
 
-	dashboardGauges = {};
+   dashboardGauges = {};
 
    if (!update) {
       $('#container').removeClass('hidden');
@@ -212,12 +212,12 @@ function newDashboard()
 function getWidgetColor(widget, colorCondition, defaultColor, value)
 {
    if (colorCondition == null || colorCondition == '') {
-		if (defaultColor != null)
-			return defaultColor;
-		return 'white';
-	}
-	else {
-		let conditions = colorCondition.split(",");
+      if (defaultColor != null)
+         return defaultColor;
+      return 'white';
+   }
+   else {
+      let conditions = colorCondition.split(",");
       for (c = 0; c < conditions.length; ++c) {
          if (conditions[c].indexOf('=') != -1) {
             let [val,col] = conditions[c].split("=");
@@ -332,7 +332,7 @@ function initWidget(key, widget, fact)
       widget.unit = fact.unit;
 
    const marginWidth = 3 *2;
-	const useKioskHeight = kioskMode == 1 || kioskMode == 2;
+   const useKioskHeight = kioskMode == 1 || kioskMode == 2;
    let root = document.getElementById("widgetContainer");
    let id = 'div_' + key;
    let elem = document.getElementById(id);
@@ -543,8 +543,8 @@ function initWidget(key, widget, fact)
          let cFact = fact;
          if (!setupMode && fact.record) {
             eChart.setAttribute("onclick", "toggleChartDialog('" + cFact.type + "'," + cFact.address + ")");
-				$(eChart).css('cursor', 'pointer');
-			}
+            $(eChart).css('cursor', 'pointer');
+         }
          elem.appendChild(eChart);
 
          let eCanvas = document.createElement("canvas");
@@ -568,7 +568,7 @@ function initWidget(key, widget, fact)
                     .addClass('widget-value')
                     .css('user-select', 'none')
                     .css('color', widget.color)
-						  .css('cursor', !setupMode && fact.record ? 'pointer' : '')
+                    .css('cursor', !setupMode && fact.record ? 'pointer' : '')
                     .click(function() {
                        let cFact = fact;
                        if (!setupMode && fact.record)
@@ -630,8 +630,8 @@ function initWidget(key, widget, fact)
          let cFact = fact;
          if (!setupMode && fact.record) {
             $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
-				$(elem).css('cursor', 'pointer');
-			}
+            $(elem).css('cursor', 'pointer');
+         }
 
          let divId = '#svgDiv' + fact.type + fact.address;
          $(divId).html($(divId).html());  // redraw to activate the SVG !!
@@ -856,8 +856,8 @@ function initWidget(key, widget, fact)
          let cFact = fact;
          if (!setupMode && fact.record) {
             $(elem).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
-				$(elem).css('cursor', 'pointer');
-			}
+            $(elem).css('cursor', 'pointer');
+         }
          break;
       }
    }
@@ -959,8 +959,8 @@ function initMeter(key, widget, fact, neededScaleMax, value)
    let cFact = fact;
    if (!setupMode && fact.record) {
       $(canvas).click(function() {toggleChartDialog(cFact.type, cFact.address, key);});
-		canvas.style.cursor = 'pointer';
-	}
+      canvas.style.cursor = 'pointer';
+   }
 
    if (!radial && showValue) {
       let _value = document.createElement("div");
@@ -1040,10 +1040,10 @@ function initMeter(key, widget, fact, neededScaleMax, value)
 
    let progressColor = widget.unit == '%' ? 'blue' : 'red';
 
-	if (widget.barcolor != null && widget.barcolor != '')
-		progressColor = widget.barcolor
+   if (widget.barcolor != null && widget.barcolor != '')
+      progressColor = widget.barcolor
 
-	progressColor = getWidgetColor(widget, widget.colorConditionBar, progressColor, value);
+   progressColor = getWidgetColor(widget, widget.colorConditionBar, progressColor, value);
 
    options = {
       renderTo: 'widget' + fact.type + fact.address,
@@ -1106,7 +1106,7 @@ function initMeter(key, widget, fact, neededScaleMax, value)
    if ($(main).innerHeight() < $(main).innerWidth())
       options.width = options.hight = $(main).innerHeight();
 
-	if (dashboardGauges[fact.type + fact.address] != null) {
+   if (dashboardGauges[fact.type + fact.address] != null) {
       dashboardGauges[fact.type + fact.address].destroy();
       dashboardGauges[fact.type + fact.address] = null;
    }
@@ -1319,7 +1319,7 @@ function titleClick(ctrlKey, key)
       let sensor = allSensors[key];
       let now = new Date();
       let last = new Date(sensor.last * 1000);
-		let before = Math.round((now - daemonState.timeOffset -last)/1000)
+      let before = Math.round((now - daemonState.timeOffset -last)/1000)
       let peakMaxTime = new Date(sensor.peakmaxtime * 1000);
       let peakMinTime = new Date(sensor.peakmintime * 1000);
       let form = document.createElement("div");
@@ -1569,14 +1569,14 @@ function updateWidget(sensor, refresh, widget)
       widgetDiv.css('background-color', (fact.outputModes == 3 && sensor.mode == 'manual') ? '#a27373' : '');
       widget.colorOn = widget.colorOn == null ? symbolOnColorDefault : widget.colorOn;
 
-		let color = state ? widget.colorOn : widget.color;
+      let color = state ? widget.colorOn : widget.color;
 
-		color = getWidgetColor(widget, widget.colorCondition, color, sensor.value);
+      color = getWidgetColor(widget, widget.colorCondition, color, sensor.value);
 
       if (sensor.hue)
          color = tinycolor({ 'h': sensor.hue, 's': sensor.sat, 'v': sensor.score }).toHslString();
-		else if (sensor.color)
-			color = sensor.color;
+      else if (sensor.color)
+         color = sensor.color;
 
       // widget.color = widget.color == null ? symbolColorDefault : widget.color;
 
@@ -1646,7 +1646,7 @@ function updateWidget(sensor, refresh, widget)
          if (weatherData && config.toggleWeatherView != 0) {
             weatherInterval = setInterval(function() {
                bigView = !bigView;
-               $("#widget" + fact.type + fact.address).html(getWeatherHtml(bigView, wfact, weatherData));
+               $("#widget" + wfact.type + wfact.address).html(getWeatherHtml(bigView, wfact, weatherData));
             }, 5*1000);
          }
       }
@@ -1709,10 +1709,10 @@ function updateWidget(sensor, refresh, widget)
    {
       if (sensor.value != null) {
          let value = sensor.value;
-			let reInitMeter = false;
+         let reInitMeter = false;
 
-			if (widgetDiv.data('scalemax') != widget.scalemax)
-				widgetDiv.data('scalemax', widget.scalemax);
+         if (widgetDiv.data('scalemax') != widget.scalemax)
+            widgetDiv.data('scalemax', widget.scalemax);
 
          if (widget.rescale) {
             let neededScaleMax = widget.scalemax;
@@ -1738,19 +1738,19 @@ function updateWidget(sensor, refresh, widget)
 
             if (widgetDiv.data('scalemax') != neededScaleMax) {
                widgetDiv.data('scalemax', neededScaleMax);
-					reInitMeter = true;
+               reInitMeter = true;
                // initMeter(key, widget, fact, neededScaleMax, sensor.value);
             }
          }
 
-			let progressColor = getWidgetColor(widget, widget.colorConditionBar, widget.barcolor, value);
+         let progressColor = getWidgetColor(widget, widget.colorConditionBar, widget.barcolor, value);
 
-			if (widgetDiv.data('progressColor') != progressColor) {
+         if (widgetDiv.data('progressColor') != progressColor) {
             widgetDiv.data('progressColor', progressColor);
-				reInitMeter = true;
-			}
+            reInitMeter = true;
+         }
 
-			if (reInitMeter)
+         if (reInitMeter)
             initMeter(key, widget, fact, widgetDiv.data('scalemax'), sensor.value);
 
          if (widget.widgettype == 6) {
@@ -1758,7 +1758,7 @@ function updateWidget(sensor, refresh, widget)
             $('#widgetValue' + fact.type + fact.address).html(value.toFixed(widget.unit == '%' ? 0 : 1) + ' ' + widget.unit);
          }
 
-			let gauge = dashboardGauges[fact.type + fact.address];
+         let gauge = dashboardGauges[fact.type + fact.address];
 
          if (gauge != null)
             gauge.value = value;

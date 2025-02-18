@@ -43,9 +43,9 @@ elif ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
    fi
 
    STATE="true"
-	echo -n
+   echo -n
 else
-	STATE="false"
+   STATE="false"
 fi
 
 if [[ "${COMMAND}" == "init" ]]; then

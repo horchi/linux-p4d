@@ -33,10 +33,10 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
    { "latitude",                  ctNum,     "50.3",         false, "Daemon", "Breitengrad", "" },
    { "longitude",                 ctNum,     "8.79",         false, "Daemon", "Längengrad", "" },
 
-   { "interval",                  ctInteger, "60",           false, "Daemon", "Intervall der Aufzeichung", "Datenbank Aufzeichung [s]" },
+   { "interval",                  ctInteger, "60",           false, "Daemon", "Intervall der Aufzeichnung", "Datenbank Aufzeichnung [s]" },
 
    { "aggregateHistory",          ctInteger, "365",          false, "Daemon", "Historie [Tage]", "history for aggregation [days] (default 0 days -> aggegation turned OFF)" },
-   { "aggregateInterval",         ctInteger, "15",           false, "Daemon", "Aggregate Interval der historisierten Daten [m]", "aggregation interval in minutes - 'one sample per interval will be build'" },
+   { "aggregateInterval",         ctInteger, "15",           false, "Daemon", "Aggregate Intervall der historisierten Daten [m]", "aggregation interval in minutes - 'one sample per interval will be build'" },
 
    { "peakResetAt",               ctString,  "",             true,  "Daemon", "", "" },
 
@@ -748,7 +748,7 @@ int P4d::sendStateMail()
 
          if (!sensor->title.length())
          {
-            tell(eloAlways, "Skip Mail for: '%s:0x%02x' ('%s') '%s' %s %s",
+            tell(eloDebug, "Debug: Skip mail for: '%s:0x%02x' ('%s') '%s' %s %s",
                  sensor->type.c_str(), sensor->address, typeSensorsIt.first.c_str(),
                  sensor->name.c_str(), sensor->kind.c_str(), sensor->unit.c_str());
             continue;

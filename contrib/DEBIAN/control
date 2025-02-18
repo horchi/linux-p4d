@@ -4,7 +4,7 @@ Section: base
 Priority: optional
 Architecture: arm64
 Depends: rsyslog, libssl1.1, libjansson4, openssl, bsd-mailx, msmtp, msmtp-mta,
-  libcurl4, mosquitto, mosquitto-clients, libmariadb-dev, mariadb-server, libuuid1, bc, jq
+  libcurl4, mosquitto, mosquitto-clients, libmariadb-dev, mariadb-server, libuuid1, bc, jq, jo
 Maintainer: Jörg Wendel <linux@jwendel.de>
 Description: p4 deamon
  Deamon to fetch sensor data of the 'Lambdatronic s3200' and store to a MariaDb database

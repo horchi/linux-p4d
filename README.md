@@ -116,7 +116,7 @@ install mosquitto-clients
 ## Installation of the p4d daemon:
 ### install the build dependencies
 ```
-apt install build-essential pkg-config libssl-dev libjansson-dev libcurl4-openssl-dev libmariadb-dev uuid-dev libcap-dev liblua5.3-dev libsystemd-dev jq bc
+apt install build-essential pkg-config libssl-dev libjansson-dev libcurl4-openssl-dev libmariadb-dev uuid-dev libcap-dev liblua5.3-dev libsystemd-dev jq jo bc
 ```
 
 ### get the p4d and build it

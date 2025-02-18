@@ -3,7 +3,7 @@
 COMMAND="$1"
 ADDRESS="$2"
 MQTTURL="$3"
-SERVICE="$4"
+JARGS="$4"
 
 VALUE=77.4
 

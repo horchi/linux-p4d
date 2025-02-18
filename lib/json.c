@@ -297,7 +297,7 @@ int getIntByPath(json_t* jData, const char* aPath, int def)
 {
    json_t* jObj = getObjectByPath(jData, aPath);
 
-   if (!jObj)
+   if (!jObj || !json_is_integer(jObj))
       return def;
 
    return json_integer_value(jObj);
@@ -320,7 +320,7 @@ const char* getStringByPath(json_t* jData, const char* aPath, const char* def)
 {
    json_t* jObj = getObjectByPath(jData, aPath);
 
-   if (!jObj)
+   if (!jObj || !json_is_string(jObj))
       return def;
 
    return json_string_value(jObj);

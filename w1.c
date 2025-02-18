@@ -216,13 +216,15 @@ int W1::update()
          {
             double value = atoi(p+3) / 1000.0;
 
-            if (value == 84 || value < -55)
-            {
-               // at error we get sometimes like +85 or -85 from the sensor :o
+            // myString tmp = it->first;
+            // #TODO deactivated - check later
+            // if (!tmp.starts_with("3b-") && (value == 85 || value < -55 || value > 125))
+            // {
+            //    // at error we get sometimes like +85 or -85 from the sensor :o
 
-               tell(eloAlways, "Error: Ignoring invalid value (%0.2f) of w1 sensor '%s'", value, it->first.c_str());
-               break;
-            }
+            //    tell(eloAlways, "Error: Ignoring invalid value (%0.2f) of w1 sensor '%s'", value, it->first.c_str());
+            //    break;
+            // }
 
             if (sensors[it->first].values.size() >= 3)
             {
@@ -264,7 +266,8 @@ int W1::update()
       free(path);
 
       // take a breath ..
-      //   -> "jedes lesen des Bus zieht die Leitungen runter und da alle Sensoren am selben Bus hängen -> min. 1 Sekunde Pause zwischen den Zugriffen"
+      //   -> "jedes lesen des Bus zieht die Leitungen runter und da alle Sensoren am selben Bus hängen
+      //      daher min. 1 Sekunde Pause zwischen den Zugriffen"
 
       sleep(1);
    }
