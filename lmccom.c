@@ -332,10 +332,13 @@ int LmcCom::restQuery(std::string what, Parameters pars)
    char* request = json_dumps(jRequest, JSON_REAL_PRECISION(4));
    json_decref(jRequest);
    tell(eloDebugLmc, "[LMC/REST] -> (%s) [%s]", what.c_str(), request);
+
    int res = curl->post(curlUrl, request, &lastRestResult);
    free(request);
 
-   tell(eloDebugLmc, "[LMC/REST] <- (%s) [%s]", what.c_str(), lastRestResult.c_str());
+   if (res == success)
+      tell(eloDebugLmc, "[LMC/REST] <- '%s' (%s) [%s]", curlUrl, what.c_str(), lastRestResult.c_str());
+
    return res;
 }
 

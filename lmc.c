@@ -20,7 +20,6 @@ int Daemon::lmcInit(bool force)
    if (isEmpty(lmcHost) || isEmpty(lmcPlayerMac))
       return done;
 
-
    if (!force && lastTryAt > time(0) - 10)
       return done;
 
@@ -29,7 +28,7 @@ int Daemon::lmcInit(bool force)
    if (!lmc)
       lmc = new LmcCom(lmcPlayerMac);
 
-   tell(eloAlways, "[LMC] Try pening connection to server at '%s:%d' for player '%s'", lmcHost, lmcPort, lmcPlayerMac);
+   tell(eloAlways, "[LMC] Try opening connection to server at '%s:%d' for player '%s'", lmcHost, lmcPort, lmcPlayerMac);
 
    if (lmc->open(lmcHost, lmcPort) != success)
    {
@@ -71,7 +70,7 @@ int Daemon::performLmcUpdates()
 
    if (!lmc->isOpen())
    {
-      if (lmcInit() != success)
+      if (lmcInit(true) != success)
          return fail;
    }
 

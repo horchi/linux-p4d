@@ -461,7 +461,7 @@ class cDbStatement : public cDbService
       virtual ~cDbStatement();
 
       int execute(int noResult = no);
-      int find();
+      bool find();
       int fetch();
       int freeResult();
       void clear();

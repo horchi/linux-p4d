@@ -35,12 +35,14 @@ function initLmc()
                                       .attr('id', 'lmcCurrentArtist')
                                       .addClass('lmcCurrentArtist'))
                               .append($('<div></div>')
+                                      .attr('id', 'lmcDivCurrentAlbum')
                                       .css('margin-top', '8px')
                                       .append($('<span></span>')
                                               .html('Album: '))
                                       .append($('<span></span>')
                                               .attr('id', 'lmcCurrentAlbum')))
                               .append($('<div></div>')
+                                      .attr('id', 'lmcDivCurrentGenreYear')
                                       .append($('<span></span>')
                                               .attr('id', 'lmcCurrentGenreYear')))
                               .append($('<div></div>')
@@ -49,8 +51,8 @@ function initLmc()
                                       .append($('<span></span>')
                                               .attr('id', 'lmcCurrenStream')))
                               .append($('<div></div>')
-                                      .addClass('lmcTrackProgress')
                                       .attr('id', 'lmcTrackProgress')
+                                      .addClass('lmcTrackProgress')
                                       .click(function(event) {
                                          let relX = event.pageX - $(this).offset().left;
                                          let percent = parseInt(relX / ($(this).width()/100));
@@ -187,7 +189,8 @@ var progressTrigger = 0;
 
 function updateLmc()
 {
-   console.log("updateLmc lmcData.state =", JSON.stringify(lmcData.state, undefined, 4));
+   console.log("updateLmc lmcData.state", JSON.stringify(lmcData.state, undefined, 4));
+   // console.log("updateLmc lmcData.players", JSON.stringify(lmcData.players, undefined, 4));
 
    if (!lmcData || !lmcData.current || !lmcData.state) {
       clearProgressTrigger();
@@ -215,9 +218,11 @@ function updateLmc()
 
    $('#lmcCurrentArtist').html(lmcData.current.artist);
    $('#lmcCurrentTitle').html(lmcData.current.title);
+   $('#lmcDivCurrentAlbum').css('display', lmcData.current.album != '' ? '' : 'none');
    $('#lmcCurrentAlbum').html(lmcData.current.album);
    $('#infoVolume').html(lmcData.state.volume + '%');
 
+   $('#lmcDivCurrentGenreYear').css('display', (lmcData.current.genre != '' || lmcData.current.year > 0) ? '' : 'none');
    $('#lmcCurrentGenreYear').html(lmcData.current.genre + ' / ' + lmcData.current.year);
    // $('#lmcCurrentYear').html(lmcData.current.year);
    $('#lmcCurrenStream').html(lmcData.current.bitrate + ' kb/s, ' + (lmcData.current.contentType == 'flc'? 'flac' : lmcData.current.contentType));
@@ -322,11 +327,13 @@ function calcProgress()
    }
 
    let percent = time / (lmcData.current.duration / 100.0);
+   $('#lmcTrackProgress').css('display', lmcData.current.duration > 0 ? '' : 'none');
    $('#lmcTrackProgressBar').css('width', percent + '%');
 
    // console.log("setting progress to", paserInt(percent)+'%');
 
    $('#lmcTrackTime').html(parseInt(time/60) + ':' + (time%60).toString().padStart(2, '0'));
+   $('#lmcTrackDuration').css('display', lmcData.current.duration > 0 ? '' : 'none');
    $('#lmcTrackDuration').html(parseInt(lmcData.current.duration/60) + ':' + (lmcData.current.duration%60).toString().padStart(2, '0'));
 }
 

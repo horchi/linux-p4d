@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.3"
-#define VERSION_DATE "18.02.2025"
+#define _VERSION     "0.11.4"
+#define VERSION_DATE "22.02.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-02-22:  version 0.11.4
+ - bugfix:  Fixed convert script call on NON JSON messages
 
 2025-02-18:  version 0.11.3
  - added:   Convert script hook für mqtt messages

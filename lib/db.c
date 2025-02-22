@@ -178,12 +178,12 @@ int cDbStatement::getResultCount()
    return mysql_stmt_affected_rows(stmt);
 }
 
-int cDbStatement::find()
+bool cDbStatement::find()
 {
    if (execute() != success)
-      return fail;
+      return false;
 
-   return getAffected() > 0 ? yes : no;
+   return getAffected() > 0;
 }
 
 int cDbStatement::fetch()

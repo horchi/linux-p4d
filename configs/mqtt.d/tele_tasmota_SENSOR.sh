@@ -3,49 +3,32 @@
 MQTTURL="$1"
 MSG="$2"
 
-LOGGER="logger -t homectld -p kern.warn"
+LOGGER="logger -t sensormqtt -p kern.warn"
 
-# ${LOGGER} "/etc/homectld/mqtt.d/tele_tasmota_SENSOR.sh: Convert ${MSG} to ${MQTTURL}"
+#${LOGGER} "/etc/homectld/mqtt.d/tele_tasmota_SENSOR.sh: Convert ${MSG} to ${MQTTURL}"
 
-totalIn=`echo ${MSG} | jq -r .SML.Total_in`
+sensor()
+{
+   ADDRESS=${1}
+   ELEMENT="${2}"
+   TITLE="${3}"
+   UNIT="${4}"
 
-RESULT=$(jo \
-            type="TASMOTA" \
-            address=1 \
-            kind="value" \
-            title="Total Consumption" \
-            unit="kWh" \
-            valid=true \
-            value=${totalIn})
+   value=`echo ${MSG} | jq -r "${ELEMENT}"`
 
-${LOGGER} "tele_tasmota_SENSOR.sh: -> ${RESULT}"
-mosquitto_pub --quiet -L ${MQTTURL} -m "${RESULT}"
+   RESULT=$(jo \
+               type="TASMOTA" \
+               address=${ADDRESS} \
+               kind="value" \
+               title="${TITLE}" \
+               unit="${UNIT}" \
+               valid=true \
+               value=${value})
 
+   ${LOGGER} "tele_tasmota_SENSOR.sh: -> ${RESULT}"
+   mosquitto_pub --quiet -L ${MQTTURL} -m "${RESULT}"
+}
 
-totalIn=`echo ${MSG} | jq -r .SML.Total_out`
-
-RESULT=$(jo \
-            type="TASMOTA" \
-            address=2 \
-            kind="value" \
-            title="Total fed in" \
-            unit="kWh" \
-            valid=true \
-            value=${totalIn})
-
-${LOGGER} "tele_tasmota_SENSOR.sh: -> ${RESULT}"
-mosquitto_pub --quiet -L ${MQTTURL} -m "${RESULT}"
-
-totalIn=`echo ${MSG} | jq -r .SML.Power_curr`
-
-RESULT=$(jo \
-            type="TASMOTA" \
-            address=3 \
-            kind="value" \
-            title="Actual load" \
-            unit="W" \
-            valid=true \
-            value=${totalIn})
-
-${LOGGER} "tele_tasmota_SENSOR.sh: -> ${RESULT}"
-mosquitto_pub --quiet -L ${MQTTURL} -m "${RESULT}"
+sensor 1 '.data.Total_in' 'Total Consumption' 'kWh'
+sensor 2 '.data.Total_out' 'Total fed in' 'kWh'
+sensor 3 '.data.Power_curr' 'Actual Load' 'W'

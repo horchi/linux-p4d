@@ -631,7 +631,8 @@ class Daemon : public cWebInterface
          json_t* oHaJson {};
       };
 
-      char* mqttUrl {};
+      char* mqttUrl {};          // like tcp://192.168.200.101:1883
+      char* mqttUrlPlain {};     // like 192.168.200.101:1883
       char* sensorTopics {};
       char* mqttUser {};
       char* mqttPassword {};

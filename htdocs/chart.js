@@ -124,7 +124,7 @@ function drawCharts(dataObject)
       var dataset = {};
 
       if (knownUnits[unit] == null) {
-         // console.log("Adding yAxis for " + unit);
+         // console.log("Adding yAxis for " + unit + ', ' + JSON.stringify(valueFacts[dataObject.rows[i].key], undefined, 4));
          knownUnits[unit] = true;
          yAxes.push({
             id: unit,
@@ -134,6 +134,9 @@ function drawCharts(dataObject)
             scaleLabel: { display: true, fontColor: colors[i], labelString: '[' + unit + ']' }
          });
       }
+
+      if (unit == 'zst')
+         yAxes[yAxes.length-1].ticks.max = 1.1;
 
       dataset["data"] = dataObject.rows[i].data;
       dataset["backgroundColor"] = colors[i];

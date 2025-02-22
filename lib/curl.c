@@ -514,21 +514,26 @@ int cCurl::post(const char* url, const std::string& sPost, std::string* sOutput)
    curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
    curl_easy_setopt(handle, CURLOPT_USERAGENT, "libcrp/0.1");
 
-   // CURLcode res = curl_easy_perform(handle);
-
+   CURLcode res {CURLE_OK};
    sBuf = "";
 
-   if (curl_easy_perform(handle) == 0)
+   if ((res = curl_easy_perform(handle)) != CURLE_OK)
    {
-      *sOutput = sBuf;
-      curl_slist_free_all(headers);
-      return success;
+      long httpCode = 0;
+
+      curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
+      tell(eloAlways, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
+           curl_easy_strerror(res), res, httpCode, url);
+
+     *sOutput = "";
+
+     return fail;
    }
 
-   *sOutput = "";
+   *sOutput = sBuf;
    curl_slist_free_all(headers);
 
-   return fail;
+   return success;
 }
 
 //***************************************************************************

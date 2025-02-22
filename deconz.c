@@ -53,7 +53,6 @@ int Deconz::init(Daemon* parent, cDbConnection* connection)
    int status {success};
 
    daemon = parent;
-   cCurl::create();      // create global cCurl instance
    curl.init();
 
    tableDeconzLights = new cDbTable(connection, "deconzl");
@@ -90,7 +89,6 @@ int Deconz::init(Daemon* parent, cDbConnection* connection)
 int Deconz::exit()
 {
    curl.exit();
-   cCurl::destroy();
 
    delete tableDeconzLights;  tableDeconzLights = nullptr;
    delete tableDeconzSensors; tableDeconzSensors = nullptr;

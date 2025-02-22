@@ -5,7 +5,7 @@ ADDRESS="$2"
 MQTTURL="$3"
 JARGS="$4"
 
-LOGGER="logger -t homectld -p kern.warn"
+LOGGER="logger -t sensormqtt -p kern.warn"
 
 GIT_ROOT=`echo ${JARGS} | jq -r .gitroot`
 SERVICE=`echo ${JARGS} | jq -r .service`
@@ -38,7 +38,7 @@ elif ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
       COLOR="\"blue\""
       UPD_PENDING=1
    else
-      ${LOGGER} "update.sh: NO update pending, commit id is ${LOCAL}"
+      # ${LOGGER} "update.sh: NO update pending, commit id is ${LOCAL}"
       COLOR="\"green\""
    fi
 

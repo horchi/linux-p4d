@@ -293,14 +293,15 @@ Daemon::Daemon()
    cDbConnection::setUser(dbUser);
    cDbConnection::setPass(dbPass);
 
+   cCurl::create();      // create global cCurl instance
    webSock = new cWebSock(this, httpPath);
 }
 
 Daemon::~Daemon()
 {
    exit();
-
    delete webSock;
+   cCurl::destroy();
 
    // #TODO free() all char* configuration variables
 
@@ -521,7 +522,7 @@ int Daemon::init()
    performMqttRequests();
    initScripts();
    loadStates();           // load states of outputs on last exit
-   lmcInit();
+   lmcInit(true);
 
    if (!isEmpty(deconz.getHttpUrl()) && !isEmpty(deconz.getApiKey()))
       deconz.initWsClient();
@@ -769,6 +770,7 @@ int Daemon::cfgInput(myString type, uint pin, json_t* jCal)
       if (sensors[type][pin].active && sensors[type][pin].interrupt)
       {
          tell(eloDebugWiringPi, "Debug: wiringPiISR(%d) (%d / %s)", pin, physPinToGpio(pin), physPinToGpioName(pin));
+
          if (!sensors[type][pin].interruptSet)
          {
             // if (sensors[type][pin].interruptSet)
@@ -840,8 +842,7 @@ int Daemon::initScripts()
       tableValueFacts->setValue("TYPE", "SC");
       tableValueFacts->setValue("NAME", script.name.c_str());
 
-      bool found = selectValueFactsByTypeAndName->find();
-
+      bool found {selectValueFactsByTypeAndName->find()};
       char* scriptPath {};
       asprintf(&scriptPath, "%s/%s", path, script.name.c_str());
 
@@ -869,20 +870,13 @@ int Daemon::initScripts()
 
       // execute script
 
-      const char* url = strrchr(mqttUrl, '/');
-
-      if (url)
-         url++;
-      else
-         url = mqttUrl;
-
       if (found)
          sensors["SC"][addr].script = tableValueFacts->getStrValue("SETTINGS");
 
       const char* arguments = sensors["SC"][addr].script.c_str();
 
-      tell(eloScript, "Script: Calling %s %s %d 'mqtt://%s/%s' '%s'", scriptPath, "init", addr, url, TARGET "2mqtt/scripts", arguments);
-      result = executeCommand("%s %s %d 'mqtt://%s/%s' '%s'", scriptPath, "init", addr, url, TARGET "2mqtt/scripts", arguments);
+      tell(eloScript, "Script: Calling %s %s %d 'mqtt://%s/%s' '%s'", scriptPath, "init", addr, mqttUrlPlain, TARGET "2mqtt/scripts", arguments);
+      result = executeCommand("%s %s %d 'mqtt://%s/%s' '%s'", scriptPath, "init", addr, mqttUrlPlain, TARGET "2mqtt/scripts", arguments);
 
       json_t* oData = jsonLoad(result.c_str());
 
@@ -975,16 +969,10 @@ int Daemon::callScript(int addr, const char* command)
    }
 
    char* cmd {};
-   const char* url = strrchr(mqttUrl, '/');
-   if (url)
-      url++;
-   else
-      url = mqttUrl;
-
    const char* arguments {sensors["SC"][addr].script.c_str()};
 
    asprintf(&cmd, "%s/scripts.d/%s %s %d 'mqtt://%s/%s' '%s'", confDir, tableValueFacts->getStrValue("NAME"),
-            command, addr, url, TARGET "2mqtt/scripts", arguments);
+            command, addr, mqttUrlPlain, TARGET "2mqtt/scripts", arguments);
 
    tell(eloScript, "Script: Calling '%s' ..", cmd);
    int result = executeCommandAsync(addr, cmd);
@@ -1824,6 +1812,8 @@ int Daemon::readConfiguration(bool initial)
 
    std::string url {mqttUrl ? mqttUrl : ""};
    getConfigItem("mqttUrl", mqttUrl);
+   free(mqttUrlPlain);
+   mqttUrlPlain = strdup(strrchr(mqttUrl, '/') ? strrchr(mqttUrl, '/')+1 : mqttUrl);
 
    std::string sTopics = sensorTopics ? sensorTopics : "";
    getConfigItem("mqttSensorTopics", sensorTopics, "+/w1/#");
@@ -3812,29 +3802,16 @@ int Daemon::dispatchRtl433(const char* message)
 
 int Daemon::dispatchOther(const char* topic, const char* message)
 {
-   json_t* jData {jsonLoad(message)};
-
-   if (!jData)
-   {
-      tell(eloAlways, "Error: (%s) Can't parse json in '%s'", topic, message);
-      return fail;
-   }
-
    // check if we have a converter script
 
    char* converter {};
    asprintf(&converter, "%s/mqtt.d/%s.sh", confDir, strReplace("/", "_", topic).c_str());
 
+   tell(eloAlways, "checking for convert script '%s' for topic '%s'", converter, topic);
+
    if (fileExists(converter))
    {
-      const char* url = strrchr(mqttUrl, '/');
-
-      if (url)
-         url++;
-      else
-         url = mqttUrl;
-
-      executeCommand("%s 'mqtt://%s/%s' '%s'", converter, url, TARGET "2mqtt/scripts", message);
+      executeCommand("%s 'mqtt://%s/%s' '%s'", converter, mqttUrlPlain, TARGET "2mqtt/scripts", message);
       tell(eloScript, ".. '%s' done", converter);
       free(converter);
 
@@ -3842,6 +3819,14 @@ int Daemon::dispatchOther(const char* topic, const char* message)
    }
 
    free(converter);
+
+   json_t* jData {jsonLoad(message)};
+
+   if (!jData)
+   {
+      tell(eloAlways, "Error: (%s) Can't parse json in '%s'", topic, message);
+      return fail;
+   }
 
    // tell(eloAlways, "dispatch (%s) '%s'", topic, message);
 
@@ -3856,7 +3841,7 @@ int Daemon::dispatchOther(const char* topic, const char* message)
    std::string kind = getStringFromJson(jData, "kind", "");
    const char* image = getStringFromJson(jData, "image", "");
    const char* choices = getStringFromJson(jData, "choices");
-	json_t* jParameter = getObjectFromJson(jData, "parameter");
+   json_t* jParameter = getObjectFromJson(jData, "parameter");
 
    if (action == "init")
    {
@@ -3908,14 +3893,14 @@ int Daemon::dispatchOther(const char* topic, const char* message)
          return fail;
       }
 
-		if (jParameter)
-		{
-			char* p = json_dumps(jParameter, 0);
-			// don't free it's only a reference onto oData! // json_decref(jParameter);
-			tell(eloDebug, "Sensor parameter: '%s'", p);
-			sensors[type][address].parameter = p;
-			free(p);
-		}
+      if (jParameter)
+      {
+         char* p = json_dumps(jParameter, 0);
+         // don't free it's only a reference onto oData! // json_decref(jParameter);
+         tell(eloDebug, "Sensor parameter: '%s'", p);
+         sensors[type][address].parameter = p;
+         free(p);
+      }
 
       if (type.starts_with("MCPO"))
          addValueFact(address, type.c_str(), 1, title, unit, title, urControl, nullptr, soNone, sensors[type][address].parameter.c_str());  // if output set rights
