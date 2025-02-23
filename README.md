@@ -42,7 +42,7 @@ If this project help you, you can give me a cup of coffee :)
 - USB-Serial converter must be connected to COM1 on Fröling mainboard
 - A Linux based operating system is required
 
-# Installation by package (actually available for Raspian Buster)
+# Installation by package (actually available for Raspberry Pi OS (bookworm) (64-Bit))
 
 ## install
 ```
