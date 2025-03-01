@@ -71,16 +71,16 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // MQTT interface
 
-   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "MQTT Interface", "MQTT Broker Url", "URL der MQTT Instanz Beispiel: 'tcp://127.0.0.1:1883'" },
-   { "mqttUser",                  ctString,  "",                     false, "MQTT Interface", "User", "" },
-   { "mqttPassword",              ctString,  "",                     false, "MQTT Interface", "Password", "" },
-   { "mqttSensorTopics",          ctText,  TARGET "2mqtt/w1/#,  " TARGET "2mqtt/arduino/out",  false, "MQTT Interface", "Zusätzliche sensor Topics", "Diese Topics werden gelesen und als Sensor Daten verwendet (Komma getrennte Liste)" },
+   { "mqttUrl",                   ctString,  "tcp://localhost:1883", false, "MQTT", "MQTT Broker Url", "URL der MQTT Instanz Beispiel: 'tcp://127.0.0.1:1883'" },
+   { "mqttUser",                  ctString,  "",                     false, "MQTT", "User", "" },
+   { "mqttPassword",              ctString,  "",                     false, "MQTT", "Password", "" },
+   { "mqttSensorTopics",          ctText,  TARGET "2mqtt/w1/#,  " TARGET "2mqtt/arduino/out",  false, "MQTT", "Zusätzliche sensor Topics", "Diese Topics werden gelesen und als Sensor Daten verwendet (Komma getrennte Liste)" },
 
    // Home Automation MQTT interface
 
-   { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
-   { "mqttSendWithKeyPrefix",     ctString,  "",  false, "Home Automation Interface (like Home-Assistant, ...)", "Adresse übertragen", "Wenn hier ein Präfix konfiguriert ist wird die Adresse der Sensoren nebst Präfix übertragen" },
-   { "mqttHaveConfigTopic",       ctBool,    "0", false, "Home Automation Interface (like Home-Assistant, ...)", "Config Topic", "Speziell für HomeAssistant" },
+   { "mqttDataTopic",             ctString,  "",  false, "Home Automation Interface", "Data Topic Name", "&lt;NAME&gt; wird gegen den Messwertnamen und &lt;GROUP&gt; gegen den Namen der Gruppe ersetzt. Beispiel: p4d2mqtt/sensor/&lt;NAME&gt;/state" },
+   { "mqttSendWithKeyPrefix",     ctString,  "",  false, "Home Automation Interface", "Adresse übertragen", "Wenn hier ein Präfix konfiguriert ist wird die Adresse der Sensoren nebst Präfix übertragen" },
+   { "mqttHaveConfigTopic",       ctBool,    "0", false, "Home Automation Interface", "Config Topic", "Speziell für HomeAssistant" },
 
    // mail
 
@@ -106,9 +106,9 @@ std::list<Daemon::ConfigItemDef> P4d::configuration
 
    // LMC (Logitec Media Server)
 
-   { "lmcHost",                   ctString,  "",                   false, "Logitech Media Server (squeezebox)", "LMC Host", "" },
-   { "lmcPort",                   ctInteger, "9090",               false, "Logitech Media Server (squeezebox)", "LMC Port", "" },
-   { "lmcPlayerMac",              ctString,  "",                   false, "Logitech Media Server (squeezebox)", "MAC of LMC Player ", "" },
+   { "lmcHost",                   ctString,  "",                   false, "Logitech Media Server", "LMC Host", "" },
+   { "lmcPort",                   ctInteger, "9090",               false, "Logitech Media Server", "LMC Port", "" },
+   { "lmcPlayerMac",              ctString,  "",                   false, "Logitech Media Server", "MAC of LMC Player ", "" },
 };
 
 //***************************************************************************

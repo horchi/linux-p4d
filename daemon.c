@@ -3807,7 +3807,7 @@ int Daemon::dispatchOther(const char* topic, const char* message)
    char* converter {};
    asprintf(&converter, "%s/mqtt.d/%s.sh", confDir, strReplace("/", "_", topic).c_str());
 
-   tell(eloAlways, "checking for convert script '%s' for topic '%s'", converter, topic);
+   tell(eloScript, "Checking for convert script '%s' for topic '%s'", converter, topic);
 
    if (fileExists(converter))
    {
@@ -4436,6 +4436,14 @@ void Daemon::publishVictronInit(const char* type)
    if (mqttTopicVictron.empty())
    {
       tell(eloAlways, "Error: Can't init victron for '%s', missing topic", type);
+      return;
+   }
+
+   mqttCheckConnection();
+
+   if (!mqttWriter)
+   {
+      tell(eloAlways, "Error: Can't init victron for '%s', missing broker at '%s'", type, mqttUrl);
       return;
    }
 

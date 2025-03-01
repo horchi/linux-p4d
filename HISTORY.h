@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.4"
-#define VERSION_DATE "22.02.2025"
+#define _VERSION     "0.11.5"
+#define VERSION_DATE "01.03.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2025-03-01:  version 0.11.5
+ - change:  Minor log level change
+ - bugfix:  Fixed potential crash on MQTT url problems
 
 2025-02-22:  version 0.11.4
  - bugfix:  Fixed convert script call on NON JSON messages
