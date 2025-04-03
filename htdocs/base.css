@@ -899,7 +899,7 @@ div.greenCircle
     margin-top: 5px;
     white-space-collapse: preserve-breaks;
     table-layout: fixed;
-    background: linear-gradient(to bottom right, #00000096, black);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1));
 }
 
 table.tableMultiCol thead
@@ -1315,7 +1315,7 @@ table.tableMultiCol td
 
 .inputTableConfig
 {
-    background: linear-gradient(to bottom right, #00000096, black);
+    background: linear-gradient(to bottom right, var(--light3), var(--light1));
     padding: var(--containerPadding);
     display: table;
     width: 95%;

@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.5"
-#define VERSION_DATE "01.03.2025"
+#define _VERSION     "0.11.6"
+#define VERSION_DATE "03.03.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-03-03:  version 0.11.6
+ - change:  Minor style change
 
 2025-03-01:  version 0.11.5
  - change:  Minor log level change

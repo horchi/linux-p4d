@@ -1181,7 +1181,7 @@ int Daemon::storeChartbookmarks(json_t* array, long client)
 int Daemon::performChartbookmarks(long client)
 {
    char* bookmarks {};
-   getConfigItem("chartBookmarks", bookmarks, "{[]}");
+   getConfigItem("chartBookmarks", bookmarks, "[]");
    json_t* oJson = jsonLoad(bookmarks);
    pushOutMessage(oJson, "chartbookmarks", client);
    free(bookmarks);

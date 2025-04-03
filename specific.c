@@ -1535,7 +1535,7 @@ int P4d::performPellets(json_t* oObject, long client)
 
    double consumptionH = consumptionPerHour ? consumptionPerHour : consumptionHLast;
    char* hint;
-   asprintf(&hint, "consumption sice tankering by %.2f kg per stoker hour", consumptionH);
+   asprintf(&hint, "consumption since tankering by %.2f kg per stoker hour", consumptionH);
    tell(eloAlways, "Calculating %s", hint);
 
    json_t* oData = json_object();
