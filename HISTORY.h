@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.6"
-#define VERSION_DATE "03.03.2025"
+#define _VERSION     "0.11.7"
+#define VERSION_DATE "08.12.2025"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-12-08:  version 0.11.7
+ - bugfix:  Fixed widget scaling on "Skala Min" option (Thx to HautdenLukas)
 
 2025-03-03:  version 0.11.6
  - change:  Minor style change

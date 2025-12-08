@@ -133,16 +133,19 @@ function getSchemDef(id)
    }
 }
 
-// get schema definition by '<Type>:0x<HexAddr>' notation
-
-function getItemDef(key)
+function getItemDef(id)
 {
-   for (let i = 0; i < lastSchemadata.length; i++) {
-      if (lastSchemadata[i].type + ':0x' + ((lastSchemadata[i].address)>>>0).toString(16).toUpperCase() == key)
-         return lastSchemadata[i];
+   let idPar = id.split(':');
+
+   if (idPar.length == 2) {
+      for (let key in valueFacts) {
+         if (idPar[0] == valueFacts[key].type && parseInt(idPar[1]) == valueFacts[key].address) {
+            return valueFacts[key];
+         }
+      }
    }
 
-   return { 'value' : 'unkown id', 'title' : 'unkown', 'name' : 'unkown', type : 'NN', address : -1 };
+   return { name: "-", title :  "-", unit : "", usrtitle : "--" };
 }
 
 function getItemById(id)
@@ -656,8 +659,6 @@ function editSchemaValue(type, address, newUC)
                           .append($('<span></span>')
                                   .html('Bild'))
                           .append($('<span></span>')
-                                  .html('Wert'))
-                          .append($('<span></span>')
                                   .append($('<input></input>')
                                           .attr('type', 'radio')
                                           .attr('name', 'kind')
@@ -695,7 +696,7 @@ function editSchemaValue(type, address, newUC)
 
          .append($('<div></div>')
                  .append($('<span></span>')
-                         .attr('id', 'labelFunction'))
+                         .attr('id', 'labelUsrText'))
                  .append($('<span></span>')
                          .append($('<textarea></textarea>')
                                  .attr('id', 'usrText')
@@ -703,7 +704,7 @@ function editSchemaValue(type, address, newUC)
 
          .append($('<div></div>')
                  .append($('<span></span>')
-                         .attr('id', 'labelUsrText'))
+                         .attr('id', 'labelFunction'))
                  .append($('<span></span>')
                          .append($('<textarea></textarea>')
                                  .attr('id', 'function')
