@@ -139,7 +139,7 @@ void tell(Eloquence elo, const char* format, ...)
 
          sprintf(buf, "%2.2d:%2.2d:%2.2d,%3.3ld ",
                  tm->tm_hour, tm->tm_min, tm->tm_sec,
-                 tp.tv_usec / 1000);
+                 (long)(tp.tv_usec / 1000));
       }
 
       printf("%s%s\n", buf, t);
@@ -743,6 +743,15 @@ std::string strReplace(const std::string& what, long with, const std::string& su
    char swith[100];
 
    sprintf(swith, "%ld", with);
+
+   return strReplace(what, swith, subject);
+}
+
+std::string strReplace(const std::string& what, long long with, const std::string& subject)
+{
+   char swith[100];
+
+   sprintf(swith, "%lld", with);
 
    return strReplace(what, swith, subject);
 }

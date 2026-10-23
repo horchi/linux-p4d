@@ -1039,8 +1039,8 @@ int Daemon::performChartData(json_t* oObject, long client)
    rangeFrom.setValue(rangeStart);
    rangeTo.setValue(rangeStart + (int)(range*(int)tmeSecondsPerDay));
 
-   tell(eloDb, "Db: Selecting chart '%s' data for sensors '%s' from (%ld) to (%ld) with range %.1f",
-        id, sensors, rangeFrom.getTimeValue(), rangeTo.getTimeValue(), range);
+   tell(eloDb, "Db: Selecting chart '%s' data for sensors '%s' from (%lld) to (%lld) with range %.1f",
+        id, sensors, (long long)rangeFrom.getTimeValue(), (long long)rangeTo.getTimeValue(), range);
 
    tableValueFacts->clear();
 

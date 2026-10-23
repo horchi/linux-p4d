@@ -1085,7 +1085,7 @@ int LmcCom::getCurrentCoverUrl(TrackInfo* track, std::string& coverUrl, bool big
    else
    {
       // http://localhost:9000/music/current/cover.jpg?player=f0:4d:a2:33:b7:ed
-      asprintf(&tmp, "http://%s:%d/music/current/cover.jpg?player=%s&nocache=%ld", host, 9000, escId, time(0));
+      asprintf(&tmp, "http://%s:%d/music/current/cover.jpg?player=%s&nocache=%lld", host, 9000, escId, (long long)time(0));
       coverUrl = tmp;
    }
 

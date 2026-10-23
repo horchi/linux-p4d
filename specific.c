@@ -671,7 +671,7 @@ int P4d::updateState()
    {
       if (now > nextReportAt)
       {
-         tell(eloAlways, "Time drift is %ld seconds", currentState.time - now);
+         tell(eloAlways, "Time drift is %lld seconds", (long long)(currentState.time - now));
          nextReportAt = now + 2 * tmeSecondsPerMinute;
       }
 
@@ -679,7 +679,7 @@ int P4d::updateState()
       {
          scheduleTimeSyncIn(tmeSecondsPerDay);
 
-         tell(eloAlways, "Time drift is %ld seconds, syncing now", currentState.time - now);
+         tell(eloAlways, "Time drift is %lld seconds, syncing now", (long long)(currentState.time - now));
 
          sem->p();
 
@@ -695,7 +695,7 @@ int P4d::updateState()
 
          sem->v();
 
-         tell(eloAlways, "Time drift now %ld seconds", currentState.time - now);
+         tell(eloAlways, "Time drift now %lld seconds", (long long)(currentState.time - now));
       }
    }
 
@@ -1392,7 +1392,7 @@ int P4d::calcStateDuration()
 
       for (const auto& d : stateDurations)
       {
-         tell(eloDebug, "%d: %ld minutes", d.first, d.second / 60);
+         tell(eloDebug, "%d: %lld minutes", d.first, (long long)(d.second / 60));
          total += d.second;
       }
 

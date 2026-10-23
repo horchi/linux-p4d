@@ -561,7 +561,7 @@ int Daemon::initLocale()
 {
    setenv("TZ", "CET", 1);
    tzset();  // init timezone environment
-   tell(eloAlways, "Daylight (%d); Timezone is (%ld) now it's %ld", isDST(), timezone, time(0));
+   tell(eloAlways, "Daylight (%d); Timezone is (%ld) now it's %lld", isDST(), timezone, (long long)time(0));
 
    // set a locale to "" means 'reset it to the environment'
    // as defined by the ISO-C standard the locales after start are C
@@ -2299,7 +2299,7 @@ int Daemon::process(bool force)
                if (tuple.size() == 3 && tuple[2] == "last")
                {
                   expression = strReplace(what, sensors[tuple[0].c_str()][matchAddr].last, expression);
-                  tell(eloDebug, "Debug: LUA: Replace %s:0x%x with '%ld'", tuple[0].c_str(), matchAddr, sensors[tuple[0].c_str()][matchAddr].last);
+                  tell(eloDebug, "Debug: LUA: Replace %s:0x%x with '%lld'", tuple[0].c_str(), matchAddr, (long long)sensors[tuple[0].c_str()][matchAddr].last);
                }
                else
                {
@@ -2315,7 +2315,7 @@ int Daemon::process(bool force)
 
                if (sensors[tuple[0].c_str()][matchAddr].changedAt > sensors[type][address].last)
                {
-                  tell(eloLua, "LUA: %s (%ld) newer than %s (%ld)", searchKey.c_str(), sensors[tuple[0].c_str()][matchAddr].changedAt, key, sensors[type][address].last);
+                  tell(eloLua, "LUA: %s (%lld) newer than %s (%lld)", searchKey.c_str(), (long long)sensors[tuple[0].c_str()][matchAddr].changedAt, key, (long long)sensors[type][address].last);
                   update = true;
                }
             }
@@ -2895,11 +2895,11 @@ int Daemon::aggregate()
             "    samples "
             "  where "
             "    aggregate != 'A' and "
-            "    time <= from_unixtime(%ld) "
+            "    time <= from_unixtime(%lld) "
             "  group by "
             "    CONCAT(DATE(time), ' ', SEC_TO_TIME((TIME_TO_SEC(time) DIV %d) * %d)) + INTERVAL %d MINUTE, address, type;",
             aggregateInterval * tmeSecondsPerMinute, aggregateInterval * tmeSecondsPerMinute, aggregateInterval,
-            history,
+            (long long)history,
             aggregateInterval * tmeSecondsPerMinute, aggregateInterval * tmeSecondsPerMinute, aggregateInterval);
 
    tell(eloAlways, "Starting aggregation ...");
@@ -2911,7 +2911,7 @@ int Daemon::aggregate()
 
       // Einzelmesspunkte löschen ...
 
-      asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%ld)", history);
+      asprintf(&stmt, "aggregate != 'A' and time <= from_unixtime(%lld)", (long long)history);
 
       if ((status = tableSamples->deleteWhere("%s", stmt)) == success)
          tell(eloAlways, "Aggregation with interval of %d minutes done; Created %d aggregation rows", aggregateInterval, aggCount);
@@ -4665,7 +4665,7 @@ int Daemon::dispatchArduinoMsg(const char* message)
 
          if (stamp < time(0)-300)
          {
-            tell(eloInfo, "Skipping old (%ld seconds) arduino value", time(0)-stamp);
+            tell(eloInfo, "Skipping old (%lld seconds) arduino value", (long long)(time(0)-stamp));
             continue;
          }
 
@@ -4848,7 +4848,7 @@ void Daemon::updateW1(const char* id, double value, time_t stamp)
 
    if (stamp < time(0)-300)
    {
-      tell(eloInfo, "Skipping old (%ld seconds) value of 'W1:%d'", time(0)-stamp, address);
+      tell(eloInfo, "Skipping old (%lld seconds) value of 'W1:%d'", (long long)(time(0)-stamp), address);
       return ;
    }
 

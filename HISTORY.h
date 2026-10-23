@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.11.9"
+#define _VERSION     "0.11.10"
 #define VERSION_DATE "23.10.2026"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2026-10-23:  version 0.11.10
+ - bugfix:  Fixed further build errors on 32-bit platforms with 64-bit time_t (e.g. Debian Trixie armhf)
+ - bugfix:  Fixed wrong printf formats for time_t values (e.g. wrong timestamp in aggregate statements on 32-bit)
 
 2026-10-23:  version 0.11.9
  - bugfix:  Fixed build on 32-bit platforms with 64-bit time_t (e.g. Debian Trixie armhf)
