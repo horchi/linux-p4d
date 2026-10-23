@@ -5,8 +5,8 @@
  *
  */
 
-#define _VERSION     "0.11.7"
-#define VERSION_DATE "08.12.2025"
+#define _VERSION     "0.11.8"
+#define VERSION_DATE "23.10.2026"
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2026-10-23:  version 0.11.8
+ - bugfix:  Fixed link against static libwebsockets built with GnuTLS backend
+ - bugfix:  Fixed missing range check of time range on 'parstore' request
+ - change:  Fixed compiler warnings in specific.c
 
 2025-12-08:  version 0.11.7
  - bugfix:  Fixed widget scaling on 'Skala Min' option (Thx to HautdenLukas)

@@ -1119,8 +1119,8 @@ int P4d::updateTimeRangeData()
 {
    Fs::TimeRanges t;
    int status {success};
-   char fName[10+TB] {};
-   char tName[10+TB] {};
+   char fName[20+TB] {};
+   char tName[20+TB] {};
 
    tell(eloAlways, "Updating time ranges data ...");
 
@@ -1140,8 +1140,8 @@ int P4d::updateTimeRangeData()
 
       for (int n = 0; n < 4; n++)
       {
-         sprintf(fName, "FROM%d", n+1);
-         sprintf(tName, "TO%d", n+1);
+         snprintf(fName, sizeof(fName), "FROM%d", n+1);
+         snprintf(tName, sizeof(tName), "TO%d", n+1);
          tableTimeRanges->setValue(fName, t.getTimeRangeFrom(n));
          tableTimeRanges->setValue(tName, t.getTimeRangeTo(n));
       }
@@ -1878,16 +1878,23 @@ int P4d::performTimeParStore(json_t* oObject, long client)
    tableTimeRanges->clear();
    tableTimeRanges->setValue("ADDRESS", trAddr);
 
-   if (!tableTimeRanges->find() || range < 1)
+   if (!tableTimeRanges->find())
    {
       replyResult(fail, "Parameter not found", client);
       tell(eloAlways, "Info: Address %d for 'parstore' not found!", trAddr);
       return done;
    }
 
+   if (range < 1 || range > 4)
+   {
+      replyResult(fail, "Time range out of range", client);
+      tell(eloAlways, "Info: Time range %d of address %d for 'parstore' out of range!", range, trAddr);
+      return done;
+   }
+
    Fs::TimeRanges t(trAddr);
-   char fName[10+TB];
-   char tName[10+TB];
+   char fName[20+TB];
+   char tName[20+TB];
    char valueFrom[100+TB];
    char valueTo[100+TB];
 
@@ -1910,8 +1917,8 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
    for (int n = 0; n < 4; n++)
    {
-      sprintf(fName, "FROM%d", n+1);
-      sprintf(tName, "TO%d", n+1);
+      snprintf(fName, sizeof(fName), "FROM%d", n+1);
+      snprintf(tName, sizeof(tName), "TO%d", n+1);
 
       status += t.setTimeRange(n, tableTimeRanges->getStrValue(fName), tableTimeRanges->getStrValue(tName));
    }
@@ -1937,8 +1944,8 @@ int P4d::performTimeParStore(json_t* oObject, long client)
 
    // update time range table
 
-   sprintf(fName, "FROM%d", range);
-   sprintf(tName, "TO%d", range);
+   snprintf(fName, sizeof(fName), "FROM%d", range);
+   snprintf(tName, sizeof(tName), "TO%d", range);
    tableTimeRanges->setValue(fName, t.getTimeRangeFrom(range-1));
    tableTimeRanges->setValue(tName, t.getTimeRangeTo(range-1));
    tableTimeRanges->update();
