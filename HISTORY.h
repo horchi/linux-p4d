@@ -5,7 +5,7 @@
  *
  */
 
-#define _VERSION     "0.11.8"
+#define _VERSION     "0.11.9"
 #define VERSION_DATE "23.10.2026"
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2026-10-23:  version 0.11.9
+ - bugfix:  Fixed build on 32-bit platforms with 64-bit time_t (e.g. Debian Trixie armhf)
+ - bugfix:  Fixed setting datetime fields by long long / 64-bit time_t value
 
 2026-10-23:  version 0.11.8
  - bugfix:  Fixed link against static libwebsockets built with GnuTLS backend
